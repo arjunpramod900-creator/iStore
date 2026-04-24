@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iStore - Discover the Latest Apple Products</title>
+    <link rel="stylesheet" href="/css/home.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav">
+            <a href="/" class="logo">iStore</a>
+            <div class="nav-links">
+                <a href="/" class="nav-link active">Home</a>
+                <a href="/categories" class="nav-link">Categories</a>
+                <a href="/products" class="nav-link">Products</a>
+                <a href="/deals" class="nav-link">Deals</a>
+            </div>
+            <div class="nav-icons">
+                <div class="nav-icon"><i data-lucide="search"></i></div>
+                <div class="nav-icon"><i data-lucide="heart"></i></div>
+                <div class="nav-icon"><i data-lucide="shopping-cart"></i></div>
+              <a href="/profile"
+class="nav-icon"
+title="Profile">
+
+<i data-lucide="user"></i>
+
+</a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1 class="hero-title">Discover the <span>Latest</span> Apple Products</h1>
+            <p class="hero-description">Experience innovation like never before. From iPhone to MacBook, find everything you need to light up your life.</p>
+        </div>
+        <div class="hero-image-container">
+            <img src="/images/hero_new.png" alt="Apple Products" class="hero-image">
+        </div>
+    </section>
+
+    <!-- Shop by Category -->
+    <section class="section categories">
+        <div class="category-header">
+            <span class="section-label">Collections</span>
+            <h2 class="section-title">Shop by Category</h2>
+        </div>
+        <div class="category-grid-container">
+            <!-- Card 1: iPhone -->
+            <div class="category-card iphone">
+                <div class="category-img" style="background-image: url('/images/cat_iphone.png');"></div>
+                <div class="category-gradient"></div>
+                <div class="category-content">
+                    <p class="category-name">iPhone</p>
+                    <p class="category-description">Everything you need</p>
+                </div>
+            </div>
+            <!-- Card 2: MacBook -->
+            <div class="category-card macbook">
+                <div class="category-img" style="background-image: url('/images/cat_macbook.png');"></div>
+                <div class="category-gradient"></div>
+                <div class="category-content">
+                    <p class="category-name">MacBook</p>
+                    <p class="category-description">Pure power</p>
+                </div>
+            </div>
+            <!-- Card 3: iPad -->
+            <div class="category-card ipad">
+                <div class="category-img" style="background-image: url('/images/cat_ipad.png');"></div>
+                <div class="category-gradient"></div>
+                <div class="category-content">
+                    <p class="category-name">iPad</p>
+                    <p class="category-description">Your new studio</p>
+                </div>
+            </div>
+            <!-- Card 4: Watch -->
+            <div class="category-card watch">
+                <div class="category-img" style="background-image: url('/images/cat_watch.png');"></div>
+                <div class="category-gradient"></div>
+                <div class="category-content">
+                    <p class="category-name">Apple Watch</p>
+                    <p class="category-description">Health on your wrist</p>
+                </div>
+            </div>
+            <!-- Card 5: AirPods -->
+            <div class="category-card airpods">
+                <div class="category-img" style="background-image: url('/images/cat_airpods.png');"></div>
+                <div class="category-gradient"></div>
+                <div class="category-content">
+                    <p class="category-name">AirPods</p>
+                    <p class="category-description">Magic in your ears</p>
+                </div>
+            </div>
+            <!-- Card 6: Accessories -->
+            <div class="category-card accessories">
+                <div class="category-img" style="background-image: url('/images/cat_accessories.png');"></div>
+                <div class="category-gradient"></div>
+                <div class="category-content">
+                    <p class="category-name">Accessories</p>
+                    <p class="category-description">Complete the kit</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Products -->
+    <section class="section featured">
+        <div class="featured-container">
+            <h2 class="featured-title">Featured Products</h2>
+            <div class="product-grid">
+                <!-- Product 1 -->
+                <div class="product-card">
+                    <div class="product-img-container">
+                        <div class="product-img" style="background-image: url('/images/prod_iphone17pro.png');"></div>
+                        <button class="wishlist-btn"><i data-lucide="heart"></i></button>
+                    </div>
+                    <div class="product-info">
+                        <p class="product-name">iPhone 17 Pro</p>
+                    </div>
+                    <div class="product-price-container">
+                        <p class="product-price">₹1,19,900</p>
+                    </div>
+                    <button class="add-cart-btn"><i data-lucide="shopping-cart"></i> Add to Cart</button>
+                </div>
+                <!-- Product 2 -->
+                <div class="product-card">
+                    <div class="product-img-container">
+                        <div class="product-img" style="background-image: url('/images/prod_macbookm5.png');"></div>
+                        <button class="wishlist-btn"><i data-lucide="heart"></i></button>
+                    </div>
+                    <div class="product-info">
+                        <p class="product-name">MacBook Pro M5</p>
+                    </div>
+                    <div class="product-price-container">
+                        <p class="product-price">₹1,99,900</p>
+                    </div>
+                    <button class="add-cart-btn"><i data-lucide="shopping-cart"></i> Add to Cart</button>
+                </div>
+                <!-- Product 3 -->
+                <div class="product-card">
+                    <div class="product-img-container">
+                        <div class="product-img" style="background-image: url('/images/prod_ipadpro.png');"></div>
+                        <button class="wishlist-btn"><i data-lucide="heart"></i></button>
+                    </div>
+                    <div class="product-info">
+                        <p class="product-name">iPad Pro</p>
+                    </div>
+                    <div class="product-price-container">
+                        <p class="product-price">₹79,900</p>
+                    </div>
+                    <button class="add-cart-btn"><i data-lucide="shopping-cart"></i> Add to Cart</button>
+                </div>
+                <!-- Product 4 -->
+                <div class="product-card">
+                    <div class="product-img-container">
+                        <div class="product-img" style="background-image: url('/images/prod_airpodsmax.png');"></div>
+                        <button class="wishlist-btn"><i data-lucide="heart"></i></button>
+                    </div>
+                    <div class="product-info">
+                        <p class="product-name">AirPods Max</p>
+                    </div>
+                    <div class="product-price-container">
+                        <p class="product-price">₹59,900</p>
+                    </div>
+                    <button class="add-cart-btn"><i data-lucide="shopping-cart"></i> Add to Cart</button>
+                </div>
+                <!-- Product 5 -->
+                <div class="product-card">
+                    <div class="product-img-container">
+                        <div class="product-img" style="background-image: url('/images/prod_iphone17.png');"></div>
+                        <button class="wishlist-btn"><i data-lucide="heart"></i></button>
+                    </div>
+                    <div class="product-info">
+                        <p class="product-name">iPhone 17</p>
+                    </div>
+                    <div class="product-price-container">
+                        <p class="product-price">₹79,900</p>
+                    </div>
+                    <button class="add-cart-btn"><i data-lucide="shopping-cart"></i> Add to Cart</button>
+                </div>
+                <!-- Product 6 -->
+                <div class="product-card">
+                    <div class="product-img-container">
+                        <div class="product-img" style="background-image: url('/images/macbook.png');"></div>
+                        <button class="wishlist-btn"><i data-lucide="heart"></i></button>
+                    </div>
+                    <div class="product-info">
+                        <p class="product-name">MacBook Air M5</p>
+                    </div>
+                    <div class="product-price-container">
+                        <p class="product-price">₹1,14,900</p>
+                    </div>
+                    <button class="add-cart-btn"><i data-lucide="shopping-cart"></i> Add to Cart</button>
+                </div>
+                <!-- Product 7 -->
+                <div class="product-card">
+                    <div class="product-img-container">
+                        <div class="product-img" style="background-image: url('/images/hero.png');"></div>
+                        <button class="wishlist-btn"><i data-lucide="heart"></i></button>
+                    </div>
+                    <div class="product-info">
+                        <p class="product-name">iMac M5</p>
+                    </div>
+                    <div class="product-price-container">
+                        <p class="product-price">₹1,34,900</p>
+                    </div>
+                    <button class="add-cart-btn"><i data-lucide="shopping-cart"></i> Add to Cart</button>
+                </div>
+                <!-- Product 8 -->
+                <div class="product-card">
+                    <div class="product-img-container">
+                        <div class="product-img" style="background-image: url('/images/airpods.png');"></div>
+                        <button class="wishlist-btn"><i data-lucide="heart"></i></button>
+                    </div>
+                    <div class="product-info">
+                        <p class="product-name">AirPods Pro</p>
+                    </div>
+                    <div class="product-price-container">
+                        <p class="product-price">₹24,900</p>
+                    </div>
+                    <button class="add-cart-btn"><i data-lucide="shopping-cart"></i> Add to Cart</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Best Sellers -->
+    <section class="section best-sellers">
+        <h2 class="best-sellers-title">Best Sellers</h2>
+        <div class="best-grid">
+            <!-- Item 1: iPhone 16 Pro -->
+            <div class="best-card">
+                <div class="best-tag"><span>HOT</span></div>
+                <div class="best-img-container">
+                    <div class="best-img" style="background-image: url('/images/iphone.png');"></div>
+                </div>
+                <div class="best-info">
+                    <p class="best-name">iPhone 16 Pro</p>
+                    <p class="best-price">₹1,19,900</p>
+                </div>
+            </div>
+            <!-- Item 2: MacBook Air M4 -->
+            <div class="best-card">
+                <div class="best-tag"><span>HOT</span></div>
+                <div class="best-img-container">
+                    <div class="best-img" style="background-image: url('/images/macbook.png');"></div>
+                </div>
+                <div class="best-info">
+                    <p class="best-name">MacBook Air M4</p>
+                    <p class="best-price">₹1,14,900</p>
+                </div>
+            </div>
+            <!-- Item 3: Apple Watch Ultra 2 -->
+            <div class="best-card">
+                <div class="best-img-container">
+                    <div class="best-img" style="background-image: url('/images/watch.png');"></div>
+                </div>
+                <div class="best-info">
+                    <p class="best-name">Apple Watch Ultra 2</p>
+                    <p class="best-price">₹89,900</p>
+                </div>
+            </div>
+            <!-- Item 4: AirPods Max -->
+            <div class="best-card">
+                <div class="best-tag"><span>HOT</span></div>
+                <div class="best-img-container">
+                    <div class="best-img" style="background-image: url('/images/best_airpods_max.jpg');"></div>
+                </div>
+                <div class="best-info">
+                    <p class="best-name">AirPods Max</p>
+                    <p class="best-price">₹59,900</p>
+                </div>
+            </div>
+            <!-- Item 5: Magic Keyboard -->
+            <div class="best-card">
+                <div class="best-img-container">
+                    <div class="best-img" style="background-image: url('/images/best_keyboard.jpg');"></div>
+                </div>
+                <div class="best-info">
+                    <p class="best-name">Magic Keyboard</p>
+                    <p class="best-price">₹29,900</p>
+                </div>
+            </div>
+            <!-- Item 6: Apple Pencil Pro -->
+            <div class="best-card">
+                <div class="best-img-container">
+                    <div class="best-img" style="background-image: url('/images/best_pencil.jpg');"></div>
+                </div>
+                <div class="best-info">
+                    <p class="best-name">Apple Pencil Pro</p>
+                    <p class="best-price">₹12,900</p>
+                </div>
+            </div>
+            <!-- Item 7: AirTag -->
+            <div class="best-card">
+                <div class="best-img-container">
+                    <div class="best-img" style="background-image: url('/images/best_airtag.jpg');"></div>
+                </div>
+                <div class="best-info">
+                    <p class="best-name">AirTag</p>
+                    <p class="best-price">₹3,490</p>
+                </div>
+            </div>
+            <!-- Item 8: HomePod Mini -->
+            <div class="best-card">
+                <div class="best-tag"><span>HOT</span></div>
+                <div class="best-img-container">
+                    <div class="best-img" style="background-image: url('/images/best_homepod_mini.jpg');"></div>
+                </div>
+                <div class="best-info">
+                    <p class="best-name">HomePod Mini</p>
+                    <p class="best-price">₹9,900</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Today's Deals -->
+    <section class="section deals">
+        <div class="deals-container">
+            <h2 class="section-title" style="margin:0">Today's Deals</h2>
+            <div class="deals-grid">
+                <!-- Deal 1 -->
+                <div class="deal-card">
+                    <div class="deal-badge">Limited Time</div>
+                    <h3 class="deal-title">Save 10% on MacBooks</h3>
+                    <p class="deal-text">Upgrade your workspace with the latest M5 chips.</p>
+                    <a href="#" class="deal-btn">Claim Offer</a>
+                    <i data-lucide="laptop" class="deal-icon-bg"></i>
+                </div>
+                <!-- Deal 2 -->
+                <div class="deal-card">
+                    <div class="deal-badge">Audio Deal</div>
+                    <h3 class="deal-title">AirPods Pro Discount</h3>
+                    <p class="deal-text">Experience superior sound at an unbeatable price.</p>
+                    <a href="#" class="deal-btn">Claim Offer</a>
+                    <i data-lucide="headphones" class="deal-icon-bg"></i>
+                </div>
+                <!-- Deal 3 -->
+                <div class="deal-card">
+                    <div class="deal-badge">Shipping</div>
+                    <h3 class="deal-title">Free Delivery on iPhones</h3>
+                    <p class="deal-text">Get your new iPhone delivered to your door today.</p>
+                    <a href="#" class="deal-btn">Claim Offer</a>
+                    <i data-lucide="truck" class="deal-icon-bg"></i>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Apple Lifestyle -->
+    <section class="section lifestyle">
+        <div class="lifestyle-container">
+            <h2 class="lifestyle-title">Apple Lifestyle</h2>
+            <div class="lifestyle-grid">
+                <div class="lifestyle-left lifestyle-card">
+                    <img src="/images/lifestyle_imac.png" alt="iMac Workspace" class="lifestyle-img">
+                </div>
+                <div class="lifestyle-right">
+                    <div class="lifestyle-right-top">
+                        <div class="lifestyle-card">
+                            <img src="/images/lifestyle_iphone.png" alt="iPhone Sunset" class="lifestyle-img">
+                        </div>
+                        <div class="lifestyle-card">
+                            <img src="/images/lifestyle_watch.png" alt="Apple Watch Cycling" class="lifestyle-img">
+                        </div>
+                    </div>
+                    <div class="lifestyle-right-bottom lifestyle-card">
+                        <img src="/images/lifestyle_ipad.png" alt="iPad Creativity" class="lifestyle-img">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-main">
+                <div class="footer-col-1">
+                    <h3 class="footer-logo">iStore</h3>
+                    <p class="footer-desc">The ultimate destination for premium Apple technology and bespoke customer experiences.</p>
+                </div>
+                <div class="footer-col">
+                    <h4 class="footer-heading">Products</h4>
+                    <ul class="footer-list">
+                        <li><a href="#">iPhone</a></li>
+                        <li><a href="#">MacBook</a></li>
+                        <li><a href="#">iPad Pro</a></li>
+                        <li><a href="#">Apple Watch</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4 class="footer-heading">Support</h4>
+                    <ul class="footer-list">
+                        <li><a href="#">Order Status</a></li>
+                        <li><a href="#">Returns</a></li>
+                        <li><a href="#">Product Help</a></li>
+                        <li><a href="#">Contact Us</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4 class="footer-heading">Company</h4>
+                    <ul class="footer-list">
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Store Finder</a></li>
+                        <li><a href="#">Careers</a></li>
+                        <li><a href="#">Sustainability</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <div class="footer-socials">
+                    <a href="#" class="social-icon facebook">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1V12h3v3h-3v6.8c4.56-.93 8-4.96 8-9.8z"/></svg>
+                    </a>
+                    <a href="#" class="social-icon instagram">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+                    </a>
+                    <a href="#" class="social-icon twitter">
+                        <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
+                    </a>
+                    <a href="#" class="social-icon youtube">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                    </a>
+                </div>
+                <p class="footer-copyright">© 2026 iStore. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        gsap.registerPlugin(ScrollTrigger);
+
+        // Entrance animations
+        gsap.from(".hero-title, .hero-description", {
+            y: 50,
+            opacity: 0,
+            duration: 1,
+            stagger: 0.2,
+            ease: "power3.out"
+        });
+
+        gsap.from(".hero-image", {
+            x: 100,
+            opacity: 0,
+            duration: 1.2,
+            ease: "power3.out",
+            delay: 0.5
+        });
+
+        // Scroll animations for sections
+        gsap.utils.toArray(".category-card, .product-card, .best-card, .deal-card, .bento-item").forEach(item => {
+            gsap.from(item, {
+                scrollTrigger: {
+                    trigger: item,
+                    start: "top 90%",
+                },
+                y: 40,
+                opacity: 0,
+                duration: 1,
+                ease: "power3.out"
+            });
+        });
+    </script>
+</body>
+</html>

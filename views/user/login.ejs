@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>iStore - Login</title>
+
+<link rel="stylesheet" href="/css/login.css">
+<link rel="stylesheet" href="/css/sweetalert-theme.css">
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+
+<!-- GSAP -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+<!-- Axios -->
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+<!-- SweetAlert -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+</head>
+
+
+
+<body>
+
+<div class="login-container">
+
+<!-- LEFT SIDE -->
+
+<section class="branding-panel">
+
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+
+<div class="branding-content">
+
+<div class="product-showcase">
+
+<div class="glass-card card-1">
+<div class="product-img"
+style="background-image: url('/images/iphone.png');">
+</div>
+<span class="card-label">iPhone 17</span>
+</div>
+
+<div class="glass-card card-2">
+<div class="product-img"
+style="background-image: url('/images/macbook.png');">
+</div>
+<span class="card-label">MacBook Pro M5</span>
+</div>
+
+<div class="glass-card card-3">
+<div class="product-img"
+style="background-image: url('/images/watch.png');">
+</div>
+<span class="card-label">Watch Ultra</span>
+</div>
+
+<div class="glass-card card-4">
+<div class="product-img"
+style="background-image: url('/images/airpods.png');">
+</div>
+<span class="card-label">AirPods Pro</span>
+</div>
+
+</div>
+
+<div class="branding-text">
+
+<h1>iStore</h1>
+
+<p>
+Your Apple ecosystem, simplified.
+</p>
+
+</div>
+
+</div>
+
+</section>
+
+
+
+<!-- RIGHT SIDE -->
+
+<section class="login-section auth-section">
+
+<div class="form-container">
+
+<header class="form-header">
+
+<h2>Welcome Back</h2>
+
+<p>
+Login to access your orders and devices.
+</p>
+
+</header>
+
+
+
+<form
+class="login-form"
+id="loginForm">
+
+<!-- Email -->
+
+<div class="form-group">
+
+<label>Email Address</label>
+
+<div class="input-wrapper">
+
+<input
+type="email"
+id="email"
+name="email"
+placeholder="Enter your email"
+required
+class="input-field">
+
+</div>
+
+</div>
+
+
+
+<!-- Password -->
+
+<div class="form-group">
+
+<label>Password</label>
+
+<div class="input-wrapper password-wrapper">
+
+<input
+type="password"
+id="password"
+name="password"
+placeholder="Enter your password"
+required
+class="input-field">
+
+<button
+type="button"
+class="eye-btn"
+id="togglePassword">
+
+<svg
+class="eye-icon"
+xmlns="http://www.w3.org/2000/svg"
+viewBox="0 0 24 24">
+
+<path
+stroke="currentColor"
+stroke-width="2"
+fill="none"
+d="M1 12s4-8 11-8
+11 8 11 8
+-4 8-11 8
+-11-8-11-8z"/>
+
+<circle
+cx="12"
+cy="12"
+r="3"
+stroke="currentColor"
+stroke-width="2"
+fill="none"/>
+
+</svg>
+
+</button>
+
+</div>
+
+</div>
+
+
+
+<div class="form-options">
+
+<a href="/forgot-password"
+class="forgot-link">
+Forgot Password?
+</a>
+
+</div>
+
+
+
+<button
+type="submit"
+class="login-btn">
+
+Login
+
+</button>
+
+</form>
+
+
+
+<footer class="form-footer">
+
+<p>
+
+New to iStore?
+
+<a href="/signup">
+
+Create an Account
+
+</a>
+
+</p>
+
+</footer>
+
+</div>
+
+</section>
+
+</div>
+
+
+
+<!-- ============================
+   PASSWORD TOGGLE SCRIPT
+============================ -->
+
+<script>
+
+const togglePassword =
+document.getElementById("togglePassword")
+
+const passwordField =
+document.getElementById("password")
+
+togglePassword.addEventListener(
+"click",
+
+function () {
+
+if (passwordField.type === "password") {
+
+passwordField.type = "text"
+
+/* Eye OFF Icon */
+
+this.innerHTML = `
+<svg
+class="eye-icon"
+xmlns="http://www.w3.org/2000/svg"
+viewBox="0 0 24 24">
+
+<path
+stroke="currentColor"
+stroke-width="2"
+fill="none"
+d="M17.94 17.94
+A10.94 10.94 0 0 1 12 20
+C5 20 1 12 1 12
+A21.76 21.76 0 0 1
+5.06 5.06M9.88 9.88
+A3 3 0 0 1 14.12
+14.12M1 1l22 22"/>
+
+</svg>
+`
+
+}
+
+else {
+
+passwordField.type = "password"
+
+/* Eye ON Icon */
+
+this.innerHTML = `
+<svg
+class="eye-icon"
+xmlns="http://www.w3.org/2000/svg"
+viewBox="0 0 24 24">
+
+<path
+stroke="currentColor"
+stroke-width="2"
+fill="none"
+d="M1 12s4-8 11-8
+11 8 11 8
+-4 8-11 8
+-11-8-11-8z"/>
+
+<circle
+cx="12"
+cy="12"
+r="3"
+stroke="currentColor"
+stroke-width="2"
+fill="none"/>
+
+</svg>
+`
+
+}
+
+})
+
+</script>
+
+
+
+<!-- ============================
+   LOGIN REQUEST SCRIPT
+============================ -->
+
+<script>
+
+const loginForm =
+document.getElementById("loginForm")
+
+const loginBtn =
+document.querySelector(".login-btn")
+
+loginForm.addEventListener(
+"submit",
+
+async (e) => {
+
+e.preventDefault()
+
+loginBtn.disabled = true
+
+
+
+const email =
+document.getElementById("email").value.trim()
+
+const password =
+document.getElementById("password").value.trim()
+
+
+
+try {
+
+/* Loading */
+
+Swal.fire({
+
+title: "Logging in...",
+
+allowOutsideClick: false,
+
+didOpen: () => {
+
+Swal.showLoading()
+
+}
+
+})
+
+
+
+const response =
+await axios.post(
+
+"/login",
+
+{
+email,
+password
+}
+
+)
+
+
+
+if (response.data.success) {
+
+Swal.fire({
+
+icon: "success",
+
+title: "Login Successful",
+
+timer: 1200,
+
+showConfirmButton: false
+
+})
+
+
+
+setTimeout(() => {
+
+window.location.href = "/"
+
+}, 1200)
+
+}
+
+}
+
+
+
+catch (error) {
+
+Swal.fire({
+
+icon: "error",
+
+title: "Login Failed",
+
+text:
+
+error.response?.data?.message ||
+
+"Invalid credentials"
+
+})
+
+}
+
+
+
+finally {
+
+loginBtn.disabled = false
+
+}
+
+}
+
+)
+
+</script>
+
+
+
+<!-- Shared Animations -->
+
+<script src="/js/animations.js"></script>
+<script src="/js/tilt.js"></script>
+
+
+
+</body>
+
+</html>

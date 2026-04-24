@@ -1,0 +1,32 @@
+{
+  "name": "istore",
+  "version": "1.0.0",
+  "description": "iStore E-commerce Project",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.15.1",
+    "bcrypt": "^6.0.0",
+    "dotenv": "^17.4.2",
+    "ejs": "^5.0.2",
+    "express": "^5.2.1",
+    "express-session": "^1.19.0",
+    "mongoose": "^9.4.1",
+    "nodemailer": "^8.0.5",
+    "sweetalert2": "^11.26.24",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.5.0",
+    "nodemon": "^3.1.14",
+    "postcss": "^8.5.10",
+    "tailwindcss": "^4.2.4"
+  }
+}

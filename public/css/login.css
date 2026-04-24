@@ -1,0 +1,592 @@
+:root {
+    --primary-gradient: linear-gradient(147.99deg, #4C0080 0%, #6A0DAD 100%);
+    --button-gradient: linear-gradient(97.13deg, #4C0080 0%, #6A0DAD 100%);
+    --bg-light: #F9F9FB;
+    --input-bg: #EEEEF0;
+    --text-main: #1A1C1D;
+    --text-muted: #4D4353;
+    --text-placeholder: #7E7384;
+    --glass-bg: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --purple-light: #F1DAFF;
+    --border-radius: 24px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+body {
+    background-color: var(--bg-light);
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+.login-container {
+    display: flex;
+    width: 100%;
+    min-height: 100vh;
+}
+
+/* LEFT SIDE: Branding Panel */
+.branding-panel {
+    flex: 1;
+    min-width: 50%;
+    background: var(--primary-gradient);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 48px;
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+}
+
+/* Decorative Orbs */
+.orb {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(32px);
+    z-index: 0;
+}
+
+.orb-1 {
+    width: 400px;
+    height: 400px;
+    left: -10%;
+    top: -10%;
+    background: rgba(106, 13, 173, 0.2);
+}
+
+.orb-2 {
+    width: 300px;
+    height: 300px;
+    right: -10%;
+    bottom: -10%;
+    background: rgba(97, 0, 198, 0.2);
+}
+
+.branding-content {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    max-width: 512px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 48px;
+}
+
+/* Product Showcase */
+.product-showcase {
+    position: relative;
+    width: 100%;
+    height: 500px;
+}
+
+.glass-card {
+    position: absolute;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(10px);
+    border-radius: 24px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+}
+
+.glass-card:hover {
+    transform: scale(1.05) !important;
+    z-index: 10;
+}
+
+.product-img {
+    width: 158px;
+    height: 158px;
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    margin-bottom: 16px;
+}
+
+.card-label {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* Specific Card Positioning */
+.card-1 { left: -12px; top: 0; transform: rotate(-6deg); }
+.card-2 { right: -12px; top: 0; transform: rotate(12deg); }
+.card-3 { left: 0; top: 290px; transform: rotate(-12deg); }
+.card-4 { right: 0; top: 290px; transform: rotate(6deg); }
+
+/* Branding Text */
+.branding-text {
+    text-align: center;
+}
+
+.branding-text h1 {
+    font-size: 60px;
+    font-weight: 900;
+    line-height: 60px;
+    letter-spacing: -3px;
+    color: #FFFFFF;
+    margin-bottom: 16px;
+}
+
+.branding-text p {
+    font-size: 20px;
+    font-weight: 300;
+    line-height: 28px;
+    letter-spacing: -0.5px;
+    color: var(--purple-light);
+    opacity: 0.9;
+}
+
+/* RIGHT SIDE: Login Form */
+.login-section {
+    flex: 1;
+    min-width: 50%;
+    background: var(--bg-light);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 48px;
+}
+
+.form-container {
+    width: 100%;
+    max-width: 448px;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+}
+
+.form-header {
+    text-align: center;
+}
+
+.form-header h2 {
+    font-size: 30px;
+    font-weight: 400;
+    line-height: 36px;
+    letter-spacing: -0.75px;
+    color: var(--text-main);
+    margin-bottom: 8px;
+}
+
+.form-header p {
+    font-size: 16px;
+    line-height: 24px;
+    color: var(--text-muted);
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+.input-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.input-field {
+    width: 100%;
+    height: 55px;
+    background: var(--input-bg);
+    border: 2px solid transparent;
+    border-radius: var(--border-radius);
+    padding: 0 20px;
+    font-size: 16px;
+    color: var(--text-main);
+    transition: all 0.3s ease;
+}
+
+.input-field:focus {
+    outline: none;
+    background: #FFFFFF;
+    border-color: #6A0DAD;
+    box-shadow: 0 0 0 4px rgba(106, 13, 173, 0.1);
+}
+
+.input-field::placeholder {
+    color: var(--text-placeholder);
+}
+
+.password-toggle {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 20px;
+}
+
+.form-options {
+    display: flex;
+    justify-content: flex-start;
+}
+
+.forgot-link {
+    font-size: 14px;
+    font-weight: 500;
+    color: #4C0080;
+    text-decoration: none;
+}
+
+.forgot-link:hover {
+    text-decoration: underline;
+}
+
+.login-btn {
+    width: 100%;
+    height: 56px;
+    background: var(--button-gradient);
+    border: none;
+    border-radius: var(--border-radius);
+    color: #FFFFFF;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+    box-shadow: 0px 10px 15px -3px rgba(76, 0, 128, 0.2);
+}
+
+.login-btn:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.1);
+    box-shadow: 0px 20px 25px -5px rgba(76, 0, 128, 0.3);
+}
+
+.login-btn:active {
+    transform: translateY(0);
+}
+
+.form-footer {
+    text-align: center;
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+.form-footer a {
+    color: #4C0080;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.form-footer a:hover {
+    text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .login-container {
+        flex-direction: column;
+    }
+    .branding-panel {
+        min-height: 500px;
+        padding: 64px 24px;
+    }
+    .login-section {
+        padding: 64px 24px;
+    }
+    .card-1, .card-2, .card-3, .card-4 {
+        transform: none !important;
+        position: relative;
+        left: auto;
+        right: auto;
+        top: auto;
+        bottom: auto;
+        width: 100%;
+        max-width: 240px;
+    }
+    .product-showcase {
+        height: auto;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+}
+
+@media (max-width: 640px) {
+    .product-showcase {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* =====================================
+   PASSWORD EYE ICON (UPDATED VERSION)
+===================================== */
+
+.password-wrapper {
+    position: relative;
+}
+
+/* Add space inside input for eye icon */
+
+.password-wrapper .input-field {
+    padding-right: 52px;
+}
+
+/* Eye Button */
+
+.eye-btn {
+
+    position: absolute;
+
+    right: 16px;
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    background: transparent;
+    border: none;
+
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: var(--text-muted);
+
+    transition: all 0.25s ease;
+
+}
+
+/* Hover Effect */
+
+.eye-btn:hover {
+
+    color: #6A0DAD;
+
+    transform: translateY(-50%) scale(1.08);
+
+}
+
+/* Click Effect */
+
+.eye-btn:active {
+
+    transform: translateY(-50%) scale(0.95);
+
+}
+
+/* SVG Icon */
+
+.eye-icon {
+
+    width: 20px;
+    height: 20px;
+
+    stroke: currentColor;
+
+    opacity: 0.85;
+
+    transition: all 0.2s ease;
+
+}
+
+/* Hover Glow */
+
+.eye-btn:hover .eye-icon {
+
+    opacity: 1;
+
+}
+
+/* Smooth Toggle Animation */
+
+.eye-icon path,
+.eye-icon circle {
+
+    transition: all 0.2s ease;
+
+}
+
+/* ======================================
+   PROFESSIONAL PASSWORD STRENGTH UI
+====================================== */
+
+.password-strength-container {
+
+margin-top: -8px;
+margin-bottom: 14px;
+
+padding: 8px 4px;
+
+}
+
+/* Strength Label */
+
+.strength-label {
+
+font-size: 13px;
+
+font-weight: 500;
+
+color: var(--text-muted);
+
+margin-bottom: 6px;
+
+display: flex;
+align-items: center;
+gap: 6px;
+
+}
+
+#strengthText {
+
+font-weight: 600;
+
+}
+
+/* ======================
+   Strength Bar
+====================== */
+
+.strength-bar {
+
+width: 100%;
+
+height: 6px;
+
+background: #E5E7EB;
+
+border-radius: 999px;
+
+overflow: hidden;
+
+margin-bottom: 10px;
+
+}
+
+.strength-fill {
+
+height: 100%;
+
+width: 0%;
+
+border-radius: 999px;
+
+transition: all 0.35s ease;
+
+}
+
+/* Strength Colors */
+
+.strength-weak {
+
+background: #EF4444;
+
+}
+
+.strength-medium {
+
+background: #F59E0B;
+
+}
+
+.strength-strong {
+
+background: linear-gradient(
+97deg,
+#4C0080,
+#6A0DAD
+);
+
+}
+
+
+
+/* ======================
+   Password Rules
+====================== */
+
+.password-rules {
+
+list-style: none;
+
+font-size: 12px;
+
+color: var(--text-placeholder);
+
+display: flex;
+
+flex-direction: column;
+
+gap: 5px;
+
+margin-top: 4px;
+
+}
+
+/* Each Rule */
+
+.password-rules li {
+
+position: relative;
+
+padding-left: 20px;
+
+transition: all 0.25s ease;
+
+}
+
+/* Bullet */
+
+.password-rules li::before {
+
+content: "●";
+
+position: absolute;
+
+left: 0;
+
+font-size: 8px;
+
+top: 4px;
+
+color: #9CA3AF;
+
+}
+
+/* Valid Rule */
+
+.password-rules li.valid {
+
+color: #6A0DAD;
+
+font-weight: 500;
+
+}
+
+.password-rules li.valid::before {
+
+color: #6A0DAD;
+
+}

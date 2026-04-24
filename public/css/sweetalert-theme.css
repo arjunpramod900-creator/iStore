@@ -1,0 +1,238 @@
+/* ===============================
+   iStore SWEETALERT SOFT GLASS
+   Toned Violet Premium Theme
+================================ */
+
+/* MAIN POPUP */
+
+.swal2-popup {
+
+    border-radius: 20px !important;
+
+    /* Soft translucent glass */
+    background:
+        rgba(75, 75, 75, 0.11) !important;
+
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+
+    border:
+        1px solid rgba(255,255,255,0.12);
+
+    /* Softer shadow */
+    box-shadow:
+        0 8px 30px rgba(0,0,0,0.45);
+
+    color: #ffffff;
+
+    font-family: "Inter", sans-serif;
+
+    padding: 26px;
+
+}
+
+
+
+/* TITLE */
+
+.swal2-title {
+
+    font-weight: 700;
+
+    font-size: 22px;
+
+    color: #ffffff;
+
+}
+
+
+
+/* TEXT */
+
+.swal2-html-container {
+
+    font-size: 15px;
+
+    color: rgba(255,255,255,0.8);
+
+}
+
+
+
+/* ICON COLORS (Soft toned) */
+
+.swal2-success {
+
+    color: #8A2BE2 !important;
+
+}
+
+.swal2-error {
+
+    color: #FF6B81 !important;
+
+}
+
+.swal2-warning {
+
+    color: #FFD166 !important;
+
+}
+
+
+
+/* CONFIRM BUTTON */
+
+.swal2-confirm {
+
+    border-radius: 14px !important;
+
+    background:
+
+        linear-gradient(
+            135deg,
+            #7B2CBF,
+            #5A189A
+        ) !important;
+
+    padding: 10px 26px;
+
+    font-weight: 600;
+
+    font-size: 14px;
+
+    border: none;
+
+    box-shadow:
+
+        0 4px 14px rgba(123,44,191,0.35);
+
+    transition: all 0.25s ease;
+
+}
+
+
+
+/* BUTTON HOVER */
+
+.swal2-confirm:hover {
+
+    transform: translateY(-1px);
+
+    box-shadow:
+
+        0 6px 18px rgba(123,44,191,0.45);
+
+}
+
+
+
+/* LOADING SPINNER */
+
+.swal2-loader {
+
+    border-color:
+
+        #7B2CBF transparent
+        #7B2CBF transparent;
+
+}
+
+
+
+/* BACKDROP — MUCH SOFTER */
+
+.swal2-backdrop-show {
+
+    background:
+
+        rgba(10,10,20,0.45) !important;
+
+}
+
+
+
+/* INPUT FIELD (future use) */
+
+.swal2-input {
+
+    border-radius: 12px !important;
+
+    background:
+
+        rgba(255,255,255,0.08) !important;
+
+    border:
+
+        1px solid rgba(255,255,255,0.15) !important;
+
+    color: #ffffff;
+
+}
+
+
+
+/* ANIMATION (Subtle) */
+
+.swal2-show {
+
+    animation:
+
+        softFadeIn 0.25s ease;
+
+}
+
+.swal2-hide {
+
+    animation:
+
+        softFadeOut 0.2s ease;
+
+}
+
+
+
+/* KEYFRAMES */
+
+@keyframes softFadeIn {
+
+    from {
+
+        opacity: 0;
+
+        transform:
+            scale(0.96)
+            translateY(10px);
+
+    }
+
+    to {
+
+        opacity: 1;
+
+        transform:
+            scale(1)
+            translateY(0);
+
+    }
+
+}
+
+@keyframes softFadeOut {
+
+    from {
+
+        opacity: 1;
+
+    }
+
+    to {
+
+        opacity: 0;
+
+        transform:
+            scale(0.96);
+
+    }
+
+}

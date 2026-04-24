@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>iStore - Create Your Account</title>
+
+<link rel="stylesheet" href="/css/index.css">
+
+<link rel="stylesheet"
+href="/css/sweetalert-theme.css">
+
+<link rel="stylesheet"
+href="/css/login.css">
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+
+<!-- GSAP -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+<!-- Axios -->
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+</head>
+
+
+
+<body>
+
+<div class="main-container">
+
+<!-- LEFT PANEL -->
+
+<section class="branding-panel">
+
+<div class="blur-circle blur-circle-1"></div>
+<div class="blur-circle blur-circle-2"></div>
+
+<div class="branding-content">
+
+<div class="logo-container">
+
+<h1 class="logo-text">
+iStore
+</h1>
+
+<p class="sub-greeting">
+Join the future of Apple shopping.
+</p>
+
+</div>
+
+
+
+<!-- PRODUCT SHOWCASE -->
+
+<div class="product-showcase">
+
+<div class="glass-card card-1">
+
+<div class="product-img"
+style="background-image: url('/images/iphone.png');">
+</div>
+
+<span class="card-label">
+iPhone 17
+</span>
+
+</div>
+
+
+
+<div class="glass-card card-2">
+
+<div class="product-img"
+style="background-image: url('/images/macbook.png');">
+</div>
+
+<span class="card-label">
+MacBook Pro M5
+</span>
+
+</div>
+
+
+
+<div class="glass-card card-3">
+
+<div class="product-img"
+style="background-image: url('/images/watch.png');">
+</div>
+
+<span class="card-label">
+Watch Ultra
+</span>
+
+</div>
+
+
+
+<div class="glass-card card-4">
+
+<div class="product-img"
+style="background-image: url('/images/airpods.png');">
+</div>
+
+<span class="card-label">
+AirPods Pro
+</span>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+
+
+<!-- RIGHT PANEL -->
+
+<section class="signup-section auth-section">
+
+<div class="form-container">
+
+<header class="form-header">
+
+<h1>
+Create Your Account
+</h1>
+
+<p>
+Start your Apple shopping journey.
+</p>
+
+</header>
+
+
+
+<form class="signup-form"
+id="signupForm">
+
+
+
+<!-- Name -->
+
+<div class="form-group">
+
+<label>
+Full Name
+</label>
+
+<input
+type="text"
+id="fullName"
+class="input-field"
+placeholder="Enter your full name"
+required>
+
+</div>
+
+
+
+<!-- Phone -->
+
+<div class="form-group">
+
+<label>
+Phone Number
+</label>
+
+<input
+type="tel"
+id="phone"
+class="input-field"
+placeholder="Enter your phone number"
+required>
+
+</div>
+
+
+
+<!-- Email -->
+
+<div class="form-group">
+
+<label>
+Email
+</label>
+
+<input
+type="email"
+id="email"
+class="input-field"
+placeholder="Enter your email"
+required>
+
+</div>
+
+
+
+<!-- Password -->
+
+<div class="form-group">
+
+<label>
+Password
+</label>
+
+<input
+type="password"
+id="password"
+class="input-field"
+placeholder="Create password"
+required>
+
+</div>
+
+
+
+<!-- Confirm Password -->
+
+<div class="form-group">
+
+<label>
+Confirm Password
+</label>
+
+<input
+type="password"
+id="confirmPassword"
+class="input-field"
+placeholder="Confirm password"
+required>
+
+</div>
+
+
+
+<button
+type="submit"
+class="submit-btn">
+
+Create Account
+
+</button>
+
+
+
+<div style="display:flex;align-items:center;gap:12px;margin:10px 0;">
+
+<hr style="flex:1;border:0;border-top:1px solid #E5E7EB;">
+
+<span style="font-size:14px;color:#9CA3AF;">
+or
+</span>
+
+<hr style="flex:1;border:0;border-top:1px solid #E5E7EB;">
+
+</div>
+
+
+
+<button
+type="button"
+class="google-auth-btn">
+
+Sign up with Google
+
+</button>
+
+
+
+<div class="footer-link">
+
+Already have an account?
+
+<a href="/login">
+Login
+</a>
+
+</div>
+
+</form>
+
+</div>
+
+</section>
+
+</div>
+
+
+
+<!-- SweetAlert -->
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<!-- GLOBAL ALERT CONFIG -->
+
+<script src="/js/alertConfig.js"></script>
+
+
+
+<!-- Signup Logic -->
+
+<script>
+
+const signupForm =
+document.getElementById("signupForm")
+
+signupForm.addEventListener(
+
+"submit",
+
+async (e) => {
+
+e.preventDefault()
+
+const formData = {
+
+fullName:
+document.getElementById("fullName").value,
+
+phoneNumber:
+document.getElementById("phone").value,
+
+email:
+document.getElementById("email").value,
+
+password:
+document.getElementById("password").value,
+
+confirmPassword:
+document.getElementById("confirmPassword").value
+
+}
+
+
+
+try {
+
+/* Loading */
+
+showLoadingAlert("Sending OTP...")
+
+
+
+const response =
+await axios.post(
+"/send-otp",
+formData
+)
+
+
+
+if (response.data.success) {
+
+/* Success */
+
+showSuccessAlert(
+"OTP Sent",
+"Check your email"
+)
+
+
+
+setTimeout(() => {
+
+window.location.href =
+"/verify-otp?type=signup"
+
+}, 1500)
+
+}
+
+}
+
+catch (error) {
+
+/* Error */
+
+showErrorAlert(
+
+"Signup Failed",
+
+error.response?.data?.message
+|| "Something went wrong"
+
+)
+
+}
+
+}
+
+)
+
+</script>
+
+
+
+<!-- Animations -->
+
+<script src="/js/animations.js"></script>
+<script src="/js/tilt.js"></script>
+
+</body>
+
+</html>

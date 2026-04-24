@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - iStore</title>
+    <link rel="stylesheet" href="/css/home.css">
+    <link rel="stylesheet" href="/css/profile.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav">
+            <a href="/" class="logo">iStore</a>
+            <div class="nav-links">
+                <a href="/" class="nav-link">Home</a>
+                <a href="#" class="nav-link">Categories</a>
+                <a href="#" class="nav-link">Products</a>
+                <a href="#" class="nav-link">Deals</a>
+            </div>
+            <div class="nav-icons">
+                <div class="nav-icon"><i data-lucide="search"></i></div>
+                <div class="nav-icon"><i data-lucide="heart"></i></div>
+                <div class="nav-icon"><i data-lucide="shopping-cart"></i></div>
+                <a href="/profile" class="nav-icon active" style="text-decoration: none; color: inherit;"><i data-lucide="user"></i></a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="profile-dashboard">
+        <!-- Breadcrumb -->
+        <nav class="breadcrumb">
+            <a href="/">Home</a>
+            <div class="breadcrumb-separator"></div>
+            <span class="breadcrumb-current">My Account</span>
+        </nav>
+
+        <div class="dashboard-container">
+            <!-- Left Column: Header & Personal Info -->
+            <aside class="sidebar">
+                <!-- Profile Header Card -->
+                <div class="profile-card">
+                    <div class="profile-overlay"></div>
+                    <div class="avatar-wrapper">
+                  <div class="avatar-img" style="background-image:url('/uploads/<%- user.profileImage || `default.png` %>');"></div>
+                    </div>
+                   <h1 class="profile-name"><%= user.fullName %></h1>
+                </div>
+
+                <!-- Personal Information Section -->
+                <section class="personal-info">
+                    <div class="info-header">
+                        <h2>Personal Details</h2>
+                      <a href="/edit-profile" class="edit-btn"> Edit Profile </a>
+                    </div>
+                    <div class="info-list">
+                        <div class="info-item">
+                            <span class="info-label">Email Address</span>
+                            <span class="info-value"><%= user.email %></span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Phone Number</span>
+                            <span class="info-value"><%= user.phoneNumber %></span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Date of Birth</span>
+                           <span class="info-value"><%= user.dateOfBirth? new Date(user.dateOfBirth).toLocaleDateString("en-IN",{day: "numeric",month: "long",year: "numeric"}): "Not Set"%></span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Logout Button -->
+               <a href="/logout" class="logout-btn"> <i data-lucide="log-out"></i>Logout from iStore</a>
+            </aside>
+
+            <!-- Right Column: Navigation Grid & Settings -->
+            <div class="main-content">
+                <!-- Navigation Grid (Bento Style) -->
+                <div class="nav-grid">
+                    <div class="nav-card">
+                        <div class="nav-icon-bg">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+                        </div>
+                        <h3>My Orders</h3>
+                        <p>Track, return, and manage orders.</p>
+                    </div>
+                    <div class="nav-card">
+                        <div class="nav-icon-bg">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                        </div>
+                        <h3>My Addresses</h3>
+                        <p>Add, edit, or remove addresses.</p>
+                    </div>
+                    <div class="nav-card">
+                        <div class="nav-icon-bg">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                        </div>
+                        <h3>My Wishlist</h3>
+                        <p>View saved favorite products.</p>
+                    </div>
+                    <div class="nav-card">
+                        <div class="nav-icon-bg">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>
+                        </div>
+                        <h3>My Wallet</h3>
+                        <p>Check balance and transactions.</p>
+                    </div>
+                    <div class="nav-card">
+                        <div class="nav-icon-bg">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        </div>
+                        <h3>My Reviews</h3>
+                        <p>Manage product reviews.</p>
+                    </div>
+                    <div class="nav-card">
+                        <div class="nav-icon-bg">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg>
+                        </div>
+                        <h3>My Coupons</h3>
+                        <p>View available discounts.</p>
+                    </div>
+                </div>
+
+                <!-- Account Settings Section -->
+             <section class="settings-section">
+
+    <div class="settings-header">
+
+        <svg width="24"
+             height="24"
+             viewBox="0 0 24 24"
+             fill="none"
+             stroke="currentColor"
+             stroke-width="2"
+             stroke-linecap="round"
+             stroke-linejoin="round">
+
+          <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74 l-.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+
+            <circle cx="12" cy="12" r="3"/>
+
+        </svg>
+
+        <h2>Account Settings</h2>
+
+    </div>
+
+
+
+    <div class="settings-list">
+
+        <!-- Change Password -->
+
+        <a href="/change-password"
+           class="settings-item">
+
+            <span>Change Password</span>
+
+            <svg width="16"
+                 height="16"
+                 viewBox="0 0 24 24"
+                 fill="none"
+                 stroke="currentColor"
+                 stroke-width="2"
+                 stroke-linecap="round"
+                 stroke-linejoin="round">
+
+                <path d="m9 18 6-6-6-6"/>
+
+            </svg>
+
+        </a>
+
+
+
+        <!-- Update Email -->
+
+        <a href="/change-email"
+           class="settings-item">
+
+            <span>Update Email</span>
+
+            <svg width="16"
+                 height="16"
+                 viewBox="0 0 24 24"
+                 fill="none"
+                 stroke="currentColor"
+                 stroke-width="2"
+                 stroke-linecap="round"
+                 stroke-linejoin="round">
+
+                <path d="m9 18 6-6-6-6"/>
+
+            </svg>
+
+        </a>
+
+    </div>
+
+</section>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-main">
+                <div class="footer-col-1">
+                    <h3 class="footer-logo">iStore</h3>
+                    <p class="footer-desc">The ultimate destination for premium Apple technology and bespoke customer experiences.</p>
+                </div>
+                <div class="footer-col">
+                    <h4 class="footer-heading">Products</h4>
+                    <ul class="footer-list">
+                        <li><a href="#">iPhone</a></li>
+                        <li><a href="#">MacBook</a></li>
+                        <li><a href="#">iPad Pro</a></li>
+                        <li><a href="#">Apple Watch</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4 class="footer-heading">Support</h4>
+                    <ul class="footer-list">
+                        <li><a href="#">Order Status</a></li>
+                        <li><a href="#">Returns</a></li>
+                        <li><a href="#">Product Help</a></li>
+                        <li><a href="#">Contact Us</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4 class="footer-heading">Company</h4>
+                    <ul class="footer-list">
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Store Finder</a></li>
+                        <li><a href="#">Careers</a></li>
+                        <li><a href="#">Sustainability</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <div class="footer-socials">
+                    <a href="#" class="social-icon facebook">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1V12h3v3h-3v6.8c4.56-.93 8-4.96 8-9.8z"/></svg>
+                    </a>
+                    <a href="#" class="social-icon instagram">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+                    </a>
+                    <a href="#" class="social-icon twitter">
+                        <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
+                    </a>
+                    <a href="#" class="social-icon youtube">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                    </a>
+                </div>
+                <p class="footer-copyright">© 2026 iStore. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+
+        // Simple entrance animation
+        gsap.from(".dashboard-container", {
+            y: 30,
+            duration: 0.8,
+            ease: "power2.out"
+        });
+        
+        gsap.from(".nav-card", {
+            scale: 0.98,
+            duration: 0.6,
+            stagger: 0.05,
+            ease: "power2.out",
+            delay: 0.1
+        });
+    </script>
+</body>
+</html>
