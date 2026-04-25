@@ -9,6 +9,9 @@ import connectDB from "./config/db.js"
 import authRoutes
 from "./routes/user/authRoutes.js"
 
+import profileRoutes
+from "./routes/user/profileRoutes.js"
+
 import noCache
 from "./middleware/noCache.js"
 
@@ -155,6 +158,13 @@ app.use(
   "/",
 
   authRoutes
+
+)
+app.use(
+
+  "/",
+
+  profileRoutes
 
 )
 

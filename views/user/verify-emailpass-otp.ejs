@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Your Email - iStore</title>
+    <link rel="stylesheet" href="/css/verify-emailpass-otp.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+</head>
+<body class="verify-otp-body">
+    <!-- Decorative Blurs -->
+    <div class="blur-overlay blur-1"></div>
+    <div class="blur-overlay blur-2"></div>
+
+    <!-- Brand Header -->
+    <header class="brand-anchor">
+        <h1>iStore</h1>
+        <span>Verify Your Email</span>
+    </header>
+
+    <!-- Transactional Card -->
+    <main class="otp-card">
+        <div class="otp-header">
+            <h2>Enter Verification Code</h2>
+            <p>We have sent a 6-digit verification code to your email <span id="masked-email">
+<%= newEmail || "your registered email" %>
+</span></p>
+        </div>
+
+        <!-- Form - OTP Input Field Logic -->
+    <form 
+class="otp-form"
+action="<%= flow === 'password'? '/verify-change-password-otp': '/verify-email-change-otp' %>" 
+method="POST">
+
+<input type="hidden" name="otp" id="otpHidden">
+            <div class="otp-input-group">
+                <input type="text" maxlength="1" pattern="\d*" inputmode="numeric" autofocus>
+                <input type="text" maxlength="1" pattern="\d*" inputmode="numeric">
+                <input type="text" maxlength="1" pattern="\d*" inputmode="numeric">
+                <input type="text" maxlength="1" pattern="\d*" inputmode="numeric">
+                <input type="text" maxlength="1" pattern="\d*" inputmode="numeric">
+                <input type="text" maxlength="1" pattern="\d*" inputmode="numeric">
+            </div>
+
+            <div class="otp-timer-section">
+                <div class="timer-display">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    <span id="countdown">Code expires in 04:59</span>
+                </div>
+                <div class="resend-text">
+                    Didn't receive the code? <a href="#" class="resend-link">Resend Code</a>
+                </div>
+            </div>
+
+            <button type="submit" class="verify-btn">Verify Code</button>
+        </form>
+
+        <div class="card-footer">
+            <a href="/profile" class="back-link">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                Back to Account
+            </a>
+            
+            <div class="security-note-small">
+                <svg width="16" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #4C0080;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                <span>For your security, this code will expire shortly.</span>
+            </div>
+        </div>
+    </main>
+
+    <footer class="otp-page-footer">
+        © 2024 iStore Editorial. All rights reserved.
+    </footer>
+
+    <script>
+        // Lucide icons
+        lucide.createIcons();
+
+        // OTP Input Auto-focus Logic
+        const otpInputs = document.querySelectorAll('.otp-input-group input');
+        
+        otpInputs.forEach((input, index) => {
+            input.addEventListener('input', (e) => {
+                if (e.target.value.length === 1 && index < otpInputs.length - 1) {
+                    otpInputs[index + 1].focus();
+                }
+            });
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && e.target.value === '' && index > 0) {
+                    otpInputs[index - 1].focus();
+                }
+            });
+        });
+
+        // Timer Logic
+        let timeLeft = 299; // 5 minutes (4:59)
+        const timerElement = document.getElementById('countdown');
+
+        const updateTimer = () => {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            timerElement.textContent = `Code expires in ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            if (timeLeft > 0) {
+                timeLeft--;
+            } else {
+                clearInterval(timerInterval);
+                timerElement.textContent = "Code expired";
+                timerElement.style.color = "#DC2626";
+            }
+        };
+
+        const timerInterval = setInterval(updateTimer, 1000);
+
+        // Entrance animation
+        gsap.from(".brand-anchor", {
+            y: -20,
+            opacity: 0,
+            duration: 0.8,
+            ease: "power2.out"
+        });
+
+        gsap.from(".otp-card", {
+            y: 30,
+            opacity: 0,
+            duration: 1,
+            ease: "power3.out",
+            delay: 0.2
+        });
+
+        gsap.from(".blur-overlay", {
+            opacity: 0,
+            scale: 0.8,
+            duration: 1.5,
+            ease: "power2.out"
+        });
+
+
+        /* =========================
+   COMBINE OTP INPUTS
+========================= */
+const form =
+document.querySelector(".otp-form")
+
+if (form) {
+
+form.addEventListener(
+"submit",
+function () {
+
+let otpValue = ""
+
+otpInputs.forEach(
+input => {
+
+otpValue += input.value
+
+})
+
+document.getElementById(
+"otpHidden"
+).value = otpValue
+
+}
+)
+
+}
+    </script>
+</body>
+</html>

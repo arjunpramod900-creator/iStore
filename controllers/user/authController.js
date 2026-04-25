@@ -663,6 +663,136 @@ message: "Failed to send OTP"
 
 }
 
+/* ================================
+   SEND EMAIL CHANGE OTP
+================================ */
+
+const sendEmailChangeOTP = async (req, res) => {
+
+try {
+
+const userId =
+req.session.userId
+
+const {
+newEmail,
+confirmEmail
+} = req.body
+
+
+
+/* Check email match */
+
+if (newEmail !== confirmEmail) {
+
+return res.status(400).json({
+
+success: false,
+message: "Emails do not match"
+
+})
+
+}
+
+
+
+/* Check email already exists */
+
+const existingUser =
+await User.findOne({ email: newEmail })
+
+if (existingUser) {
+
+return res.status(400).json({
+
+success: false,
+message: "Email already in use"
+
+})
+
+}
+
+
+
+/* Remove old OTP */
+
+await OTP.deleteMany({
+
+email: newEmail,
+type: "emailChange"
+
+})
+
+
+
+/* Generate OTP */
+
+const otp =
+generateOTP()
+
+const expiresAt =
+new Date(Date.now() + 300000)
+
+
+
+/* Save OTP */
+
+await OTP.create({
+
+email: newEmail,
+code: otp,
+type: "emailChange",
+expiresAt
+
+})
+
+
+
+/* Save email in session */
+
+req.session.newEmail =
+newEmail
+
+
+
+/* Send Email */
+
+/* Send Email */
+
+await sendEmail(
+
+newEmail,
+"Email Change OTP",
+`Your email change OTP is ${otp}`
+
+)
+
+
+
+/* Redirect to OTP page */
+
+res.redirect("/verify-email-otp?flow=email")
+
+}
+
+catch (error) {
+
+console.log(
+"Email Change OTP Error:",
+error
+)
+
+return res.status(500).json({
+
+success: false,
+message: "Failed to send OTP"
+
+})
+
+}
+
+}
+
 
 
 /* ================================
@@ -751,7 +881,119 @@ message: "Verification Failed"
 
 }
 
+/* ================================
+   VERIFY EMAIL CHANGE OTP
+================================ */
 
+const verifyEmailChangeOTP = async (req, res) => {
+
+try {
+
+const { otp } = req.body
+
+
+
+/* Find latest OTP */
+
+const storedOTP =
+await OTP.findOne({
+
+code: otp,
+type: "emailChange"
+
+}).sort({
+
+createdAt: -1
+
+})
+
+
+
+/* Invalid OTP */
+
+if (!storedOTP) {
+
+return res.status(400).json({
+
+success: false,
+message: "Invalid OTP"
+
+})
+
+}
+
+
+
+/* Expired OTP */
+
+if (storedOTP.expiresAt < new Date()) {
+
+return res.status(400).json({
+
+success: false,
+message: "OTP Expired"
+
+})
+
+}
+
+
+
+/* Update Email */
+
+await User.findByIdAndUpdate(
+
+req.session.userId,
+
+{
+
+email:
+req.session.newEmail
+
+}
+
+)
+
+
+
+/* Cleanup */
+
+await OTP.deleteMany({
+
+email:
+req.session.newEmail,
+
+type: "emailChange"
+
+})
+
+
+
+delete req.session.newEmail
+
+
+
+/* Redirect */
+
+res.redirect("/profile")
+
+}
+
+catch (error) {
+
+console.log(
+
+"Verify Email OTP Error:",
+
+error
+
+)
+
+res.redirect("/change-email")
+
+}
+
+}
 
 /* ================================
    RESET PASSWORD
@@ -858,7 +1100,237 @@ message: "Password Reset Failed"
 
 }
 
+/* ================================
+   SEND CHANGE PASSWORD OTP
+================================ */
 
+const sendChangePasswordOTP = async (req, res) => {
+
+try {
+
+const userId =
+req.session.userId
+
+const {
+oldPassword,
+newPassword,
+confirmPassword
+} = req.body
+
+
+
+/* Password Match Check */
+
+if (newPassword !== confirmPassword) {
+
+return res.send("Passwords do not match")
+
+}
+
+
+
+/* Get User */
+
+const user =
+await User.findById(userId)
+
+
+
+/* Verify Old Password */
+
+const isMatch =
+await bcrypt.compare(
+oldPassword,
+user.password
+)
+
+if (!isMatch) {
+
+return res.send("Current password incorrect")
+
+}
+
+
+
+/* Generate OTP */
+
+const otp =
+generateOTP()
+
+const expiresAt =
+new Date(Date.now() + 300000)
+
+
+
+/* Remove old OTP */
+
+await OTP.deleteMany({
+
+email: user.email,
+type: "changePassword"
+
+})
+
+
+
+/* Save OTP */
+
+await OTP.create({
+
+email: user.email,
+code: otp,
+type: "changePassword",
+expiresAt
+
+})
+
+
+
+/* Save new password temporarily */
+
+req.session.newPassword =
+newPassword
+
+
+
+/* Send Email */
+
+await sendEmail(
+
+user.email,
+"Change Password OTP",
+`Your password change OTP is ${otp}`
+
+)
+
+
+
+/* Redirect to OTP page */
+
+res.redirect("/verify-email-otp?flow=password")
+
+}
+
+catch (error) {
+
+console.log(
+"Change Password OTP Error:",
+error
+)
+
+res.redirect("/change-password")
+
+}
+
+}
+
+/* ================================
+   VERIFY CHANGE PASSWORD OTP
+================================ */
+
+const verifyChangePasswordOTP = async (req, res) => {
+
+try {
+
+const { otp } =
+req.body
+
+
+
+/* Find OTP */
+
+const storedOTP =
+await OTP.findOne({
+
+code: otp,
+type: "changePassword"
+
+}).sort({
+
+createdAt: -1
+
+})
+
+
+
+if (!storedOTP) {
+
+return res.send("Invalid OTP")
+
+}
+
+
+
+if (storedOTP.expiresAt < new Date()) {
+
+return res.send("OTP Expired")
+
+}
+
+
+
+/* Hash New Password */
+
+const hashedPassword =
+await bcrypt.hash(
+
+req.session.newPassword,
+10
+
+)
+
+
+
+/* Update Password */
+
+await User.findByIdAndUpdate(
+
+req.session.userId,
+
+{
+
+password:
+hashedPassword
+
+}
+
+)
+
+
+
+/* Cleanup */
+
+await OTP.deleteMany({
+
+email:
+storedOTP.email,
+
+type: "changePassword"
+
+})
+
+
+
+delete req.session.newPassword
+
+
+
+res.redirect("/profile")
+
+}
+
+catch (error) {
+
+console.log(
+"Verify Change Password Error:",
+error
+)
+
+res.redirect("/change-password")
+
+}
+
+}
 
 /* ================================
    LOGOUT USER
@@ -917,6 +1389,10 @@ loadHome,
 
 loadProfile,
 loadEditProfile,
-updateProfile
+updateProfile,
+sendEmailChangeOTP,
+verifyEmailChangeOTP,
+sendChangePasswordOTP,
+verifyChangePasswordOTP
 
 }
