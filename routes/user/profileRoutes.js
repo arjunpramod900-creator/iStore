@@ -13,6 +13,15 @@ import {
 } from "../../controllers/user/profileController.js"
 
 import {
+
+loadAddresses,
+addAddress,
+deleteAddress,
+updateAddress
+
+} from "../../controllers/user/addressController.js"
+
+import {
   isLoggedIn
 } from "../../middleware/authMiddleware.js"
 
@@ -186,6 +195,47 @@ isLoggedIn,
 authController.verifyChangePasswordOTP
 )
 
+/* =========================
+   LOAD ADDRESSES PAGE
+========================= */
+router.get(
+"/addresses",
+isLoggedIn,
+loadAddresses
+)
+/* =========================
+   ADD ADDRESS
+========================= */
+
+router.post(
+"/add-address",
+isLoggedIn,
+addAddress
+)
+
+
+
+/* =========================
+   DELETE ADDRESS
+========================= */
+
+router.get(
+"/delete-address/:id",
+isLoggedIn,
+deleteAddress
+)
+
+
+
+/* =========================
+   UPDATE ADDRESS
+========================= */
+
+router.post(
+"/edit-address/:id",
+isLoggedIn,
+updateAddress
+)
 
 
 export default router
