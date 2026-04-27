@@ -14,9 +14,15 @@ const userSchema = new mongoose.Schema({
     index: true
   },
 
+  googleId: {
+    type: String,
+    unique: true,
+    sparse: true
+  },
+
   password: {
     type: String,
-    required: true
+    required: false
   },
 
   dateOfBirth: {
@@ -38,9 +44,7 @@ const userSchema = new mongoose.Schema({
 
 }, { timestamps: true })
 
-
 const User =
   mongoose.model("User", userSchema)
-
 
 export default User

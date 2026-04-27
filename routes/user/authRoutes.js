@@ -3,6 +3,8 @@ import express from "express"
 import authController
 from "../../controllers/user/authController.js"
 
+import passport from "passport"
+
 import {
 
   isLoggedOut,
@@ -106,6 +108,63 @@ router.post(
   "/login",
 
   authController.loginUser
+
+)
+
+/* =========================
+   GOOGLE AUTH
+========================= */
+
+router.get(
+
+"/auth/google",
+
+passport.authenticate(
+
+"google",
+
+{
+
+scope: [
+
+"profile",
+
+"email"
+
+]
+
+}
+
+)
+
+)
+
+
+
+router.get(
+
+"/auth/google/callback",
+
+passport.authenticate(
+
+"google",
+
+{
+
+failureRedirect: "/login"
+
+}
+
+),
+
+(req, res) => {
+
+req.session.userId =
+req.user._id
+
+res.redirect("/")
+
+}
 
 )
 

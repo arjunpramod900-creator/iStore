@@ -6,14 +6,13 @@ import session from "express-session"
 
 import connectDB from "./config/db.js"
 
-import authRoutes
-from "./routes/user/authRoutes.js"
+import authRoutes from "./routes/user/authRoutes.js"
 
-import profileRoutes
-from "./routes/user/profileRoutes.js"
+import profileRoutes from "./routes/user/profileRoutes.js"
 
-import noCache
-from "./middleware/noCache.js"
+import noCache from "./middleware/noCache.js"
+
+import passport from "./config/passport.js"
 
 
 
@@ -85,6 +84,17 @@ app.use(
   })
 
 )
+
+/* ================================
+
+   PASSPORT SETUP (ADD HERE)
+
+================================ */
+
+
+app.use(passport.initialize())
+
+app.use(passport.session())
 
 
 

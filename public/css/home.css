@@ -126,6 +126,56 @@ body {
     color: #4C1D95;
 }
 
+/* =========================
+   LOGIN BUTTON
+========================= */
+
+.login-btn {
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 8px 24px;
+
+    height: 36px;
+
+    background: #4C0080;
+
+    color: #FFFFFF;
+
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+
+    border-radius: 9999px;
+
+    text-decoration: none;
+
+    transition: all 0.25s ease;
+
+}
+
+
+/* Hover Effect */
+
+.login-btn:hover {
+
+    background: #5a0099;
+
+    transform: translateY(-1px);
+
+}
+
+
+/* Click Effect */
+
+.login-btn:active {
+
+    transform: scale(0.97);
+
+}
+
 /* Hero Section */
 .hero {
     background: var(--bg-light);

@@ -1,0 +1,51 @@
+<!-- Header -->
+<header class="header">
+    <nav class="nav">
+        <a href="/" class="logo">iStore</a>
+
+        <div class="nav-links">
+            <a href="/" class="nav-link active">Home</a>
+            <a href="/categories" class="nav-link">Categories</a>
+            <a href="/products" class="nav-link">Products</a>
+            <a href="/deals" class="nav-link">Deals</a>
+        </div>
+
+        <div class="nav-icons">
+
+            <div class="nav-icon">
+                <i data-lucide="search"></i>
+            </div>
+
+            <div class="nav-icon">
+                <i data-lucide="heart"></i>
+            </div>
+
+            <div class="nav-icon">
+                <i data-lucide="shopping-cart"></i>
+            </div>
+
+            <% if (userId) { %>
+
+                <a href="/profile"
+                   class="nav-icon"
+                   title="Profile">
+
+                   <i data-lucide="user"></i>
+
+                </a>
+
+            <% } else { %>
+
+               <a href="/login"
+                class="login-btn">
+
+                Login
+
+                </a>
+
+            <% } %>
+
+        </div>
+
+    </nav>
+</header>
