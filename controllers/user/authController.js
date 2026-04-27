@@ -1338,30 +1338,23 @@ res.redirect("/change-password")
 
 const logoutUser = (req, res) => {
 
-req.session.destroy(
-
-(err) => {
+req.session.destroy((err) => {
 
 if (err) {
 
-console.log(
-"Logout Error:",
-err
-)
+console.log("Logout Error:", err)
 
 return res.redirect("/")
 
 }
 
-res.redirect("/login")
+res.clearCookie("connect.sid")
+
+res.redirect(303,"/")
+
+})
 
 }
-
-)
-
-}
-
-
 
 /* ================================
    EXPORT

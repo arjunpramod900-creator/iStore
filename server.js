@@ -15,9 +15,7 @@ from "./routes/user/profileRoutes.js"
 import noCache
 from "./middleware/noCache.js"
 
-import {
-  isLoggedIn
-} from "./middleware/authMiddleware.js"
+
 
 const app = express()
 
@@ -74,6 +72,10 @@ app.use(
     cookie: {
 
       httpOnly: true,
+
+      sameSite: "lax",
+
+      secure: false,
 
       maxAge:
         1000 * 60 * 60 * 24 // 1 day
@@ -136,8 +138,6 @@ app.set(
 app.get(
 
   "/",
-
-  isLoggedIn,
 
   (req, res) => {
 

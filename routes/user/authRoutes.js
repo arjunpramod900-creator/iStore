@@ -109,15 +109,6 @@ router.post(
 
 )
 
-/* =========================
-   HOME ROUTE
-========================= */
-
-router.get(
-  "/",
-  isLoggedIn,
-  authController.loadHome
-)
 
 
 /* =========================
@@ -131,30 +122,6 @@ router.get(
   isLoggedIn,
 
   authController.loadProfile
-
-)
-
-/* =========================
-   EDIT PROFILE
-========================= */
-
-router.get(
-
-  "/edit-profile",
-
-  isLoggedIn,
-
-  authController.loadEditProfile
-
-)
-
-router.post(
-
-  "/edit-profile",
-
-  isLoggedIn,
-
-  authController.updateProfile
 
 )
 

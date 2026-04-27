@@ -287,6 +287,31 @@ style="background-image:url('<%= user.profilePhoto ? user.profilePhoto : "/image
             ease: "power2.out",
             delay: 0.1
         });
+        
+
+/* =========================
+   SAFARI BACK BUTTON FIX
+========================= */
+
+window.addEventListener("pageshow", function (event) {
+
+if (event.persisted) {
+
+window.location.reload()
+
+}
+
+})
+
+
+/* FORCE RELOAD WHEN USING BACK */
+
+window.addEventListener("popstate", function () {
+
+window.location.reload()
+
+})
+
     </script>
 </body>
 </html>

@@ -25,7 +25,27 @@
                 <div class="nav-icon"><i data-lucide="search"></i></div>
                 <div class="nav-icon"><i data-lucide="heart"></i></div>
                 <div class="nav-icon"><i data-lucide="shopping-cart"></i></div>
-              <a href="/profile" class="nav-icon" title="Profile"><i data-lucide="user"></i></a>
+             <% if (userId) { %>
+
+                <a href="/profile"
+                class="nav-icon"
+                title="Profile">
+
+                <i data-lucide="user"></i>
+
+                </a>
+
+              <% } else { %>
+
+                <a href="/login"
+                class="nav-icon"
+                title="Login">
+
+                <i data-lucide="log-in"></i>
+
+                </a>
+
+                <% } %>
             </div>
         </nav>
     </header>

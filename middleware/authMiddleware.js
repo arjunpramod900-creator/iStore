@@ -2,25 +2,22 @@
    CHECK USER LOGGED IN
 ========================= */
 
-export const isLoggedIn = (
+export const isLoggedIn = (req, res, next) => {
 
-  req,
-  res,
-  next
+if (!req.session.userId) {
 
-) => {
+res.setHeader(
+"Cache-Control",
+"no-store"
+)
 
-  if (!req.session.userId) {
-
-    return res.redirect("/login")
-
-  }
-
-  next()
+return res.redirect("/login")
 
 }
 
+next()
 
+}
 
 /* =========================
    PREVENT LOGGED USERS
