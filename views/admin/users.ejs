@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management - Admin | iStore</title>
+    <link rel="stylesheet" href="/css/admin-header.css">
+    <link rel="stylesheet" href="/css/admin-users.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&family=Liberation+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/admin-dashboard.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+    <!-- Top Navbar -->
+   <%- include("../partials/admin/header") %>
+
+    <main class="dashboard-main">
+        
+        <!-- Header -->
+        <header class="page-header">
+            <h1>User Management</h1>
+            <p>Manage registered customers and monitor user activity.</p>
+        </header>
+
+        <!-- Stats Section -->
+        <section class="stats-grid">
+            <!-- Total Users -->
+            <div class="stat-card">
+                <div class="stat-info">
+                    <span class="stat-label">TOTAL USERS</span>
+                    <span class="stat-value">2,450</span>
+                </div>
+                <div class="stat-icon">
+                    <i data-lucide="users" size="22"></i>
+                </div>
+            </div>
+
+            <!-- Active Users -->
+            <div class="stat-card">
+                <div class="stat-info">
+                    <span class="stat-label">ACTIVE USERS</span>
+                    <span class="stat-value">2,210</span>
+                </div>
+                <div class="stat-icon">
+                    <i data-lucide="user-check" size="22"></i>
+                </div>
+            </div>
+
+            <!-- Blocked Users -->
+            <div class="stat-card">
+                <div class="stat-info">
+                    <span class="stat-label">BLOCKED USERS</span>
+                    <span class="stat-value">240</span>
+                </div>
+                <div class="stat-icon">
+                    <i data-lucide="user-minus" size="22"></i>
+                </div>
+            </div>
+        </section>
+
+        <!-- Filter Section -->
+        <section class="filter-section">
+            <div class="filter-group search">
+                <span class="filter-label">SEARCH DIRECTORY</span>
+                <div class="search-input-wrapper">
+                    <i data-lucide="search" size="18"></i>
+                    <input type="text" class="search-input" placeholder="Search by Name, Email, or Phone...">
+                </div>
+            </div>
+            
+            <div class="filter-group">
+                <span class="filter-label">STATUS</span>
+                <div class="select-wrapper">
+                    <select class="filter-select">
+                        <option>All Statuses</option>
+                        <option>Active</option>
+                        <option>Blocked</option>
+                    </select>
+                    <i data-lucide="chevron-down" size="16"></i>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <span class="filter-label">JOINED</span>
+                <div class="select-wrapper">
+                    <select class="filter-select">
+                        <option>All Time</option>
+                        <option>Last 30 Days</option>
+                        <option>This Year</option>
+                    </select>
+                    <i data-lucide="chevron-down" size="16"></i>
+                </div>
+            </div>
+
+            <button class="btn-apply">Apply Filters</button>
+        </section>
+
+        <!-- User Table Section -->
+        <div class="table-card">
+            <div class="table-header-title">
+                <h2>All Users</h2>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="users-table">
+                    <thead>
+                        <tr>
+                            <th>USER ID</th>
+                            <th>USER NAME</th>
+                            <th>CONTACT DETAILS</th>
+                            <th class="center">ORDERS</th>
+                            <th>REGISTRATION</th>
+                            <th>STATUS</th>
+                            <th class="right">ACTIONS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- User 1 -->
+                        <tr>
+                            <td class="td-id">#US-9021</td>
+                            <td>
+                                <div class="td-user">
+                                    <div class="user-avatar-initials initials-am">AM</div>
+                                    <span class="td-user-name">Alexander Mercer</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="td-contact">
+                                    <span class="td-email">alex.m@example.com</span>
+                                    <span class="td-phone">+1 (555) 123-4567</span>
+                                </div>
+                            </td>
+                            <td class="td-orders">12</td>
+                            <td class="td-reg">Oct 24, 2025</td>
+                            <td>
+                                <div class="td-status">
+                                    <div class="status-dot-wrapper active"></div>
+                                    <span class="status-text">Active</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="td-actions">
+                                    <button class="action-btn" title="View User"><i data-lucide="eye" size="18"></i></button>
+                                    <button class="action-btn secondary" title="Block User"><i data-lucide="ban" size="16"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- User 2 -->
+                        <tr>
+                            <td class="td-id">#US-8945</td>
+                            <td>
+                                <div class="td-user">
+                                    <div class="user-avatar-initials initials-sk">SK</div>
+                                    <span class="td-user-name">Sophia Kovac</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="td-contact">
+                                    <span class="td-email">skovac@cloud.net</span>
+                                    <span class="td-phone">+1 (555) 987-6543</span>
+                                </div>
+                            </td>
+                            <td class="td-orders" style="color: #4D444C;">0</td>
+                            <td class="td-reg">Jan 12, 2026</td>
+                            <td>
+                                <div class="td-status">
+                                    <div class="status-dot-wrapper blocked"></div>
+                                    <span class="status-text blocked">Blocked</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="td-actions">
+                                    <button class="action-btn" title="View User"><i data-lucide="eye" size="18"></i></button>
+                                    <button class="action-btn secondary" title="Unblock User"><i data-lucide="undo" size="16"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- User 3 -->
+                        <tr>
+                            <td class="td-id">#US-8832</td>
+                            <td>
+                                <div class="td-user">
+                                    <div class="user-avatar-initials initials-jl">JL</div>
+                                    <span class="td-user-name">Julian Laurent</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="td-contact">
+                                    <span class="td-email">j.laurent@design.io</span>
+                                    <span class="td-phone">+1 (555) 444-2222</span>
+                                </div>
+                            </td>
+                            <td class="td-orders">45</td>
+                            <td class="td-reg">Nov 03, 2024</td>
+                            <td>
+                                <div class="td-status">
+                                    <div class="status-dot-wrapper active"></div>
+                                    <span class="status-text">Active</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="td-actions">
+                                    <button class="action-btn" title="View User"><i data-lucide="eye" size="18"></i></button>
+                                    <button class="action-btn secondary" title="Block User"><i data-lucide="ban" size="16"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination-bar">
+                <span class="pagination-info">Showing 1-10 of 2,450 users</span>
+                <div class="pagination-controls">
+                    <button class="page-btn icon"><i data-lucide="chevron-left" size="16"></i></button>
+                    <button class="page-btn active">1</button>
+                    <button class="page-btn">2</button>
+                    <button class="page-btn">3</button>
+                    <span class="page-ellipsis">...</span>
+                    <button class="page-btn">245</button>
+                    <button class="page-btn icon" style="color: #603763;"><i data-lucide="chevron-right" size="16"></i></button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="page-footer">
+        <span class="footer-text">© 2026 iStore Admin</span>
+        <div class="footer-links">
+            <a href="#" class="footer-link">PRIVACY POLICY</a>
+            <a href="#" class="footer-link">TERMS OF SERVICE</a>
+            <a href="#" class="footer-link">HELP CENTER</a>
+        </div>
+    </footer>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+    </script>
+</body>
+</html>

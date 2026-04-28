@@ -14,6 +14,13 @@ import noCache from "./middleware/noCache.js"
 
 import passport from "./config/passport.js"
 
+import adminAuthRoutes from "./routes/admin/adminAuthRoutes.js"
+
+import adminRoutes from "./routes/admin/adminRoutes.js"
+
+
+
+
 
 
 const app = express()
@@ -117,6 +124,9 @@ app.use(
     res.locals.userId =
       req.session.userId || null
 
+    res.locals.adminId =
+      req.session.adminId || null
+
     next()
 
   }
@@ -177,6 +187,24 @@ app.use(
   profileRoutes
 
 )
+
+
+
+/* ================================
+
+   ADMIN ROUTES
+
+================================ */
+
+app.use(
+
+  "/admin",
+
+  adminAuthRoutes
+
+)
+
+app.use("/admin", adminRoutes)
 
 
 

@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify OTP - Admin | iStore</title>
+    <link rel="stylesheet" href="/css/admin-otp.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+</head>
+<body>
+    <div class="admin-otp-container">
+        <!-- LEFT SIDE: Branding Panel -->
+        <aside class="branding-panel">
+            <div class="decor-shape shape-1"></div>
+            <div class="decor-shape shape-2"></div>
+            <div class="texture-overlay"></div>
+            
+            <div class="branding-content">
+                <div class="brand-header">
+                    <div class="admin-logo-box">
+                        <i data-lucide="shield" size="24"></i>
+                    </div>
+                    <h1 class="branding-title">iStore Admin</h1>
+                </div>
+
+                <div class="security-cards">
+                    <div class="security-card">
+                        <i data-lucide="lock" size="20"></i>
+                        <h4>Encrypted</h4>
+                        <p>End-to-end security layers</p>
+                    </div>
+                    <div class="security-card">
+                        <i data-lucide="zap" size="20"></i>
+                        <h4>Fast Access</h4>
+                        <p>Real-time validation engine</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- RIGHT SIDE: Verification Form -->
+        <main class="verification-panel">
+            <div class="verification-card">
+                <div class="card-header">
+                    <h2>Verify OTP</h2>
+                    <p>Enter the 6-digit verification code sent to your email.</p>
+                </div>
+
+                <form id="adminOtpForm" class="otp-form" action="/admin/verify-otp" method="POST">
+                    <div class="otp-inputs">
+                        <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" required>
+                        <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" required>
+                        <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" required>
+                        <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" required>
+                        <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" required>
+                        <input type="text" class="otp-input" maxlength="1" pattern="[0-9]" required>
+                    </div>
+                         <input type="hidden" name="otp" id="finalOtp">
+
+                    <button type="submit" class="submit-btn">
+                        <span>Verify Identity</span>
+                        <i data-lucide="arrow-right" size="16"></i>
+                    </button>
+
+                    <div class="resend-section">
+                        <span class="resend-text">Didn't receive the code? <a href="#" class="resend-link">Resend OTP</a></span>
+                        <div class="resend-timer">
+                            <i data-lucide="clock" size="12"></i>
+                            <span>Resend OTP in 30 seconds</span>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="card-footer">
+                    <a href="/admin/login" class="back-to-login">
+                        <i data-lucide="arrow-left" size="12"></i>
+                        <span>Back to Login</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Page Footer -->
+            <footer class="page-footer">
+                <span class="footer-copyright">© 2026 ISTORE ADMIN</span>
+                <div class="footer-links">
+                    <a href="#">PRIVACY POLICY</a>
+                    <a href="#">SECURITY STANDARDS</a>
+                    <a href="#">CONTACT SUPPORT</a>
+                </div>
+            </footer>
+        </main>
+    </div>
+
+   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+
+/* ============================
+   INIT ICONS
+============================ */
+
+lucide.createIcons();
+
+
+
+/* ============================
+   OTP AUTO NAVIGATION
+============================ */
+
+const inputs =
+document.querySelectorAll(
+'.otp-input'
+)
+
+inputs.forEach(
+
+(input, index) => {
+
+input.addEventListener(
+
+'input',
+
+(e) => {
+
+if (
+
+e.target.value.length === 1 &&
+index < inputs.length - 1
+
+) {
+
+inputs[index + 1].focus()
+
+}
+
+}
+
+)
+
+
+
+input.addEventListener(
+
+'keydown',
+
+(e) => {
+
+if (
+
+e.key === 'Backspace' &&
+e.target.value === '' &&
+index > 0
+
+) {
+
+inputs[index - 1].focus()
+
+}
+
+}
+
+)
+
+}
+
+)
+
+
+
+/* Focus First Input */
+
+if (inputs.length > 0)
+
+inputs[0].focus()
+
+
+/* ============================
+   VERIFY OTP SUBMIT
+============================ */
+
+const otpForm =
+document.getElementById("adminOtpForm")
+
+otpForm.addEventListener(
+
+"submit",
+
+(e) => {
+
+/* COLLECT OTP */
+
+let otp = ""
+
+inputs.forEach(
+
+input => {
+
+otp += input.value
+
+}
+
+)
+
+/* CHECK LENGTH */
+
+if (otp.length !== 6) {
+
+e.preventDefault()
+
+Swal.fire({
+
+icon: "warning",
+
+title: "Invalid OTP",
+
+text: "Please enter all 6 digits"
+
+})
+
+return
+
+}
+
+/* SET HIDDEN FIELD */
+
+document
+.getElementById("finalOtp")
+.value = otp
+
+}
+)
+
+
+
+/* ============================
+   RESEND OTP
+============================ */
+
+const resendBtn =
+document.querySelector(
+".resend-link"
+)
+
+
+
+resendBtn.addEventListener(
+
+"click",
+
+async (e) => {
+
+e.preventDefault()
+
+
+
+try {
+
+const response =
+await fetch(
+
+"/admin/send-otp",
+
+{
+
+method: "POST",
+
+headers: {
+
+"Content-Type":
+"application/json"
+
+}
+
+}
+
+)
+
+
+
+const data =
+await response.json()
+
+
+
+if (data.success) {
+
+Swal.fire({
+
+icon: "success",
+
+title: "OTP Resent",
+
+text: "Check your email"
+
+})
+
+}
+
+else {
+
+Swal.fire({
+
+icon: "error",
+
+title: "Error",
+
+text: data.message
+
+})
+
+}
+
+}
+
+catch (error) {
+
+console.log(error)
+
+Swal.fire({
+
+icon: "error",
+
+title: "Error",
+
+text: "Failed to resend OTP"
+
+})
+
+}
+
+}
+
+)
+
+
+
+document
+.getElementById("adminOtpForm")
+.addEventListener("submit", function () {
+
+const inputs =
+document.querySelectorAll(".otp-input")
+
+let otp = ""
+
+inputs.forEach(input => {
+
+otp += input.value
+
+})
+
+document
+.getElementById("finalOtp")
+.value = otp
+
+})
+
+
+
+/* ============================
+   ENTRANCE ANIMATIONS
+============================ */
+
+gsap.from(
+
+".branding-content > *",
+
+{
+
+y: 30,
+opacity: 0,
+duration: 0.8,
+stagger: 0.2,
+ease: "power2.out"
+
+}
+
+)
+
+
+
+gsap.from(
+
+".verification-card",
+
+{
+
+y: 30,
+opacity: 0,
+duration: 0.8,
+ease: "power2.out"
+
+}
+
+)
+
+
+
+gsap.from(
+
+".page-footer",
+
+{
+
+opacity: 0,
+duration: 0.8,
+delay: 0.5
+
+}
+
+)
+
+</script>
+</body>
+</html>

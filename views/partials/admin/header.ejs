@@ -1,0 +1,47 @@
+<!-- Top Navbar -->
+    <nav class="top-navbar">
+        <div class="nav-left">
+            <button class="mobile-nav-toggle">
+                <i data-lucide="menu"></i>
+            </button>
+            <a href="/admin/dashboard" class="nav-logo">iStore Admin</a>
+            <div class="nav-links">
+                <a href="#" class="nav-link active">Dashboard</a>
+                <a href="#" class="nav-link">Products</a>
+                <a href="#" class="nav-link">Orders</a>
+                <a href="#" class="nav-link">Report</a>
+                <a href="/admin/users" class="nav-link <%= page === 'users' ? 'active' : '' %>"> Users</a>
+                <a href="#" class="nav-link">Categories</a>
+                <a href="#" class="nav-link">Offers</a>
+                <a href="#" class="nav-link">Coupons</a>
+            </div>
+        </div>
+        <div class="nav-right">
+            <div class="search-bar">
+
+                <input
+                type="text"
+                placeholder="Search..."
+                class="search-input"
+                >
+
+                <button
+                type="button"
+                class="search-btn">
+
+                <i data-lucide="search"></i>
+
+                </button>
+
+            </div>
+            <button class="icon-btn">
+                <i data-lucide="bell" size="20"></i>
+            </button>
+            <button class="icon-btn">
+                <i data-lucide="settings" size="20"></i>
+            </button>
+            <div class="user-profile">
+                <i data-lucide="user" color="white" size="20"></i>
+            </div>
+        </div>
+    </nav>

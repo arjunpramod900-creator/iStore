@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Overview - Admin | iStore</title>
+    <link rel="stylesheet" href="/css/admin-header.css">
+    <link rel="stylesheet" href="/css/admin-dashboard.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+    <%- include("../partials/admin/header") %>
+
+    <main class="dashboard-main">
+        
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="header-title">
+                <span class="subtitle">OVERVIEW</span>
+                <h1>Dashboard Overview</h1>
+            </div>
+            <div class="header-actions">
+                <div class="date-filter">
+                    <span>Last 30 Days</span>
+                    <i data-lucide="chevron-down" size="16"></i>
+                </div>
+            </div>
+        </header>
+
+        <!-- KPI Grid -->
+        <section class="kpi-grid">
+            <!-- Revenue -->
+            <div class="kpi-card">
+                <div class="kpi-top">
+                    <div class="kpi-icon revenue">
+                        <i data-lucide="banknote" size="20"></i>
+                    </div>
+                    <div class="kpi-trend positive">
+                        <i data-lucide="trending-up" size="12"></i>
+                        <span>+12%</span>
+                    </div>
+                </div>
+                <div class="kpi-info">
+                    <span class="kpi-label">TOTAL REVENUE</span>
+                    <span class="kpi-value">₹18,45,200</span>
+                </div>
+            </div>
+
+            <!-- Orders -->
+            <div class="kpi-card">
+                <div class="kpi-top">
+                    <div class="kpi-icon orders">
+                        <i data-lucide="shopping-bag" size="20"></i>
+                    </div>
+                    <div class="kpi-trend positive">
+                        <i data-lucide="trending-up" size="12"></i>
+                        <span>+8%</span>
+                    </div>
+                </div>
+                <div class="kpi-info">
+                    <span class="kpi-label">TOTAL ORDERS</span>
+                    <span class="kpi-value">1,248</span>
+                </div>
+            </div>
+
+            <!-- Customers -->
+            <div class="kpi-card">
+                <div class="kpi-top">
+                    <div class="kpi-icon customers">
+                        <i data-lucide="users" size="20"></i>
+                    </div>
+                    <div class="kpi-trend positive">
+                        <i data-lucide="trending-up" size="12"></i>
+                        <span>+18%</span>
+                    </div>
+                </div>
+                <div class="kpi-info">
+                    <span class="kpi-label">TOTAL CUSTOMERS</span>
+                    <span class="kpi-value">842</span>
+                </div>
+            </div>
+
+            <!-- Products -->
+            <div class="kpi-card">
+                <div class="kpi-top">
+                    <div class="kpi-icon products">
+                        <i data-lucide="package" size="20"></i>
+                    </div>
+                    <div class="kpi-trend neutral">
+                        <span>Stable</span>
+                    </div>
+                </div>
+                <div class="kpi-info">
+                    <span class="kpi-label">TOTAL PRODUCTS</span>
+                    <span class="kpi-value">320</span>
+                </div>
+            </div>
+
+            <!-- Returns -->
+            <div class="kpi-card">
+                <div class="kpi-top">
+                    <div class="kpi-icon returns">
+                        <i data-lucide="corner-down-left" size="20"></i>
+                    </div>
+                    <div class="kpi-trend negative">
+                        <i data-lucide="trending-up" size="12"></i>
+                        <span>+2%</span>
+                    </div>
+                </div>
+                <div class="kpi-info">
+                    <span class="kpi-label">TOTAL RETURNS</span>
+                    <span class="kpi-value">24</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Chart Section -->
+        <section class="chart-section">
+            <div class="chart-header">
+                <div class="chart-title">
+                    <h2>Revenue Trends</h2>
+                    <p>Daily sales performance tracking</p>
+                </div>
+                <div class="chart-legend">
+                    <div class="legend-item">
+                        <div class="legend-dot current"></div>
+                        <span>Current Period</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot previous"></div>
+                        <span>Previous Period</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <!-- SVG Chart Mockup -->
+                <svg viewBox="0 0 1000 250" preserveAspectRatio="none">
+                    <defs>
+                        <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="rgba(122, 78, 124, 0.2)" />
+                            <stop offset="100%" stop-color="rgba(122, 78, 124, 0)" />
+                        </linearGradient>
+                    </defs>
+                    <path d="M0,200 C150,150 250,220 400,100 C500,0 600,80 800,180 C900,230 1000,100 1000,100 L1000,250 L0,250 Z" fill="url(#chartGradient)" />
+                    <path d="M0,200 C150,150 250,220 400,100 C500,0 600,80 800,180 C900,230 1000,100 1000,100" fill="none" stroke="#7A4E7C" stroke-width="4" stroke-linecap="round" />
+                    <circle cx="550" cy="50" r="6" fill="#7A4E7C" stroke="#fff" stroke-width="2" />
+                </svg>
+
+                <div class="chart-labels">
+                    <span>MON</span>
+                    <span>TUE</span>
+                    <span>WED</span>
+                    <span>THU</span>
+                    <span>FRI</span>
+                    <span>SAT</span>
+                    <span>SUN</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Content Grid -->
+        <div class="content-grid">
+            
+            <!-- Left Column: Tables -->
+            <div class="main-column">
+                
+                <!-- Recent Orders -->
+                <div class="dashboard-card">
+                    <div class="card-header-inner">
+                        <h3>Recent Orders</h3>
+                        <a href="#" class="card-link">View All</a>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ORDER ID</th>
+                                    <th>CUSTOMER</th>
+                                    <th>AMOUNT</th>
+                                    <th>STATUS</th>
+                                    <th>DATE</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="td-order-id">#IST-9402</td>
+                                    <td class="td-customer">
+                                        <div class="customer-avatar" style="background: #A7F3D0;"><i data-lucide="user" size="20" style="margin: 6px; color: #065F46"></i></div>
+                                        <span class="customer-name">Sarah Miller</span>
+                                    </td>
+                                    <td class="td-amount">₹1,24,900</td>
+                                    <td>
+                                        <div class="status-badge delivered">
+                                            <div class="status-dot"></div>
+                                            DELIVERED
+                                        </div>
+                                    </td>
+                                    <td class="td-date">May 12, 2026</td>
+                                </tr>
+                                <tr>
+                                    <td class="td-order-id">#IST-9401</td>
+                                    <td class="td-customer">
+                                        <div class="customer-avatar" style="background: #BAE6FD;"><i data-lucide="user" size="20" style="margin: 6px; color: #0369A1"></i></div>
+                                        <span class="customer-name">David Chen</span>
+                                    </td>
+                                    <td class="td-amount">₹54,900</td>
+                                    <td>
+                                        <div class="status-badge processing">
+                                            <div class="status-dot"></div>
+                                            PROCESSING
+                                        </div>
+                                    </td>
+                                    <td class="td-date">May 12, 2026</td>
+                                </tr>
+                                <tr>
+                                    <td class="td-order-id">#IST-9400</td>
+                                    <td class="td-customer">
+                                        <div class="customer-avatar" style="background: #FEF08A;"><i data-lucide="user" size="20" style="margin: 6px; color: #854D0E"></i></div>
+                                        <span class="customer-name">Anita Roy</span>
+                                    </td>
+                                    <td class="td-amount">₹2,10,000</td>
+                                    <td>
+                                        <div class="status-badge delivered">
+                                            <div class="status-dot"></div>
+                                            DELIVERED
+                                        </div>
+                                    </td>
+                                    <td class="td-date">May 11, 2026</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Top Products -->
+                <div class="dashboard-card">
+                    <div class="card-header-inner">
+                        <h3>Top Products</h3>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>PRODUCT NAME</th>
+                                    <th>UNITS SOLD</th>
+                                    <th>REVENUE</th>
+                                    <th>STOCK</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <div class="td-customer">
+                                            <div class="product-icon">
+                                                <i data-lucide="smartphone" color="#603763"></i>
+                                            </div>
+                                            <span class="td-product-name">iPhone 15 Pro Max</span>
+                                        </div>
+                                    </td>
+                                    <td class="td-units">422</td>
+                                    <td class="td-amount">₹6,75,000</td>
+                                    <td>
+                                        <div class="stock-bar-container">
+                                            <div class="stock-bar-fill good" style="width: 80%;"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="td-customer">
+                                            <div class="product-icon">
+                                                <i data-lucide="laptop" color="#603763"></i>
+                                            </div>
+                                            <span class="td-product-name">MacBook Pro M3</span>
+                                        </div>
+                                    </td>
+                                    <td class="td-units">158</td>
+                                    <td class="td-amount">₹3,45,000</td>
+                                    <td>
+                                        <div class="stock-bar-container">
+                                            <div class="stock-bar-fill medium" style="width: 40%;"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="td-customer">
+                                            <div class="product-icon">
+                                                <i data-lucide="headphones" color="#603763"></i>
+                                            </div>
+                                            <span class="td-product-name">AirPods Max</span>
+                                        </div>
+                                    </td>
+                                    <td class="td-units">210</td>
+                                    <td class="td-amount">₹1,15,000</td>
+                                    <td>
+                                        <div class="stock-bar-container">
+                                            <div class="stock-bar-fill good" style="width: 65%;"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Column: Alerts & Categories -->
+            <aside class="side-column">
+                
+                <!-- Stock Alerts -->
+                <div class="dashboard-card alert-card">
+                    <div class="alert-header">
+                        <div class="alert-title">
+                            <i data-lucide="alert-triangle" color="#7B1E5A" size="20"></i>
+                            Stock Alerts
+                        </div>
+                        <span class="urgent-badge">4 Urgent</span>
+                    </div>
+                    
+                    <div class="alert-list">
+                        
+                        <div class="alert-item">
+                            <div class="alert-item-info">
+                                <div class="alert-item-icon">
+                                    <i data-lucide="headphones" size="16" color="#A1A1AA"></i>
+                                </div>
+                                <div class="alert-item-text">
+                                    <span class="alert-item-name">AirPods Pro</span>
+                                    <span class="alert-item-stock">5 items left</span>
+                                </div>
+                            </div>
+                            <button class="alert-item-action">
+                                <i data-lucide="shopping-cart" size="16"></i>
+                            </button>
+                        </div>
+
+                        <div class="alert-item">
+                            <div class="alert-item-info">
+                                <div class="alert-item-icon">
+                                    <i data-lucide="laptop" size="16" color="#A1A1AA"></i>
+                                </div>
+                                <div class="alert-item-text">
+                                    <span class="alert-item-name">MacBook Pro</span>
+                                    <span class="alert-item-stock">3 items left</span>
+                                </div>
+                            </div>
+                            <button class="alert-item-action">
+                                <i data-lucide="shopping-cart" size="16"></i>
+                            </button>
+                        </div>
+
+                        <div class="alert-item">
+                            <div class="alert-item-info">
+                                <div class="alert-item-icon">
+                                    <i data-lucide="watch" size="16" color="#A1A1AA"></i>
+                                </div>
+                                <div class="alert-item-text">
+                                    <span class="alert-item-name">Apple Watch S9</span>
+                                    <span class="alert-item-stock">2 items left</span>
+                                </div>
+                            </div>
+                            <button class="alert-item-action">
+                                <i data-lucide="shopping-cart" size="16"></i>
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Top Categories -->
+                <div class="dashboard-card categories-card">
+                    <div class="categories-header">
+                        <h3>Top Categories</h3>
+                    </div>
+                    
+                    <div class="category-list">
+                        
+                        <div class="category-item">
+                            <div class="category-info">
+                                <span class="category-name">Smartphones</span>
+                                <span class="category-stats">₹8.4L • 45%</span>
+                            </div>
+                            <div class="category-bar-container">
+                                <div class="category-bar-fill c-purple-1" style="width: 55%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="category-item">
+                            <div class="category-info">
+                                <span class="category-name">Laptops</span>
+                                <span class="category-stats">₹5.2L • 28%</span>
+                            </div>
+                            <div class="category-bar-container">
+                                <div class="category-bar-fill c-purple-2" style="width: 72%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="category-item">
+                            <div class="category-info">
+                                <span class="category-name">Accessories</span>
+                                <span class="category-stats">₹3.8L • 20%</span>
+                            </div>
+                            <div class="category-bar-container">
+                                <div class="category-bar-fill c-purple-3" style="width: 80%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="category-item">
+                            <div class="category-info">
+                                <span class="category-name">Audio</span>
+                                <span class="category-stats dim">₹1.1L • 7%</span>
+                            </div>
+                            <div class="category-bar-container">
+                                <div class="category-bar-fill c-gray" style="width: 93%;"></div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <button class="btn-report">DETAILED REPORT</button>
+                </div>
+
+            </aside>
+
+        </div>
+
+        <footer class="dashboard-footer">
+            <p>© 2026 iStore Admin. Crafted for Excellence.</p>
+        </footer>
+
+    </main>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+    </script>
+</body>
+</html>
