@@ -173,13 +173,16 @@ required>
 Phone Number
 </label>
 
-<input
+<input 
 type="tel"
 id="phone"
 class="input-field"
+name="phoneNumber"
 placeholder="Enter your phone number"
-required>
-
+maxlength="10"
+pattern="[0-9]{10}"
+inputmode="numeric"
+title="Enter a valid 10-digit phone number">
 </div>
 
 
@@ -202,7 +205,6 @@ required>
 </div>
 
 
-
 <!-- Password -->
 
 <div class="form-group">
@@ -211,12 +213,48 @@ required>
 Password
 </label>
 
+<div class="password-wrapper">
+
 <input
 type="password"
 id="password"
 class="input-field"
 placeholder="Create password"
 required>
+
+<span
+class="toggle-password"
+data-target="password">
+
+👁️
+
+</span>
+
+</div>
+
+<!-- Strength Meter -->
+
+<div class="strength-meter">
+
+<div class="strength-bar">
+
+<div
+id="strengthFill"
+class="strength-fill">
+
+</div>
+
+</div>
+
+<span
+id="strengthText"
+class="strength-text">
+
+Password strength
+
+</span>
+
+</div>
 
 </div>
 
@@ -230,12 +268,24 @@ required>
 Confirm Password
 </label>
 
+<div class="password-wrapper">
+
 <input
 type="password"
 id="confirmPassword"
 class="input-field"
 placeholder="Confirm password"
 required>
+
+<span
+class="toggle-password"
+data-target="confirmPassword">
+
+👁️
+
+</span>
+
+</div>
 
 </div>
 
@@ -291,7 +341,6 @@ Login
 </div>
 
 
-
 <!-- SweetAlert -->
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -323,7 +372,7 @@ fullName:
 document.getElementById("fullName").value,
 
 phoneNumber:
-document.getElementById("phone").value,
+document.getElementById("phone")?.value || "",
 
 email:
 document.getElementById("email").value,
@@ -394,6 +443,210 @@ error.response?.data?.message
 }
 
 )
+
+
+
+/* =========================
+   OPTIONAL PHONE VALIDATION
+========================= */
+
+const signupPhone =
+document.querySelector(
+'input[name="phoneNumber"]'
+)
+
+if (signupPhone) {
+
+signupPhone.addEventListener(
+"input",
+
+function () {
+
+const value =
+signupPhone.value.trim()
+
+/* Allow empty */
+
+if (value === "") {
+
+signupPhone.setCustomValidity("")
+return
+
+}
+
+/* Must be exactly 10 digits */
+
+if (!/^[0-9]{10}$/.test(value)) {
+
+signupPhone.setCustomValidity(
+"Enter a valid 10-digit phone number"
+)
+
+}
+
+else {
+
+signupPhone.setCustomValidity("")
+
+}
+
+}
+
+)
+
+}
+
+
+
+/* =========================
+   PASSWORD SHOW / HIDE
+========================= */
+
+document
+.querySelectorAll(".toggle-password")
+
+.forEach(icon => {
+
+icon.addEventListener("click", () => {
+
+const target =
+icon.dataset.target
+
+const input =
+document.getElementById(target)
+
+if (!input) return
+
+if (input.type === "password") {
+
+input.type = "text"
+
+icon.textContent = "🙈"
+
+}
+
+else {
+
+input.type = "password"
+
+icon.textContent = "👁️"
+
+}
+
+})
+
+})
+
+
+
+/* =========================
+   PASSWORD STRENGTH METER
+========================= */
+
+const passwordInput =
+document.getElementById("password")
+
+const strengthFill =
+document.getElementById("strengthFill")
+
+const strengthText =
+document.getElementById("strengthText")
+
+if (
+passwordInput &&
+strengthFill &&
+strengthText
+) {
+
+passwordInput.addEventListener(
+
+"input",
+
+() => {
+
+const value =
+passwordInput.value
+
+let strength = 0
+
+
+
+if (value.length >= 6)
+strength++
+
+if (/[A-Z]/.test(value))
+strength++
+
+if (/[0-9]/.test(value))
+strength++
+
+if (/[^A-Za-z0-9]/.test(value))
+strength++
+
+
+
+switch (strength) {
+
+case 0:
+
+strengthFill.style.width = "0%"
+strengthFill.style.background = "#ccc"
+strengthText.textContent =
+"Password strength"
+
+break
+
+
+
+case 1:
+
+strengthFill.style.width = "25%"
+strengthFill.style.background = "red"
+strengthText.textContent =
+"Weak password"
+
+break
+
+
+
+case 2:
+
+strengthFill.style.width = "50%"
+strengthFill.style.background = "orange"
+strengthText.textContent =
+"Medium password"
+
+break
+
+
+
+case 3:
+
+strengthFill.style.width = "75%"
+strengthFill.style.background = "#4caf50"
+strengthText.textContent =
+"Strong password"
+
+break
+
+
+
+case 4:
+
+strengthFill.style.width = "100%"
+strengthFill.style.background = "#2e7d32"
+strengthText.textContent =
+"Very strong password"
+
+break
+
+}
+
+}
+
+)
+
+}
 
 </script>
 

@@ -13,18 +13,42 @@ export const signupSchema = z.object({
     .trim()
     .min(3, "Name must be at least 3 characters"),
 
+
+
+  /* PHONE NUMBER (FIXED) */
+
   phoneNumber: z
     .string()
     .trim()
-    .regex(
-      /^[0-9]{10}$/,
-      "Phone number must be exactly 10 digits"
+    .optional()
+    .or(z.literal(""))
+    .refine(
+
+      (val) => {
+
+        if (!val || val === "") return true
+
+        return /^[0-9]{10}$/.test(val)
+
+      },
+
+      {
+
+        message:
+          "Phone number must be exactly 10 digits"
+
+      }
+
     ),
+
+
 
   email: z
     .string()
     .trim()
     .email("Invalid email address"),
+
+
 
   password: z
     .string()
@@ -33,10 +57,13 @@ export const signupSchema = z.object({
       "Password must be at least 6 characters"
     ),
 
+
+
   confirmPassword: z
     .string()
 
 })
+
 .refine(
 
   (data) =>

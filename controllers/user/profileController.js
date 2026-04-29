@@ -79,13 +79,43 @@ export const updateProfile = async (
 
 
     /* =========================
+       PHONE VALIDATION (NEW)
+       Optional but must be 10 digits
+    ========================= */
+
+    if (
+
+      phoneNumber &&
+      !/^[0-9]{10}$/.test(phoneNumber)
+
+    ) {
+
+      req.session.toast = {
+
+        type: "error",
+
+        message:
+          "Phone number must be exactly 10 digits"
+
+      }
+
+      return res.redirect("/edit-profile")
+
+    }
+
+
+
+    /* =========================
        PREPARE UPDATE DATA
     ========================= */
 
     let updateData = {
 
       fullName,
-      phoneNumber,
+
+      phoneNumber:
+        phoneNumber || "",
+
       dateOfBirth
 
     }
@@ -93,40 +123,44 @@ export const updateProfile = async (
 
 
     /* =========================
-   IMAGE UPLOAD DEBUG
-========================= */
+       IMAGE UPLOAD DEBUG
+    ========================= */
 
-console.log("BODY:", req.body)
-console.log("FILE:", req.file)
+    console.log("BODY:", req.body)
+    console.log("FILE:", req.file)
 
-if (req.file) {
+    if (req.file) {
 
-  console.log("📸 File received:", req.file.path)
+      console.log("📸 File received:", req.file.path)
 
-  const result =
-    await cloudinary.uploader.upload(
+      const result =
+        await cloudinary.uploader.upload(
 
-      req.file.path,
+          req.file.path,
 
-      {
-        folder: "profile_photos"
-      }
+          {
+            folder: "profile_photos"
+          }
 
-    )
+        )
 
-  console.log(
-    "☁️ Cloudinary URL:",
-    result.secure_url
-  )
+      console.log(
+        "☁️ Cloudinary URL:",
+        result.secure_url
+      )
 
-  updateData.profilePhoto =
-    result.secure_url
+      updateData.profilePhoto =
+        result.secure_url
 
-} else {
+    }
 
-  console.log("❌ No file received")
+    else {
 
-}
+      console.log("❌ No file received")
+
+    }
+
+
 
     /* =========================
        UPDATE USER
@@ -172,4 +206,3 @@ if (req.file) {
   }
 
 }
-

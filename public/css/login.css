@@ -707,3 +707,56 @@ font-weight: 500;
 color: #6A0DAD;
 
 }
+/* =========================
+   PASSWORD INPUT WITH ICON
+========================= */
+
+.password-wrapper {
+
+position: relative;
+
+width: 100%;
+
+display: flex;
+
+align-items: center;
+
+}
+
+/* Make space for icon */
+
+.password-input {
+
+padding-right: 45px;
+
+}
+
+/* Eye icon inside input */
+
+.toggle-password {
+
+position: absolute;
+
+right: 14px;
+
+top: 50%;
+
+transform: translateY(-50%);
+
+cursor: pointer;
+
+font-size: 16px;
+
+color: #666;
+
+user-select: none;
+
+}
+
+/* Hover effect */
+
+.toggle-password:hover {
+
+color: #6a0dad;
+
+}

@@ -102,7 +102,15 @@ id="profileUpload">
                         <div class="form-group">
                             <label>Phone Number</label>
                             <div class="input-wrapper">
-                               <input type="tel" name="phoneNumber" value="<%= user.phoneNumber %>" placeholder="Enter Phone Number" required>
+                             <input 
+                                type="tel"
+                                name="phoneNumber"
+                                value="<%= user.phoneNumber || '' %>"
+                                placeholder="Enter Phone Number"
+                                maxlength="10"
+                                pattern="[0-9]{10}"
+                                inputmode="numeric"
+                                title="Enter a valid 10-digit phone number">
                                 <span class="form-hint">Enter a valid 10-digit mobile number.</span>
                             </div>
                         </div>
@@ -192,6 +200,58 @@ window.location.reload()
 }
 
 })
+
+
+
+/* =========================
+   OPTIONAL PHONE VALIDATION
+========================= */
+
+const phoneInput =
+document.querySelector(
+'input[name="phoneNumber"]'
+)
+
+if (phoneInput) {
+
+phoneInput.addEventListener(
+"input",
+
+function () {
+
+const value =
+phoneInput.value.trim()
+
+/* Allow empty */
+
+if (value === "") {
+
+phoneInput.setCustomValidity("")
+return
+
+}
+
+/* Validate exactly 10 digits */
+
+if (!/^[0-9]{10}$/.test(value)) {
+
+phoneInput.setCustomValidity(
+"Enter a valid 10-digit phone number"
+)
+
+}
+
+else {
+
+phoneInput.setCustomValidity("")
+
+}
+
+}
+
+)
+
+}
 
 
 

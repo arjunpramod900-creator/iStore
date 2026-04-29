@@ -207,6 +207,14 @@ const sendSignupOTP = async (req, res) => {
 
 try {
 
+
+
+if (req.body.phoneNumber === "") {
+
+req.body.phoneNumber = undefined
+
+}
+
 const result =
 signupSchema.safeParse(req.body)
 
@@ -1149,6 +1157,17 @@ if (newPassword !== confirmPassword) {
 
 return res.send(
 "Passwords do not match"
+)
+
+}
+/* 
+   PASSWORD MIN LENGTH
+ */
+
+if (newPassword.length < 6) {
+
+return res.send(
+"Password must be at least 6 characters long"
 )
 
 }

@@ -463,6 +463,82 @@ body {
     color: var(--button-bg);
 }
 
+
+
+/* PASSWORD WRAPPER */
+
+.password-wrapper {
+
+position: relative;
+
+display: flex;
+
+align-items: center;
+
+}
+
+.toggle-password {
+
+position: absolute;
+
+right: 14px;
+
+cursor: pointer;
+
+font-size: 16px;
+
+user-select: none;
+
+}
+
+
+
+/* STRENGTH METER */
+
+.strength-meter {
+
+margin-top: 8px;
+
+}
+
+.strength-bar {
+
+width: 100%;
+
+height: 6px;
+
+background: #eee;
+
+border-radius: 4px;
+
+overflow: hidden;
+
+margin-top: 6px;
+
+}
+
+.strength-fill {
+
+height: 100%;
+
+width: 0%;
+
+transition: 0.3s;
+
+}
+
+.strength-text {
+
+font-size: 12px;
+
+color: #666;
+
+margin-top: 4px;
+
+display: block;
+
+}
+
 /* RESPONSIVE DESIGN */
 /* Fluid Responsiveness Handled via Flex-Wrap */
 @media (max-width: 1040px) {
