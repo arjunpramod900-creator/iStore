@@ -29,7 +29,7 @@
             <div class="stat-card">
                 <div class="stat-info">
                     <span class="stat-label">TOTAL USERS</span>
-                    <span class="stat-value">2,450</span>
+                    <span class="stat-value"><%= totalUsers %></span>
                 </div>
                 <div class="stat-icon">
                     <i data-lucide="users" size="22"></i>
@@ -40,7 +40,7 @@
             <div class="stat-card">
                 <div class="stat-info">
                     <span class="stat-label">ACTIVE USERS</span>
-                    <span class="stat-value">2,210</span>
+                    <span class="stat-value"><%= activeUsers %></span>
                 </div>
                 <div class="stat-icon">
                     <i data-lucide="user-check" size="22"></i>
@@ -51,7 +51,7 @@
             <div class="stat-card">
                 <div class="stat-info">
                     <span class="stat-label">BLOCKED USERS</span>
-                    <span class="stat-value">240</span>
+                    <span class="stat-value"><%= blockedUsers %></span>
                 </div>
                 <div class="stat-icon">
                     <i data-lucide="user-minus" size="22"></i>
@@ -60,41 +60,123 @@
         </section>
 
         <!-- Filter Section -->
-        <section class="filter-section">
-            <div class="filter-group search">
-                <span class="filter-label">SEARCH DIRECTORY</span>
-                <div class="search-input-wrapper">
-                    <i data-lucide="search" size="18"></i>
-                    <input type="text" class="search-input" placeholder="Search by Name, Email, or Phone...">
-                </div>
-            </div>
-            
-            <div class="filter-group">
-                <span class="filter-label">STATUS</span>
-                <div class="select-wrapper">
-                    <select class="filter-select">
-                        <option>All Statuses</option>
-                        <option>Active</option>
-                        <option>Blocked</option>
-                    </select>
-                    <i data-lucide="chevron-down" size="16"></i>
-                </div>
-            </div>
+      <form method="GET" action="/admin/users">
 
-            <div class="filter-group">
-                <span class="filter-label">JOINED</span>
-                <div class="select-wrapper">
-                    <select class="filter-select">
-                        <option>All Time</option>
-                        <option>Last 30 Days</option>
-                        <option>This Year</option>
-                    </select>
-                    <i data-lucide="chevron-down" size="16"></i>
-                </div>
-            </div>
+<section class="filter-section">
 
-            <button class="btn-apply">Apply Filters</button>
-        </section>
+<!-- SEARCH -->
+
+<div class="filter-group search">
+
+<span class="filter-label">
+SEARCH DIRECTORY
+</span>
+
+<div class="search-input-wrapper">
+
+<i data-lucide="search" size="18"></i>
+
+<input
+type="text"
+name="search"
+class="search-input"
+placeholder="Search by Name, Email, or Phone..."
+value="<%= search || '' %>">
+
+</div>
+
+</div>
+
+
+
+<!-- STATUS FILTER -->
+
+<div class="filter-group status">
+
+<span class="filter-label">
+STATUS
+</span>
+
+<div class="select-wrapper">
+
+<select
+name="status"
+class="filter-select">
+
+<option value="all"
+<%= status === "all" ? "selected" : "" %>>
+All Statuses
+</option>
+
+<option value="active"
+<%= status === "active" ? "selected" : "" %>>
+Active
+</option>
+
+<option value="blocked"
+<%= status === "blocked" ? "selected" : "" %>>
+Blocked
+</option>
+
+</select>
+
+<i data-lucide="chevron-down"></i>
+
+</div>
+
+</div>
+
+
+
+<!-- JOINED FILTER -->
+
+<div class="filter-group joined">
+
+<span class="filter-label">
+JOINED
+</span>
+
+<div class="select-wrapper">
+
+<select
+name="joined"
+class="filter-select">
+
+<option value="all">
+All Time
+</option>
+
+<option value="30days">
+Last 30 Days
+</option>
+
+<option value="year">
+This Year
+</option>
+
+</select>
+
+<i data-lucide="chevron-down"></i>
+
+</div>
+
+</div>
+
+
+
+<!-- APPLY BUTTON -->
+
+<button
+type="submit"
+class="btn-apply">
+
+Apply Filters
+
+</button>
+
+</section>
+
+</form>
 
         <!-- User Table Section -->
         <div class="table-card">
@@ -116,115 +198,230 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <!-- User 1 -->
-                        <tr>
-                            <td class="td-id">#US-9021</td>
-                            <td>
-                                <div class="td-user">
-                                    <div class="user-avatar-initials initials-am">AM</div>
-                                    <span class="td-user-name">Alexander Mercer</span>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="td-contact">
-                                    <span class="td-email">alex.m@example.com</span>
-                                    <span class="td-phone">+1 (555) 123-4567</span>
-                                </div>
-                            </td>
-                            <td class="td-orders">12</td>
-                            <td class="td-reg">Oct 24, 2025</td>
-                            <td>
-                                <div class="td-status">
-                                    <div class="status-dot-wrapper active"></div>
-                                    <span class="status-text">Active</span>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="td-actions">
-                                    <button class="action-btn" title="View User"><i data-lucide="eye" size="18"></i></button>
-                                    <button class="action-btn secondary" title="Block User"><i data-lucide="ban" size="16"></i></button>
-                                </div>
-                            </td>
-                        </tr>
 
-                        <!-- User 2 -->
-                        <tr>
-                            <td class="td-id">#US-8945</td>
-                            <td>
-                                <div class="td-user">
-                                    <div class="user-avatar-initials initials-sk">SK</div>
-                                    <span class="td-user-name">Sophia Kovac</span>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="td-contact">
-                                    <span class="td-email">skovac@cloud.net</span>
-                                    <span class="td-phone">+1 (555) 987-6543</span>
-                                </div>
-                            </td>
-                            <td class="td-orders" style="color: #4D444C;">0</td>
-                            <td class="td-reg">Jan 12, 2026</td>
-                            <td>
-                                <div class="td-status">
-                                    <div class="status-dot-wrapper blocked"></div>
-                                    <span class="status-text blocked">Blocked</span>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="td-actions">
-                                    <button class="action-btn" title="View User"><i data-lucide="eye" size="18"></i></button>
-                                    <button class="action-btn secondary" title="Unblock User"><i data-lucide="undo" size="16"></i></button>
-                                </div>
-                            </td>
-                        </tr>
+<% users.forEach(user => { %>
 
-                        <!-- User 3 -->
-                        <tr>
-                            <td class="td-id">#US-8832</td>
-                            <td>
-                                <div class="td-user">
-                                    <div class="user-avatar-initials initials-jl">JL</div>
-                                    <span class="td-user-name">Julian Laurent</span>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="td-contact">
-                                    <span class="td-email">j.laurent@design.io</span>
-                                    <span class="td-phone">+1 (555) 444-2222</span>
-                                </div>
-                            </td>
-                            <td class="td-orders">45</td>
-                            <td class="td-reg">Nov 03, 2024</td>
-                            <td>
-                                <div class="td-status">
-                                    <div class="status-dot-wrapper active"></div>
-                                    <span class="status-text">Active</span>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="td-actions">
-                                    <button class="action-btn" title="View User"><i data-lucide="eye" size="18"></i></button>
-                                    <button class="action-btn secondary" title="Block User"><i data-lucide="ban" size="16"></i></button>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
+<tr>
+
+<!-- USER ID -->
+
+<td class="td-id">
+
+#US-<%= user._id.toString().slice(-4) %>
+
+</td>
+
+
+
+<!-- USER NAME -->
+
+<td>
+
+<div class="td-user">
+
+<div class="user-avatar-initials">
+
+<%= user.fullName
+.charAt(0)
+.toUpperCase() %>
+
+</div>
+
+<span class="td-user-name">
+
+<%= user.fullName %>
+
+</span>
+
+</div>
+
+</td>
+
+
+
+<!-- CONTACT -->
+
+<td>
+
+<div class="td-contact">
+
+<span class="td-email">
+
+<%= user.email %>
+
+</span>
+
+<span class="td-phone">
+
+<%= user.phoneNumber || "N/A" %>
+
+</span>
+
+</div>
+
+</td>
+
+
+
+<!-- ORDERS (future feature) -->
+
+<td class="td-orders">
+
+0
+
+</td>
+
+
+
+<!-- REGISTRATION DATE -->
+
+<td class="td-reg">
+
+<%= new Date(
+user.createdAt
+).toLocaleDateString() %>
+
+</td>
+
+
+
+<!-- STATUS -->
+
+<td>
+
+<div class="td-status">
+
+<div class="status-dot-wrapper
+<%= user.isBlocked ? "blocked" : "active" %>">
+
+</div>
+
+<span class="status-text
+<%= user.isBlocked ? "blocked" : "" %>">
+
+<%= user.isBlocked
+? "Blocked"
+: "Active" %>
+
+</span>
+
+</div>
+
+</td>
+
+
+
+<!-- ACTIONS -->
+
+<td>
+
+<div class="td-actions">
+
+<button
+class="action-btn"
+title="View User">
+
+<i data-lucide="eye"></i>
+
+</button>
+
+
+
+<button
+class="action-btn secondary
+block-btn"
+data-id="<%= user._id %>">
+
+<i data-lucide="
+<%= user.isBlocked
+? 'undo'
+: 'ban' %>">
+
+</i>
+
+</button>
+
+</div>
+
+</td>
+
+</tr>
+
+<% }) %>
+
+</tbody>
                 </table>
             </div>
 
             <!-- Pagination -->
-            <div class="pagination-bar">
-                <span class="pagination-info">Showing 1-10 of 2,450 users</span>
+           <div class="pagination-bar">
+
+                <span class="pagination-info">
+
+                Showing
+                <%= (currentPage - 1) * limit + 1 %>
+                -
+                <%= Math.min(currentPage * limit, totalFilteredUsers) %>
+                of
+                <%= totalFilteredUsers %>
+                users
+
+                </span>
+
+
+
                 <div class="pagination-controls">
-                    <button class="page-btn icon"><i data-lucide="chevron-left" size="16"></i></button>
-                    <button class="page-btn active">1</button>
-                    <button class="page-btn">2</button>
-                    <button class="page-btn">3</button>
-                    <span class="page-ellipsis">...</span>
-                    <button class="page-btn">245</button>
-                    <button class="page-btn icon" style="color: #603763;"><i data-lucide="chevron-right" size="16"></i></button>
+
+                <!-- PREVIOUS -->
+
+                <% if (currentPage > 1) { %>
+
+                <a
+                href="?page=<%= currentPage - 1 %>&search=<%= search %>&status=<%= status %>&joined=<%= joined %>"
+                class="page-btn icon">
+
+                <i data-lucide="chevron-left"></i>
+
+                </a>
+
+                <% } %>
+
+
+
+                <!-- PAGE NUMBERS -->
+
+                <% for (let i = 1; i <= totalPages; i++) { %>
+
+                <a
+                href="?page=<%= i %>&search=<%= search %>&status=<%= status %>&joined=<%= joined %>"
+                class="page-btn
+                <%= i === currentPage ? 'active' : '' %>">
+
+                <%= i %>
+
+                </a>
+
+                <% } %>
+
+
+
+                <!-- NEXT -->
+
+                <% if (currentPage < totalPages) { %>
+
+                <a
+                href="?page=<%= currentPage + 1 %>&search=<%= search %>&status=<%= status %>&joined=<%= joined %>"
+                class="page-btn icon">
+
+                <i data-lucide="chevron-right"></i>
+
+                </a>
+
+                <% } %>
+
                 </div>
-            </div>
+
+                </div>
         </div>
 
     </main>
@@ -242,6 +439,48 @@
     <script>
         // Initialize Lucide icons
         lucide.createIcons();
+
+
+        
+
+        document
+        .querySelectorAll(".block-btn")
+        .forEach(btn => {
+
+        btn.addEventListener(
+        "click",
+        async () => {
+
+        const userId =
+        btn.dataset.id
+
+        const response =
+        await fetch(
+        `/admin/block-user/${userId}`,
+        {
+        method: "PATCH"
+        }
+        )
+
+        const data =
+        await response.json()
+
+        if (data.success) {
+
+        location.reload()
+
+        }
+
+        }
+
+        )
+
+        })
+
+
+
+
+
     </script>
 </body>
 </html>

@@ -113,117 +113,238 @@ body {
 }
 
 /* FILTER SECTION */
+/* =========================
+   FILTER SECTION (CLEAN FIX)
+========================= */
+
 .filter-section {
+
     background: #FFF0F4;
+
     border-radius: 14px;
+
     padding: 24px;
+
     display: flex;
+
     align-items: flex-end;
-    gap: 16px;
+
+    gap: 20px;
+
     width: 100%;
+
 }
+
+
+
+/* GROUPS */
 
 .filter-group {
+
     display: flex;
+
     flex-direction: column;
+
     gap: 8px;
+
 }
+
+
+
+/* SEARCH TAKES MOST WIDTH */
 
 .filter-group.search {
-    flex: 1;
+
+    flex: 2;
+
 }
+
+
+
+/* DROPDOWNS FIXED WIDTH */
+
+.filter-group.status,
+.filter-group.joined {
+
+    flex: 0 0 180px;
+
+}
+
+
+
+/* LABEL */
 
 .filter-label {
+
     font-size: 12px;
+
     font-weight: 700;
+
     color: #4D444C;
+
     letter-spacing: 0.6px;
+
     text-transform: uppercase;
+
 }
+
+
+
+/* =========================
+   SEARCH INPUT
+========================= */
+/* SEARCH WRAPPER */
 
 .search-input-wrapper {
+
     position: relative;
+
     width: 100%;
+
 }
 
-.search-input-wrapper i {
-    position: absolute;
-    left: 16px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #7F747D;
-    pointer-events: none;
-}
+
+
+/* SEARCH INPUT */
 
 .search-input {
+
     width: 100%;
+
     height: 44px;
-    background: #FFFFFF;
-    border: none;
+
     border-radius: 12px;
-    padding: 0 16px 0 48px;
+
+    border: none;
+
+    background: #FFFFFF;
+
+    padding: 0 42px 0 16px; /* space for icon */
+
     font-size: 14px;
-    color: #2C1421;
+
 }
 
-.search-input::placeholder {
-    color: #D0C3CC;
+
+
+/* SEARCH ICON */
+
+.search-input-wrapper svg {
+
+    position: absolute;
+
+    right: 14px;
+
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    width: 18px;
+
+    height: 18px;
+
+    color: #7F747D;
+
 }
 
-.search-input:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(112, 26, 117, 0.2);
-}
+/* =========================
+   DROPDOWN
+========================= */
+/* SELECT WRAPPER */
 
 .select-wrapper {
+
     position: relative;
-    width: 192px;
+
+    width: 100%;
+
 }
+
+
+
+/* SELECT */
 
 .filter-select {
+
     width: 100%;
+
     height: 44px;
-    background: #FFFFFF;
-    border: none;
+
     border-radius: 12px;
+
+    border: none;
+
+    background: #FFFFFF;
+
     padding: 0 40px 0 16px;
-    font-size: 14px;
-    color: #2C1421;
+
     appearance: none;
-    cursor: pointer;
+
 }
 
-.filter-select:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(112, 26, 117, 0.2);
-}
 
-.select-wrapper i {
+
+/* DROPDOWN ICON */
+
+.select-wrapper svg {
+
     position: absolute;
-    right: 16px;
+
+    right: 14px;
+
     top: 50%;
+
     transform: translateY(-50%);
+
+    width: 16px;
+
+    height: 16px;
+
     color: #6B7280;
-    pointer-events: none;
+
 }
+
+/* =========================
+   BUTTON
+========================= */
 
 .btn-apply {
+
     height: 44px;
-    padding: 0 32px;
+
+    padding: 0 28px;
+
     background: #603763;
+
     border: none;
+
     border-radius: 12px;
+
     font-size: 14px;
+
     font-weight: 700;
+
     color: #FFFFFF;
+
     cursor: pointer;
-    box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.05);
-    transition: var(--transition);
+
+    white-space: nowrap;
+
 }
 
+
+
+/* HOVER */
+
 .btn-apply:hover {
+
     background: #4A044E;
+
 }
+
+
+
+
 
 /* TABLE SECTION */
 .table-card {
@@ -548,4 +669,32 @@ body {
         gap: 16px;
         align-items: center;
     }
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 900px) {
+
+.filter-section {
+
+flex-wrap: wrap;
+
+align-items: stretch;
+
+}
+
+.filter-group.search {
+
+flex: 1 1 100%;
+
+}
+
+.btn-apply {
+
+width: 100%;
+
+}
+
 }
