@@ -6,9 +6,14 @@ const userBlockCheckMiddleware = async (req, res, next) => {
     if (req.originalUrl.startsWith("/admin")) {
       return next()
     }
+
+    /* Skip static assets to prevent background requests from triggering session modifications */
+    if (req.originalUrl.match(/\.(css|js|png|jpg|jpeg|gif|ico|svg)$/)) {
+      return next()
+    }
     
     /* Not logged user */
-    if (!req.session.userId) {
+    if (!req.session || !req.session.userId) {
       return next()
     }
     
@@ -16,15 +21,15 @@ const userBlockCheckMiddleware = async (req, res, next) => {
     const user = await User.findById(req.session.userId)
     
     if (!user || user.isBlocked) {
-      // Unset only the user session so admin session remains intact
+      // Unset the user session
       delete req.session.userId;
       
-      // Explicitly save the session to ensure express-session commits the deletion
-      req.session.save((err) => {
-        if (err) console.error("Session save error:", err);
-        return res.redirect("/")
-      });
-      return;
+      // Prevent redirecting AJAX/API requests
+      if (req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1) || !req.accepts('html')) {
+          return res.status(403).send("Blocked");
+      }
+      
+      return res.redirect("/")
     }
     
     next()
