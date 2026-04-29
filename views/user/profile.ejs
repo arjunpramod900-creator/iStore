@@ -30,10 +30,46 @@
                 <div class="profile-card">
                     <div class="profile-overlay"></div>
                     <div class="avatar-wrapper">
-             <div
-class="avatar-img"
-style="background-image:url('<%= user.profilePhoto ? user.profilePhoto : "/images/default-user.png" %>');">
-</div>
+             <% let initials = "";
+
+                    if (user.fullName) {
+
+                    const name = user.fullName.trim();
+
+                    if (name.length >= 2) {
+
+                        initials =
+                        name.charAt(0).toUpperCase() +
+                        name.charAt(1).toLowerCase();
+
+                    }
+
+                    else {
+
+                        initials =
+                        name.charAt(0).toUpperCase();
+
+                    }
+
+                    }
+                    %>
+
+                    <% if (user.profilePhoto) { %>
+
+                    <div
+                    class="avatar-img"
+                    style="background-image:url('<%= user.profilePhoto %>');">
+                    </div>
+
+                    <% } else { %>
+
+                    <div class="avatar-img avatar-initials">
+
+                    <%= initials %>
+
+                    </div>
+
+                <% } %>
                     </div>
                    <h1 class="profile-name"><%= user.fullName %></h1>
                 </div>

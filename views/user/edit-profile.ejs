@@ -50,9 +50,47 @@ enctype="multipart/form-data">
 
 <div class="profile-img-wrapper">
 
-<div
-class="profile-img-main"
-style="background-image: url(<%= user.profilePhoto ? user.profilePhoto : '/images/default-user.png' %>);">
+            <%let initials = "";
+
+            if (user.fullName) {
+
+            const name = user.fullName.trim();
+
+            if (name.length >= 2) {
+
+                initials =
+                name.charAt(0).toUpperCase() +
+                name.charAt(1).toLowerCase();
+
+            }
+
+            else {
+
+                initials =
+                name.charAt(0).toUpperCase();
+
+            }
+
+            }
+            %>
+
+           <div
+class="profile-img-main <%= !user.profilePhoto ? 'profile-initials' : '' %>"
+
+<% if (user.profilePhoto) { %>
+style="background-image: url('<%= user.profilePhoto %>');"
+<% } %>
+>
+
+            <% if (!user.profilePhoto) { %>
+
+            <span class="initials-text">
+
+            <%= initials %>
+
+            </span>
+
+            <% } %>
 
 <div class="edit-icon-badge">
 

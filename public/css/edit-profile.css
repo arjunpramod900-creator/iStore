@@ -244,6 +244,34 @@
     opacity: 0.8;
 }
 
+/* =========================
+   INITIALS AVATAR STYLE
+========================= */
+
+.profile-initials {
+
+display: flex;
+align-items: center;
+justify-content: center;
+
+background: linear-gradient(
+135deg,
+#6a11cb,
+#8e2de2
+);
+
+}
+
+.initials-text {
+
+font-size: 36px;
+font-weight: 600;
+
+color: white;
+
+letter-spacing: 1px;
+
+}
 /* Responsive */
 @media (max-width: 768px) {
     .form-grid {

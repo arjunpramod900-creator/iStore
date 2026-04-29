@@ -387,3 +387,27 @@ body {
   text-decoration: none;
 
 }
+/* =========================
+   INITIALS AVATAR STYLE
+========================= */
+
+.avatar-initials {
+
+display: flex;
+align-items: center;
+justify-content: center;
+
+font-size: 32px;
+font-weight: 600;
+
+color: white;
+
+background: linear-gradient(
+135deg,
+#6a11cb,
+#8e2de2
+);
+
+text-transform: none;
+
+}
