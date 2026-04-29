@@ -188,6 +188,46 @@ res.redirect("/admin/dashboard")
 }
 
 }
+
+
+/* ============================
+   VIEW USER DETAILS
+============================ */
+
+export const viewUserDetails = async (req, res) => {
+
+try {
+
+const userId = req.params.id
+
+const user =
+await User.findById(userId)
+
+if (!user) {
+
+return res.redirect("/admin/users")
+
+}
+
+res.render(
+"admin/user-details",
+{
+page: "users",
+user
+}
+)
+
+}
+
+catch (error) {
+
+console.log(error)
+
+res.redirect("/admin/users")
+
+}
+
+}
 /* ============================
    BLOCK / UNBLOCK USER
 ============================ */
@@ -226,6 +266,38 @@ user.isBlocked =
 await user.save()
 
 
+
+res.json({
+success: true
+})
+
+}
+
+catch (error) {
+
+console.log(error)
+
+res.json({
+success: false
+})
+
+}
+
+}
+
+/* ============================
+   DELETE USER
+============================ */
+
+
+export const deleteUser = async (req, res) => {
+
+try {
+
+const userId =
+req.params.id
+
+await User.findByIdAndDelete(userId)
 
 res.json({
 success: true

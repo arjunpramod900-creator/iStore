@@ -1,8 +1,13 @@
 /* =========================
    CHECK USER LOGGED IN
 ========================= */
-
 export const isLoggedIn = (req, res, next) => {
+
+/* Skip admin routes completely */
+
+if (req.originalUrl.startsWith("/admin")) {
+return next()
+}
 
 if (!req.session.userId) {
 
@@ -25,19 +30,20 @@ next()
 
 export const isLoggedOut = (
 
-  req,
-  res,
-  next
+req,
+res,
+next
 
 ) => {
 
-  if (req.session.userId) {
+if (req.session.userId) {
 
-    return res.redirect("/")
+return res.redirect("/")
 
-  }
+}
 
-  next()
+
+next()
 
 }
 

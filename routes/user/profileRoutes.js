@@ -13,19 +13,38 @@ import {
 } from "../../controllers/user/profileController.js"
 
 import {
-
-loadAddresses,
-addAddress,
-deleteAddress,
-updateAddress
-
+  loadAddresses,
+  addAddress,
+  deleteAddress,
+  updateAddress
 } from "../../controllers/user/addressController.js"
 
 import {
   isLoggedIn
 } from "../../middleware/authMiddleware.js"
 
+import userBlockCheckMiddleware
+from "../../middleware/userBlockCheckMiddleware.js"
+
 const router = express.Router()
+
+
+
+// Add this RIGHT before router.use(isLoggedIn, userBlockCheckMiddleware)
+router.use((req, res, next) => {
+  if (req.originalUrl.startsWith("/admin")) return next("router")
+  next()
+})
+
+router.use(isLoggedIn, userBlockCheckMiddleware)
+/* =========================
+   APPLY USER SECURITY
+========================= */
+
+router.use(
+  isLoggedIn,
+  userBlockCheckMiddleware
+)
 
 
 
@@ -35,7 +54,6 @@ const router = express.Router()
 
 router.get(
 "/edit-profile",
-isLoggedIn,
 loadEditProfile
 )
 
@@ -47,7 +65,6 @@ loadEditProfile
 
 router.post(
 "/update-profile",
-isLoggedIn,
 upload.single("profilePhoto"),
 updateProfile
 )
@@ -60,7 +77,6 @@ updateProfile
 
 router.get(
 "/change-email",
-isLoggedIn,
 
 async (req, res) => {
 
@@ -80,7 +96,6 @@ return res.redirect("/login")
 res.render(
 "user/change-email",
 { user }
-
 )
 
 }
@@ -107,7 +122,6 @@ res.redirect("/profile")
 
 router.post(
 "/send-email-change-otp",
-isLoggedIn,
 authController.sendEmailChangeOTP
 )
 
@@ -119,7 +133,6 @@ authController.sendEmailChangeOTP
 
 router.get(
 "/verify-email-otp",
-isLoggedIn,
 
 (req, res) => {
 
@@ -148,7 +161,6 @@ req.query.flow || "email"
 
 router.post(
 "/verify-email-change-otp",
-isLoggedIn,
 authController.verifyEmailChangeOTP
 )
 
@@ -160,7 +172,6 @@ authController.verifyEmailChangeOTP
 
 router.get(
 "/change-password",
-isLoggedIn,
 
 (req, res) => {
 
@@ -179,7 +190,6 @@ res.render(
 
 router.post(
 "/send-change-password-otp",
-isLoggedIn,
 authController.sendChangePasswordOTP
 )
 
@@ -191,25 +201,28 @@ authController.sendChangePasswordOTP
 
 router.post(
 "/verify-change-password-otp",
-isLoggedIn,
 authController.verifyChangePasswordOTP
 )
+
+
 
 /* =========================
    LOAD ADDRESSES PAGE
 ========================= */
+
 router.get(
 "/addresses",
-isLoggedIn,
 loadAddresses
 )
+
+
+
 /* =========================
    ADD ADDRESS
 ========================= */
 
 router.post(
 "/add-address",
-isLoggedIn,
 addAddress
 )
 
@@ -221,7 +234,6 @@ addAddress
 
 router.get(
 "/delete-address/:id",
-isLoggedIn,
 deleteAddress
 )
 
@@ -233,9 +245,9 @@ deleteAddress
 
 router.post(
 "/edit-address/:id",
-isLoggedIn,
 updateAddress
 )
+
 
 
 export default router

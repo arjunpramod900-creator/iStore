@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&family=Liberation+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/admin-dashboard.css">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
 
@@ -316,18 +317,19 @@ user.createdAt
 <td>
 
 <div class="td-actions">
-
-<button
+<a
+href="/admin/users/<%= user._id %>"
 class="action-btn"
 title="View User">
 
 <i data-lucide="eye"></i>
 
-</button>
+</a>
 
 
 
 <button
+type="button"
 class="action-btn secondary
 block-btn"
 data-id="<%= user._id %>">
@@ -436,51 +438,70 @@ data-id="<%= user._id %>">
         </div>
     </footer>
 
-    <script>
-        // Initialize Lucide icons
-        lucide.createIcons();
+   <script>
+  lucide.createIcons()
 
+  document.addEventListener("click", async (e) => {
 
-        
+    const btn = e.target.closest(".block-btn")
+    if (!btn) return
 
-        document
-        .querySelectorAll(".block-btn")
-        .forEach(btn => {
+    if (btn.disabled) return
+    btn.disabled = true
 
-        btn.addEventListener(
-        "click",
-        async () => {
+    const userId = btn.dataset.id
 
-        const userId =
-        btn.dataset.id
+    try {
 
-        const response =
-        await fetch(
+      const confirmed = await Swal.fire({
+        title: "Are you sure?",
+        text: "Change user status?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Yes"
+      })
+
+      if (!confirmed.isConfirmed) {
+        btn.disabled = false
+        return
+      }
+
+      const response = await fetch(
         `/admin/block-user/${userId}`,
         {
-        method: "PATCH"
+          method: "PATCH",
+          credentials: "same-origin"
         }
-        )
+      )
 
-        const data =
-        await response.json()
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`)
+      }
 
-        if (data.success) {
+      const data = await response.json()
 
-        location.reload()
-
-        }
-
-        }
-
-        )
-
+      if (data.success) {
+        await Swal.fire({
+          icon: "success",
+          title: "User Updated",
+          timer: 1000,
+          showConfirmButton: false
         })
+        location.reload()
+      } else {
+        throw new Error("Server returned success: false")
+      }
 
+    } catch (error) {
+      console.error("Block/Unblock Error:", error)
+      Swal.fire({
+        icon: "error",
+        title: "Failed to update user"
+      })
+      btn.disabled = false
+    }
 
-
-
-
-    </script>
+  })
+</script>
 </body>
 </html>

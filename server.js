@@ -18,6 +18,8 @@ import adminAuthRoutes from "./routes/admin/adminAuthRoutes.js"
 
 import adminRoutes from "./routes/admin/adminRoutes.js"
 
+import userBlockCheckMiddleware from "./middleware/userBlockCheckMiddleware.js"
+
 
 
 
@@ -93,6 +95,11 @@ app.use(
 )
 
 /* ================================
+   GLOBAL USER BLOCK CHECK
+================================ */
+app.use(userBlockCheckMiddleware)  // already skips /admin and non-logged-in users
+
+/* ================================
 
    PASSPORT SETUP (ADD HERE)
 
@@ -110,7 +117,6 @@ app.use(passport.session())
 ================================ */
 
 app.use(noCache)
-
 
 
 /* ================================
@@ -169,23 +175,18 @@ app.get(
 
 
 
-/* ================================
-   AUTH ROUTES
-================================ */
+//* USER AUTH ROUTES */
 
 app.use(
-
-  "/",
-
-  authRoutes
-
+"/",
+authRoutes
 )
+
+/* USER PROFILE ROUTES (PROTECTED) */
+
 app.use(
-
-  "/",
-
-  profileRoutes
-
+"/",
+profileRoutes
 )
 
 

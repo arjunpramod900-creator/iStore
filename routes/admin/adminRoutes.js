@@ -3,7 +3,9 @@ import adminAuthMiddleware from "../../middleware/adminAuthMiddleware.js"
 import {
 
 loadUsers,
-toggleBlockUser
+toggleBlockUser,
+viewUserDetails,
+deleteUser
 
 }
 
@@ -28,7 +30,15 @@ loadUsers
 
 )
 
+router.get(
 
+"/users/:id",
+
+adminAuthMiddleware,
+
+viewUserDetails
+
+)
 
 router.patch(
 
@@ -38,6 +48,12 @@ adminAuthMiddleware,
 
 toggleBlockUser
 
+)
+
+router.delete(
+"/users/delete/:id",
+adminAuthMiddleware,
+deleteUser
 )
 
 export default router

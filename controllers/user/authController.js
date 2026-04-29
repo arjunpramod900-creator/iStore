@@ -482,6 +482,8 @@ await User.findOne({ email })
 
 
 
+/* USER NOT FOUND */
+
 if (!user) {
 
 return res.status(400).json({
@@ -494,6 +496,26 @@ message: "User not found"
 }
 
 
+
+/* BLOCK CHECK */
+
+if (user.isBlocked) {
+
+req.session.blockMessage =
+"Your account has been blocked by admin"
+
+return res.status(403).json({
+
+success: false,
+message: "Account Blocked"
+
+})
+
+}
+
+
+
+/* PASSWORD CHECK */
 
 const isMatch =
 await bcrypt.compare(
@@ -515,6 +537,8 @@ message: "Incorrect Password"
 }
 
 
+
+/* CREATE SESSION */
 
 req.session.userId =
 user._id
@@ -547,7 +571,6 @@ message: "Login Failed"
 }
 
 }
-
 
 
 /* ================================
