@@ -397,6 +397,29 @@ delay: 0.3
 
 })
 
+
+
+
+//for safari
+
+
+/* Prevent Cached Login Page */
+
+window.addEventListener(
+"pageshow",
+function (event) {
+
+if (event.persisted) {
+
+window.location.reload()
+
+}
+
+}
+)
+
+
+
 </script>
 
 </body>

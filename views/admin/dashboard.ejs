@@ -438,6 +438,60 @@
     <script>
         // Initialize Lucide icons
         lucide.createIcons();
+
+        
+
+/* Prevent Back Button Cache (Safari Fix) */
+
+window.addEventListener(
+"pageshow",
+function (event) {
+
+if (event.persisted) {
+
+window.location.reload()
+
+}
+
+}
+)
+
+
+
+/* Check Admin Session Every 5 Seconds */
+
+setInterval(async () => {
+
+try {
+
+const response =
+await fetch(
+"/admin/check-session"
+)
+
+const data =
+await response.json()
+
+if (!data.active) {
+
+window.location.href =
+"/admin/login"
+
+}
+
+}
+
+catch (error) {
+
+console.log(
+"Admin session check failed"
+)
+
+}
+
+}, 5000)
+
+
     </script>
 </body>
 </html>

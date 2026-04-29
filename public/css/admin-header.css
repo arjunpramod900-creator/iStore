@@ -204,3 +204,45 @@
     height: 100%;
     object-fit: cover;
 }
+
+/* ADMIN LOGOUT BUTTON */
+
+.admin-logout-btn {
+
+display: flex;
+align-items: center;
+gap: 8px;
+
+padding: 10px 16px;
+
+background: #FFF0F4;
+
+border-radius: 10px;
+
+font-size: 13px;
+font-weight: 600;
+
+color: #603763;
+
+text-decoration: none;
+
+transition: 0.2s ease;
+
+}
+
+.admin-logout-btn:hover {
+
+background: #603763;
+
+color: #FFFFFF;
+
+}
+
+/* ICON */
+
+.admin-logout-btn i {
+
+width: 18px;
+height: 18px;
+
+}

@@ -12,6 +12,8 @@ import profileRoutes from "./routes/user/profileRoutes.js"
 
 import noCache from "./middleware/noCache.js"
 
+import adminNoCache from "./middleware/adminNoCache.js"
+
 import passport from "./config/passport.js"
 
 import adminAuthRoutes from "./routes/admin/adminAuthRoutes.js"
@@ -198,14 +200,16 @@ profileRoutes
 ================================ */
 
 app.use(
-
   "/admin",
-
+  adminNoCache,
   adminAuthRoutes
-
 )
 
-app.use("/admin", adminRoutes)
+app.use(
+  "/admin",
+  adminNoCache,
+  adminRoutes
+)
 
 
 

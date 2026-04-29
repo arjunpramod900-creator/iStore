@@ -1126,7 +1126,6 @@ message: "Password Reset Failed"
 /* ================================
    SEND CHANGE PASSWORD OTP
 ================================ */
-
 const sendChangePasswordOTP = async (req, res) => {
 
 try {
@@ -1142,24 +1141,42 @@ confirmPassword
 
 
 
-/* Password Match Check */
+/* 
+   PASSWORD MATCH CHECK
+ */
 
 if (newPassword !== confirmPassword) {
 
-return res.send("Passwords do not match")
+return res.send(
+"Passwords do not match"
+)
 
 }
 
 
 
-/* Get User */
+/* 
+   GET USER
+ */
 
 const user =
 await User.findById(userId)
 
+if (!user) {
+
+return res.redirect("/login")
+
+}
 
 
-/* Verify Old Password */
+
+/* 
+   GOOGLE USER CHECK
+*/
+
+if (!user.googleId) {
+
+/* Normal users → verify old password */
 
 const isMatch =
 await bcrypt.compare(
@@ -1169,13 +1186,19 @@ user.password
 
 if (!isMatch) {
 
-return res.send("Current password incorrect")
+return res.send(
+"Current password incorrect"
+)
+
+}
 
 }
 
 
 
-/* Generate OTP */
+/* 
+   GENERATE OTP
+ */
 
 const otp =
 generateOTP()
@@ -1196,7 +1219,7 @@ type: "changePassword"
 
 
 
-/* Save OTP */
+/* Save new OTP */
 
 await OTP.create({
 
@@ -1209,7 +1232,7 @@ expiresAt
 
 
 
-/* Save new password temporarily */
+/* Store new password */
 
 req.session.newPassword =
 newPassword
@@ -1228,9 +1251,11 @@ user.email,
 
 
 
-/* Redirect to OTP page */
+/* Redirect */
 
-res.redirect("/verify-email-otp?flow=password")
+res.redirect(
+"/verify-email-otp?flow=password"
+)
 
 }
 
@@ -1241,11 +1266,15 @@ console.log(
 error
 )
 
-res.redirect("/change-password")
+res.redirect(
+"/change-password"
+
+)
 
 }
 
 }
+
 
 /* ================================
    VERIFY CHANGE PASSWORD OTP

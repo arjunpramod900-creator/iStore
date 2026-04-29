@@ -23,19 +23,17 @@ from "../../controllers/admin/adminAuthController.js"
 import adminAuthMiddleware
 from "../../middleware/adminAuthMiddleware.js"
 
+import adminLoggedOut
+from "../../middleware/adminLoggedOut.js"
+
 /* ============================
    LOGIN PAGE
 ============================ */
-
 router.get(
-
 "/login",
-
+adminLoggedOut,
 renderAdminLogin
-
 )
-
-
 
 /* ============================
    LOGIN POST
@@ -141,3 +139,25 @@ adminLogout
 )
 
 export default router
+
+
+//for safari//
+router.get(
+"/check-session",
+
+(req, res) => {
+
+if (!req.session.adminId) {
+
+return res.json({
+active: false
+})
+
+}
+
+res.json({
+active: true
+})
+
+}
+)

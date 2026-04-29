@@ -169,21 +169,48 @@ authController.verifyEmailChangeOTP
 /* =========================
    LOAD CHANGE PASSWORD PAGE
 ========================= */
-
 router.get(
 "/change-password",
+isLoggedIn,
 
-(req, res) => {
+async (req, res) => {
+
+try {
+
+const user =
+await User.findById(
+req.session.userId
+)
+
+if (!user) {
+
+return res.redirect("/login")
+
+}
+
+/* PASS USER TO EJS */
 
 res.render(
-"user/change-password"
+"user/change-password",
+{ user }
+
 )
 
 }
+
+catch (error) {
+
+console.log(
+"Change Password Load Error:",
+error
 )
 
+res.redirect("/profile")
 
+}
 
+}
+)
 /* =========================
    SEND PASSWORD CHANGE OTP
 ========================= */

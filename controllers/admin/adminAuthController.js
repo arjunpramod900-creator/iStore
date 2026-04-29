@@ -115,7 +115,6 @@ message: "Login failed"
 /* ============================
    ADMIN LOGOUT
 ============================ */
-
 export const adminLogout = (
 
 req,
@@ -123,9 +122,35 @@ res
 
 ) => {
 
-req.session.destroy(() => {
+req.session.destroy((err) => {
 
-res.redirect("/admin/login")
+if (err) {
+
+console.log(
+"Admin Logout Error:",
+err
+)
+
+return res.redirect(
+"/admin/dashboard"
+)
+
+}
+
+/* SAFARI SAFE COOKIE CLEAR */
+
+res.clearCookie(
+"connect.sid",
+{
+path: "/"
+}
+)
+
+/* FORCE LOGIN PAGE */
+
+res.redirect(
+"/admin/login"
+)
 
 })
 
@@ -453,13 +478,12 @@ res.send(
 /* ================================
    RENDER ADMIN DASHBOARD
 ================================ */
-
 export const renderAdminDashboard =
 (req, res) => {
 
 try {
 
-/* CHECK SESSION */
+/* SESSION CHECK */
 
 if (!req.session.adminId) {
 
@@ -469,14 +493,29 @@ return res.redirect(
 
 }
 
-/* LOAD DASHBOARD */
+/* SAFARI CACHE FIX */
+
+res.setHeader(
+"Cache-Control",
+"no-store, no-cache, must-revalidate, proxy-revalidate, private"
+)
+
+res.setHeader(
+"Pragma",
+"no-cache"
+)
+
+res.setHeader(
+"Expires",
+"0"
+)
+
+/* RENDER DASHBOARD */
 
 res.render(
 "admin/dashboard",
 {
-
 page: "dashboard"
-
 }
 )
 
