@@ -16,6 +16,7 @@
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.3",
     "cloudinary": "^2.9.0",
+    "connect-mongo": "^6.0.0",
     "dotenv": "^17.4.2",
     "ejs": "^5.0.2",
     "express": "^5.2.1",
@@ -25,6 +26,7 @@
     "nodemailer": "^8.0.5",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
+    "slugify": "^1.6.9",
     "sweetalert2": "^11.26.24",
     "zod": "^3.25.76"
   },

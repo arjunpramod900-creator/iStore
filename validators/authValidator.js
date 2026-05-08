@@ -8,14 +8,49 @@ import { z } from "zod"
 
 export const signupSchema = z.object({
 
+  /* =========================
+     FULL NAME
+  ========================= */
+
   fullName: z
     .string()
     .trim()
-    .min(3, "Name must be at least 3 characters"),
+
+    /* Minimum characters */
+
+    .min(
+      3,
+      "Name must be at least 3 characters"
+    )
+
+    /* Maximum characters */
+
+    .max(
+      50,
+      "Name cannot exceed 50 characters"
+    )
+
+    /* Prevent spaces-only names */
+
+    .refine(
+
+      (val) =>
+        val.replace(/\s/g, "").length > 0,
+
+      {
+
+        message:
+          "Name cannot be empty or only spaces"
+
+      }
+
+    ),
 
 
 
-  /* PHONE NUMBER (FIXED) */
+  /* =========================
+     PHONE NUMBER (OPTIONAL)
+  ========================= */
 
   phoneNumber: z
     .string()
@@ -26,7 +61,8 @@ export const signupSchema = z.object({
 
       (val) => {
 
-        if (!val || val === "") return true
+        if (!val || val === "")
+          return true
 
         return /^[0-9]{10}$/.test(val)
 
@@ -43,31 +79,60 @@ export const signupSchema = z.object({
 
 
 
+  /* =========================
+     EMAIL
+  ========================= */
+
   email: z
     .string()
     .trim()
-    .email("Invalid email address"),
 
+    .max(
+      100,
+      "Email cannot exceed 100 characters"
+    )
 
-
-  password: z
-    .string()
-    .min(
-      6,
-      "Password must be at least 6 characters"
+    .email(
+      "Invalid email address"
     ),
 
 
 
-  confirmPassword: z
+  /* =========================
+     PASSWORD
+  ========================= */
+
+  password: z
     .string()
 
+    .min(
+      6,
+      "Password must be at least 6 characters"
+    )
+
+    .max(
+      50,
+      "Password cannot exceed 50 characters"
+    ),
+
+
+
+  confirmPassword:
+    z.string()
+
 })
+
+
+
+/* =========================
+   PASSWORD MATCH CHECK
+========================= */
 
 .refine(
 
   (data) =>
-    data.password === data.confirmPassword,
+    data.password ===
+    data.confirmPassword,
 
   {
 

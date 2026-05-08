@@ -1,7 +1,16 @@
-import bcrypt from "bcrypt"
+import {
 
-import Admin from "../../models/Admin.js"
-import sendEmail from "../../services/emailService.js"
+adminLoginService,
+
+sendAdminOTPService,
+
+verifyAdminOTPService,
+
+resetAdminPasswordService
+
+}
+
+from "../../services/admin/authService.js"
 
 
 
@@ -9,12 +18,8 @@ import sendEmail from "../../services/emailService.js"
    RENDER LOGIN PAGE
 ============================ */
 
-export const renderAdminLogin = (
-
-req,
-res
-
-) => {
+export const renderAdminLogin =
+(req, res) => {
 
 res.render("admin/login")
 
@@ -38,55 +43,22 @@ password
 
 
 
-/* FIND ADMIN */
-
 const admin =
-await Admin.findOne({ email })
+await adminLoginService(
 
-if (!admin) {
+email,
+password
 
-return res.status(400).json({
-
-success: false,
-
-message: "Admin not found"
-
-})
-
-}
-
-
-
-/* PASSWORD CHECK */
-
-const isMatch =
-await bcrypt.compare(
-password,
-admin.password
 )
 
-if (!isMatch) {
-
-return res.status(400).json({
-
-success: false,
-
-message: "Incorrect password"
-
-})
-
-}
 
 
-
-/* CREATE SESSION */
+/* SESSION */
 
 req.session.adminId =
 admin._id
 
 
-
-/* SEND JSON RESPONSE */
 
 res.status(200).json({
 
@@ -100,11 +72,11 @@ catch (error) {
 
 console.log(error)
 
-res.status(500).json({
+res.status(400).json({
 
 success: false,
 
-message: "Login failed"
+message: error.message
 
 })
 
@@ -112,15 +84,14 @@ message: "Login failed"
 
 }
 
+
+
 /* ============================
    ADMIN LOGOUT
 ============================ */
-export const adminLogout = (
 
-req,
-res
-
-) => {
+export const adminLogout =
+(req, res) => {
 
 req.session.destroy((err) => {
 
@@ -137,16 +108,19 @@ return res.redirect(
 
 }
 
-/* SAFARI SAFE COOKIE CLEAR */
+
 
 res.clearCookie(
+
 "connect.sid",
+
 {
 path: "/"
 }
+
 )
 
-/* FORCE LOGIN PAGE */
+
 
 res.redirect(
 "/admin/login"
@@ -157,16 +131,13 @@ res.redirect(
 }
 
 
+
 /* ============================
    RENDER FORGOT PASSWORD
 ============================ */
 
-export const renderForgotPassword = (
-
-req,
-res
-
-) => {
+export const renderForgotPassword =
+(req, res) => {
 
 res.render(
 "admin/forgot-password"
@@ -180,75 +151,30 @@ res.render(
    SEND ADMIN OTP
 ============================ */
 
-export const sendAdminOTP = async (
-
-req,
-res
-
-) => {
+export const sendAdminOTP =
+async (req, res) => {
 
 try {
 
-const { email } = req.body
+const { email } =
+req.body
 
 
-
-/* CHECK ADMIN */
-
-const admin =
-await Admin.findOne({ email })
-
-if (!admin) {
-
-return res.status(400).json({
-
-success: false,
-
-message: "Admin email not found"
-
-})
-
-}
-
-
-
-/* GENERATE OTP */
 
 const otp =
-Math.floor(
-100000 + Math.random() * 900000
+await sendAdminOTPService(
+email
 )
 
 
 
-/* STORE IN SESSION */
+/* STORE SESSION */
 
 req.session.adminOTP =
 otp
 
 req.session.adminEmail =
 email
-
-/* SEND EMAIL */
-
-await sendEmail(
-
-email,
-
-"Admin Password Reset OTP",
-
-`Your Admin OTP is: ${otp}`
-
-)
-
-/* TEMP LOG (easy otp on terminal) */
-
-console.log(
-
-"Admin OTP:",
-otp
-
-)
 
 
 
@@ -264,11 +190,11 @@ catch (error) {
 
 console.log(error)
 
-res.status(500).json({
+res.status(400).json({
 
 success: false,
 
-message: "Server Error"
+message: error.message
 
 })
 
@@ -276,16 +202,14 @@ message: "Server Error"
 
 }
 
+
+
 /* ============================
    RENDER OTP PAGE
 ============================ */
 
-export const renderAdminOTP = (
-
-req,
-res
-
-) => {
+export const renderAdminOTP =
+(req, res) => {
 
 if (!req.session.adminOTP) {
 
@@ -295,9 +219,9 @@ return res.redirect(
 
 }
 
-res.render(
-"admin/otp"
-)
+
+
+res.render("admin/otp")
 
 }
 
@@ -306,37 +230,34 @@ res.render(
 /* ============================
    VERIFY ADMIN OTP
 ============================ */
-export const verifyAdminOTP = (req, res) => {
+
+export const verifyAdminOTP =
+(req, res) => {
 
 try {
 
-const enteredOTP = req.body.otp
+const enteredOTP =
+req.body.otp
 
 
 
-/* DEBUG LOG */
+const isValid =
+verifyAdminOTPService(
 
-console.log("Entered OTP:", enteredOTP)
+enteredOTP,
 
-console.log("Session OTP:", req.session.adminOTP)
+req.session.adminOTP
 
-
-
-/* CHECK OTP */
-
-if (enteredOTP == req.session.adminOTP) {
-
-console.log("OTP Verified ✅")
+)
 
 
 
-/* 🔴 THIS LINE IS CRITICAL */
+if (isValid) {
 
-req.session.adminOTPVerified = true
+req.session.adminOTPVerified =
+true
 
 
-
-/* REDIRECT TO RESET PAGE */
 
 return res.redirect(
 "/admin/reset-password"
@@ -346,15 +267,9 @@ return res.redirect(
 
 
 
-else {
-
-console.log("OTP Incorrect ❌")
-
 return res.redirect(
 "/admin/otp"
 )
-
-}
 
 }
 
@@ -369,10 +284,12 @@ res.redirect(
 }
 
 }
-/* ============================
-    RENDER RESET PASSWORD PAGE
-============================ */
 
+
+
+/* ============================
+   RENDER RESET PASSWORD
+============================ */
 
 export const renderAdminResetPassword =
 (req, res) => {
@@ -385,14 +302,18 @@ return res.redirect(
 
 }
 
+
+
 res.render(
 "admin/reset-password"
 )
 
 }
 
+
+
 /* ============================
-    RESET PASSWORD
+   RESET PASSWORD
 ============================ */
 
 export const resetAdminPassword =
@@ -407,8 +328,6 @@ confirmPassword
 
 
 
-/* PASSWORD MATCH CHECK */
-
 if (password !== confirmPassword) {
 
 return res.send(
@@ -419,29 +338,11 @@ return res.send(
 
 
 
-/* HASH PASSWORD */
+await resetAdminPasswordService(
 
-const hashedPassword =
-await bcrypt.hash(
-password,
-10
-)
+req.session.adminEmail,
 
-
-
-/* UPDATE ADMIN */
-
-await Admin.findOneAndUpdate(
-
-{
-email:
-req.session.adminEmail
-},
-
-{
-password:
-hashedPassword
-}
+password
 
 )
 
@@ -450,12 +351,12 @@ hashedPassword
 /* CLEAR SESSION */
 
 req.session.adminOTP = null
+
 req.session.adminOTPVerified = null
+
 req.session.adminEmail = null
 
 
-
-/* SUCCESS */
 
 res.redirect(
 "/admin/login"
@@ -475,15 +376,16 @@ res.send(
 
 }
 
+
+
 /* ================================
    RENDER ADMIN DASHBOARD
 ================================ */
+
 export const renderAdminDashboard =
 (req, res) => {
 
 try {
-
-/* SESSION CHECK */
 
 if (!req.session.adminId) {
 
@@ -493,11 +395,16 @@ return res.redirect(
 
 }
 
-/* SAFARI CACHE FIX */
+
+
+/* CACHE FIX */
 
 res.setHeader(
+
 "Cache-Control",
+
 "no-store, no-cache, must-revalidate, proxy-revalidate, private"
+
 )
 
 res.setHeader(
@@ -510,13 +417,16 @@ res.setHeader(
 "0"
 )
 
-/* RENDER DASHBOARD */
+
 
 res.render(
+
 "admin/dashboard",
+
 {
 page: "dashboard"
 }
+
 )
 
 }

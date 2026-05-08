@@ -1,42 +1,120 @@
 import User from "../models/User.js"
 
 const userBlockCheckMiddleware = async (req, res, next) => {
-  try {
-    /* Skip admin routes */
-    if (req.originalUrl.startsWith("/admin")) {
-      return next()
-    }
 
-    /* Skip static assets to prevent background requests from triggering session modifications */
-    if (req.originalUrl.match(/\.(css|js|png|jpg|jpeg|gif|ico|svg)$/)) {
-      return next()
-    }
-    
-    /* Not logged user */
-    if (!req.session || !req.session.userId) {
-      return next()
-    }
-    
-    /* Find user */
-    const user = await User.findById(req.session.userId)
-    
-    if (!user || user.isBlocked) {
-      // Unset the user session
-      delete req.session.userId;
-      
-      // Prevent redirecting AJAX/API requests
-      if (req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1) || !req.accepts('html')) {
-          return res.status(403).send("Blocked");
-      }
-      
-      return res.redirect("/")
-    }
-    
-    next()
-  } catch (error) {
-    console.log("User Block Check Error:", error)
-    next()
-  }
+try {
+
+/* =========================
+   Skip ADMIN routes
+========================= */
+
+if (req.path.startsWith("/admin")) {
+
+return next()
+
+}
+
+
+
+/* =========================
+   Skip static files
+========================= */
+
+if (
+
+req.path.match(
+/\.(css|js|png|jpg|jpeg|gif|ico|svg)$/
+)
+
+) {
+
+return next()
+
+}
+
+
+
+/* =========================
+   If user not logged in
+========================= */
+
+if (!req.session || !req.session.userId) {
+
+return next()
+
+}
+
+
+
+/* =========================
+   Find user
+========================= */
+
+const user =
+await User.findById(
+req.session.userId
+)
+
+
+
+/* =========================
+   If blocked
+========================= */
+
+if (!user || user.isBlocked) {
+
+/* Remove only USER session */
+
+delete req.session.userId
+
+
+
+/* AJAX request */
+
+if (
+
+req.xhr ||
+
+(req.headers.accept &&
+req.headers.accept.includes("json")) ||
+
+!req.accepts("html")
+
+) {
+
+return res.status(403).json({
+
+message: "User blocked"
+
+})
+
+}
+
+
+
+/* Redirect to HOME */
+
+return res.redirect("/")
+
+}
+
+
+
+next()
+
+}
+
+catch (error) {
+
+console.log(
+"User Block Check Error:",
+error
+)
+
+next()
+
+}
+
 }
 
 export default userBlockCheckMiddleware

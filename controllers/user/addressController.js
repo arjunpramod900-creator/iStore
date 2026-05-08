@@ -1,3 +1,5 @@
+import { addressSchema } from "../../validators/addressValidator.js"
+
 import Address from "../../models/Address.js"
 
 
@@ -62,29 +64,30 @@ res.redirect("/profile")
 /* =========================
    ADD NEW ADDRESS
 ========================= */
+
 export const addAddress = async (req, res) => {
 
 try {
 
 const userId = req.session.userId
 
-const {
-fullName,
-phoneNumber,
-addressLine1,
-city,
-state,
-pincode,
-country,
-type,
-isDefault
-} = req.body
+/* ZOD VALIDATION */
 
+const result = addressSchema.safeParse(req.body)
 
+if (!result.success) {
 
-/* Default Handling */
+return res.status(400).send(
+result.error.errors[0].message
+)
 
-if (isDefault === "true") {
+}
+
+const data = result.data
+
+/* DEFAULT HANDLING */
+
+if (data.isDefault) {
 
 await Address.updateMany(
 { userId },
@@ -93,22 +96,20 @@ await Address.updateMany(
 
 }
 
-
-
-/* Create Address */
+/* CREATE ADDRESS */
 
 const newAddress = new Address({
 
-fullName,
-phoneNumber,
-addressLine1,
-city,
-state,
-pincode,
-country,
-type,
+fullName: data.fullName,
+phoneNumber: data.phoneNumber,
+addressLine1: data.addressLine1,
+city: data.city,
+state: data.state,
+pincode: data.pincode,
+country: data.country,
+type: data.type,
 userId,
-isDefault: isDefault === "true"
+isDefault: data.isDefault || false
 
 })
 
@@ -127,8 +128,6 @@ res.redirect("/addresses")
 }
 
 }
-
-
 
 /* =========================
    DELETE ADDRESS
@@ -173,31 +172,31 @@ res.redirect("/addresses")
 /* =========================
    UPDATE ADDRESS
 ========================= */
+
 export const updateAddress = async (req, res) => {
 
 try {
 
 const addressId = req.params.id
-
 const userId = req.session.userId
 
-const {
-fullName,
-phoneNumber,
-addressLine1,
-city,
-state,
-pincode,
-country,
-type,
-isDefault
-} = req.body
+/* ZOD VALIDATION */
 
+const result = addressSchema.safeParse(req.body)
 
+if (!result.success) {
 
-/* DEFAULT LOGIC*/
+return res.status(400).send(
+result.error.errors[0].message
+)
 
-if (isDefault === "true") {
+}
+
+const data = result.data
+
+/* DEFAULT LOGIC */
+
+if (data.isDefault) {
 
 await Address.updateMany(
 { userId },
@@ -206,31 +205,25 @@ await Address.updateMany(
 
 }
 
-
-
-/* update address */
+/* UPDATE ADDRESS */
 
 await Address.findByIdAndUpdate(
 
 addressId,
 
 {
-
-fullName,
-phoneNumber,
-addressLine1,
-city,
-state,
-pincode,
-country,
-type,
-isDefault: isDefault === "true"
-
+fullName: data.fullName,
+phoneNumber: data.phoneNumber,
+addressLine1: data.addressLine1,
+city: data.city,
+state: data.state,
+pincode: data.pincode,
+country: data.country,
+type: data.type,
+isDefault: data.isDefault || false
 }
 
 )
-
-
 
 res.redirect("/addresses")
 

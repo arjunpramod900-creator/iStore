@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
 <body class="verify-otp-body">
     <!-- Decorative Blurs -->
@@ -25,7 +26,7 @@
         <div class="otp-header">
             <h2>Enter Verification Code</h2>
             <p>We have sent a 6-digit verification code to your email <span id="masked-email">
-<%= newEmail || "your registered email" %>
+<%= typeof newEmail !== "undefined" ? newEmail : "your registered email" %>
 </span></p>
         </div>
 
@@ -166,6 +167,78 @@ document.getElementById(
 ).value = otpValue
 
 }
+)
+
+}
+
+
+/* =========================
+   RESEND OTP LOGIC
+========================= */
+
+/* Get flow from URL */
+
+const flow =
+"<%= flow %>"
+
+/* Select resend link */
+
+const resendLink =
+document.querySelector(".resend-link")
+
+if (resendLink) {
+
+resendLink.addEventListener(
+"click",
+
+async (e) => {
+
+e.preventDefault()
+
+try {
+
+/* Choose correct endpoint */
+
+let endpoint = ""
+
+if (flow === "password") {
+
+endpoint =
+"/send-change-password-otp"
+
+}
+
+else if (flow === "email") {
+
+endpoint =
+"/send-email-change-otp"
+
+}
+
+/* Send OTP */
+
+await axios.post(endpoint)
+
+/* Reset timer */
+
+timeLeft = 299
+
+timerElement.style.color = ""
+
+/* Success message */
+
+alert("OTP resent successfully")
+
+}
+
+catch (error) {
+
+alert("Failed to resend OTP")
+
+}
+
+}
+
 )
 
 }

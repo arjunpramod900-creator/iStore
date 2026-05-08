@@ -523,7 +523,9 @@ clearProps: "all"
         };
 
         closeEditBtn.addEventListener('click', closeEditModal);
-        /* =========================
+
+        
+/* =========================
    EDIT ADDRESS SWEET ALERT
 ========================= */
 
@@ -783,7 +785,147 @@ deleteBtn.closest('.address-card-v2')
             delay: 0.4
         });
 
-        /* =========================
+
+
+
+
+
+
+
+/* =========================
+   ADD ADDRESS VALIDATION
+========================= */
+
+const newForm = document.getElementById("new-address-form")
+
+newForm.addEventListener("submit", function (e) {
+
+let errors = []
+
+const fullName = document.getElementById("form-name").value.trim()
+const phone = document.getElementById("form-phone").value.trim()
+const address = document.getElementById("form-address").value.trim()
+const city = document.getElementById("form-city").value.trim()
+const state = document.getElementById("form-state").value.trim()
+const pin = document.getElementById("form-pin").value.trim()
+
+/* VALIDATIONS */
+
+// Full Name
+if (fullName.length < 3) {
+errors.push("Name must be at least 3 characters")
+}
+
+// Phone
+if (!/^[0-9]{10}$/.test(phone)) {
+errors.push("Phone must be 10 digits")
+}
+
+// Address
+if (address.length < 5) {
+errors.push("Address is too short")
+}
+
+// City
+if (city.length < 2) {
+errors.push("Enter valid city")
+}
+
+// State
+if (state.length < 2) {
+errors.push("Enter valid state")
+}
+
+// PIN
+if (!/^[0-9]{6}$/.test(pin)) {
+errors.push("PIN must be 6 digits")
+}
+
+/* ERROR HANDLING */
+
+if (errors.length > 0) {
+
+e.preventDefault()
+
+Swal.fire({
+icon: "error",
+title: "Invalid Input",
+html: errors.join("<br>")
+})
+
+}
+
+})
+
+
+
+
+
+
+/* =========================
+   EDIT ADDRESS VALIDATION
+========================= */
+
+editForm.addEventListener("submit", function (e) {
+
+let errors = []
+
+const fullName = document.getElementById("edit-form-name").value.trim()
+const phone = document.getElementById("edit-form-phone").value.trim()
+const address = document.getElementById("edit-form-address").value.trim()
+const city = document.getElementById("edit-form-city").value.trim()
+const state = document.getElementById("edit-form-state").value.trim()
+const pin = document.getElementById("edit-form-pin").value.trim()
+
+/* VALIDATIONS */
+
+if (fullName.length < 3) {
+errors.push("Name must be at least 3 characters")
+}
+
+if (!/^[0-9]{10}$/.test(phone)) {
+errors.push("Phone must be 10 digits")
+}
+
+if (address.length < 5) {
+errors.push("Address is too short")
+}
+
+if (city.length < 2) {
+errors.push("Enter valid city")
+}
+
+if (state.length < 2) {
+errors.push("Enter valid state")
+}
+
+if (!/^[0-9]{6}$/.test(pin)) {
+errors.push("PIN must be 6 digits")
+}
+
+/* ERROR */
+
+if (errors.length > 0) {
+
+e.preventDefault()
+
+Swal.fire({
+icon: "error",
+title: "Invalid Input",
+html: errors.join("<br>")
+})
+
+return
+}
+
+/* KEEP YOUR EXISTING SWEET ALERT CONFIRM */
+
+})
+
+
+
+
+/* =========================
    CLOSE MODAL ON OUTSIDE CLICK
 ========================= */
 

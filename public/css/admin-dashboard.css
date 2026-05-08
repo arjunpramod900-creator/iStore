@@ -671,6 +671,104 @@ tbody tr:last-child td {
     cursor: pointer;
 }
 
+
+/* =========================
+   SWEET ALERT PREMIUM THEME
+========================= */
+
+.swal2-popup {
+    border-radius: 24px !important;
+    background: rgba(255, 255, 255, 0.88) !important;
+    backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(208, 195, 204, 0.18) !important;
+    box-shadow: 0px 40px 80px rgba(46, 15, 47, 0.12) !important;
+    padding: 28px !important;
+    font-family: 'Inter', sans-serif !important;
+}
+
+.swal2-title {
+    color: #2C1421 !important;
+    font-size: 24px !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.5px !important;
+}
+
+.swal2-html-container {
+    color: #6B7280 !important;
+    font-size: 15px !important;
+    font-weight: 500 !important;
+}
+
+.swal2-confirm {
+    background: linear-gradient(
+        135deg,
+        #603763 0%,
+        #7A4E7C 100%
+    ) !important;
+
+    border-radius: 14px !important;
+
+    padding: 12px 24px !important;
+
+    font-weight: 600 !important;
+
+    box-shadow:
+    0px 10px 30px rgba(96, 55, 99, 0.25) !important;
+}
+
+.swal2-cancel {
+    background: #F4F4F5 !important;
+    color: #4D444C !important;
+    border-radius: 14px !important;
+    padding: 12px 24px !important;
+    font-weight: 600 !important;
+}
+
+/* =========================
+   TOAST
+========================= */
+
+.swal2-toast {
+    background:
+    rgba(255, 255, 255, 0.82) !important;
+
+    backdrop-filter:
+    blur(18px) !important;
+
+    border:
+    1px solid rgba(208, 195, 204, 0.16) !important;
+
+    border-radius:
+    18px !important;
+
+    padding:
+    14px 18px !important;
+
+    box-shadow:
+    0px 20px 40px rgba(46, 15, 47, 0.12) !important;
+}
+
+.swal2-toast .swal2-title {
+
+    font-size: 14px !important;
+
+    font-weight: 600 !important;
+
+    color: #2C1421 !important;
+}
+
+.swal2-success-ring {
+    border-color:
+    rgba(96, 55, 99, 0.18) !important;
+}
+
+.swal2-success-line-tip,
+.swal2-success-line-long {
+
+    background-color:
+    #603763 !important;
+}
+
 /* RESPONSIVE CSS */
 @media (max-width: 1200px) {
     .kpi-grid {

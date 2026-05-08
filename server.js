@@ -22,6 +22,8 @@ import adminRoutes from "./routes/admin/adminRoutes.js"
 
 import userBlockCheckMiddleware from "./middleware/userBlockCheckMiddleware.js"
 
+import categoryRoutes from "./routes/admin/categoryRoutes.js"
+
 
 
 
@@ -88,12 +90,12 @@ app.use(
       secure: false,
 
       maxAge:
-        1000 * 60 * 60 * 24 // 1 day
-
+      1000 * 60 * 60 * 24 // 1 day
+      
     }
-
+    
   })
-
+  
 )
 
 /* ================================
@@ -103,7 +105,7 @@ app.use(userBlockCheckMiddleware)  // already skips /admin and non-logged-in use
 
 /* ================================
 
-   PASSPORT SETUP (ADD HERE)
+PASSPORT SETUP (ADD HERE)
 
 ================================ */
 
@@ -115,36 +117,36 @@ app.use(passport.session())
 
 
 /* ================================
-   NO CACHE
+NO CACHE
 ================================ */
 
 app.use(noCache)
 
 
 /* ================================
-   GLOBAL VARIABLES
+GLOBAL VARIABLES
 ================================ */
 
 app.use(
-
+  
   (req, res, next) => {
-
+    
     res.locals.userId =
-      req.session.userId || null
-
+    req.session.userId || null
+    
     res.locals.adminId =
-      req.session.adminId || null
-
+    req.session.adminId || null
+    
     next()
-
+    
   }
-
+  
 )
 
 
 
 /* ================================
-   VIEW ENGINE
+VIEW ENGINE
 ================================ */
 
 app.set(
@@ -160,19 +162,19 @@ app.set(
 
 
 /* ================================
-   PROTECTED HOME ROUTE
+PROTECTED HOME ROUTE
 ================================ */
 
 app.get(
-
+  
   "/",
-
+  
   (req, res) => {
-
+    
     res.render("user/home")
-
+    
   }
-
+  
 )
 
 
@@ -180,22 +182,22 @@ app.get(
 //* USER AUTH ROUTES */
 
 app.use(
-"/",
-authRoutes
+  "/",
+  authRoutes
 )
 
 /* USER PROFILE ROUTES (PROTECTED) */
 
 app.use(
-"/",
-profileRoutes
+  "/",
+  profileRoutes
 )
 
 
 
 /* ================================
 
-   ADMIN ROUTES
+ADMIN ROUTES
 
 ================================ */
 
@@ -211,6 +213,7 @@ app.use(
   adminRoutes
 )
 
+app.use("/admin", categoryRoutes)
 
 
 /* ================================

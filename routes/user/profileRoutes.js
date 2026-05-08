@@ -30,21 +30,13 @@ const router = express.Router()
 
 
 
-// Add this RIGHT before router.use(isLoggedIn, userBlockCheckMiddleware)
+
 router.use((req, res, next) => {
   if (req.originalUrl.startsWith("/admin")) return next("router")
   next()
 })
 
 router.use(isLoggedIn, userBlockCheckMiddleware)
-/* =========================
-   APPLY USER SECURITY
-========================= */
-
-router.use(
-  isLoggedIn,
-  userBlockCheckMiddleware
-)
 
 
 

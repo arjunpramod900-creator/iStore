@@ -37,6 +37,7 @@
            <div class="form-container">
 
 <form
+id="editProfileForm" 
 class="edit-form"
 action="/update-profile"
 method="POST"
@@ -128,7 +129,16 @@ id="profileUpload">
                         <div class="form-group">
                             <label>Full Name</label>
                             <div class="input-wrapper">
-                               <input type="text" name="fullName" value="<%= user.fullName %>" placeholder="Enter Full Name" required>
+                              <input 
+type="text"
+name="fullName"
+id="fullName"
+value="<%= user.fullName %>"
+placeholder="Enter Full Name"
+maxlength="50"
+required>
+
+<span class="error-text" id="nameError"></span>
                             </div>
                         </div>
                         <div class="form-group">
@@ -291,6 +301,89 @@ phoneInput.setCustomValidity("")
 
 }
 
+/* =========================
+   FULL NAME VALIDATION
+========================= */
+
+const nameInput =
+document.getElementById("fullName")
+
+const nameError =
+document.getElementById("nameError")
+
+nameInput.addEventListener("input", () => {
+
+let value = nameInput.value
+
+/* Remove leading spaces */
+value = value.replace(/^\s+/, "")
+
+nameInput.value = value
+
+/* Validation */
+
+if (value.trim().length === 0) {
+
+nameError.textContent = "Name cannot be empty"
+
+}
+
+else if (value.trim().length < 3) {
+
+nameError.textContent = "Minimum 3 characters required"
+
+}
+
+else if (value.length > 50) {
+
+nameError.textContent = "Maximum 50 characters allowed"
+
+}
+
+else if (!/^[A-Za-z ]+$/.test(value)) {
+
+nameError.textContent =
+"Only letters and spaces allowed"
+
+}
+
+else {
+
+nameError.textContent = ""
+
+}
+
+})
+
+
+/* =========================
+   FORM SUBMIT VALIDATION
+========================= */
+
+const form =
+document.getElementById("editProfileForm")
+
+form.addEventListener("submit", (e) => {
+
+const value =
+nameInput.value.trim()
+
+if (
+value.length < 3 ||
+value.length > 50 ||
+!/^[A-Za-z ]+$/.test(value)
+) {
+
+e.preventDefault()
+
+nameError.textContent =
+"Please enter a valid name"
+
+nameInput.focus()
+
+}
+
+})
 
 
 </script>

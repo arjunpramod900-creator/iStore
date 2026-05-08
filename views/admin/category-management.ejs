@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Category Management - Admin | iStore</title>
+    <link rel="stylesheet" href="/css/admin-header.css">
+    <link rel="stylesheet" href="/css/admin-categories.css">
+    <link rel="stylesheet" href="/css/admin-dashboard.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+
+    <!-- Top Navbar -->
+    <%- include("../partials/admin/header") %>
+
+    <main class="dashboard-main">
+        
+        <!-- Breadcrumbs & Header -->
+        <header class="page-header">
+            <div class="header-left">
+                <nav class="breadcrumb">
+                    <a href="/admin/dashboard">DASHBOARD</a>
+                    <i data-lucide="chevron-right" size="12"></i>
+                    <span class="current">CATEGORIES</span>
+                </nav>
+                <h1 class="page-title">Category Management</h1>
+            </div>
+            <button class="btn-add" onclick="window.location.href='/admin/add-category'">
+                <i data-lucide="plus-circle" size="18"></i>
+                <span>Add New Category</span>
+            </button>
+        </header>
+
+        <!-- Stats Grid -->
+        <section class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-label">TOTAL CATEGORIES</span>
+                <div class="stat-value-group">
+                    <span class="stat-value"><%= stats.total || 0 %></span>
+                    <span class="stat-trend">+2 this month</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">ACTIVE</span>
+                <div class="stat-value-group">
+                    <span class="stat-value"><%= stats.active || 0 %></span>
+                    <span class="status-indicator indicator-active"></span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">INACTIVE</span>
+                <div class="stat-value-group">
+                    <span class="stat-value"><%= stats.inactive || 0 %></span>
+                    <span class="status-indicator indicator-inactive"></span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Search & Filter Bar -->
+       <form
+method="GET"
+action="/admin/categories"
+class="filter-bar"
+>
+
+<div class="search-wrapper">
+
+<i
+data-lucide="search"
+size="18"
+class="search-icon">
+</i>
+
+<input
+type="text"
+name="search"
+class="search-input"
+placeholder="Search categories..."
+value="<%= search %>"
+>
+
+</div>
+
+<div class="filter-group">
+
+<span class="filter-label">
+Filter Status:
+</span>
+
+<div class="filter-select-wrapper">
+
+<select
+name="status"
+class="filter-select"
+>
+
+<option
+value="all"
+<%= status === "all" ? "selected" : "" %>>
+All
+</option>
+
+<option
+value="active"
+<%= status === "active" ? "selected" : "" %>>
+Active
+</option>
+
+<option
+value="inactive"
+<%= status === "inactive" ? "selected" : "" %>>
+Inactive
+</option>
+
+</select>
+
+<i
+data-lucide="chevron-down"
+size="18"
+class="select-chevron">
+</i>
+
+</div>
+
+</div>
+
+<button
+type="submit"
+class="btn-add"
+style="height: 48px;"
+>
+
+Search
+
+</button>
+
+<a
+href="/admin/categories"
+class="page-btn"
+>
+
+Clear
+
+</a>
+
+</form>
+
+        <!-- Categories Table -->
+        <div class="table-card">
+            <div class="table-header">
+                <h2>All Categories</h2>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="categories-table">
+                    <thead>
+                        <tr>
+                            <th>PREVIEW</th>
+                            <th>CATEGORY NAME</th>
+                            <th>PARENT CATEGORY</th>
+                            <th>TOTAL PRODUCTS</th>
+                            <th>STATUS</th>
+                            <th style="text-align: right;">ACTIONS</th>
+                        </tr>
+                    </thead>
+                    <tbody id="categoryTableBody">
+                        <% if (categories && categories.length > 0) { %>
+                            <% categories.forEach(category => { %>
+                                <tr data-id="<%= category._id %>">
+                                    <td>
+                                        <img src="<%= category.image || '/img/placeholder-category.jpg' %>" alt="<%= category.name %>" class="category-preview">
+                                    </td>
+                                    <td>
+                                        <a href="#" class="category-name"><%= category.name %></a>
+                                    </td>
+                                    <td>
+                                        <span class="parent-category"><%= category.parentName || 'Top-level' %></span>
+                                    </td>
+                                    <td>
+                                        <span class="product-count-badge"><%= category.productCount || 0 %> Products</span>
+                                    </td>
+                                    <td>
+                                        <div class="status-badge <%= category.isActive ? '' : 'inactive' %>">
+                                            <span class="status-indicator <%= category.isActive ? 'indicator-active' : 'indicator-inactive' %>"></span>
+                                            <%= category.isActive ? 'Active' : 'Inactive' %>
+                                        </div>
+                                    </td>
+                                    <td class="actions-cell">
+                                        <button class="action-btn" title="Edit Category" onclick="window.location.href='/admin/edit-category/<%= category._id %>'">
+                                            <i data-lucide="edit-3" size="18"></i>
+                                        </button>
+                                        <button class="action-btn delete-btn" title="Delete Category" data-id="<%= category._id %>">
+                                            <i data-lucide="trash-2" size="18"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                                    No categories found.
+                                </td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination Footer -->
+            <div class="pagination-footer">
+                <span class="pagination-info">
+                    Showing <%= (currentPage - 1) * limit + 1 %> - <%= Math.min(currentPage * limit, totalCategories) %> of <%= totalCategories %> Categories
+                </span>
+                <div class="pagination-controls">
+                    <% if (currentPage > 1) { %>
+                        <a href="?page=<%= currentPage - 1 %>" class="page-btn">Previous</a>
+                    <% } %>
+                    
+                    <% for(let i = 1; i <= totalPages; i++) { %>
+                        <a href="?page=<%= i %>" class="page-btn <%= i === currentPage ? 'active' : '' %>"><%= i %></a>
+                    <% } %>
+
+                    <% if (currentPage < totalPages) { %>
+                        <a href="?page=<%= currentPage + 1 %>" class="page-btn">Next</a>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+
+        <footer class="page-footer">
+            <span class="footer-text">© 2026 iStore Admin</span>
+        </footer>
+
+    </main>
+
+    <script>
+
+lucide.createIcons()
+
+/* =========================
+   PREMIUM TOAST FUNCTION
+========================= */
+
+const premiumToast = (title, icon = "success") => {
+
+Swal.fire({
+
+toast: true,
+
+position: "top",
+
+icon,
+
+title,
+
+showConfirmButton: false,
+
+timer: 2200,
+
+timerProgressBar: true,
+
+background: "#FFFFFF",
+
+color: "#2C1421",
+
+iconColor: "#701A75",
+
+customClass: {
+
+popup: "premium-toast"
+
+},
+
+showClass: {
+
+popup: `
+animate__animated
+animate__fadeInDown
+animate__faster
+`
+
+},
+
+hideClass: {
+
+popup: `
+animate__animated
+animate__fadeOutUp
+animate__faster
+`
+
+}
+
+})
+
+}
+
+
+
+/* =========================
+   SUCCESS TOASTS
+========================= */
+
+const params =
+new URLSearchParams(window.location.search)
+
+const success =
+params.get("success")
+
+
+
+if (success === "added") {
+
+premiumToast(
+"Category added successfully"
+)
+
+}
+
+
+
+if (success === "updated") {
+
+premiumToast(
+"Category updated successfully"
+)
+
+}
+
+
+
+/* REMOVE URL PARAMS */
+
+if (success) {
+
+window.history.replaceState(
+
+{},
+
+document.title,
+
+window.location.pathname
+
+)
+
+}
+
+
+
+/* =========================
+   DELETE CATEGORY
+========================= */
+
+document
+.querySelectorAll('.delete-btn')
+
+.forEach(btn => {
+
+btn.addEventListener(
+
+'click',
+
+async () => {
+
+const categoryId =
+btn.dataset.id
+
+
+
+const result =
+await Swal.fire({
+
+title: 'Delete Category?',
+
+text:
+"This category will be removed from the store.",
+
+icon: 'warning',
+
+background: '#FFFFFF',
+
+color: '#2C1421',
+
+confirmButtonColor: '#603763',
+
+cancelButtonColor: '#E5E7EB',
+
+confirmButtonText: 'Delete',
+
+cancelButtonText: 'Cancel',
+
+reverseButtons: true,
+
+showClass: {
+
+popup: `
+animate__animated
+animate__zoomIn
+animate__faster
+`
+
+},
+
+hideClass: {
+
+popup: `
+animate__animated
+animate__zoomOut
+animate__faster
+`
+
+}
+
+})
+
+
+
+if (result.isConfirmed) {
+
+try {
+
+const response =
+await fetch(
+
+`/admin/delete-category/${categoryId}`,
+
+{
+
+method: "PATCH"
+
+}
+
+)
+
+
+
+const data =
+await response.json()
+
+
+
+if (data.success) {
+
+premiumToast(
+"Category deleted successfully"
+)
+
+
+
+setTimeout(() => {
+
+window.location.reload()
+
+}, 1200)
+
+}
+
+else {
+
+premiumToast(
+data.message ||
+"Failed to delete category",
+"error"
+)
+
+}
+
+}
+
+catch (error) {
+
+console.log(error)
+
+premiumToast(
+"Something went wrong",
+"error"
+)
+
+}
+
+}
+
+}
+
+)
+
+})
+
+</script>
+</body>
+</html>

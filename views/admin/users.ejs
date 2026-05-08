@@ -467,12 +467,15 @@ data-id="<%= user._id %>">
       }
 
       const response = await fetch(
-        `/admin/block-user/${userId}`,
-        {
-          method: "PATCH",
-          credentials: "same-origin"
-        }
-      )
+  `/admin/block-user/${userId}`,
+  {
+    method: "PATCH",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json"
+    }
+  }
+)
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`)
@@ -487,7 +490,7 @@ data-id="<%= user._id %>">
           timer: 1000,
           showConfirmButton: false
         })
-        location.reload()
+        window.location.href = "/admin/users"
       } else {
         throw new Error("Server returned success: false")
       }

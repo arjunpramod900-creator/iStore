@@ -40,9 +40,7 @@ renderAdminLogin
 ============================ */
 
 router.post(
-
 "/login",
-
 adminLogin
 
 )
@@ -53,9 +51,8 @@ adminLogin
 ============================ */
 
 router.get(
-
 "/forgot-password",
-
+adminLoggedOut,
 renderForgotPassword
 
 )
@@ -79,9 +76,8 @@ sendAdminOTP
 ============================ */
 
 router.get(
-
 "/verify-otp",
-
+adminLoggedOut,
 renderAdminOTP
 
 )
@@ -105,6 +101,7 @@ verifyAdminOTP
 ============================ */
 router.get(
 "/reset-password",
+adminLoggedOut,
 renderAdminResetPassword
 )
 

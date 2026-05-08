@@ -1,13 +1,32 @@
+import User from "../models/User.js"
+
+
+
 /* =========================
    CHECK USER LOGGED IN
 ========================= */
-export const isLoggedIn = (req, res, next) => {
 
-/* Skip admin routes completely */
+export const isLoggedIn = async (
+
+req,
+res,
+next
+
+) => {
+
+try {
+
+/* Skip admin routes */
 
 if (req.originalUrl.startsWith("/admin")) {
+
 return next()
+
 }
+
+
+
+/* If not logged in */
 
 if (!req.session.userId) {
 
@@ -20,7 +39,49 @@ return res.redirect("/login")
 
 }
 
+
+
+/* =========================
+   CHECK BLOCKED USER
+========================= */
+
+const user =
+await User.findById(
+req.session.userId
+)
+
+
+
+if (!user || user.isBlocked) {
+
+/* Remove only user session */
+
+delete req.session.userId
+
+
+
+/* Redirect to HOME as guest */
+
+return res.redirect("/")
+
+}
+
+
+
 next()
+
+}
+
+catch (error) {
+
+console.log(
+"isLoggedIn Middleware Error:",
+error
+)
+
+return res.redirect("/login")
+
+}
 
 }
 

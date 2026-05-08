@@ -232,7 +232,23 @@ router.post(
 
 )
 
+/* =========================
+   CHANGE PASSWORD OTP
+========================= */
 
+router.post(
+"/send-change-password-otp",
+authController.sendChangePasswordOTP
+)
+
+/* =========================
+   EMAIL CHANGE OTP
+========================= */
+
+router.post(
+"/send-email-change-otp",
+authController.sendEmailChangeOTP
+)
 
 /* =========================
    LOGOUT ROUTE
@@ -248,6 +264,28 @@ router.get(
 
 )
 
+/* =========================
+   VERIFY EMAIL / PASSWORD OTP PAGE
+========================= */
+
+router.get(
+"/verify-email-otp",
+
+isLoggedIn,
+
+(req, res) => {
+
+const flow =
+req.query.flow
+
+res.render(
+"user/verify-emailpass-otp",
+{ flow }
+
+)
+
+}
+)
 
 
 export default router

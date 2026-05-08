@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add New Category - Admin | iStore</title>
+    <link rel="stylesheet" href="/css/admin-header.css">
+<link rel="stylesheet" href="/css/admin-add-category.css">
+<link rel="stylesheet" href="/css/admin-dashboard.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+
+    <!-- Top Navbar -->
+   <%- include("../partials/admin/header") %>
+
+    <main class="main-content">
+        
+   <!-- Breadcrumbs & Header -->
+<header class="page-header">
+
+    <div class="header-left">
+
+        <nav class="breadcrumb">
+
+            <a href="/admin/dashboard">
+            DASHBOARD
+            </a>
+
+            <i data-lucide="chevron-right" size="12"></i>
+
+            <a href="/admin/categories">
+            CATEGORIES
+            </a>
+
+            <i data-lucide="chevron-right" size="12"></i>
+
+            <span class="current">
+            ADD CATEGORY
+            </span>
+
+        </nav>
+
+        <h1 class="page-title">
+        Add New Category
+        </h1>
+
+    </div>
+
+</header>
+        <form action="/admin/add-category" method="POST" enctype="multipart/form-data" id="categoryForm">
+            <div class="form-grid">
+                
+                <!-- Left Column -->
+                <div class="left-column">
+                    <section class="card">
+                        <h2 class="card-title">Category Details</h2>
+                        
+                        <div class="form-group">
+                            <label class="form-label">CATEGORY NAME</label>
+                            <input type="text" class="form-input" name="name" placeholder="Example: Smartphones" maxlength="40" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">CATEGORY DESCRIPTION</label>
+                            <textarea class="form-textarea" name="description" maxlength="200" placeholder="Describe the category's purpose and contents..."></textarea>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Right Column -->
+                <div class="right-column">
+                    
+                    <!-- Image Card -->
+                    <section class="card" style="margin-bottom: 32px;">
+                        <h2 class="card-title">Category Image</h2>
+                        <div class="image-upload-box">
+                            <i data-lucide="upload-cloud" class="upload-icon" size="32"></i>
+                            <span class="upload-text">Drop image here</span>
+                            <span class="upload-subtext">PNG, JPG up to 5MB</span>
+                            <input type="file" class="file-input" name="image" accept="image/*" required>
+                            <img id="previewImage" style=" width: 100%; max-height: 220px; object-fit: cover; border-radius: 16px; display: none; margin-top: 16px;"/>
+                        </div>
+                        <div class="image-actions">
+                            <a href="#" class="action-link link-replace">Replace Image</a>
+                            <a href="#" class="action-link link-remove">Remove</a>
+                        </div>
+                    </section>
+
+                    <!-- Visibility Card -->
+                    <section class="card visibility-card">
+                        <h2 class="card-title">Visibility</h2>
+                        <input type="hidden" name="isActive" id="isActiveInput" value="true">
+                        
+                        <div class="status-toggle-group">
+                            <div class="status-info">
+                                <span class="status-label">Category Status</span>
+                                <span class="status-desc">Visible in store navigation</span>
+                            </div>
+                            <div class="toggle-switch">
+                                <div class="toggle-handle"></div>
+                            </div>
+                        </div>
+
+                        <div class="system-indicator">
+                            <div class="indicator-dot"></div>
+                            <span class="indicator-text">SYSTEM READY</span>
+                        </div>
+                    </section>
+                </div>
+
+            </div>
+
+            <!-- Bottom Actions -->
+            <div class="bottom-actions">
+                <a href="/admin/categories" class="btn-cancel">Cancel Changes</a>
+                <button type="submit" class="btn-save">Save Category</button>
+            </div>
+        </form>
+
+        <footer style="margin-top: 80px; text-align: center; padding-bottom: 48px;">
+            <p style="font-size: 14px; color: rgba(77, 68, 76, 0.6);">© 2026 iStore Admin</p>
+        </footer>
+
+    </main>
+
+         <script>
+
+lucide.createIcons()
+
+/* =========================
+   TOGGLE STATUS
+========================= */
+
+
+const toggle =
+document.querySelector(".toggle-switch")
+
+const handle =
+document.querySelector(".toggle-handle")
+
+const statusInput =
+document.getElementById("isActiveInput")
+
+
+
+/* INITIAL STATE */
+
+let isActive = true
+
+statusInput.value = "true"
+
+
+
+toggle.addEventListener("click", () => {
+
+isActive = !isActive
+
+
+
+/* IMPORTANT */
+
+statusInput.value =
+
+isActive ? "true" : "false"
+
+
+
+if (isActive) {
+
+toggle.style.background =
+"#603763"
+
+handle.style.right = "2px"
+
+handle.style.left = "auto"
+
+}
+
+else {
+
+toggle.style.background =
+"#D1D5DB"
+
+handle.style.right = "auto"
+
+handle.style.left = "2px"
+
+}
+
+})
+
+
+
+/* =========================
+   IMAGE PREVIEW
+========================= */
+
+const imageInput =
+document.querySelector(
+'input[name="image"]'
+)
+
+const previewImage =
+document.getElementById(
+"previewImage"
+)
+
+const replaceBtn =
+document.querySelector(".link-replace")
+
+const removeBtn =
+document.querySelector(".link-remove")
+
+
+
+imageInput.addEventListener(
+
+"change",
+
+function () {
+
+const file =
+this.files[0]
+
+if (!file) return
+
+
+
+/* FILE TYPE VALIDATION */
+
+const allowedTypes = [
+
+"image/jpeg",
+"image/png",
+"image/jpg",
+"image/webp"
+
+]
+
+if (!allowedTypes.includes(file.type)) {
+
+Swal.fire({
+
+icon: "error",
+
+title: "Invalid File",
+
+text: "Only JPG, PNG or WEBP images are allowed"
+
+})
+
+imageInput.value = ""
+
+previewImage.style.display = "none"
+
+return
+
+}
+
+
+
+/* FILE SIZE VALIDATION */
+
+const maxSize =
+5 * 1024 * 1024
+
+if (file.size > maxSize) {
+
+Swal.fire({
+
+icon: "error",
+
+title: "File Too Large",
+
+text: "Image size must be below 5MB"
+
+})
+
+imageInput.value = ""
+
+previewImage.style.display = "none"
+
+return
+
+}
+
+
+
+/* IMAGE PREVIEW */
+
+const reader =
+new FileReader()
+
+reader.onload = function (e) {
+
+previewImage.src =
+e.target.result
+
+previewImage.style.display =
+"block"
+
+}
+
+reader.readAsDataURL(file)
+
+}
+
+)
+
+
+
+/* =========================
+   REPLACE IMAGE
+========================= */
+
+replaceBtn.addEventListener(
+
+"click",
+
+function (e) {
+
+e.preventDefault()
+
+imageInput.click()
+
+}
+
+)
+
+
+
+/* =========================
+   REMOVE IMAGE
+========================= */
+
+removeBtn.addEventListener(
+
+"click",
+
+function (e) {
+
+e.preventDefault()
+
+imageInput.value = ""
+
+previewImage.src = ""
+
+previewImage.style.display =
+"none"
+
+}
+
+)
+
+
+
+/* =========================
+   FORM VALIDATION
+========================= */
+
+const categoryForm =
+document.getElementById("categoryForm")
+
+categoryForm.addEventListener(
+
+"submit",
+
+function (e) {
+
+const name =
+document.querySelector(
+'input[name="name"]'
+)
+
+const description =
+document.querySelector(
+'textarea[name="description"]'
+)
+
+const trimmedName =
+name.value.trim()
+
+const trimmedDescription =
+description.value.trim()
+
+
+
+/* CATEGORY NAME */
+
+if (
+
+trimmedName.length < 3 ||
+
+trimmedName.length > 40
+
+) {
+
+e.preventDefault()
+
+Swal.fire({
+
+icon: "error",
+
+title: "Validation Error",
+
+text:
+"Category name must be between 3 and 40 characters"
+
+})
+
+return
+
+}
+
+
+
+/* ONLY LETTERS + SPACES */
+
+const categoryRegex =
+/^[A-Za-z\s]+$/
+
+if (!categoryRegex.test(trimmedName)) {
+
+e.preventDefault()
+
+Swal.fire({
+
+icon: "error",
+
+title: "Invalid Category",
+
+text:
+"Category name should contain only letters and spaces"
+
+})
+
+return
+
+}
+
+
+
+/* DESCRIPTION */
+
+if (
+
+trimmedDescription &&
+trimmedDescription.length < 10
+
+) {
+
+e.preventDefault()
+
+Swal.fire({
+
+icon: "error",
+
+title: "Invalid Description",
+
+text:
+"Description must be at least 10 characters"
+
+})
+
+return
+
+}
+
+
+
+/* IMAGE REQUIRED */
+
+if (!imageInput.files.length) {
+
+e.preventDefault()
+
+Swal.fire({
+
+icon: "error",
+
+title: "Image Required",
+
+text:
+"Please upload a category image"
+
+})
+
+return
+
+}
+
+
+
+/* SUCCESS LOADER */
+
+Swal.fire({
+
+title: "Saving Category...",
+
+text: "Please wait",
+
+allowOutsideClick: false,
+
+didOpen: () => {
+
+Swal.showLoading()
+
+}
+
+})
+
+}
+
+)
+
+</script>
+</body>
+</html>
