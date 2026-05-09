@@ -48,12 +48,23 @@ async (queryData) => {
     queryData.status || "all"
 
 
+let query = {}
 
-  let query = {
+/* 
+   TRASH FILTER
+ */
 
-    isDeleted: false
+if (status === "trash") {
 
-  }
+query.isDeleted = true
+
+}
+
+else {
+
+query.isDeleted = false
+
+}
 
 
 
@@ -365,9 +376,30 @@ async (req) => {
 
 
 
-  const slug =
-    generateSlug(name)
+  let slug =
+generateSlug(name)
 
+/* CHECK SLUG */
+
+const existingSlug =
+await Category.findOne({
+
+slug,
+
+_id: {
+
+$ne: categoryId
+
+}
+
+})
+
+if (existingSlug) {
+
+slug =
+`${slug}-${Date.now()}`
+
+}
 
 
   /* DUPLICATE */
@@ -510,6 +542,64 @@ async (categoryId) => {
 
     }
 
+  )
+
+}
+
+/* ============================
+   RESTORE CATEGORY
+============================ */
+
+export const restoreCategoryService =
+async (categoryId) => {
+
+  const category =
+    await Category.findById(categoryId)
+
+  if (!category) {
+
+    throw new Error(
+      "Category not found"
+    )
+
+  }
+
+  await Category.findByIdAndUpdate(
+
+    categoryId,
+
+    {
+
+      isDeleted: false
+
+    }
+
+  )
+
+}
+
+
+
+/* ============================
+   PERMANENT DELETE CATEGORY
+============================ */
+
+export const permanentDeleteCategoryService =
+async (categoryId) => {
+
+  const category =
+    await Category.findById(categoryId)
+
+  if (!category) {
+
+    throw new Error(
+      "Category not found"
+    )
+
+  }
+
+  await Category.findByIdAndDelete(
+    categoryId
   )
 
 }

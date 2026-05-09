@@ -1,7 +1,5 @@
 import { z } from "zod"
 
-
-
 export const variantSchema = z.object({
 
 SKU: z
@@ -10,9 +8,21 @@ SKU: z
 
 .trim()
 
-.min(3, "SKU is required")
+.min(
 
-.max(50),
+3,
+
+"SKU is required"
+
+)
+
+.max(
+
+50,
+
+"SKU is too long"
+
+),
 
 
 
@@ -52,7 +62,13 @@ stock: z
 
 .number()
 
-.min(0, "Stock cannot be negative"),
+.min(
+
+0,
+
+"Stock cannot be negative"
+
+),
 
 
 
@@ -62,7 +78,13 @@ price: z
 
 .number()
 
-.min(1, "Price must be greater than 0"),
+.min(
+
+1,
+
+"Price must be greater than 0"
+
+),
 
 
 
@@ -86,7 +108,25 @@ discountPercentage: z
 
 .min(0)
 
-.max(100)
+.max(
+
+100,
+
+"Discount cannot exceed 100%"
+
+)
+
+.optional(),
+
+
+
+images: z
+
+.array(
+
+z.string()
+
+)
 
 .optional(),
 
@@ -97,12 +137,19 @@ isDefault: z
 .union([
 
 z.boolean(),
-
 z.string()
 
 ])
 
-.optional(),
+.optional()
+
+.transform(val =>
+
+val === true ||
+
+val === "true"
+
+),
 
 
 
@@ -111,11 +158,18 @@ isActive: z
 .union([
 
 z.boolean(),
-
 z.string()
 
 ])
 
 .optional()
+
+.transform(val =>
+
+val === true ||
+
+val === "true"
+
+)
 
 })

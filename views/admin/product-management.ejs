@@ -1,0 +1,817 @@
+<!-- product-management.ejs -->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+name="viewport"
+content="width=device-width, initial-scale=1.0"
+>
+
+<title>
+Product Management - Admin | iStore
+</title>
+
+<link
+rel="stylesheet"
+href="/css/admin-header.css"
+>
+
+<link
+rel="stylesheet"
+href="/css/admin-dashboard.css"
+>
+
+<link
+rel="stylesheet"
+href="/css/admin-products.css"
+>
+
+<link
+href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+rel="stylesheet"
+>
+
+<link
+rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+/>
+
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+
+<%- include("../partials/admin/header") %>
+
+<main class="dashboard-main">
+
+<!-- PAGE HEADER -->
+
+<header class="page-header">
+
+<div class="header-left">
+
+<nav class="breadcrumb">
+
+<a href="/admin/dashboard">
+DASHBOARD
+</a>
+
+<i
+data-lucide="chevron-right"
+size="12"
+>
+</i>
+
+<span class="current">
+PRODUCTS
+</span>
+
+</nav>
+
+<h1 class="page-title">
+Product Management
+</h1>
+
+<p class="page-subtitle">
+Manage all store products efficiently.
+</p>
+
+</div>
+
+</header>
+
+<!-- STATS -->
+
+<section class="stats-grid">
+
+<!-- TOTAL -->
+
+<div class="stat-card">
+
+<div class="stat-header">
+
+<span class="stat-label">
+TOTAL PRODUCTS
+</span>
+
+<i
+data-lucide="package"
+size="20"
+>
+</i>
+
+</div>
+
+<span class="stat-value">
+
+<%= stats.total %>
+
+</span>
+
+<div class="stat-sub">
+
+<i
+data-lucide="trending-up"
+size="14"
+>
+</i>
+
+Inventory products
+
+</div>
+
+</div>
+
+<!-- ACTIVE -->
+
+<div class="stat-card">
+
+<div class="stat-header">
+
+<span class="stat-label">
+ACTIVE PRODUCTS
+</span>
+
+<div class="status-dot-small dot-pink">
+</div>
+
+</div>
+
+<span class="stat-value">
+
+<%= stats.active %>
+
+</span>
+
+<div class="stat-sub">
+Currently visible in store
+</div>
+
+</div>
+
+<!-- INACTIVE -->
+
+<div class="stat-card">
+
+<div class="stat-header">
+
+<span class="stat-label">
+INACTIVE PRODUCTS
+</span>
+
+<div class="status-dot-small dot-gray">
+</div>
+
+</div>
+
+<span class="stat-value">
+
+<%= stats.inactive %>
+
+</span>
+
+<div class="stat-sub">
+Hidden from storefront
+</div>
+
+</div>
+
+</section>
+
+<!-- ACTION BAR -->
+
+<form
+method="GET"
+action="/admin/products"
+>
+
+<section class="action-bar">
+
+<div class="filters-left">
+
+<!-- SEARCH -->
+
+<div class="search-wrapper">
+
+<i
+data-lucide="search"
+size="16"
+class="search-icon-inline"
+>
+</i>
+
+<input
+type="text"
+name="search"
+class="search-input-field"
+placeholder="Search products..."
+value="<%= search %>"
+>
+
+</div>
+
+<!-- CATEGORY -->
+
+<select
+name="category"
+class="filter-select"
+>
+
+<option value="">
+All Categories
+</option>
+
+<% categories.forEach(categoryItem => { %>
+
+<option
+value="<%= categoryItem._id %>"
+<%= categoryItem._id.toString() === category
+? "selected"
+: "" %>
+>
+
+<%= categoryItem.name %>
+
+</option>
+
+<% }) %>
+
+</select>
+
+<!-- STATUS -->
+
+<select
+name="status"
+class="filter-select"
+>
+
+<option
+value="all"
+<%= status === "all"
+? "selected"
+: "" %>
+>
+
+All Status
+
+</option>
+
+<option
+value="active"
+<%= status === "active"
+? "selected"
+: "" %>
+>
+
+Active
+
+</option>
+
+<option
+value="inactive"
+<%= status === "inactive"
+? "selected"
+: "" %>
+>
+
+Inactive
+
+</option>
+
+</select>
+
+<button
+type="submit"
+class="btn-add"
+>
+
+<i data-lucide="filter">
+</i>
+
+Apply
+
+</button>
+
+</div>
+
+<a
+href="/admin/products/add"
+class="btn-add"
+>
+
+<i data-lucide="plus">
+</i>
+
+Add Product
+
+</a>
+
+</section>
+
+</form>
+
+<!-- TABLE -->
+
+<div class="table-card">
+
+<div class="table-header-row">
+
+<h2 class="table-title">
+All Products
+</h2>
+
+<a
+href="#"
+class="btn-export"
+>
+
+Export CSV
+
+</a>
+
+</div>
+
+<div class="table-wrapper">
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>
+PRODUCT
+</th>
+
+<th>
+CATEGORY
+</th>
+
+<th>
+VARIANTS
+</th>
+
+<th>
+PRICE
+</th>
+
+<th style="text-align:right;">
+STOCK
+</th>
+
+<th>
+STATUS
+</th>
+
+<th style="text-align:right;">
+ACTIONS
+</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+<% if(products.length > 0) { %>
+
+<% products.forEach(product => { %>
+
+<tr>
+
+<!-- PRODUCT -->
+
+<td>
+
+<div class="product-info-cell">
+
+<img
+src="<%= product.thumbnail || '/images/default-product.png' %>"
+class="product-thumb"
+alt="<%= product.name %>"
+>
+
+<div class="product-details">
+
+<span class="product-name">
+
+<%= product.name %>
+
+</span>
+
+<span class="product-sku">
+
+SKU:
+<%= product.defaultSKU %>
+
+</span>
+
+</div>
+
+</div>
+
+</td>
+
+<!-- CATEGORY -->
+
+<td>
+
+<%= product.categoryId?.name || "N/A" %>
+
+</td>
+
+<!-- VARIANTS -->
+
+<td>
+
+<%= product.variantCount %> Variants
+
+</td>
+
+<!-- PRICE -->
+
+<td class="price-text">
+
+₹<%= product.defaultPrice.toLocaleString() %>
+
+</td>
+
+<!-- STOCK -->
+
+<td style="text-align:right;">
+
+<%= product.totalStock %>
+
+</td>
+
+<!-- STATUS -->
+
+<td>
+
+<div class="status-badge">
+
+<div
+class="status-dot-small
+<%= product.isActive
+? 'dot-pink'
+: 'dot-gray' %>"
+>
+</div>
+
+<%= product.isActive
+? "Active"
+: "Inactive" %>
+
+</div>
+
+</td>
+
+<!-- ACTIONS -->
+
+<td>
+
+<div class="action-btns">
+
+<!-- VIEW -->
+
+<a
+href="/admin/products/<%= product._id %>"
+class="btn-icon-action"
+>
+
+<i data-lucide="eye">
+</i>
+
+</a>
+
+<!-- EDIT -->
+
+<a
+href="/admin/products/edit/<%= product._id %>"
+class="btn-icon-action"
+>
+
+<i data-lucide="edit-2">
+</i>
+
+</a>
+
+<!-- DELETE -->
+
+<button
+type="button"
+class="btn-icon-action delete-btn"
+data-id="<%= product._id %>"
+>
+
+<i data-lucide="trash-2">
+</i>
+
+</button>
+
+</div>
+
+</td>
+
+</tr>
+
+<% }) %>
+
+<% } else { %>
+
+<tr>
+
+<td
+colspan="7"
+class="empty-table"
+>
+
+No products found
+
+</td>
+
+</tr>
+
+<% } %>
+
+</tbody>
+
+</table>
+
+</div>
+
+<!-- PAGINATION -->
+
+<div class="pagination-container">
+
+<span class="pagination-info">
+
+Showing
+
+<%= ((currentPage - 1) * limit) + 1 %>
+
+to
+
+<%= Math.min(currentPage * limit, totalProducts) %>
+
+of
+
+<%= totalProducts %>
+
+entries
+
+</span>
+
+<div class="pagination-controls">
+
+<!-- PREVIOUS -->
+
+<% if(currentPage > 1) { %>
+
+<a
+href="?page=<%= currentPage - 1 %>&search=<%= search %>&category=<%= category %>&status=<%= status %>"
+class="page-nav"
+>
+
+<i data-lucide="chevron-left">
+</i>
+
+</a>
+
+<% } %>
+
+<!-- PAGE NUMBERS -->
+
+<% for(let i = 1; i <= totalPages; i++) { %>
+
+<a
+href="?page=<%= i %>&search=<%= search %>&category=<%= category %>&status=<%= status %>"
+class="page-num
+<%= currentPage === i
+? 'active'
+: '' %>"
+>
+
+<%= i %>
+
+</a>
+
+<% } %>
+
+<!-- NEXT -->
+
+<% if(currentPage < totalPages) { %>
+
+<a
+href="?page=<%= currentPage + 1 %>&search=<%= search %>&category=<%= category %>&status=<%= status %>"
+class="page-nav"
+>
+
+<i data-lucide="chevron-right">
+</i>
+
+</a>
+
+<% } %>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- FOOTER -->
+
+<footer class="page-footer">
+
+<span class="footer-text">
+© 2026 iStore Admin
+</span>
+
+</footer>
+
+</main>
+
+
+<% if (req.query.success === "added") { %>
+
+<script>
+
+document.addEventListener(
+
+"DOMContentLoaded",
+
+() => {
+
+Swal.fire({
+
+toast: true,
+
+position: "top",
+
+icon: "success",
+
+title: "Product added successfully",
+
+showConfirmButton: false,
+
+timer: 2400,
+
+timerProgressBar: true,
+
+width: "380px",
+
+padding: "16px 18px",
+
+background: "#FFFFFF",
+
+color: "#2C1421",
+
+iconColor: "#701A75",
+
+customClass: {
+
+popup:
+"animate__animated animate__fadeInDown animate__faster"
+
+}
+
+})
+
+}
+
+)
+
+</script>
+
+<% } %>
+<script>
+
+lucide.createIcons()
+
+/* =========================
+DELETE PRODUCT
+========================= */
+
+document.addEventListener(
+
+"click",
+
+async (e) => {
+
+const btn =
+e.target.closest(".delete-btn")
+
+if (!btn) return
+
+const productId =
+btn.dataset.id
+
+const result =
+await Swal.fire({
+
+title:
+"Delete Product?",
+
+text:
+"This product will be hidden from the store.",
+
+icon:
+"warning",
+
+showCancelButton:
+true,
+
+confirmButtonColor:
+"#603763",
+
+cancelButtonColor:
+"#E5E7EB",
+
+confirmButtonText:
+"Delete"
+
+})
+
+if (!result.isConfirmed) return
+
+try {
+
+const response =
+await fetch(
+
+`/admin/delete-product/${productId}`,
+
+{
+method: "PATCH"
+}
+
+)
+
+const data =
+await response.json()
+
+if (data.success) {
+
+await Swal.fire({
+
+icon:
+"success",
+
+title:
+"Deleted Successfully",
+
+timer:
+1200,
+
+showConfirmButton:
+false
+
+})
+
+window.location.reload()
+
+}
+
+else {
+
+throw new Error()
+
+}
+
+}
+
+catch (error) {
+
+Swal.fire({
+
+icon:
+"error",
+
+title:
+"Failed to delete product"
+
+})
+
+}
+
+}
+
+)
+
+</script>
+
+</body>
+
+</html>

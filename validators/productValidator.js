@@ -1,7 +1,5 @@
 import { z } from "zod"
 
-
-
 export const productSchema = z.object({
 
 name: z
@@ -10,9 +8,21 @@ name: z
 
 .trim()
 
-.min(3, "Product name must be at least 3 characters")
+.min(
 
-.max(100, "Product name cannot exceed 100 characters"),
+3,
+
+"Product name must be at least 3 characters"
+
+)
+
+.max(
+
+100,
+
+"Product name cannot exceed 100 characters"
+
+),
 
 
 
@@ -22,9 +32,21 @@ description: z
 
 .trim()
 
-.min(10, "Description must be at least 10 characters")
+.min(
 
-.max(3000, "Description is too long"),
+10,
+
+"Description must be at least 10 characters"
+
+)
+
+.max(
+
+3000,
+
+"Description is too long"
+
+),
 
 
 
@@ -32,7 +54,15 @@ categoryId: z
 
 .string()
 
-.min(1, "Category is required"),
+.trim()
+
+.min(
+
+1,
+
+"Category is required"
+
+),
 
 
 
@@ -49,12 +79,19 @@ isFeatured: z
 .union([
 
 z.boolean(),
-
 z.string()
 
 ])
 
-.optional(),
+.optional()
+
+.transform(val =>
+
+val === true ||
+
+val === "true"
+
+),
 
 
 
@@ -63,12 +100,19 @@ isBestSeller: z
 .union([
 
 z.boolean(),
-
 z.string()
 
 ])
 
-.optional(),
+.optional()
+
+.transform(val =>
+
+val === true ||
+
+val === "true"
+
+),
 
 
 
@@ -77,12 +121,19 @@ isDeal: z
 .union([
 
 z.boolean(),
-
 z.string()
 
 ])
 
-.optional(),
+.optional()
+
+.transform(val =>
+
+val === true ||
+
+val === "true"
+
+),
 
 
 
@@ -91,11 +142,18 @@ isActive: z
 .union([
 
 z.boolean(),
-
 z.string()
 
 ])
 
 .optional()
+
+.transform(val =>
+
+val === true ||
+
+val === "true"
+
+)
 
 })

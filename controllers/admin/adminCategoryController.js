@@ -8,7 +8,11 @@ import {
 
   updateCategoryService,
 
-  deleteCategoryService
+  deleteCategoryService,
+
+  restoreCategoryService,
+
+  permanentDeleteCategoryService
 
 }
 
@@ -156,21 +160,29 @@ async (req, res) => {
 
   catch (error) {
 
-    return res.status(400).render(
+let errorMessage =
+error.message
 
-      "admin/add-category",
+if (
 
-      {
+error.message.includes(
+"E11000"
+)
 
-        page: "categories",
+) {
 
-        error: error.message
+errorMessage =
+"Category already exists"
 
-      }
+}
 
-    )
+return res.redirect(
 
-  }
+`/admin/categories?error=${encodeURIComponent(errorMessage)}`
+
+)
+
+}
 
 }
 
@@ -197,28 +209,29 @@ async (req, res) => {
 
   catch (error) {
 
-    const category =
-      await getCategoryByIdService(
-        req.params.id
-      )
+let errorMessage =
+error.message
 
-    res.status(400).render(
+if (
 
-      "admin/edit-category",
+error.message.includes(
+"E11000"
+)
 
-      {
+) {
 
-        category,
+errorMessage =
+"Category already exists"
 
-        page: "categories",
+}
 
-        error: error.message
+return res.redirect(
 
-      }
+`/admin/categories?error=${encodeURIComponent(errorMessage)}`
 
-    )
+)
 
-  }
+}
 
 }
 
@@ -249,6 +262,79 @@ async (req, res) => {
   }
 
   catch (error) {
+
+    res.json({
+
+      success: false,
+
+      message: error.message
+
+    })
+
+  }
+
+}
+
+
+/* ============================
+   RESTORE CATEGORY
+============================ */
+export const restoreCategory = async (req, res) => {
+
+  try {
+
+    await restoreCategoryService(
+      req.params.id
+    )
+
+    res.json({
+
+      success: true
+
+    })
+
+  }
+
+  catch (error) {
+
+    console.log(error)
+
+    res.json({
+
+      success: false,
+
+      message: error.message
+
+    })
+
+  }
+
+}
+
+
+/* ============================
+   PERMANENT DELETE CATEGORY
+============================ */
+
+export const permanentDeleteCategory = async (req, res) => {
+
+  try {
+
+    await permanentDeleteCategoryService(
+      req.params.id
+    )
+
+    res.json({
+
+      success: true
+
+    })
+
+  }
+
+  catch (error) {
+
+    console.log(error)
 
     res.json({
 

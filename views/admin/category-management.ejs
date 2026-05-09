@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="/css/admin-header.css">
     <link rel="stylesheet" href="/css/admin-categories.css">
     <link rel="stylesheet" href="/css/admin-dashboard.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -116,6 +116,12 @@ value="inactive"
 Inactive
 </option>
 
+<option
+value="trash"
+<%= status === "trash" ? "selected" : "" %>>
+Trash
+</option>
+
 </select>
 
 <i
@@ -189,14 +195,63 @@ Clear
                                             <%= category.isActive ? 'Active' : 'Inactive' %>
                                         </div>
                                     </td>
-                                    <td class="actions-cell">
-                                        <button class="action-btn" title="Edit Category" onclick="window.location.href='/admin/edit-category/<%= category._id %>'">
-                                            <i data-lucide="edit-3" size="18"></i>
-                                        </button>
-                                        <button class="action-btn delete-btn" title="Delete Category" data-id="<%= category._id %>">
-                                            <i data-lucide="trash-2" size="18"></i>
-                                        </button>
-                                    </td>
+                                   <td class="actions-cell">
+
+<% if(!category.isDeleted) { %>
+
+<!-- EDIT -->
+
+<button
+class="action-btn"
+title="Edit Category"
+onclick="window.location.href='/admin/edit-category/<%= category._id %>'"
+>
+
+<i data-lucide="edit-3" size="18"></i>
+
+</button>
+
+<!-- SOFT DELETE -->
+
+<button
+class="action-btn delete-btn"
+title="Delete Category"
+data-id="<%= category._id %>"
+>
+
+<i data-lucide="trash-2" size="18"></i>
+
+</button>
+
+<% } else { %>
+
+<!-- RESTORE -->
+
+<button
+class="action-btn restore-btn"
+title="Restore Category"
+data-id="<%= category._id %>"
+>
+
+<i data-lucide="rotate-ccw" size="18"></i>
+
+</button>
+
+<!-- PERMANENT DELETE -->
+
+<button
+class="action-btn permanent-delete-btn"
+title="Delete Permanently"
+data-id="<%= category._id %>"
+>
+
+<i data-lucide="x-circle" size="18"></i>
+
+</button>
+
+<% } %>
+
+</td>
                                 </tr>
                             <% }) %>
                         <% } else { %>
@@ -304,14 +359,14 @@ animate__faster
 /* =========================
    SUCCESS TOASTS
 ========================= */
-
 const params =
 new URLSearchParams(window.location.search)
 
 const success =
 params.get("success")
 
-
+const error =
+params.get("error")
 
 if (success === "added") {
 
@@ -333,9 +388,22 @@ premiumToast(
 
 
 
+/* 
+ERROR TOAST
+ */
+
+if (error) {
+
+premiumToast(
+error,
+"error"
+)
+
+}
+
 /* REMOVE URL PARAMS */
 
-if (success) {
+if (success || error) {
 
 window.history.replaceState(
 
@@ -490,6 +558,195 @@ premiumToast(
 
 })
 
+
+
+/* =========================
+   RESTORE CATEGORY
+========================= */
+
+document
+.querySelectorAll('.restore-btn')
+
+.forEach(btn => {
+
+btn.addEventListener(
+
+'click',
+
+async () => {
+
+const categoryId =
+btn.dataset.id
+
+try {
+
+const response =
+await fetch(
+
+`/admin/restore-category/${categoryId}`,
+
+{
+
+method: "PATCH"
+
+}
+
+)
+
+const data =
+await response.json()
+
+if (data.success) {
+
+premiumToast(
+"Category restored successfully"
+)
+
+setTimeout(() => {
+
+window.location.reload()
+
+}, 1200)
+
+}
+
+else {
+
+premiumToast(
+"Failed to restore category",
+"error"
+)
+
+}
+
+}
+
+catch (error) {
+
+premiumToast(
+"Something went wrong",
+"error"
+)
+
+}
+
+}
+
+)
+
+})
+
+
+
+/* =========================
+   PERMANENT DELETE
+========================= */
+
+document
+.querySelectorAll('.permanent-delete-btn')
+
+.forEach(btn => {
+
+btn.addEventListener(
+
+'click',
+
+async () => {
+
+const categoryId =
+btn.dataset.id
+
+const result =
+await Swal.fire({
+
+title:
+"Delete Permanently?",
+
+text:
+"This action cannot be undone.",
+
+icon:
+"warning",
+
+background: "#FFFFFF",
+
+color: "#2C1421",
+
+confirmButtonColor:
+"#BA1A1A",
+
+cancelButtonColor:
+"#E5E7EB",
+
+confirmButtonText:
+"Delete Forever",
+
+cancelButtonText:
+"Cancel",
+
+reverseButtons: true
+
+})
+
+if (!result.isConfirmed) return
+
+try {
+
+const response =
+await fetch(
+
+`/admin/permanent-delete-category/${categoryId}`,
+
+{
+
+method: "DELETE"
+
+}
+
+)
+
+const data =
+await response.json()
+
+if (data.success) {
+
+premiumToast(
+"Category permanently deleted"
+)
+
+setTimeout(() => {
+
+window.location.reload()
+
+}, 1200)
+
+}
+
+else {
+
+premiumToast(
+"Permanent delete failed",
+"error"
+)
+
+}
+
+}
+
+catch (error) {
+
+premiumToast(
+"Something went wrong",
+"error"
+)
+
+}
+
+}
+
+)
+
+})
 </script>
 </body>
 </html>

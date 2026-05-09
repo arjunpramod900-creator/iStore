@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Details - Admin | iStore</title>
+    <link rel="stylesheet" href="/css/admin-product-details.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+    <%- include('partials/admin/header') %>
+
+    <main class="main-canvas">
+        
+        <!-- Header & Breadcrumbs -->
+        <header class="header-section">
+            <nav class="breadcrumbs">
+                <a href="/admin/dashboard">DASHBOARD</a>
+                <span class="separator">/</span>
+                <a href="/admin/products">PRODUCTS</a>
+                <span class="separator">/</span>
+                <span class="active">PRODUCT DETAILS</span>
+            </nav>
+            
+            <div class="title-actions-row">
+                <div class="page-title-group">
+                    <h1>Product Details</h1>
+                    <p>View product insights</p>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn-detail btn-add-variant">
+                        <i data-lucide="plus-circle" size="18"></i>
+                        Add Variant
+                    </button>
+                    <button class="btn-detail btn-edit">
+                        <i data-lucide="edit-3" size="18"></i>
+                        Edit Product
+                    </button>
+                    <button class="btn-detail btn-delete">
+                        <i data-lucide="trash-2" size="18"></i>
+                        Delete
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Analytics Grid -->
+        <section class="analytics-grid">
+            <div class="analytic-card">
+                <div class="analytic-icon-wrapper">
+                    <i data-lucide="package" size="20"></i>
+                </div>
+                <div class="analytic-info">
+                    <span class="analytic-label">Total Stock</span>
+                    <span class="analytic-value">185 units</span>
+                </div>
+            </div>
+            <div class="analytic-card">
+                <div class="analytic-icon-wrapper">
+                    <i data-lucide="shopping-bag" size="20"></i>
+                </div>
+                <div class="analytic-info">
+                    <span class="analytic-label">Total Sales</span>
+                    <span class="analytic-value">1,245 units</span>
+                </div>
+            </div>
+            <div class="analytic-card">
+                <div class="analytic-icon-wrapper">
+                    <i data-lucide="refresh-cw" size="20"></i>
+                </div>
+                <div class="analytic-info">
+                    <span class="analytic-label">Total Returns</span>
+                    <span class="analytic-value">42 units</span>
+                </div>
+            </div>
+            <div class="analytic-card">
+                <div class="analytic-icon-wrapper">
+                    <i data-lucide="banknote" size="20"></i>
+                </div>
+                <div class="analytic-info">
+                    <span class="analytic-label">Revenue</span>
+                    <span class="analytic-value">₹1,82,45,600</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Product Showcase -->
+        <section class="product-showcase-grid">
+            <!-- Left: Gallery -->
+            <div class="product-gallery">
+                <div class="main-image-container">
+                    <img src="/images/prod_macbookm5_1778162180340.png" alt="MacBook Pro M5">
+                </div>
+                <div class="thumbnail-list">
+                    <div class="thumbnail-item active">
+                        <img src="/images/prod_macbookm5_1778162180340.png" alt="Thumb">
+                    </div>
+                    <div class="thumbnail-item">
+                        <img src="/images/prod_macbookm5_1778162180340.png" alt="Thumb">
+                    </div>
+                    <div class="thumbnail-item">
+                        <img src="/images/prod_macbookm5_1778162180340.png" alt="Thumb">
+                    </div>
+                    <div class="thumbnail-item">
+                        <img src="/images/prod_macbookm5_1778162180340.png" alt="Thumb">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Info Panel -->
+            <div class="product-info-panel">
+                <div class="info-header">
+                    <div class="product-title-group">
+                        <span class="badge-status">Premium Series</span>
+                        <h2>MacBook Pro M5 16-inch</h2>
+                    </div>
+                    <div class="status-active-badge">
+                        <div class="status-dot-blur"></div>
+                        <span class="status-active-text">Active</span>
+                    </div>
+                </div>
+
+                <div class="info-details-grid">
+                    <div class="detail-item">
+                        <span class="detail-label">Category</span>
+                        <span class="detail-value">Mac</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Variants</span>
+                        <span class="detail-value">3 Configs Available</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Base Price</span>
+                        <span class="detail-value price">₹2,39,900</span>
+                    </div>
+                </div>
+
+                <div class="description-section">
+                    <span class="detail-label">Description</span>
+                    <p class="description-text">
+                        MacBook Pro M5 delivers unmatched performance and premium build quality designed for professionals. Featuring the revolutionary M5 chip with next-gen neural architecture, stunning Liquid Retina XDR display, and up to 24 hours of battery life.
+                    </p>
+                </div>
+
+                <div class="technical-highlights">
+                    <span class="detail-label">Technical Highlights</span>
+                    <div class="highlight-tags">
+                        <span class="tag">M5 chip with 16-core CPU</span>
+                        <span class="tag">40-core GPU</span>
+                        <span class="tag">Up to 128GB Unified Memory</span>
+                        <span class="tag">1600 nits sustained brightness</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Variant Management -->
+        <section class="variants-section">
+            <h3 class="section-title">Variant Management</h3>
+            <div class="table-card">
+                <table class="variants-table">
+                    <thead>
+                        <tr>
+                            <th>Variant Name</th>
+                            <th>Storage</th>
+                            <th>RAM</th>
+                            <th>Color</th>
+                            <th>Price</th>
+                            <th>Stock</th>
+                            <th style="text-align: right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="font-bold">MBP M5 Base</td>
+                            <td>512 GB</td>
+                            <td>16 GB</td>
+                            <td>Space Black</td>
+                            <td class="font-bold">₹2,39,900</td>
+                            <td><span class="stock-badge">120 units</span></td>
+                            <td>
+                                <div class="variant-actions">
+                                    <button class="btn-icon"><i data-lucide="edit-2" size="16"></i></button>
+                                    <button class="btn-icon"><i data-lucide="trash-2" size="16"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="font-bold">MBP M5 Performance</td>
+                            <td>1 TB</td>
+                            <td>32 GB</td>
+                            <td>Silver</td>
+                            <td class="font-bold">₹2,79,900</td>
+                            <td><span class="stock-badge low">50 units</span></td>
+                            <td>
+                                <div class="variant-actions">
+                                    <button class="btn-icon"><i data-lucide="edit-2" size="16"></i></button>
+                                    <button class="btn-icon"><i data-lucide="trash-2" size="16"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="highlighted">
+                            <td class="font-bold">MBP M5 Maxed</td>
+                            <td>2 TB</td>
+                            <td>128 GB</td>
+                            <td>Space Black</td>
+                            <td class="font-bold">₹4,29,900</td>
+                            <td><span class="stock-badge critical">10 units</span> <span style="font-size: 10px; font-weight: 700; color: #7D205B; margin-left: 8px;">LOW STOCK</span></td>
+                            <td>
+                                <div class="variant-actions">
+                                    <button class="btn-icon"><i data-lucide="edit-2" size="16"></i></button>
+                                    <button class="btn-icon"><i data-lucide="trash-2" size="16"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Charts & Logs -->
+        <section class="analytics-logs-grid">
+            <!-- Left: Charts -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3 class="chart-title">Sales Performance</h3>
+                    <div class="chart-tabs">
+                        <span class="tab active">Weekly</span>
+                        <span class="tab">Monthly</span>
+                    </div>
+                </div>
+                <div class="bar-chart-mock">
+                    <div class="bar" style="height: 40%; background: rgba(96, 55, 99, 0.2);"></div>
+                    <div class="bar" style="height: 60%; background: rgba(96, 55, 99, 0.3);"></div>
+                    <div class="bar" style="height: 50%; background: rgba(96, 55, 99, 0.4);"></div>
+                    <div class="bar" style="height: 80%; background: rgba(96, 55, 99, 0.5);"></div>
+                    <div class="bar" style="height: 65%; background: rgba(96, 55, 99, 0.6);"></div>
+                    <div class="bar" style="height: 90%; background: rgba(96, 55, 99, 0.7);"></div>
+                    <div class="bar" style="height: 75%; background: rgba(96, 55, 99, 0.8);"></div>
+                </div>
+                <div class="progress-grid">
+                    <div class="progress-card">
+                        <span class="detail-label">Return Rate Overview</span>
+                        <div style="display: flex; align-items: center; justify-content: center; height: 100px;">
+                             <!-- Mock Donut -->
+                             <div style="width: 80px; height: 80px; border-radius: 50%; border: 10px solid rgba(122, 78, 124, 0.1); border-top-color: var(--secondary); display: flex; align-items: center; justify-content: center; font-weight: 800;">3.4%</div>
+                        </div>
+                    </div>
+                    <div class="progress-card">
+                        <span class="detail-label">Stock Health</span>
+                        <div class="progress-item">
+                            <div class="progress-labels"><span>Main Warehouse</span><span>85%</span></div>
+                            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 85%; background: var(--secondary);"></div></div>
+                        </div>
+                        <div class="progress-item">
+                            <div class="progress-labels"><span>Retail Outlets</span><span>40%</span></div>
+                            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 40%; background: var(--accent);"></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Activity Log -->
+            <div class="log-card">
+                <h3 class="chart-title">Product Activity Log</h3>
+                <div class="log-timeline">
+                    <div class="log-item">
+                        <div class="log-dot" style="background: #FFD6FC;"></div>
+                        <div class="log-content">
+                            <span class="log-title">Price updated</span>
+                            <span class="log-desc">Admin changed base price to ₹2,39,900</span>
+                            <span class="log-time">2 hours ago</span>
+                        </div>
+                    </div>
+                    <div class="log-item">
+                        <div class="log-dot" style="background: #FFD8E8;"></div>
+                        <div class="log-content">
+                            <span class="log-title">New variant added</span>
+                            <span class="log-desc">Space Black 2 TB added to inventory</span>
+                            <span class="log-time">Yesterday at 4:32 PM</span>
+                        </div>
+                    </div>
+                    <div class="log-item">
+                        <div class="log-dot" style="background: #FFD8E9;"></div>
+                        <div class="log-content">
+                            <span class="log-title">Stock replenished</span>
+                            <span class="log-desc">+50 units added to Base variant</span>
+                            <span class="log-time">Oct 24, 2026</span>
+                        </div>
+                    </div>
+                    <div class="log-item">
+                        <div class="log-dot" style="background: #D0C3CC;"></div>
+                        <div class="log-content">
+                            <span class="log-title">Status changed</span>
+                            <span class="log-desc">Product marked as 'Active'</span>
+                            <span class="log-time">Oct 20, 2026</span>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn-detail" style="width: 100%; justify-content: center; border: 1px solid rgba(96, 55, 99, 0.2); background: none; color: var(--secondary);">
+                    View All Activity
+                </button>
+            </div>
+        </section>
+
+        <!-- Related Ecosystem -->
+        <section class="related-section">
+            <div class="related-header">
+                <h3 class="section-title">Related Ecosystem</h3>
+                <a href="/admin/products" class="link-secondary">Explore Category</a>
+            </div>
+            <div class="related-grid">
+                <div class="product-card">
+                    <div class="product-card-img"><img src="/images/prod_macbookm5_1778162180340.png" alt="MacBook Air"></div>
+                    <span class="product-card-title">MacBook Air M4</span>
+                    <span class="product-card-price">Starting at ₹99,900</span>
+                    <div class="product-card-footer">
+                         <span class="badge-status" style="background: #FFE8F0; color: #4D444C;">42 units left</span>
+                         <i data-lucide="arrow-right" size="16" style="color: var(--secondary);"></i>
+                    </div>
+                </div>
+                <div class="product-card">
+                    <div class="product-card-img"><img src="/images/prod_ipadpro_m4_1778162199426.png" alt="iPad Pro"></div>
+                    <span class="product-card-title">iPad Pro M4</span>
+                    <span class="product-card-price">Starting at ₹89,900</span>
+                    <div class="product-card-footer">
+                         <span class="badge-status" style="background: #FFE8F0; color: #4D444C;">12 units left</span>
+                         <i data-lucide="arrow-right" size="16" style="color: var(--secondary);"></i>
+                    </div>
+                </div>
+                <div class="product-card">
+                    <div class="product-card-img"><img src="/images/prod_iphone17_1778162162498.png" alt="Watch S10"></div>
+                    <span class="product-card-title">Watch Series 10</span>
+                    <span class="product-card-price">Starting at ₹46,900</span>
+                    <div class="product-card-footer">
+                         <span class="badge-status" style="background: #FFE8F0; color: #4D444C;">In Stock</span>
+                         <i data-lucide="arrow-right" size="16" style="color: var(--secondary);"></i>
+                    </div>
+                </div>
+                <div class="product-card">
+                    <div class="product-card-img"><img src="/images/prod_iphone17_1778162162498.png" alt="AirPods Pro 3"></div>
+                    <span class="product-card-title">AirPods Pro 3</span>
+                    <span class="product-card-price">Starting at ₹24,900</span>
+                    <div class="product-card-footer">
+                         <span class="badge-status" style="background: #FFE8F0; color: #4D444C;">Fast Moving</span>
+                         <i data-lucide="arrow-right" size="16" style="color: var(--secondary);"></i>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Site Footer -->
+        <footer class="site-footer">
+            © 2026 iStore Admin — Digital Atelier Environment
+        </footer>
+
+    </main>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>
