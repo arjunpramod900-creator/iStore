@@ -41,6 +41,13 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+    <!-- cropper.js -->
+    <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css"/>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
+
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -421,19 +428,56 @@
 
                    <div class="highlight-tags">
 
-    <span class="tag">
-        Premium Build
-    </span>
+                    <span class="tag">
+                        Premium Build
+                    </span>
 
-    <span class="tag">
-        Official Apple Product
-    </span>
+                    <span class="tag">
+                        Official Apple Product
+                    </span>
 
-    <span class="tag">
-        High Performance
-    </span>
+                    <span class="tag">
+                        High Performance
+                    </span>
 
-</div>
+                    </div>
+
+                </div>
+                <!-- =========================================
+                    VARIANT SPECIFICATIONS
+                ========================================= -->
+
+                <div class="technical-highlights">
+
+                    <span class="detail-label">
+                        Variant Specifications
+                    </span>
+
+                    <div
+                        id="variantSpecsContainer"
+                        class="highlight-tags">
+
+                        <span class="tag" id="specColor">
+                            Black
+                        </span>
+
+                        <span class="tag" id="specStorage">
+                            256GB
+                        </span>
+
+                        <span class="tag" id="specRAM">
+                            8GB RAM
+                        </span>
+
+                        <span class="tag" id="specSKU">
+                            IP17-BLK-256
+                        </span>
+
+                        <span class="tag" id="specStock">
+                            5 Units
+                        </span>
+
+                    </div>
 
                 </div>
 
@@ -540,7 +584,17 @@
 
                             <% variants.forEach(variant => { %>
 
-                                <tr>
+                               <tr
+    class="variant-row"
+
+    data-sku="<%= variant.SKU %>"
+    data-storage="<%= variant.storage %>"
+    data-ram="<%= variant.RAM %>"
+    data-color="<%= variant.color %>"
+    data-price="<%= variant.price %>"
+    data-stock="<%= variant.stock %>"
+    data-images='<%- JSON.stringify(variant.images) %>'
+>
                                     <td>
 
                                         <div class="variant-preview">
@@ -1181,6 +1235,63 @@
     </div>
 
 </div>
+
+<!-- =========================================
+     IMAGE CROPPER MODAL
+========================================= -->
+
+<div
+    class="cropper-overlay"
+    id="cropperOverlay"
+>
+
+    <div class="cropper-modal">
+
+        <div class="cropper-header">
+
+            <h3>
+                Crop Image
+            </h3>
+
+            <button
+                type="button"
+                id="closeCropperBtn"
+                class="cropper-close-btn"
+            >
+                ×
+            </button>
+
+        </div>
+
+        <div class="cropper-body">
+
+            <img id="cropperImage">
+
+        </div>
+
+        <div class="cropper-footer">
+
+            <button
+                type="button"
+                id="cancelCropBtn"
+                class="btn-detail"
+            >
+                Cancel
+            </button>
+
+            <button
+                type="button"
+                id="cropImageBtn"
+                class="btn-detail btn-edit"
+            >
+                Crop & Add
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
         <!-- =========================================
              FOOTER
         ========================================== -->
@@ -1192,6 +1303,15 @@
         </footer>
 
     </main>
+
+    <div
+    class="fullscreen-preview"
+    id="fullscreenPreview"
+>
+
+    <img id="fullscreenImage">
+
+</div>
 
     <!-- =========================================
          SCRIPTS
@@ -1227,18 +1347,92 @@
                     thumb.querySelector("img").src;
 
                 mainImage.style.opacity = "0";
+mainImage.style.transform = "scale(0.98)";
 
-                setTimeout(() => {
+setTimeout(() => {
 
-                    mainImage.src = img;
+    mainImage.src = img;
 
-                    mainImage.style.opacity = "1";
+    mainImage.onload = () => {
 
-                }, 150);
+        mainImage.style.opacity = "1";
+        mainImage.style.transform = "scale(1)";
+
+    };
+
+}, 180);
 
             });
 
         });
+
+
+        /* =========================================
+   FULLSCREEN IMAGE VIEWER
+========================================= */
+
+const fullscreenPreview =
+document.getElementById(
+    "fullscreenPreview"
+);
+
+const fullscreenImage =
+document.getElementById(
+    "fullscreenImage"
+);
+
+mainImage.addEventListener(
+    "click",
+    () => {
+
+        fullscreenPreview.classList.add(
+            "active"
+        );
+
+        fullscreenImage.src =
+        mainImage.src;
+
+        document.body.style.overflow =
+        "hidden";
+
+    }
+);
+
+fullscreenPreview.addEventListener(
+    "click",
+    () => {
+
+        fullscreenPreview.classList.remove(
+            "active"
+        );
+
+        document.body.style.overflow =
+        "";
+
+    }
+);
+document.addEventListener(
+    "keydown",
+    (e) => {
+
+        if(
+            e.key === "Escape" &&
+            fullscreenPreview.classList.contains(
+                "active"
+            )
+        ) {
+
+            fullscreenPreview.classList.remove(
+                "active"
+            );
+
+            document.body.style.overflow =
+            "";
+
+        }
+
+    }
+);
 
         /* =========================================
            VARIANT SEARCH
@@ -1991,26 +2185,401 @@ allImages.forEach((imageData) => {
 /* =========================================
    ADD NEW IMAGES
 ========================================= */
+/* =========================================
+   CROPPER
+========================================= */
+
+const cropperOverlay =
+document.getElementById(
+    "cropperOverlay"
+);
+
+const cropperImage =
+document.getElementById(
+    "cropperImage"
+);
+
+let cropper;
+
+let pendingFiles = [];
+
+/* =========================================
+   OPEN CROPPER
+========================================= */
 
 imageInput.addEventListener(
     "change",
-    (e) => {
+    async (e) => {
 
-        const files =
+        pendingFiles =
         Array.from(e.target.files);
 
-        selectedFiles = [
+        if(!pendingFiles.length) {
+            return;
+        }
 
-            ...selectedFiles,
-
-            ...files
-
-        ];
-
-        renderImages();
+        openCropper(
+            pendingFiles[0]
+        );
 
     }
 );
+
+/* =========================================
+   OPEN SINGLE IMAGE
+========================================= */
+function openCropper(file) {
+
+    const reader =
+    new FileReader();
+
+    reader.onload = function(event) {
+
+        cropperOverlay.classList.add(
+            "active"
+        );
+
+        cropperImage.src =
+        event.target.result;
+
+        setTimeout(() => {
+
+            if(cropper) {
+
+                cropper.destroy();
+
+            }
+
+            cropper = new Cropper(
+                cropperImage,
+                {
+
+                    aspectRatio: 4 / 5,
+
+                    viewMode: 1,
+
+                    dragMode: "move",
+
+                    autoCropArea: 0.8,
+
+                    movable: true,
+
+                    zoomable: true,
+
+                    scalable: true,
+
+                    rotatable: false,
+
+                    cropBoxMovable: true,
+
+                    cropBoxResizable: true,
+
+                    background: false
+
+                }
+            );
+
+        }, 100);
+
+    };
+
+    reader.readAsDataURL(file);
+
+}
+
+/* =========================================
+   CROP IMAGE
+========================================= */
+
+document
+.getElementById("cropImageBtn")
+.addEventListener(
+    "click",
+    () => {
+
+        if(!cropper) return;
+
+        const canvas =
+        cropper.getCroppedCanvas({
+
+            width: 1200,
+            height: 1200,
+
+            imageSmoothingEnabled: true,
+            imageSmoothingQuality: "high"
+
+        });
+
+        canvas.toBlob(
+            (blob) => {
+
+                const croppedFile =
+                new File(
+                    [blob],
+                    `variant-${Date.now()}.jpg`,
+                    {
+                        type: "image/jpeg"
+                    }
+                );
+
+                selectedFiles.push(
+                    croppedFile
+                );
+
+                renderImages();
+
+                cropperOverlay.classList.remove(
+                    "active"
+                );
+
+                cropper.destroy();
+
+                cropper = null;
+
+                /* NEXT IMAGE */
+
+                pendingFiles.shift();
+
+                if(pendingFiles.length) {
+
+                    openCropper(
+                        pendingFiles[0]
+                    );
+
+                }
+
+            },
+            "image/jpeg",
+            0.9
+        );
+
+    }
+);
+
+/* =========================================
+   CLOSE CROPPER
+========================================= */
+
+function closeCropper() {
+
+    cropperOverlay.classList.remove(
+        "active"
+    );
+
+    if(cropper) {
+
+        cropper.destroy();
+
+        cropper = null;
+
+    }
+
+    imageInput.value = "";
+
+}
+
+
+document
+.getElementById("closeCropperBtn")
+.addEventListener(
+    "click",
+    closeCropper
+);
+
+
+document
+.getElementById("cancelCropBtn")
+.addEventListener(
+    "click",
+    closeCropper
+);
+
+
+
+
+/* =========================================
+   VARIANT SWITCHING
+========================================= */
+
+const variantRows =
+document.querySelectorAll(".variant-row");
+
+const specColor =
+document.getElementById("specColor");
+
+const specStorage =
+document.getElementById("specStorage");
+
+const specRAM =
+document.getElementById("specRAM");
+
+const specSKU =
+document.getElementById("specSKU");
+
+const specStock =
+document.getElementById("specStock");
+
+const galleryContainer =
+document.querySelector(".thumbnail-list");
+
+variantRows.forEach((row) => {
+
+    row.addEventListener("click", () => {
+
+        /* ACTIVE ROW */
+
+        variantRows.forEach(r => {
+
+            r.classList.remove(
+                "active-variant"
+            );
+
+        });
+
+        row.classList.add(
+            "active-variant"
+        );
+
+        /* DATA */
+
+        const sku =
+        row.dataset.sku;
+
+        const storage =
+        row.dataset.storage;
+
+        const ram =
+        row.dataset.ram;
+
+        const color =
+        row.dataset.color;
+
+        const stock =
+        row.dataset.stock;
+
+        const price =
+        row.dataset.price;
+
+        const images =
+        JSON.parse(
+            row.dataset.images || "[]"
+        );
+
+        /* UPDATE SPECS */
+
+        specColor.innerText =
+        color;
+
+        specStorage.innerText =
+        storage;
+
+        specRAM.innerText =
+        `${ram} RAM`;
+
+        specSKU.innerText =
+        sku;
+
+        specStock.innerText =
+        `${stock} Units`;
+
+        /* UPDATE PRICE */
+
+        document.querySelector(
+            ".detail-value.price"
+        ).innerText =
+        `₹${Number(price).toLocaleString()}`;
+
+        /* UPDATE MAIN IMAGE */
+
+        if(images.length){
+
+            mainImage.style.opacity = "0";
+
+            setTimeout(() => {
+
+                mainImage.src =
+                images[0];
+
+                mainImage.style.opacity =
+                "1";
+
+            }, 180);
+
+        }
+
+        /* REBUILD THUMBNAILS */
+
+        galleryContainer.innerHTML = "";
+
+        images.forEach((image, index) => {
+
+            const thumb =
+            document.createElement("div");
+
+            thumb.className =
+            `thumbnail-item ${
+                index === 0
+                ? "active"
+                : ""
+            }`;
+
+            thumb.innerHTML = `
+
+                <img
+                    src="${image}"
+                    alt="Thumbnail"
+                >
+
+            `;
+
+            thumb.addEventListener(
+                "click",
+                () => {
+
+                    document
+                    .querySelectorAll(
+                        ".thumbnail-item"
+                    )
+                    .forEach(t => {
+
+                        t.classList.remove(
+                            "active"
+                        );
+
+                    });
+
+                    thumb.classList.add(
+                        "active"
+                    );
+
+                    mainImage.style.opacity =
+                    "0";
+
+                    setTimeout(() => {
+
+                        mainImage.src =
+                        image;
+
+                        mainImage.style.opacity =
+                        "1";
+
+                    }, 150);
+
+                }
+            );
+
+            galleryContainer.appendChild(
+                thumb
+            );
+
+        });
+
+    });
+
+});
+
+
+
 /* =========================================
    SAVE VARIANT
 ========================================= */
@@ -2206,6 +2775,115 @@ formData.append(
     }
 
 });
+
+
+/* =========================================
+   PREMIUM PARALLAX EFFECT
+========================================= */
+
+const imageContainer =
+document.querySelector(
+    ".main-image-container"
+);
+
+imageContainer.addEventListener(
+    "mousemove",
+    (e) => {
+
+        const rect =
+        imageContainer.getBoundingClientRect();
+
+        const x =
+        e.clientX - rect.left;
+
+        const y =
+        e.clientY - rect.top;
+
+        const rotateY =
+        ((x / rect.width) - 0.5) * 5;
+
+        const rotateX =
+        ((y / rect.height) - 0.5) * -5;
+
+        mainImage.style.transform = `
+            perspective(1200px)
+            rotateX(${rotateX}deg)
+            rotateY(${rotateY}deg)
+            scale(1.03)
+        `;
+
+    }
+);
+
+imageContainer.addEventListener(
+    "mouseleave",
+    () => {
+
+        mainImage.style.transform = `
+            perspective(1200px)
+            rotateX(0)
+            rotateY(0)
+            scale(1)
+        `;
+
+    }
+);
+
+/* =========================================
+   MOBILE SWIPE GALLERY
+========================================= */
+
+let currentIndex = 0;
+
+const imageItems =
+[...thumbnails];
+
+let touchStartX = 0;
+let touchEndX = 0;
+
+mainImage.addEventListener(
+    "touchstart",
+    (e) => {
+
+        touchStartX =
+        e.changedTouches[0].screenX;
+
+    }
+);
+
+mainImage.addEventListener(
+    "touchend",
+    (e) => {
+
+        touchEndX =
+        e.changedTouches[0].screenX;
+
+        handleSwipe();
+
+    }
+);
+
+function handleSwipe() {
+
+    if(touchEndX < touchStartX - 50) {
+
+        currentIndex =
+        (currentIndex + 1)
+        % imageItems.length;
+
+    }
+
+    if(touchEndX > touchStartX + 50) {
+
+        currentIndex =
+        (currentIndex - 1 + imageItems.length)
+        % imageItems.length;
+
+    }
+
+    imageItems[currentIndex].click();
+
+}
     </script>
 
 </body>
