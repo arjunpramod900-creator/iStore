@@ -1,365 +1,2212 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Product Details - Admin | iStore</title>
-    <link rel="stylesheet" href="/css/admin-product-details.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Product Details - Admin | iStore
+    </title>
+
+    <!-- CSS -->
+    <link
+        rel="stylesheet"
+        href="/css/admin-product-details.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="/css/admin-header.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="/css/admin-dashboard.css"
+    >
+
+    <!-- Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet"
+    >
+
+    <!-- Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 </head>
+
 <body>
 
-    <%- include('partials/admin/header') %>
+    <%- include('../partials/admin/header') %>
 
     <main class="main-canvas">
-        
-        <!-- Header & Breadcrumbs -->
+
+        <!-- =========================================
+             HEADER
+        ========================================== -->
+
         <header class="header-section">
+
             <nav class="breadcrumbs">
-                <a href="/admin/dashboard">DASHBOARD</a>
+
+                <a href="/admin/dashboard">
+                    DASHBOARD
+                </a>
+
                 <span class="separator">/</span>
-                <a href="/admin/products">PRODUCTS</a>
+
+                <a href="/admin/products">
+                    PRODUCTS
+                </a>
+
                 <span class="separator">/</span>
-                <span class="active">PRODUCT DETAILS</span>
+
+                <span class="active">
+                    PRODUCT DETAILS
+                </span>
+
             </nav>
-            
+
             <div class="title-actions-row">
+
                 <div class="page-title-group">
-                    <h1>Product Details</h1>
-                    <p>View product insights</p>
+
+                    <h1>
+                        Product Details
+                    </h1>
+
+                    <p>
+                        View product insights
+                    </p>
+
                 </div>
+
                 <div class="action-buttons">
-                    <button class="btn-detail btn-add-variant">
-                        <i data-lucide="plus-circle" size="18"></i>
-                        Add Variant
-                    </button>
-                    <button class="btn-detail btn-edit">
-                        <i data-lucide="edit-3" size="18"></i>
+
+                   <button
+    class="btn-detail btn-add-variant"
+    id="openVariantModalBtn"
+>
+
+    <i
+        data-lucide="plus-circle"
+        size="18"
+    ></i>
+
+    Add Variant
+
+</button>
+
+                    <button
+                        class="btn-detail btn-edit"
+                        onclick="window.location.href='/admin/products/edit/<%= product._id %>'"
+                    >
+
+                        <i
+                            data-lucide="edit-3"
+                            size="18"
+                        ></i>
+
                         Edit Product
+
                     </button>
-                    <button class="btn-detail btn-delete">
-                        <i data-lucide="trash-2" size="18"></i>
+
+                    <button
+                        class="btn-detail btn-delete"
+                        id="deleteProductBtn"
+                    >
+
+                        <i
+                            data-lucide="trash-2"
+                            size="18"
+                        ></i>
+
                         Delete
+
                     </button>
+
                 </div>
+
             </div>
+
         </header>
 
-        <!-- Analytics Grid -->
+        <!-- =========================================
+             ANALYTICS GRID
+        ========================================== -->
+
         <section class="analytics-grid">
+
             <div class="analytic-card">
+
                 <div class="analytic-icon-wrapper">
-                    <i data-lucide="package" size="20"></i>
+
+                    <i
+                        data-lucide="package"
+                        size="20"
+                    ></i>
+
                 </div>
-                <div class="analytic-info">
-                    <span class="analytic-label">Total Stock</span>
-                    <span class="analytic-value">185 units</span>
-                </div>
+
+               <div class="analytic-info">
+
+    <span class="analytic-label">
+        Total Stock
+    </span>
+
+    <span class="analytic-value">
+        <%= totalStock %>
+    </span>
+
+    <span class="analytic-subtext">
+        Units
+    </span>
+
+</div>
+
             </div>
+
             <div class="analytic-card">
+
                 <div class="analytic-icon-wrapper">
-                    <i data-lucide="shopping-bag" size="20"></i>
+
+                    <i
+                        data-lucide="shopping-bag"
+                        size="20"
+                    ></i>
+
                 </div>
-                <div class="analytic-info">
-                    <span class="analytic-label">Total Sales</span>
-                    <span class="analytic-value">1,245 units</span>
-                </div>
+
+               <div class="analytic-info">
+
+    <span class="analytic-label">
+        Total Sales
+    </span>
+
+    <span class="analytic-value">
+        <%= typeof totalSales !== 'undefined' ? totalSales : 0 %>
+    </span>
+
+    <span class="analytic-subtext">
+        Orders
+    </span>
+
+</div>
             </div>
+
             <div class="analytic-card">
+
                 <div class="analytic-icon-wrapper">
-                    <i data-lucide="refresh-cw" size="20"></i>
+
+                    <i
+                        data-lucide="refresh-cw"
+                        size="20"
+                    ></i>
+
                 </div>
+
                 <div class="analytic-info">
-                    <span class="analytic-label">Total Returns</span>
-                    <span class="analytic-value">42 units</span>
-                </div>
+
+    <span class="analytic-label">
+        Total Returns
+    </span>
+
+    <span class="analytic-value">
+        <%= typeof totalReturns !== 'undefined' ? totalReturns : 0 %>
+    </span>
+
+    <span class="analytic-subtext">
+        Returned
+    </span>
+
+</div>
             </div>
+
             <div class="analytic-card">
+
                 <div class="analytic-icon-wrapper">
-                    <i data-lucide="banknote" size="20"></i>
+
+                    <i
+                        data-lucide="banknote"
+                        size="20"
+                    ></i>
+
                 </div>
-                <div class="analytic-info">
-                    <span class="analytic-label">Revenue</span>
-                    <span class="analytic-value">₹1,82,45,600</span>
-                </div>
+
+               <div class="analytic-info">
+
+    <span class="analytic-label">
+        Revenue
+    </span>
+
+    <span class="analytic-value">
+
+        ₹<%= typeof totalRevenue !== 'undefined'
+            ? totalRevenue.toLocaleString()
+            : '18,245,600'
+        %>
+
+    </span>
+
+    <span class="analytic-subtext">
+        Total Revenue
+    </span>
+
+</div>
+
             </div>
+
         </section>
 
-        <!-- Product Showcase -->
+        <!-- =========================================
+             PRODUCT SHOWCASE
+        ========================================== -->
+
         <section class="product-showcase-grid">
-            <!-- Left: Gallery -->
+
+            <!-- LEFT -->
             <div class="product-gallery">
+
                 <div class="main-image-container">
-                    <img src="/images/prod_macbookm5_1778162180340.png" alt="MacBook Pro M5">
+
+                    <img
+                        id="mainProductImage"
+                        src="<%= variants[0]?.images?.[0] || product.thumbnail %>"
+                        alt="<%= product.name %>"
+                    >
+
                 </div>
+
                 <div class="thumbnail-list">
-                    <div class="thumbnail-item active">
-                        <img src="/images/prod_macbookm5_1778162180340.png" alt="Thumb">
-                    </div>
-                    <div class="thumbnail-item">
-                        <img src="/images/prod_macbookm5_1778162180340.png" alt="Thumb">
-                    </div>
-                    <div class="thumbnail-item">
-                        <img src="/images/prod_macbookm5_1778162180340.png" alt="Thumb">
-                    </div>
-                    <div class="thumbnail-item">
-                        <img src="/images/prod_macbookm5_1778162180340.png" alt="Thumb">
-                    </div>
+
+                    <% 
+                      const galleryImages = variants[0]?.images?.length
+    ? variants[0].images
+    : [product.thumbnail]
+                    %>
+
+                    <% galleryImages.forEach((image, index) => { %>
+
+                        <div
+                            class="thumbnail-item <%= index === 0 ? 'active' : '' %>"
+                        >
+
+                            <img
+                                src="<%= image %>"
+                                alt="Thumbnail"
+                            >
+
+                        </div>
+
+                    <% }) %>
+
                 </div>
+
             </div>
 
-            <!-- Right: Info Panel -->
+            <!-- RIGHT -->
             <div class="product-info-panel">
+
                 <div class="info-header">
+
                     <div class="product-title-group">
-                        <span class="badge-status">Premium Series</span>
-                        <h2>MacBook Pro M5 16-inch</h2>
+
+                        <span class="badge-status">
+                            Premium Series
+                        </span>
+
+                        <h2>
+                            <%= product.name %>
+                        </h2>
+
                     </div>
-                    <div class="status-active-badge">
+
+                    <div class="
+                        status-active-badge
+                        <%= product.isActive ? 'active' : 'blocked' %>
+                    ">
+
                         <div class="status-dot-blur"></div>
-                        <span class="status-active-text">Active</span>
+
+                        <span class="status-active-text">
+
+                           <%= product.isActive ? 'Active' : 'Inactive' %>
+
+                        </span>
+
                     </div>
+
                 </div>
 
                 <div class="info-details-grid">
+
                     <div class="detail-item">
-                        <span class="detail-label">Category</span>
-                        <span class="detail-value">Mac</span>
+
+                        <span class="detail-label">
+                            Category
+                        </span>
+
+                        <span class="detail-value">
+
+                            <%= product.categoryId?.name || "N/A" %>
+
+                        </span>
+
                     </div>
+
                     <div class="detail-item">
-                        <span class="detail-label">Variants</span>
-                        <span class="detail-value">3 Configs Available</span>
+
+                        <span class="detail-label">
+                            Variants
+                        </span>
+
+                        <span class="detail-value">
+
+                            <%= totalVariants %> Configs Available
+
+                        </span>
+
                     </div>
+
                     <div class="detail-item">
-                        <span class="detail-label">Base Price</span>
-                        <span class="detail-value price">₹2,39,900</span>
+
+                        <span class="detail-label">
+                            Base Price
+                        </span>
+
+                        <span class="detail-value price">
+
+                            ₹<%= basePrice.toLocaleString() %>
+
+                        </span>
+
                     </div>
+
                 </div>
 
                 <div class="description-section">
-                    <span class="detail-label">Description</span>
+
+                    <span class="detail-label">
+                        Description
+                    </span>
+
                     <p class="description-text">
-                        MacBook Pro M5 delivers unmatched performance and premium build quality designed for professionals. Featuring the revolutionary M5 chip with next-gen neural architecture, stunning Liquid Retina XDR display, and up to 24 hours of battery life.
+
+                        <%= product.description %>
+
                     </p>
+
                 </div>
+
+                <!-- =========================================
+                     TECHNICAL HIGHLIGHTS
+                ========================================== -->
 
                 <div class="technical-highlights">
-                    <span class="detail-label">Technical Highlights</span>
-                    <div class="highlight-tags">
-                        <span class="tag">M5 chip with 16-core CPU</span>
-                        <span class="tag">40-core GPU</span>
-                        <span class="tag">Up to 128GB Unified Memory</span>
-                        <span class="tag">1600 nits sustained brightness</span>
-                    </div>
+
+                    <span class="detail-label">
+                        Technical Highlights
+                    </span>
+
+                   <div class="highlight-tags">
+
+    <span class="tag">
+        Premium Build
+    </span>
+
+    <span class="tag">
+        Official Apple Product
+    </span>
+
+    <span class="tag">
+        High Performance
+    </span>
+
+</div>
+
                 </div>
+
             </div>
+
         </section>
 
-        <!-- Variant Management -->
+        <!-- =========================================
+             VARIANTS
+        ========================================== -->
+
         <section class="variants-section">
-            <h3 class="section-title">Variant Management</h3>
+
+            <h3 class="section-title">
+                Variant Management
+            </h3>
+
+            <!-- SEARCH -->
+
+           <div class="variant-toolbar">
+
+    <div class="variant-toolbar-left">
+
+        <div class="search-wrapper">
+
+            <i
+                data-lucide="search"
+                size="16"
+            ></i>
+
+            <input
+                type="text"
+                id="variantSearch"
+                class="variant-search"
+                placeholder="Search variants..."
+            >
+
+        </div>
+
+    </div>
+
+    <div class="variant-toolbar-right">
+
+        <select
+            id="stockFilter"
+            class="variant-filter"
+        >
+
+            <option value="all">
+                All Stock
+            </option>
+
+            <option value="instock">
+                In Stock
+            </option>
+
+            <option value="low">
+                Low Stock
+            </option>
+
+            <option value="critical">
+                Critical
+            </option>
+
+        </select>
+
+        <div class="variant-count-badge">
+
+            <%= totalVariants %> Variants
+
+        </div>
+
+    </div>
+
+</div>
+
             <div class="table-card">
+
                 <table class="variants-table">
+
                     <thead>
+
                         <tr>
+
+                            <th>Preview</th>
                             <th>Variant Name</th>
                             <th>Storage</th>
                             <th>RAM</th>
                             <th>Color</th>
                             <th>Price</th>
                             <th>Stock</th>
-                            <th style="text-align: right;">Actions</th>
+
+                            <th style="text-align:right;">
+                                Actions
+                            </th>
+
                         </tr>
+
                     </thead>
+
                     <tbody>
-                        <tr>
-                            <td class="font-bold">MBP M5 Base</td>
-                            <td>512 GB</td>
-                            <td>16 GB</td>
-                            <td>Space Black</td>
-                            <td class="font-bold">₹2,39,900</td>
-                            <td><span class="stock-badge">120 units</span></td>
-                            <td>
-                                <div class="variant-actions">
-                                    <button class="btn-icon"><i data-lucide="edit-2" size="16"></i></button>
-                                    <button class="btn-icon"><i data-lucide="trash-2" size="16"></i></button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="font-bold">MBP M5 Performance</td>
-                            <td>1 TB</td>
-                            <td>32 GB</td>
-                            <td>Silver</td>
-                            <td class="font-bold">₹2,79,900</td>
-                            <td><span class="stock-badge low">50 units</span></td>
-                            <td>
-                                <div class="variant-actions">
-                                    <button class="btn-icon"><i data-lucide="edit-2" size="16"></i></button>
-                                    <button class="btn-icon"><i data-lucide="trash-2" size="16"></i></button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr class="highlighted">
-                            <td class="font-bold">MBP M5 Maxed</td>
-                            <td>2 TB</td>
-                            <td>128 GB</td>
-                            <td>Space Black</td>
-                            <td class="font-bold">₹4,29,900</td>
-                            <td><span class="stock-badge critical">10 units</span> <span style="font-size: 10px; font-weight: 700; color: #7D205B; margin-left: 8px;">LOW STOCK</span></td>
-                            <td>
-                                <div class="variant-actions">
-                                    <button class="btn-icon"><i data-lucide="edit-2" size="16"></i></button>
-                                    <button class="btn-icon"><i data-lucide="trash-2" size="16"></i></button>
-                                </div>
-                            </td>
-                        </tr>
+
+                        <% if(variants.length > 0) { %>
+
+                            <% variants.forEach(variant => { %>
+
+                                <tr>
+                                    <td>
+
+                                        <div class="variant-preview">
+
+                                            <img
+                                                src="<%= variant.images?.[0] || product.thumbnail %>"
+                                                alt=""
+                                            >
+
+                                        </div>
+
+                                    </td>
+
+                                    <td class="font-bold">
+                                        <%= variant.SKU %>
+                                    </td>
+
+                                    <td>
+                                        <%= variant.storage %>
+                                    </td>
+
+                                    <td>
+                                        <%= variant.RAM %>
+                                    </td>
+
+                                    <td>
+                                        <%= variant.color %>
+                                    </td>
+
+                                    <td class="font-bold">
+
+                                        ₹<%= variant.price.toLocaleString() %>
+
+                                    </td>
+
+                                    <td>
+
+                                        <% if(variant.stock <= 10) { %>
+
+                                            <span class="stock-badge critical">
+
+                                                <%= variant.stock %> units
+
+                                            </span>
+
+                                        <% } else if(variant.stock <= 50) { %>
+
+                                            <span class="stock-badge low">
+
+                                                <%= variant.stock %> units
+
+                                            </span>
+
+                                        <% } else { %>
+
+                                            <span class="stock-badge">
+
+                                                <%= variant.stock %> units
+
+                                            </span>
+
+                                        <% } %>
+
+                                    </td>
+
+                                    <td>
+
+                                        <div class="variant-actions">
+
+<button
+    class="btn-icon edit-variant-btn"
+
+    data-id="<%= variant._id %>"
+    data-sku="<%= variant.SKU %>"
+    data-color="<%= variant.color %>"
+    data-storage="<%= variant.storage %>"
+    data-ram="<%= variant.RAM %>"
+    data-price="<%= variant.price %>"
+    data-stock="<%= variant.stock %>"
+    data-images='<%- JSON.stringify(variant.images) %>'
+>
+
+    <i
+        data-lucide="edit-2"
+        size="16"
+    ></i>
+
+</button>
+
+                                            <button
+                                                class="btn-icon delete-variant-btn"
+                                                data-id="<%= variant._id %>"
+                                            >
+
+                                                <i
+                                                    data-lucide="trash-2"
+                                                    size="16"
+                                                ></i>
+
+                                            </button>
+
+                                        </div>
+
+                                    </td>
+
+                                </tr>
+
+                            <% }) %>
+
+                        <% } else { %>
+
+                            <tr>
+
+                                <td colspan="7">
+
+                                   <div class="empty-variants">
+
+    <i
+        data-lucide="package-open"
+        size="52"
+    ></i>
+
+    <h4>
+        No Variants Found
+    </h4>
+
+    <p>
+        Start by adding your first variant.
+    </p>
+
+</div>
+
+                                </td>
+
+                            </tr>
+
+                        <% } %>
+
                     </tbody>
+
                 </table>
+
             </div>
+
         </section>
 
-        <!-- Charts & Logs -->
+        <!-- =========================================
+             ANALYTICS + LOGS
+        ========================================== -->
+
         <section class="analytics-logs-grid">
-            <!-- Left: Charts -->
+
+            <!-- LEFT -->
             <div class="chart-card">
+
                 <div class="chart-header">
-                    <h3 class="chart-title">Sales Performance</h3>
+
+                    <h3 class="chart-title">
+                        Sales Performance
+                    </h3>
+
                     <div class="chart-tabs">
-                        <span class="tab active">Weekly</span>
-                        <span class="tab">Monthly</span>
+
+                        <span class="tab active">
+                            Weekly
+                        </span>
+
+                        <span class="tab">
+                            Monthly
+                        </span>
+
                     </div>
+
                 </div>
-                <div class="bar-chart-mock">
-                    <div class="bar" style="height: 40%; background: rgba(96, 55, 99, 0.2);"></div>
-                    <div class="bar" style="height: 60%; background: rgba(96, 55, 99, 0.3);"></div>
-                    <div class="bar" style="height: 50%; background: rgba(96, 55, 99, 0.4);"></div>
-                    <div class="bar" style="height: 80%; background: rgba(96, 55, 99, 0.5);"></div>
-                    <div class="bar" style="height: 65%; background: rgba(96, 55, 99, 0.6);"></div>
-                    <div class="bar" style="height: 90%; background: rgba(96, 55, 99, 0.7);"></div>
-                    <div class="bar" style="height: 75%; background: rgba(96, 55, 99, 0.8);"></div>
+
+                <div
+                    style="
+                        height:320px;
+                        position:relative;
+                    "
+                >
+
+                    <canvas id="salesChart"></canvas>
+
                 </div>
-                <div class="progress-grid">
-                    <div class="progress-card">
-                        <span class="detail-label">Return Rate Overview</span>
-                        <div style="display: flex; align-items: center; justify-content: center; height: 100px;">
-                             <!-- Mock Donut -->
-                             <div style="width: 80px; height: 80px; border-radius: 50%; border: 10px solid rgba(122, 78, 124, 0.1); border-top-color: var(--secondary); display: flex; align-items: center; justify-content: center; font-weight: 800;">3.4%</div>
-                        </div>
-                    </div>
-                    <div class="progress-card">
-                        <span class="detail-label">Stock Health</span>
-                        <div class="progress-item">
-                            <div class="progress-labels"><span>Main Warehouse</span><span>85%</span></div>
-                            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 85%; background: var(--secondary);"></div></div>
-                        </div>
-                        <div class="progress-item">
-                            <div class="progress-labels"><span>Retail Outlets</span><span>40%</span></div>
-                            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 40%; background: var(--accent);"></div></div>
-                        </div>
-                    </div>
-                </div>
+
             </div>
 
-            <!-- Right: Activity Log -->
+            <!-- RIGHT -->
+
             <div class="log-card">
-                <h3 class="chart-title">Product Activity Log</h3>
+
+                <h3 class="chart-title">
+                    Product Activity Log
+                </h3>
+
                 <div class="log-timeline">
+
                     <div class="log-item">
-                        <div class="log-dot" style="background: #FFD6FC;"></div>
+
+                        <div
+                            class="log-dot"
+                            style="background:#FFD6FC;"
+                        ></div>
+
                         <div class="log-content">
-                            <span class="log-title">Price updated</span>
-                            <span class="log-desc">Admin changed base price to ₹2,39,900</span>
-                            <span class="log-time">2 hours ago</span>
+
+                            <span class="log-title">
+                                Price updated
+                            </span>
+
+                            <span class="log-desc">
+                                Admin changed base price to ₹2,39,900
+                            </span>
+
+                            <span class="log-time">
+                                2 hours ago
+                            </span>
+
                         </div>
+
                     </div>
+
                     <div class="log-item">
-                        <div class="log-dot" style="background: #FFD8E8;"></div>
+
+                        <div
+                            class="log-dot"
+                            style="background:#FFD8E8;"
+                        ></div>
+
                         <div class="log-content">
-                            <span class="log-title">New variant added</span>
-                            <span class="log-desc">Space Black 2 TB added to inventory</span>
-                            <span class="log-time">Yesterday at 4:32 PM</span>
+
+                            <span class="log-title">
+                                New variant added
+                            </span>
+
+                            <span class="log-desc">
+                                Space Black 2 TB added to inventory
+                            </span>
+
+                            <span class="log-time">
+                                Yesterday at 4:32 PM
+                            </span>
+
                         </div>
+
                     </div>
-                    <div class="log-item">
-                        <div class="log-dot" style="background: #FFD8E9;"></div>
-                        <div class="log-content">
-                            <span class="log-title">Stock replenished</span>
-                            <span class="log-desc">+50 units added to Base variant</span>
-                            <span class="log-time">Oct 24, 2026</span>
-                        </div>
-                    </div>
-                    <div class="log-item">
-                        <div class="log-dot" style="background: #D0C3CC;"></div>
-                        <div class="log-content">
-                            <span class="log-title">Status changed</span>
-                            <span class="log-desc">Product marked as 'Active'</span>
-                            <span class="log-time">Oct 20, 2026</span>
-                        </div>
-                    </div>
+
                 </div>
-                <button class="btn-detail" style="width: 100%; justify-content: center; border: 1px solid rgba(96, 55, 99, 0.2); background: none; color: var(--secondary);">
+
+                <button
+                    class="btn-detail"
+                    style="
+                        width:100%;
+                        background:none;
+                        border:1px solid rgba(96,55,99,0.12);
+                        color:var(--secondary);
+                    "
+                >
+
                     View All Activity
+
                 </button>
+
             </div>
+
         </section>
 
-        <!-- Related Ecosystem -->
-        <section class="related-section">
-            <div class="related-header">
-                <h3 class="section-title">Related Ecosystem</h3>
-                <a href="/admin/products" class="link-secondary">Explore Category</a>
-            </div>
-            <div class="related-grid">
-                <div class="product-card">
-                    <div class="product-card-img"><img src="/images/prod_macbookm5_1778162180340.png" alt="MacBook Air"></div>
-                    <span class="product-card-title">MacBook Air M4</span>
-                    <span class="product-card-price">Starting at ₹99,900</span>
-                    <div class="product-card-footer">
-                         <span class="badge-status" style="background: #FFE8F0; color: #4D444C;">42 units left</span>
-                         <i data-lucide="arrow-right" size="16" style="color: var(--secondary);"></i>
-                    </div>
-                </div>
-                <div class="product-card">
-                    <div class="product-card-img"><img src="/images/prod_ipadpro_m4_1778162199426.png" alt="iPad Pro"></div>
-                    <span class="product-card-title">iPad Pro M4</span>
-                    <span class="product-card-price">Starting at ₹89,900</span>
-                    <div class="product-card-footer">
-                         <span class="badge-status" style="background: #FFE8F0; color: #4D444C;">12 units left</span>
-                         <i data-lucide="arrow-right" size="16" style="color: var(--secondary);"></i>
-                    </div>
-                </div>
-                <div class="product-card">
-                    <div class="product-card-img"><img src="/images/prod_iphone17_1778162162498.png" alt="Watch S10"></div>
-                    <span class="product-card-title">Watch Series 10</span>
-                    <span class="product-card-price">Starting at ₹46,900</span>
-                    <div class="product-card-footer">
-                         <span class="badge-status" style="background: #FFE8F0; color: #4D444C;">In Stock</span>
-                         <i data-lucide="arrow-right" size="16" style="color: var(--secondary);"></i>
-                    </div>
-                </div>
-                <div class="product-card">
-                    <div class="product-card-img"><img src="/images/prod_iphone17_1778162162498.png" alt="AirPods Pro 3"></div>
-                    <span class="product-card-title">AirPods Pro 3</span>
-                    <span class="product-card-price">Starting at ₹24,900</span>
-                    <div class="product-card-footer">
-                         <span class="badge-status" style="background: #FFE8F0; color: #4D444C;">Fast Moving</span>
-                         <i data-lucide="arrow-right" size="16" style="color: var(--secondary);"></i>
-                    </div>
-                </div>
-            </div>
-        </section>
 
-        <!-- Site Footer -->
+
+ <!-- =========================================
+     VARIANT MODAL
+========================================= -->
+
+<div
+    class="variant-modal-overlay"
+    id="variantModal"
+>
+
+    <div class="variant-modal">
+
+        <!-- HEADER -->
+
+        <div class="variant-modal-header">
+
+            <div>
+
+                <h2 id="variantModalTitle">
+                    Add Variant
+                </h2>
+
+                <p>
+                    Configure variant inventory and pricing
+                </p>
+
+            </div>
+
+            <button
+                class="modal-close-btn"
+                id="closeVariantModal"
+            >
+
+                <i
+                    data-lucide="x"
+                    size="22"
+                ></i>
+
+            </button>
+
+        </div>
+
+        <!-- BODY -->
+
+        <div class="variant-modal-body">
+
+            <!-- =========================================
+                 FORM SECTION
+            ========================================== -->
+
+            <form
+                class="variant-form-section"
+                id="variantForm"
+            >
+
+                <!-- HIDDEN FIELDS -->
+
+                <input
+                    type="hidden"
+                    id="variantProductId"
+                    value="<%= product._id %>"
+                >
+
+                <input
+                    type="hidden"
+                    id="variantMode"
+                    value="add"
+                >
+
+                <input
+                    type="hidden"
+                    id="editingVariantId"
+                >
+
+                <!-- CONFIG -->
+
+                <div class="variant-form-group">
+
+                    <h4>
+                        Configuration
+                    </h4>
+
+                    <div class="variant-grid-3">
+
+                        <div class="field">
+
+                            <label>
+                                Color
+                            </label>
+
+                            <input
+                                type="text"
+                                id="variantColor"
+                                placeholder="Space Black"
+                            >
+
+                        </div>
+
+                        <div class="field">
+
+                            <label>
+                                Storage
+                            </label>
+
+                            <input
+                                type="text"
+                                id="variantStorage"
+                                placeholder="256GB"
+                            >
+
+                        </div>
+
+                        <div class="field">
+
+                            <label>
+                                RAM
+                            </label>
+
+                            <input
+                                type="text"
+                                id="variantRAM"
+                                placeholder="8GB"
+                            >
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- SKU -->
+
+                <div class="variant-form-group">
+
+                    <h4>
+                        SKU & Pricing
+                    </h4>
+
+                    <div class="variant-grid-2">
+
+                        <div class="field">
+
+                            <label>
+                                SKU
+                            </label>
+
+                            <input
+                                type="text"
+                                id="variantSKU"
+                                placeholder="IP17-BLK-256"
+                            >
+
+                        </div>
+
+                        <div class="field">
+
+                            <label>
+                                Price
+                            </label>
+
+                            <input
+                                type="number"
+                                id="variantPrice"
+                                placeholder="119900"
+                            >
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- INVENTORY -->
+
+                <div class="variant-form-group">
+
+                    <h4>
+                        Inventory
+                    </h4>
+
+                    <div class="variant-grid-2">
+
+                        <div class="field">
+
+                            <label>
+                                Stock
+                            </label>
+
+                            <input
+                                type="number"
+                                id="variantStock"
+                                placeholder="120"
+                            >
+
+                        </div>
+
+                        <div class="field">
+
+                            <label>
+                                Threshold
+                            </label>
+
+                            <input
+                                type="number"
+                                id="variantThreshold"
+                                placeholder="10"
+                            >
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- IMAGE -->
+
+                <div class="variant-form-group">
+
+                    <h4>
+                        Variant Media
+                    </h4>
+
+                    <label
+                        class="variant-upload-box"
+                    >
+                    
+
+                        <input
+    type="file"
+    hidden
+    id="variantImageInput"
+    accept="image/*"
+    multiple
+>
+
+                        <i
+                            data-lucide="upload"
+                            size="28"
+                        ></i>
+
+                        <span>
+                            Upload Variant Image
+                        </span>
+
+                    </label>
+                   <div
+    class="variant-images-wrapper"
+>
+
+    <div
+        class="variant-preview-grid"
+        id="variantPreviewGrid"
+    ></div>
+
+</div>
+
+                </div>
+
+            </form>
+
+            <!-- =========================================
+                 PREVIEW PANEL
+            ========================================== -->
+
+            <div class="variant-preview-panel">
+
+               <div class="preview-card">
+
+    <div class="preview-main-image-wrapper">
+
+        <img
+            id="previewImage"
+            src="<%= product.thumbnail %>"
+        >
+
+    </div>
+
+    
+
+    <h3 id="previewName">
+        <%= product.name %>
+    </h3>
+
+    <p id="previewSpecs">
+        Space Black • 256GB • 8GB
+    </p>
+
+    <div
+        class="preview-price"
+        id="previewPrice"
+    >
+
+        ₹1,19,900
+
+    </div>
+
+</div>
+
+                <div class="preview-analytics">
+
+                    <div>
+
+                        <span>
+                            Sales
+                        </span>
+
+                        <strong>
+                            482
+                        </strong>
+
+                    </div>
+
+                    <div>
+
+                        <span>
+                            Returns
+                        </span>
+
+                        <strong>
+                            12
+                        </strong>
+
+                    </div>
+
+                    <div>
+
+                        <span>
+                            Health
+                        </span>
+
+                        <strong>
+                            98%
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- FOOTER -->
+
+        <div class="variant-modal-footer">
+
+            <button
+                class="btn-detail"
+                id="cancelVariantBtn"
+                type="button"
+            >
+
+                Cancel
+
+            </button>
+
+            <button
+                class="btn-detail btn-edit"
+                id="saveVariantBtn"
+                type="button"
+            >
+
+                Save Variant
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+        <!-- =========================================
+             FOOTER
+        ========================================== -->
+
         <footer class="site-footer">
+
             © 2026 iStore Admin — Digital Atelier Environment
+
         </footer>
 
     </main>
 
+    <!-- =========================================
+         SCRIPTS
+    ========================================== -->
+
     <script>
+
         lucide.createIcons();
+
+        /* =========================================
+           IMAGE SWITCHING
+        ========================================== */
+
+        const thumbnails =
+            document.querySelectorAll(".thumbnail-item");
+
+        const mainImage =
+            document.getElementById("mainProductImage");
+
+        thumbnails.forEach((thumb) => {
+
+            thumb.addEventListener("click", () => {
+
+                thumbnails.forEach((t) => {
+
+                    t.classList.remove("active");
+
+                });
+
+                thumb.classList.add("active");
+
+                const img =
+                    thumb.querySelector("img").src;
+
+                mainImage.style.opacity = "0";
+
+                setTimeout(() => {
+
+                    mainImage.src = img;
+
+                    mainImage.style.opacity = "1";
+
+                }, 150);
+
+            });
+
+        });
+
+        /* =========================================
+           VARIANT SEARCH
+        ========================================== */
+
+        const variantSearch =
+        document.getElementById("variantSearch");
+
+        if(variantSearch) {
+
+            variantSearch.addEventListener("keyup", () => {
+
+                const value =
+                variantSearch.value.toLowerCase();
+
+                document
+                .querySelectorAll(
+                    ".variants-table tbody tr"
+                )
+                .forEach(row => {
+
+                    row.style.display =
+                    row.innerText
+                    .toLowerCase()
+                    .includes(value)
+                        ? ""
+                        : "none";
+
+                });
+
+            });
+
+        }
+
+        /* =========================================
+   STOCK FILTER
+========================================= */
+
+const stockFilter =
+document.getElementById("stockFilter");
+
+if(stockFilter) {
+
+    stockFilter.addEventListener("change", () => {
+
+        const rows =
+        document.querySelectorAll(
+            ".variants-table tbody tr"
+        );
+
+        rows.forEach(row => {
+
+            const stockBadge =
+            row.querySelector(".stock-badge");
+
+            if(!stockBadge) return;
+
+            const stock =
+            parseInt(stockBadge.innerText);
+
+            if(stockFilter.value === "all") {
+
+                row.style.display = "";
+
+            }
+
+            else if(
+                stockFilter.value === "critical"
+            ) {
+
+                row.style.display =
+                stock <= 10
+                    ? ""
+                    : "none";
+
+            }
+
+            else if(
+                stockFilter.value === "low"
+            ) {
+
+                row.style.display =
+                stock > 10 && stock <= 50
+                    ? ""
+                    : "none";
+
+            }
+
+            else if(
+                stockFilter.value === "instock"
+            ) {
+
+                row.style.display =
+                stock > 50
+                    ? ""
+                    : "none";
+
+            }
+
+        });
+
+    });
+
+}
+
+        /* =========================================
+           SALES CHART
+        ========================================== */
+
+        const ctx =
+            document.getElementById("salesChart");
+
+        new Chart(ctx, {
+
+            type: "bar",
+
+            data: {
+
+                labels: [
+                    "Mon",
+                    "Tue",
+                    "Wed",
+                    "Thu",
+                    "Fri",
+                    "Sat",
+                    "Sun"
+                ],
+
+                datasets: [{
+
+                    data: [
+                        12,
+                        19,
+                        14,
+                        24,
+                        18,
+                        29,
+                        22
+                    ],
+
+                    borderRadius: 10,
+
+                    backgroundColor: [
+                        "#E9DFEA",
+                        "#D8C7DA",
+                        "#C4AEC8",
+                        "#AF92B4",
+                        "#9A78A0",
+                        "#845C8B",
+                        "#6D4475"
+                    ]
+
+                }]
+
+            },
+
+            options: {
+
+                responsive: true,
+
+                maintainAspectRatio: false,
+
+                plugins: {
+
+                    legend: {
+
+                        display: false
+
+                    }
+
+                },
+
+                scales: {
+
+                    y: {
+
+                        grid: {
+
+                            color:
+                                "rgba(0,0,0,0.04)"
+
+                        },
+
+                        ticks: {
+
+                            color: "#6B6470"
+
+                        }
+
+                    },
+
+                    x: {
+
+                        grid: {
+
+                            display: false
+
+                        },
+
+                        ticks: {
+
+                            color: "#6B6470"
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        });
+
+        /* =========================================
+           PREMIUM TOAST
+        ========================================== */
+
+       const Toast = Swal.mixin({
+
+            toast: true,
+
+            position: "top",
+
+            showConfirmButton: false,
+
+            timer: 3000,
+
+            timerProgressBar: true,
+
+            background: "#FFFFFF",
+
+            color: "#2C1421",
+
+            iconColor: "#603763",
+
+            customClass: {
+
+                popup: "premium-toast"
+
+            }
+
+        });
+        /* =========================================
+           DELETE PRODUCT
+        ========================================== */
+
+        document
+        .getElementById("deleteProductBtn")
+        .addEventListener("click", async () => {
+
+            const result = await Swal.fire({
+
+                title: "Delete Product?",
+
+                text: "This action cannot be undone.",
+
+                icon: "warning",
+
+                showCancelButton: true,
+
+                confirmButtonColor: "#603763",
+
+                cancelButtonColor: "#D6CED7",
+
+                confirmButtonText: "Delete",
+
+                background: "#FFFFFF",
+
+                borderRadius: "16px"
+
+            });
+
+            if(result.isConfirmed) {
+
+    const response =
+    await fetch(
+
+        "/admin/delete-product/<%= product._id %>",
+
+        {
+            method: "PATCH"
+        }
+
+    );
+
+    const data =
+    await response.json();
+
+    if(data.success) {
+
+        Toast.fire({
+
+            icon: "success",
+
+            title: data.message
+
+        });
+
+        setTimeout(() => {
+
+            window.location.href =
+            "/admin/products";
+
+        }, 1000);
+
+    }
+
+    else {
+
+        Toast.fire({
+
+            icon: "error",
+
+            title: "Failed to delete product"
+
+        });
+
+    }
+
+}
+
+        });
+
+        /* =========================================
+   DELETE VARIANT
+========================================= */
+document
+.querySelectorAll(".delete-variant-btn")
+.forEach(btn => {
+
+    btn.addEventListener("click", async () => {
+
+        const id =
+        btn.dataset.id;
+
+        const result =
+        await Swal.fire({
+
+            title: "Delete Variant?",
+
+            text:
+                "Variant will be removed.",
+
+            icon: "warning",
+
+            showCancelButton: true,
+
+            confirmButtonColor: "#603763",
+
+            cancelButtonColor: "#D6CED7",
+
+            confirmButtonText: "Delete",
+
+            background: "#FFFFFF",
+
+            borderRadius: "16px"
+
+        });
+
+        if(result.isConfirmed) {
+
+            const response =
+            await fetch(
+
+                `/admin/variants/${id}/delete`,
+
+                {
+                    method: "PATCH"
+                }
+
+            );
+
+            const data =
+            await response.json();
+
+            if(data.success) {
+
+                Toast.fire({
+
+                    icon: "success",
+
+                    title: data.message
+
+                });
+
+                setTimeout(() => {
+
+                    location.reload();
+
+                }, 1000);
+
+            }
+
+            else {
+
+                Toast.fire({
+
+                    icon: "error",
+
+                    title: data.message
+
+                });
+
+            }
+
+        }
+
+    });
+
+});
+
+
+const variantModal =
+document.getElementById("variantModal");
+
+/* =========================================
+   OPEN ADD VARIANT MODAL
+========================================= */
+
+document
+.getElementById("openVariantModalBtn")
+.addEventListener("click", () => {
+
+    document.getElementById(
+        "variantModalTitle"
+    ).innerText = "Add Variant";
+
+    document.getElementById(
+        "variantMode"
+    ).value = "add";
+
+    document.getElementById(
+        "editingVariantId"
+    ).value = "";
+
+    document.getElementById(
+        "saveVariantBtn"
+    ).innerText = "Save Variant";
+
+    document.getElementById(
+        "variantForm"
+    ).reset();
+
+    document.getElementById(
+        "previewImage"
+    ).src = "<%= product.thumbnail %>";
+
+    document.getElementById(
+        "previewSpecs"
+    ).innerText =
+    "Space Black • 256GB • 8GB";
+
+    document.getElementById(
+        "previewPrice"
+    ).innerText =
+    "₹1,19,900";
+
+    variantModal.classList.add("active");
+
+});
+
+/* =========================================
+   CLOSE MODAL
+========================================= */
+
+document
+.getElementById("closeVariantModal")
+.addEventListener("click", () => {
+
+    variantModal.classList.remove("active");
+
+});
+
+document
+.getElementById("cancelVariantBtn")
+.addEventListener("click", () => {
+
+    variantModal.classList.remove("active");
+
+});
+
+/* =========================================
+   EDIT VARIANT MODAL
+========================================= */
+
+document
+.querySelectorAll(".edit-variant-btn")
+.forEach((button) => {
+
+    button.addEventListener("click", () => {
+
+        variantModal.classList.add("active");
+
+        document.getElementById(
+            "variantModalTitle"
+        ).innerText = "Edit Variant";
+
+        document.getElementById(
+            "variantMode"
+        ).value = "edit";
+
+        document.getElementById(
+            "editingVariantId"
+        ).value = button.dataset.id;
+
+        document.getElementById(
+            "saveVariantBtn"
+        ).innerText = "Update Variant";
+
+        document.getElementById(
+            "variantSKU"
+        ).value = button.dataset.sku;
+
+        document.getElementById(
+            "variantColor"
+        ).value = button.dataset.color;
+
+        document.getElementById(
+            "variantStorage"
+        ).value = button.dataset.storage;
+
+        document.getElementById(
+            "variantRAM"
+        ).value = button.dataset.ram;
+
+        document.getElementById(
+            "variantPrice"
+        ).value = button.dataset.price;
+
+        document.getElementById(
+            "variantStock"
+        ).value = button.dataset.stock;
+
+        document.getElementById(
+            "previewSpecs"
+        ).innerText =
+        `${button.dataset.color} • ${button.dataset.storage} • ${button.dataset.ram}`;
+
+        document.getElementById(
+            "previewPrice"
+        ).innerText =
+        `₹${Number(button.dataset.price).toLocaleString()}`;
+
+        existingImages =
+        JSON.parse(button.dataset.images || "[]");
+
+        selectedFiles = [];
+
+        renderImages();
+
+    });
+
+});
+
+/* =========================================
+   LIVE PREVIEW
+========================================= */
+
+const previewInputs = [
+
+    "variantColor",
+    "variantStorage",
+    "variantRAM",
+    "variantPrice"
+
+];
+
+previewInputs.forEach((id) => {
+
+    document
+    .getElementById(id)
+    .addEventListener("input", () => {
+
+        const color =
+        document.getElementById(
+            "variantColor"
+        ).value || "Space Black";
+
+        const storage =
+        document.getElementById(
+            "variantStorage"
+        ).value || "256GB";
+
+        const ram =
+        document.getElementById(
+            "variantRAM"
+        ).value || "8GB";
+
+        const price =
+        document.getElementById(
+            "variantPrice"
+        ).value || "119900";
+
+        document.getElementById(
+            "previewSpecs"
+        ).innerText =
+        `${color} • ${storage} • ${ram}`;
+
+        document.getElementById(
+            "previewPrice"
+        ).innerText =
+        `₹${Number(price).toLocaleString()}`;
+
+    });
+
+});
+/* =========================================
+   PREMIUM MULTI IMAGE MANAGER
+========================================= */
+
+let selectedFiles = [];
+let existingImages = [];
+
+const imageInput =
+document.getElementById("variantImageInput");
+
+const previewGrid =
+document.getElementById("variantPreviewGrid");
+
+const previewImage =
+document.getElementById("previewImage");
+
+/* =========================================
+   RENDER IMAGES
+========================================= */
+
+function renderImages() {
+
+   previewGrid.innerHTML = "";
+
+const allImages = [
+
+    ...existingImages.map(img => ({
+        type: "existing",
+        url: img
+    })),
+
+    ...selectedFiles.map(file => ({
+        type: "file",
+        file,
+        url: URL.createObjectURL(file)
+    }))
+
+];
+
+/* =========================
+   NO IMAGE
+========================= */
+
+if(!allImages.length) {
+
+    previewImage.src =
+    "<%= product.thumbnail %>";
+
+    return;
+
+}
+
+/* =========================
+   SET MAIN IMAGE
+========================= */
+
+previewImage.src =
+allImages[0].url;
+
+/* =========================
+   RENDER THUMBNAILS
+========================= */
+
+allImages.forEach((imageData) => {
+
+    const previewItem =
+    document.createElement("div");
+
+    previewItem.className =
+    "preview-image-item";
+
+    previewItem.innerHTML = `
+
+        <img src="${imageData.url}">
+
+        <button
+            type="button"
+            class="remove-image-btn"
+        >
+            ×
+        </button>
+
+    `;
+
+    /* =========================
+       CHANGE MAIN IMAGE
+    ========================= */
+
+    previewItem
+    .querySelector("img")
+    .addEventListener(
+        "click",
+        () => {
+
+            previewImage.src =
+            imageData.url;
+
+        }
+    );
+
+    /* =========================
+       DELETE IMAGE
+    ========================= */
+
+    previewItem
+    .querySelector(
+        ".remove-image-btn"
+    )
+    .addEventListener(
+        "click",
+        () => {
+
+            if(imageData.type === "file") {
+
+                selectedFiles =
+                selectedFiles.filter(
+                    f => f !== imageData.file
+                );
+
+            }
+
+            else {
+
+                existingImages =
+                existingImages.filter(
+                    img => img !== imageData.url
+                );
+
+            }
+
+            renderImages();
+
+        }
+    );
+
+    previewGrid.appendChild(
+        previewItem
+    );
+
+});
+
+}
+
+/* =========================================
+   ADD NEW IMAGES
+========================================= */
+
+imageInput.addEventListener(
+    "change",
+    (e) => {
+
+        const files =
+        Array.from(e.target.files);
+
+        selectedFiles = [
+
+            ...selectedFiles,
+
+            ...files
+
+        ];
+
+        renderImages();
+
+    }
+);
+/* =========================================
+   SAVE VARIANT
+========================================= */
+
+document
+.getElementById("saveVariantBtn")
+.addEventListener("click", async () => {
+
+    const mode =
+    document.getElementById(
+        "variantMode"
+    ).value;
+
+    const variantId =
+    document.getElementById(
+        "editingVariantId"
+    ).value;
+
+    const formData =
+    new FormData();
+
+    formData.append(
+
+        "productId",
+
+        document.getElementById(
+            "variantProductId"
+        ).value
+
+    );
+
+    formData.append(
+
+        "SKU",
+
+        document.getElementById(
+            "variantSKU"
+        ).value
+
+    );
+
+    formData.append(
+
+        "color",
+
+        document.getElementById(
+            "variantColor"
+        ).value
+
+    );
+
+    formData.append(
+
+        "storage",
+
+        document.getElementById(
+            "variantStorage"
+        ).value
+
+    );
+
+    formData.append(
+
+        "RAM",
+
+        document.getElementById(
+            "variantRAM"
+        ).value
+
+    );
+
+    formData.append(
+
+        "price",
+
+        document.getElementById(
+            "variantPrice"
+        ).value
+
+    );
+
+    formData.append(
+
+        "stock",
+
+        document.getElementById(
+            "variantStock"
+        ).value
+
+    );
+
+selectedFiles.forEach((file) => {
+
+    formData.append(
+        "variantImages",
+        file
+    );
+
+});
+
+formData.append(
+    "existingImages",
+    JSON.stringify(existingImages)
+);
+    try {
+
+        let url = "";
+        let method = "";
+
+        if(mode === "add") {
+
+            url =
+            `/admin/products/${
+                document.getElementById(
+                    "variantProductId"
+                ).value
+            }/variants/add`;
+
+            method = "POST";
+
+        }
+
+        else {
+
+            url =
+            `/admin/variants/${variantId}/edit`;
+
+            method = "POST";
+
+        }
+
+        const response =
+        await fetch(url, {
+
+            method,
+
+            body: formData
+
+        });
+
+        const data =
+        await response.json();
+
+        if(data.success) {
+
+            Toast.fire({
+
+                icon: "success",
+
+                title: data.message
+
+            });
+
+            variantModal.classList.remove(
+                "active"
+            );
+
+            setTimeout(() => {
+
+                location.reload();
+
+            }, 1200);
+
+        }
+
+        else {
+
+            Toast.fire({
+
+                icon: "error",
+
+                title: data.message
+
+            });
+
+        }
+
+    }
+
+    catch(error) {
+
+        console.log(error);
+
+        Toast.fire({
+
+            icon: "error",
+
+            title:
+            "Something went wrong"
+
+        });
+
+    }
+
+});
     </script>
+
 </body>
 </html>

@@ -584,41 +584,53 @@ variantValidation
    VARIANT IMAGES
 ============================ */
 
-if (req.files?.variantImages) {
-
-for (
-
-const image of
-req.files.variantImages
-
-) {
+/* MINIMUM 3 IMAGES */
 
 if (
 
-!allowedMimeTypes.includes(
-image.mimetype
-)
+    !req.files?.variantImages ||
+
+    req.files.variantImages.length < 3
 
 ) {
 
-throw new Error(
-"Only JPG, PNG and WEBP images are allowed"
-)
+    throw new Error(
+
+        "Minimum 3 variant images are required"
+
+    )
 
 }
 
+for (
 
+    const image of
+    req.files.variantImages
 
-const uploadedImage =
-await uploadImage(
-image.buffer
-)
+) {
 
-variantData.images.push(
-uploadedImage
-)
+    if (
 
-}
+        !allowedMimeTypes.includes(
+            image.mimetype
+        )
+
+    ) {
+
+        throw new Error(
+            "Only JPG, PNG and WEBP images are allowed"
+        )
+
+    }
+
+    const uploadedImage =
+    await uploadImage(
+        image.buffer
+    )
+
+    variantData.images.push(
+        uploadedImage
+    )
 
 }
 
@@ -1007,6 +1019,548 @@ error
 res.json({
 
 success: false
+
+})
+
+}
+
+}
+
+/* ============================
+   PRODUCT DETAILS PAGE
+============================ */
+
+export const loadProductDetails = async (
+req,
+res
+) => {
+
+try {
+
+const productId =
+req.params.id
+
+/* PRODUCT */
+
+const product =
+await Product.findById(productId)
+.populate("categoryId")
+.lean()
+
+if (!product || product.isDeleted) {
+
+return res.redirect(
+"/admin/products"
+)
+
+}
+
+/* VARIANTS */
+
+const variants =
+await Variant.find({
+
+productId,
+
+isDeleted: false
+
+}).lean()
+
+/* TOTAL STOCK */
+
+const totalStock =
+variants.reduce(
+
+(acc, item) => acc + item.stock,
+
+0
+
+)
+
+/* BASE PRICE */
+
+const basePrice =
+variants.length > 0
+? Math.min(...variants.map(v => v.price))
+: 0
+
+/* TOTAL VARIANTS */
+
+const totalVariants =
+variants.length
+
+res.render(
+
+"admin/product-details",
+
+{
+
+page: "products",
+
+product,
+
+variants,
+
+totalStock,
+
+basePrice,
+
+totalVariants
+
+}
+
+)
+
+}
+
+catch (error) {
+
+console.log(
+"Load Product Details Error:",
+error
+)
+
+res.redirect(
+"/admin/products"
+)
+
+}
+
+}
+
+
+/* ============================
+   ADD VARIANT 
+============================ */
+
+
+ export const addVariant = async (
+req,
+res
+) => {
+
+try {
+
+const productId =
+req.params.productId
+
+const product =
+await Product.findById(productId)
+
+if(!product || product.isDeleted) {
+
+return res.status(404).json({
+
+success: false,
+message: "Product not found"
+
+})
+
+}
+
+const {
+
+SKU,
+storage,
+color,
+RAM,
+stock,
+price,
+comparePrice,
+discountPercentage
+
+} = req.body
+
+/* ============================
+   DUPLICATE CHECK
+============================ */
+
+const existingVariant =
+await Variant.findOne({
+
+productId,
+color,
+storage,
+RAM,
+isDeleted: false
+
+})
+
+if(existingVariant) {
+
+return res.json({
+
+success: false,
+message:
+"Variant already exists"
+
+})
+
+}
+
+/* ============================
+   IMAGE UPLOAD
+============================ */
+
+let images = []
+
+if(req.files?.variantImages) {
+
+for(const image of req.files.variantImages) {
+
+if(
+
+!allowedMimeTypes.includes(
+image.mimetype
+)
+
+) {
+
+return res.json({
+
+success: false,
+message:
+"Invalid image format"
+
+})
+
+}
+
+const uploaded =
+await uploadImage(
+image.buffer
+)
+
+images.push(uploaded)
+
+}
+
+}
+
+/* ============================
+   VALIDATE
+============================ */
+
+const variantData = {
+
+productId,
+SKU,
+storage,
+color,
+RAM,
+stock,
+price,
+comparePrice,
+discountPercentage,
+images
+
+}
+
+const validation =
+variantSchema.safeParse(
+variantData
+)
+
+if(!validation.success) {
+
+return res.json({
+
+success: false,
+message:
+validation.error.errors[0].message
+
+})
+
+}
+
+/* ============================
+   CREATE
+============================ */
+
+await Variant.create({
+
+...variantData,
+
+isActive: true,
+isDeleted: false
+
+})
+
+return res.json({
+
+success: true,
+message:
+"Variant added successfully"
+
+})
+
+}
+
+catch(error) {
+
+console.log(
+"Add Variant Error:",
+error
+)
+
+return res.json({
+
+success: false,
+message:
+"Failed to add variant"
+
+})
+
+}
+
+}
+
+/* ============================
+   UPDATE VARIANT
+============================ */
+
+export const updateVariant = async (
+req,
+res
+) => {
+
+try {
+
+const variantId =
+req.params.variantId
+
+const variant =
+await Variant.findById(variantId)
+
+if(!variant) {
+
+return res.json({
+
+success: false,
+message:
+"Variant not found"
+
+})
+
+}
+
+const {
+
+SKU,
+storage,
+color,
+RAM,
+stock,
+price,
+comparePrice,
+discountPercentage
+
+} = req.body
+
+/* ============================
+   DUPLICATE CHECK
+============================ */
+
+const existingVariant =
+await Variant.findOne({
+
+_id: { $ne: variantId },
+
+productId:
+variant.productId,
+
+color,
+storage,
+RAM,
+
+isDeleted: false
+
+})
+
+if(existingVariant) {
+
+return res.json({
+
+success: false,
+message:
+"Variant already exists"
+
+})
+
+}
+
+
+
+/* ============================
+   IMAGES
+============================ */
+
+/* EXISTING IMAGES FROM FRONTEND */
+
+let existingImages = [];
+
+if (req.body.existingImages) {
+
+    existingImages = JSON.parse(
+        req.body.existingImages
+    );
+
+}
+
+/* NEW IMAGES */
+
+let newImages = [];
+
+if (req.files?.variantImages?.length) {
+
+    for (const image of req.files.variantImages) {
+
+        /* IMAGE VALIDATION */
+
+        if (
+            !allowedMimeTypes.includes(
+                image.mimetype
+            )
+        ) {
+
+            return res.json({
+
+                success: false,
+
+                message:
+                "Invalid image format"
+
+            });
+
+        }
+
+        /* UPLOAD IMAGE */
+
+        const uploadedImage =
+        await uploadImage(
+            image.buffer
+        );
+
+        newImages.push(
+            uploadedImage
+        );
+
+    }
+
+}
+
+/* MERGE OLD + NEW IMAGES */
+
+const images = [
+
+    ...existingImages,
+
+    ...newImages
+
+];
+
+/* ============================
+   UPDATE
+============================ */
+
+await Variant.findByIdAndUpdate(
+
+variantId,
+
+{
+
+SKU,
+storage,
+color,
+RAM,
+stock,
+price,
+comparePrice,
+discountPercentage,
+images
+
+}
+
+)
+
+return res.json({
+
+success: true,
+message:
+"Variant updated successfully"
+
+})
+
+}
+
+catch(error) {
+
+console.log(
+"Update Variant Error:",
+error
+)
+
+return res.json({
+
+success: false,
+message:
+"Failed to update variant"
+
+})
+
+}
+
+}
+
+
+/* ============================
+   DELETE VARIANT
+============================ */
+
+export const deleteVariant = async (
+req,
+res
+) => {
+
+try {
+
+const variantId =
+req.params.variantId
+
+await Variant.findByIdAndUpdate(
+
+variantId,
+
+{
+
+isDeleted: true
+
+}
+
+)
+
+return res.json({
+
+success: true,
+message:
+"Variant deleted successfully"
+
+})
+
+}
+
+catch(error) {
+
+console.log(
+"Delete Variant Error:",
+error
+)
+
+return res.json({
+
+success: false,
+message:
+"Failed to delete variant"
 
 })
 

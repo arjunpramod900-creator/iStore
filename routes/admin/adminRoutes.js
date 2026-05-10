@@ -1,14 +1,22 @@
 import express from "express"
-import adminAuthMiddleware from "../../middleware/adminAuthMiddleware.js"
+
+import adminAuthMiddleware
+from "../../middleware/adminAuthMiddleware.js"
+
+import upload
+from "../../middleware/multer.js"
+
 import {
+
    loadUsers,
    toggleBlockUser,
    viewUserDetails,
    deleteUser
+
 }
+
 from "../../controllers/admin/adminUserController.js"
 
-import upload from "../../middleware/multer.js"
 import {
 
 loadCategories,
@@ -25,23 +33,28 @@ permanentDeleteCategory
 from "../../controllers/admin/adminCategoryController.js"
 
 import {
+
 loadProducts,
 renderAddProduct,
 addProduct,
 renderEditProduct,
 updateProduct,
-deleteProduct
+deleteProduct,
+loadProductDetails,
+
+addVariant,
+updateVariant,
+deleteVariant
+
 }
+
 from "../../controllers/admin/adminProductController.js"
 
 const router = express.Router()
 
-
-
 /* ============================
    USER MANAGEMENT
 ============================ */
-
 
 router.get(
 
@@ -74,9 +87,13 @@ toggleBlockUser
 )
 
 router.delete(
+
 "/users/delete/:id",
+
 adminAuthMiddleware,
+
 deleteUser
+
 )
 
 /* ============================
@@ -84,61 +101,103 @@ deleteUser
 ============================ */
 
 router.get(
+
 "/categories",
+
 adminAuthMiddleware,
+
 loadCategories
+
 )
 
 router.get(
+
 "/add-category",
+
 adminAuthMiddleware,
+
 renderAddCategory
+
 )
 
 router.post(
+
 "/add-category",
+
 adminAuthMiddleware,
+
 upload.single("image"),
+
 addCategory
+
 )
 
-/* EDIT CATEGORY */
+/* ============================
+   EDIT CATEGORY
+============================ */
 
 router.get(
+
 "/edit-category/:id",
+
 adminAuthMiddleware,
+
 renderEditCategory
+
 )
 
 router.post(
+
 "/edit-category/:id",
+
 adminAuthMiddleware,
+
 upload.single("image"),
+
 updateCategory
+
 )
 
-/* SOFT DELETE */
+/* ============================
+   SOFT DELETE CATEGORY
+============================ */
 
 router.patch(
+
 "/delete-category/:id",
+
 adminAuthMiddleware,
+
 deleteCategory
+
 )
 
-/* RESTORE */
+/* ============================
+   RESTORE CATEGORY
+============================ */
 
 router.patch(
+
 "/restore-category/:id",
+
 adminAuthMiddleware,
+
 restoreCategory
+
 )
 
-/* PERMANENT DELETE */
+/* ============================
+   PERMANENT DELETE CATEGORY
+============================ */
 
 router.delete(
+
 "/permanent-delete-category/:id",
+
 adminAuthMiddleware,
+
 permanentDeleteCategory
+
 )
 
 /* ============================
@@ -155,7 +214,9 @@ loadProducts
 
 )
 
-
+/* ============================
+   RENDER ADD PRODUCT
+============================ */
 
 router.get(
 
@@ -167,7 +228,9 @@ renderAddProduct
 
 )
 
-
+/* ============================
+   ADD PRODUCT
+============================ */
 
 router.post(
 
@@ -180,6 +243,7 @@ upload.fields([
 {
 
 name: "thumbnail",
+
 maxCount: 1
 
 },
@@ -187,6 +251,7 @@ maxCount: 1
 {
 
 name: "variantImages",
+
 maxCount: 10
 
 }
@@ -197,7 +262,9 @@ addProduct
 
 )
 
-/* edit product*/
+/* ============================
+   RENDER EDIT PRODUCT
+============================ */
 
 router.get(
 
@@ -209,6 +276,10 @@ renderEditProduct
 
 )
 
+/* ============================
+   UPDATE PRODUCT
+============================ */
+
 router.post(
 
 "/products/edit/:id",
@@ -218,8 +289,11 @@ adminAuthMiddleware,
 upload.fields([
 
 {
+
 name: "thumbnail",
+
 maxCount: 1
+
 }
 
 ]),
@@ -228,6 +302,9 @@ updateProduct
 
 )
 
+/* ============================
+   DELETE PRODUCT (SOFT)
+============================ */
 
 router.patch(
 
@@ -236,6 +313,87 @@ router.patch(
 adminAuthMiddleware,
 
 deleteProduct
+
+)
+
+/* ============================
+   ADD VARIANT
+============================ */
+
+router.post(
+
+"/products/:productId/variants/add",
+
+adminAuthMiddleware,
+
+upload.fields([
+
+{
+
+name: "variantImages",
+
+maxCount: 5
+
+}
+
+]),
+
+addVariant
+
+)
+
+/* ============================
+   UPDATE VARIANT
+============================ */
+
+router.post(
+
+"/variants/:variantId/edit",
+
+adminAuthMiddleware,
+
+upload.fields([
+
+{
+
+name: "variantImages",
+
+maxCount: 5
+
+}
+
+]),
+
+updateVariant
+
+)
+
+/* ============================
+   DELETE VARIANT (SOFT)
+============================ */
+
+router.patch(
+
+"/variants/:variantId/delete",
+
+adminAuthMiddleware,
+
+deleteVariant
+
+)
+
+/* ============================
+   PRODUCT DETAILS
+   KEEP THIS LAST
+============================ */
+
+router.get(
+
+"/products/:id",
+
+adminAuthMiddleware,
+
+loadProductDetails
 
 )
 
