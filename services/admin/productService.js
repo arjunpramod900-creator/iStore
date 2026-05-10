@@ -66,9 +66,19 @@ query.category || ""
 const status =
 query.status || "all"
 
-let filter = {
+let filter = {}
 
-isDeleted: false
+/* TRASH FILTER*/
+
+if (status === "trash") {
+
+filter.isDeleted = true
+
+}
+
+else {
+
+filter.isDeleted = false
 
 }
 
@@ -544,7 +554,151 @@ isDeleted: true
 
 }
 
+/* ============================
+   RESTORE PRODUCT
+============================ */
 
+export const restoreProductService =
+async (productId) => {
+
+const product =
+await Product.findById(productId)
+
+if (!product) {
+
+throw new Error(
+"Product not found"
+)
+
+}
+
+await Product.findByIdAndUpdate(
+
+productId,
+
+{
+
+isDeleted: false
+
+}
+
+)
+
+/* RESTORE VARIANTS */
+
+await Variant.updateMany(
+
+{
+
+productId
+
+},
+
+{
+
+isDeleted: false
+
+}
+
+)
+
+}
+
+
+
+/* ============================
+   PERMANENT DELETE PRODUCT
+============================ */
+
+export const permanentDeleteProductService =
+async (productId) => {
+
+const product =
+await Product.findById(productId)
+
+if (!product) {
+
+throw new Error(
+"Product not found"
+)
+
+}
+
+/* DELETE VARIANTS */
+
+await Variant.deleteMany({
+
+productId
+
+})
+
+/* DELETE PRODUCT */
+
+await Product.findByIdAndDelete(
+productId
+)
+
+}
+
+
+
+/* ============================
+   RESTORE VARIANT
+============================ */
+
+export const restoreVariantService =
+async (variantId) => {
+
+const variant =
+await Variant.findById(variantId)
+
+if (!variant) {
+
+throw new Error(
+"Variant not found"
+)
+
+}
+
+await Variant.findByIdAndUpdate(
+
+variantId,
+
+{
+
+isDeleted: false
+
+}
+
+)
+
+}
+
+
+
+/* ============================
+   PERMANENT DELETE VARIANT
+============================ */
+
+export const permanentDeleteVariantService =
+async (variantId) => {
+
+const variant =
+await Variant.findById(variantId)
+
+if (!variant) {
+
+throw new Error(
+"Variant not found"
+)
+
+}
+
+await Variant.findByIdAndDelete(
+variantId
+)
+
+}
 
 /* ============================
    PRODUCT DETAILS
@@ -571,14 +725,18 @@ throw new Error(
 const variants =
 await Variant.find({
 
-productId,
-
-isDeleted: false
+productId
 
 }).lean()
 
 const totalStock =
-variants.reduce(
+variants
+
+.filter(
+item => !item.isDeleted
+)
+
+.reduce(
 
 (acc,item)=> acc + item.stock,
 
@@ -586,8 +744,22 @@ variants.reduce(
 
 )
 
+const activeVariants =
+
+variants.filter(
+v => !v.isDeleted
+)
+
 const basePrice =
-variants.length > 0
+activeVariants.length > 0
+
+? Math.min(
+
+...activeVariants.map(v => v.price)
+
+)
+
+: 0
 
 ? Math.min(
 
@@ -598,7 +770,11 @@ variants.length > 0
 : 0
 
 const totalVariants =
-variants.length
+variants.filter(
+
+variant => !variant.isDeleted
+
+).length
 
 return {
 

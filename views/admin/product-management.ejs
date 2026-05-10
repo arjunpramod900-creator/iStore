@@ -289,6 +289,17 @@ Inactive
 
 </option>
 
+<option
+value="trash"
+<%= status === "trash"
+? "selected"
+: "" %>
+>
+
+Trash
+
+</option>
+
 </select>
 
 <button
@@ -483,6 +494,8 @@ class="status-dot-small
 
 <div class="action-btns">
 
+<% if(!product.isDeleted) { %>
+
 <!-- VIEW -->
 
 <a
@@ -490,8 +503,7 @@ href="/admin/products/<%= product._id %>"
 class="btn-icon-action"
 >
 
-<i data-lucide="eye">
-</i>
+<i data-lucide="eye"></i>
 
 </a>
 
@@ -502,8 +514,7 @@ href="/admin/products/edit/<%= product._id %>"
 class="btn-icon-action"
 >
 
-<i data-lucide="edit-2">
-</i>
+<i data-lucide="edit-2"></i>
 
 </a>
 
@@ -515,10 +526,37 @@ class="btn-icon-action delete-btn"
 data-id="<%= product._id %>"
 >
 
-<i data-lucide="trash-2">
-</i>
+<i data-lucide="trash-2"></i>
 
 </button>
+
+<% } else { %>
+
+<!-- RESTORE -->
+
+<button
+type="button"
+class="btn-icon-action restore-btn"
+data-id="<%= product._id %>"
+>
+
+<i data-lucide="rotate-ccw"></i>
+
+</button>
+
+<!-- PERMANENT DELETE -->
+
+<button
+type="button"
+class="btn-icon-action permanent-delete-btn"
+data-id="<%= product._id %>"
+>
+
+<i data-lucide="x-circle"></i>
+
+</button>
+
+<% } %>
 
 </div>
 
@@ -801,6 +839,179 @@ icon:
 
 title:
 "Failed to delete product"
+
+})
+
+}
+
+}
+
+)
+
+/* =========================
+RESTORE PRODUCT
+========================= */
+
+document.addEventListener(
+
+"click",
+
+async (e) => {
+
+const btn =
+e.target.closest(".restore-btn")
+
+if (!btn) return
+
+const productId =
+btn.dataset.id
+
+try {
+
+const response =
+await fetch(
+
+`/admin/restore-product/${productId}`,
+
+{
+method: "PATCH"
+}
+
+)
+
+const data =
+await response.json()
+
+if (data.success) {
+
+await Swal.fire({
+
+icon: "success",
+
+title:
+"Product restored",
+
+timer: 1200,
+
+showConfirmButton: false
+
+})
+
+window.location.reload()
+
+}
+
+}
+
+catch (error) {
+
+Swal.fire({
+
+icon: "error",
+
+title:
+"Restore failed"
+
+})
+
+}
+
+}
+
+)
+
+
+
+/* =========================
+PERMANENT DELETE
+========================= */
+
+document.addEventListener(
+
+"click",
+
+async (e) => {
+
+const btn =
+e.target.closest(
+".permanent-delete-btn"
+)
+
+if (!btn) return
+
+const productId =
+btn.dataset.id
+
+const result =
+await Swal.fire({
+
+title:
+"Delete Permanently?",
+
+text:
+"This action cannot be undone.",
+
+icon:
+"warning",
+
+showCancelButton:
+true,
+
+confirmButtonColor:
+"#BA1A1A",
+
+confirmButtonText:
+"Delete Forever"
+
+})
+
+if (!result.isConfirmed) return
+
+try {
+
+const response =
+await fetch(
+
+`/admin/permanent-delete-product/${productId}`,
+
+{
+method: "DELETE"
+}
+
+)
+
+const data =
+await response.json()
+
+if (data.success) {
+
+await Swal.fire({
+
+icon: "success",
+
+title:
+"Product permanently deleted",
+
+timer: 1200,
+
+showConfirmButton: false
+
+})
+
+window.location.reload()
+
+}
+
+}
+
+catch (error) {
+
+Swal.fire({
+
+icon: "error",
+
+title:
+"Delete failed"
 
 })
 

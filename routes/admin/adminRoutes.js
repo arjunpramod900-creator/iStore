@@ -40,11 +40,14 @@ addProduct,
 renderEditProduct,
 updateProduct,
 deleteProduct,
+restoreProduct,
+permanentDeleteProduct,
 loadProductDetails,
-
 addVariant,
 updateVariant,
-deleteVariant
+deleteVariant,
+restoreVariant,
+permanentDeleteVariant
 
 }
 
@@ -315,6 +318,33 @@ adminAuthMiddleware,
 deleteProduct
 
 )
+/* ============================
+   RESTORE PRODUCT
+============================ */
+
+router.patch(
+
+"/restore-product/:id",
+
+adminAuthMiddleware,
+
+restoreProduct
+
+)
+
+/* ============================
+   PERMANENT DELETE PRODUCT
+============================ */
+
+router.delete(
+
+"/permanent-delete-product/:id",
+
+adminAuthMiddleware,
+
+permanentDeleteProduct
+
+)
 
 /* ============================
    ADD VARIANT
@@ -383,8 +413,35 @@ deleteVariant
 )
 
 /* ============================
+   RESTORE VARIANT
+============================ */
+
+router.patch(
+
+"/variants/:variantId/restore",
+
+adminAuthMiddleware,
+
+restoreVariant
+
+)
+
+/* ============================
+   PERMANENT DELETE VARIANT
+============================ */
+
+router.delete(
+
+"/variants/:variantId/permanent-delete",
+
+adminAuthMiddleware,
+
+permanentDeleteVariant
+
+)
+
+/* ============================
    PRODUCT DETAILS
-   KEEP THIS LAST
 ============================ */
 
 router.get(

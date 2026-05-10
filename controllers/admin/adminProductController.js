@@ -8,11 +8,15 @@ createProductService,
 loadProductsService,
 updateProductService,
 deleteProductService,
+restoreProductService,
+permanentDeleteProductService,
 loadProductDetailsService,
 addVariantService,
 updateVariantService,
 deleteVariantService,
-getCategoriesService          
+restoreVariantService,
+permanentDeleteVariantService,          
+getCategoriesService
 }
 from "../../services/admin/productService.js"
 
@@ -388,7 +392,85 @@ success: false
 
 }
 
+/* ============================
+   RESTORE PRODUCT
+============================ */
 
+export const restoreProduct = async (
+req,
+res
+) => {
+
+try {
+
+await restoreProductService(
+req.params.id
+)
+
+res.json({
+
+success: true,
+
+message:
+"Product restored successfully"
+
+})
+
+}
+
+catch (error) {
+
+res.json({
+
+success: false,
+
+message: error.message
+
+})
+
+}
+
+}
+
+
+
+/* ============================
+   PERMANENT DELETE PRODUCT
+============================ */
+
+export const permanentDeleteProduct =
+async (req, res) => {
+
+try {
+
+await permanentDeleteProductService(
+req.params.id
+)
+
+res.json({
+
+success: true,
+
+message:
+"Product permanently deleted"
+
+})
+
+}
+
+catch (error) {
+
+res.json({
+
+success: false,
+
+message: error.message
+
+})
+
+}
+
+}
 
 /* ============================
    PRODUCT DETAILS PAGE
@@ -591,6 +673,84 @@ success: false,
 
 message:
 "Failed to delete variant"
+
+})
+
+}
+
+}
+
+/* ============================
+   RESTORE VARIANT
+============================ */
+
+export const restoreVariant =
+async (req, res) => {
+
+try {
+
+await restoreVariantService(
+req.params.variantId
+)
+
+res.json({
+
+success: true,
+
+message:
+"Variant restored successfully"
+
+})
+
+}
+
+catch (error) {
+
+res.json({
+
+success: false,
+
+message: error.message
+
+})
+
+}
+
+}
+
+
+
+/* ============================
+   PERMANENT DELETE VARIANT
+============================ */
+
+export const permanentDeleteVariant =
+async (req, res) => {
+
+try {
+
+await permanentDeleteVariantService(
+req.params.variantId
+)
+
+res.json({
+
+success: true,
+
+message:
+"Variant permanently deleted"
+
+})
+
+}
+
+catch (error) {
+
+res.json({
+
+success: false,
+
+message: error.message
 
 })
 

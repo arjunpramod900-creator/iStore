@@ -541,6 +541,9 @@
             <option value="critical">
                 Critical
             </option>
+            <option value="trash">
+                Trash
+            </option>
 
         </select>
 
@@ -587,6 +590,7 @@
                                <tr
     class="variant-row"
 
+    data-deleted="<%= variant.isDeleted %>"
     data-sku="<%= variant.SKU %>"
     data-storage="<%= variant.storage %>"
     data-ram="<%= variant.RAM %>"
@@ -664,39 +668,73 @@
 
                                         <div class="variant-actions">
 
-<button
-    class="btn-icon edit-variant-btn"
+                                                <% if(!variant.isDeleted) { %>
 
-    data-id="<%= variant._id %>"
-    data-sku="<%= variant.SKU %>"
-    data-color="<%= variant.color %>"
-    data-storage="<%= variant.storage %>"
-    data-ram="<%= variant.RAM %>"
-    data-price="<%= variant.price %>"
-    data-stock="<%= variant.stock %>"
-    data-images='<%- JSON.stringify(variant.images) %>'
->
+                                                <!-- EDIT -->
 
-    <i
-        data-lucide="edit-2"
-        size="16"
-    ></i>
+                                                <button
+                                                    class="btn-icon edit-variant-btn"
 
-</button>
+                                                    data-id="<%= variant._id %>"
+                                                    data-sku="<%= variant.SKU %>"
+                                                    data-color="<%= variant.color %>"
+                                                    data-storage="<%= variant.storage %>"
+                                                    data-ram="<%= variant.RAM %>"
+                                                    data-price="<%= variant.price %>"
+                                                    data-stock="<%= variant.stock %>"
+                                                    data-images='<%- JSON.stringify(variant.images) %>'>
 
-                                            <button
-                                                class="btn-icon delete-variant-btn"
-                                                data-id="<%= variant._id %>"
-                                            >
+                                                    <i
+                                                        data-lucide="edit-2"
+                                                        size="16"
+                                                    ></i>
 
-                                                <i
-                                                    data-lucide="trash-2"
-                                                    size="16"
-                                                ></i>
+                                                </button>
 
-                                            </button>
+                                                <!-- SOFT DELETE -->
 
-                                        </div>
+                                                <button
+                                                    class="btn-icon delete-variant-btn"
+                                                    data-id="<%= variant._id %>">
+
+                                                    <i
+                                                        data-lucide="trash-2"
+                                                        size="16"
+                                                    ></i>
+
+                                                </button>
+
+                                                <% } else { %>
+
+                                                <!-- RESTORE -->
+
+                                                <button
+                                                    class="btn-icon restore-variant-btn"
+                                                    data-id="<%= variant._id %>">
+
+                                                    <i
+                                                        data-lucide="rotate-ccw"
+                                                        size="16"
+                                                    ></i>
+
+                                                </button>
+
+                                                <!-- PERMANENT DELETE -->
+
+                                                <button
+                                                    class="btn-icon permanent-delete-variant-btn"
+                                                    data-id="<%= variant._id %>">
+
+                                                    <i
+                                                        data-lucide="x-circle"
+                                                        size="16"
+                                                    ></i>
+
+                                                </button>
+
+                                                <% } %>
+
+                                         </div>
 
                                     </td>
 
@@ -1467,7 +1505,7 @@ document.addEventListener(
 
         }
 
-        /* =========================================
+/* =========================================
    STOCK FILTER
 ========================================= */
 
@@ -1493,40 +1531,75 @@ if(stockFilter) {
             const stock =
             parseInt(stockBadge.innerText);
 
+            const isDeleted =
+            row.dataset.deleted === "true";
+
+            /* 
+               ALL
+             */
+
             if(stockFilter.value === "all") {
 
-                row.style.display = "";
+                row.style.display =
+                !isDeleted ? "" : "none";
 
             }
+
+            /* 
+               TRASH
+             */
+
+            else if(
+                stockFilter.value === "trash"
+            ) {
+
+                row.style.display =
+                isDeleted ? "" : "none";
+
+            }
+
+            /* 
+               CRITICAL
+             */
 
             else if(
                 stockFilter.value === "critical"
             ) {
 
                 row.style.display =
-                stock <= 10
+                !isDeleted && stock <= 10
                     ? ""
                     : "none";
 
             }
+
+            /* 
+               LOW
+             */
 
             else if(
                 stockFilter.value === "low"
             ) {
 
                 row.style.display =
-                stock > 10 && stock <= 50
+                !isDeleted &&
+                stock > 10 &&
+                stock <= 50
                     ? ""
                     : "none";
 
             }
+
+            /* 
+               INSTOCK
+             */
 
             else if(
                 stockFilter.value === "instock"
             ) {
 
                 row.style.display =
-                stock > 50
+                !isDeleted && stock > 50
                     ? ""
                     : "none";
 
@@ -1536,8 +1609,15 @@ if(stockFilter) {
 
     });
 
-}
+    /* 
+       INITIAL FILTER
+     */
 
+    stockFilter.dispatchEvent(
+        new Event("change")
+    );
+
+}
         /* =========================================
            SALES CHART
         ========================================== */
@@ -1756,7 +1836,7 @@ if(stockFilter) {
 
         });
 
-        /* =========================================
+/* =========================================
    DELETE VARIANT
 ========================================= */
 document
@@ -1837,6 +1917,156 @@ document
                 });
 
             }
+
+        }
+
+    });
+
+});
+
+
+/* =========================================
+   RESTORE VARIANT
+========================================= */
+
+document
+.querySelectorAll(".restore-variant-btn")
+.forEach(btn => {
+
+    btn.addEventListener("click", async () => {
+
+        const id = btn.dataset.id;
+
+        const response =
+        await fetch(
+
+            `/admin/variants/${id}/restore`,
+
+            {
+                method: "PATCH"
+            }
+
+        );
+
+        const data =
+        await response.json();
+
+        if(data.success) {
+
+            Toast.fire({
+
+                icon: "success",
+
+                title: "Variant restored"
+
+            });
+
+            setTimeout(() => {
+
+                location.reload();
+
+            }, 1000);
+
+        }
+
+        else {
+
+            Toast.fire({
+
+                icon: "error",
+
+                title: data.message
+
+            });
+
+        }
+
+    });
+
+});
+
+
+/* =========================================
+   PERMANENT DELETE VARIANT
+========================================= */
+
+document
+.querySelectorAll(".permanent-delete-variant-btn")
+.forEach(btn => {
+
+    btn.addEventListener("click", async () => {
+
+        const id = btn.dataset.id;
+
+        const result =
+        await Swal.fire({
+
+            title: "Delete Permanently?",
+
+            text:
+            "This action cannot be undone.",
+
+            icon: "warning",
+
+            showCancelButton: true,
+
+            confirmButtonColor: "#BA1A1A",
+
+            cancelButtonColor: "#D6CED7",
+
+            confirmButtonText:
+            "Delete Forever",
+
+            background: "#FFFFFF",
+
+            borderRadius: "16px"
+
+        });
+
+        if(!result.isConfirmed) return;
+
+        const response =
+        await fetch(
+
+            `/admin/variants/${id}/permanent-delete`,
+
+            {
+                method: "DELETE"
+            }
+
+        );
+
+        const data =
+        await response.json();
+
+        if(data.success) {
+
+            Toast.fire({
+
+                icon: "success",
+
+                title:
+                "Variant permanently deleted"
+
+            });
+
+            setTimeout(() => {
+
+                location.reload();
+
+            }, 1000);
+
+        }
+
+        else {
+
+            Toast.fire({
+
+                icon: "error",
+
+                title: data.message
+
+            });
 
         }
 
