@@ -1,0 +1,75 @@
+<div class="product-card">
+
+    <!-- Wishlist -->
+
+    <button class="wishlist-toggle">
+
+        <i
+            data-lucide="heart"
+            size="18"
+        ></i>
+
+    </button>
+
+
+    <!-- Clickable Product Area -->
+
+    <a
+        href="/products/<%= product._id %>"
+        class="product-card-link"
+    >
+
+        <!-- Product Image -->
+
+        <div class="card-img-container">
+
+            <img
+                src="<%= product.variant?.images?.[0] || product.thumbnail %>"
+                alt="<%= product.name %>"
+                loading="lazy"
+            >
+
+        </div>
+
+
+        <!-- Product Content -->
+
+        <div class="card-content">
+
+            <p class="card-category">
+
+                <%= product.categoryId?.name %>
+
+            </p>
+
+            <h3 class="card-title">
+
+                <%= product.name %>
+
+            </h3>
+
+            <p class="card-price">
+
+                ₹<%= product.variant?.price?.toLocaleString() %>
+
+            </p>
+
+        </div>
+
+    </a>
+
+
+    <!-- Add To Cart -->
+
+    <button class="add-to-cart-btn">
+
+        <i
+            data-lucide="shopping-cart"
+            size="18"
+        ></i>
+
+        Add to Cart
+
+    </button>
+
+</div>

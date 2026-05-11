@@ -1,0 +1,409 @@
+/* Product Grid */
+.product-grid-section {
+    padding: 0 32px 80px;
+    max-width: 1440px;
+    margin: 0 auto;
+}
+
+
+/* =========================
+
+   PRODUCT GRID
+
+========================= */
+
+.product-grid{
+
+    display: grid;
+
+    grid-template-columns: repeat(5, 1fr);
+
+    gap: 28px;
+
+    align-items: stretch;
+
+}
+
+
+
+.product-card{
+
+    background: #FFFFFF;
+
+    border-radius: 32px;
+
+    padding: 24px;
+
+    position: relative;
+
+    overflow: hidden;
+
+    transition:
+    transform 0.4s ease,
+    box-shadow 0.4s ease,
+    border-color 0.4s ease;
+
+    border: 1px solid rgba(96,55,99,0.08);
+
+    display: flex;
+
+    flex-direction: column;
+
+    justify-content: space-between;
+
+    min-height: 540px;
+
+    box-shadow:
+    0 4px 18px rgba(17, 17, 17, 0.03);
+
+    height: 100%;
+
+}
+/* .product-card{
+
+    transform: translateY(0) !important;
+
+    opacity: 1 !important;
+
+} */
+
+.product-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.product-card-link{
+
+    text-decoration: none;
+
+    color: inherit;
+
+    display: flex;
+
+    flex-direction: column;
+
+    flex: 1;
+
+}
+
+.card-img-container{
+
+    width: 100%;
+
+    aspect-ratio: 1 / 1;
+
+    border-radius: 24px;
+
+    background: #F7F4F8;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    overflow: hidden;
+
+    position: relative;
+
+}
+
+.card-img-container img{
+
+    width: 100%;
+
+    height: 100%;
+
+    object-fit: cover;
+
+    object-position: center;
+
+    display: block;
+
+    transition: transform 0.45s ease;
+
+    filter: brightness(1.02) contrast(1.02);
+
+}
+
+.product-card:hover .card-img-container img{
+
+    transform: scale(1.04);
+
+}
+
+.wishlist-toggle {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(4px);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: var(--transition);
+    z-index: 2;
+}
+
+.wishlist-toggle:hover {
+    background: var(--white);
+    color: #EF4444;
+}
+
+.card-content{
+
+    padding-top: 24px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 10px;
+
+    flex: 1;
+
+}
+
+
+.card-category {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--primary-purple);
+    margin-bottom: 4px;
+}
+
+.card-title{
+
+    font-size: 28px;
+
+    line-height: 1.1;
+
+    font-weight: 500;
+
+    color: #1D1D1F;
+
+    letter-spacing: -1px;
+
+    min-height: 64px;
+
+}
+
+.card-price {
+    font-size: 20px;
+    font-weight: 600;
+    color: #2D004F;
+    margin-bottom: 24px;
+}
+
+
+.add-to-cart-btn {
+    width: 100%;
+    padding: 12px;
+    border-radius: 24px;
+    border: none;
+    background: linear-gradient(90deg, #4C0080 0%, #6A0DAD 100%);
+    color: var(--white);
+    font-weight: 700;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.add-to-cart-btn:hover {
+    opacity: 0.9;
+    gap: 12px;
+}
+
+
+
+/* =========================
+
+   LARGE LAPTOPS
+
+========================= */
+
+@media (max-width: 1400px){
+
+    .product-grid{
+
+        grid-template-columns: repeat(4, 1fr);
+
+    }
+
+}
+
+/* =========================
+
+   TABLETS / SMALL LAPTOPS
+
+========================= */
+
+@media (max-width: 1100px){
+
+    .product-grid{
+
+        grid-template-columns: repeat(3, 1fr);
+
+        gap: 24px;
+
+    }
+
+}
+
+/* =========================
+
+   LARGE MOBILE / IPAD MINI
+
+========================= */
+
+@media (max-width: 768px){
+
+    .product-grid-section{
+
+        padding: 0 18px 80px;
+
+    }
+
+    .product-grid{
+
+        grid-template-columns: repeat(2, 1fr);
+
+        gap: 18px;
+
+    }
+
+    .product-card{
+
+        min-height: auto;
+
+        padding: 14px;
+
+        border-radius: 24px;
+
+    }
+
+    .card-content{
+
+        padding-top: 16px;
+
+        gap: 6px;
+
+    }
+
+    .card-title{
+
+        font-size: 18px;
+
+        min-height: auto;
+
+        letter-spacing: -0.5px;
+
+    }
+
+    .card-price{
+
+        font-size: 16px;
+
+        margin-bottom: 14px;
+
+    }
+
+    .add-to-cart-btn{
+
+        height: 42px;
+
+        border-radius: 18px;
+
+        font-size: 14px;
+
+    }
+
+}
+
+/* =========================
+
+   SMALL IPHONES
+
+========================= */
+
+@media (max-width: 480px){
+
+    .product-grid{
+
+        grid-template-columns: repeat(2, 1fr);
+
+        gap: 14px;
+
+    }
+
+    .product-card{
+
+        padding: 12px;
+
+        border-radius: 22px;
+
+    }
+
+    .card-title{
+
+        font-size: 16px;
+
+        line-height: 1.2;
+
+    }
+
+    .card-category{
+
+        font-size: 9px;
+
+    }
+
+    .card-price{
+
+        font-size: 15px;
+
+    }
+
+    .wishlist-toggle{
+
+        width: 28px;
+
+        height: 28px;
+
+        top: 10px;
+
+        right: 10px;
+
+    }
+
+    .wishlist-toggle svg{
+
+        width: 16px;
+
+        height: 16px;
+
+    }
+
+    .add-to-cart-btn{
+
+        height: 38px;
+
+        font-size: 13px;
+
+        gap: 6px;
+
+    }
+
+}

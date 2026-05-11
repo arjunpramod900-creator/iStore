@@ -1,0 +1,174 @@
+<section class="filter-bar-section">
+
+    <form
+        action="/products"
+        method="GET"
+        class="filter-form"
+    >
+
+        <!-- SEARCH -->
+
+        <div class="filter-search-group">
+
+            <i
+                data-lucide="search"
+                class="filter-icon"
+            ></i>
+
+            <input
+                type="text"
+                name="search"
+                placeholder="Search products..."
+                value="<%= search || '' %>"
+                class="filter-search-input"
+            >
+
+            <% if(search){ %>
+
+                <a
+                    href="/products"
+                    class="clear-search-btn"
+                >
+
+                    Clear
+
+                </a>
+
+            <% } %>
+
+        </div>
+
+
+
+        <!-- CATEGORY -->
+
+        <div class="filter-select-wrapper">
+
+            <i
+                data-lucide="layout-grid"
+                class="filter-icon"
+            ></i>
+
+            <select
+                name="category"
+                class="premium-filter-select"
+            >
+
+                <option value="">
+                    All Categories
+                </option>
+
+                <% categories.forEach(categoryItem => { %>
+
+                    <option
+
+                        value="<%= categoryItem._id %>"
+
+                        <%= category === categoryItem._id.toString()
+                        ? "selected"
+                        : ""
+                        %>
+
+                    >
+
+                        <%= categoryItem.name %>
+
+                    </option>
+
+                <% }) %>
+
+            </select>
+
+        </div>
+
+
+
+        <!-- SORT -->
+
+        <div class="filter-select-wrapper">
+
+            <i
+                data-lucide="arrow-up-down"
+                class="filter-icon"
+            ></i>
+
+            <select
+                name="sort"
+                class="premium-filter-select"
+            >
+
+                <option
+                    value="latest"
+                    <%= sort === "latest"
+                    ? "selected"
+                    : ""
+                    %>
+                >
+                    Latest
+                </option>
+
+                <option
+                    value="priceLow"
+                    <%= sort === "priceLow"
+                    ? "selected"
+                    : ""
+                    %>
+                >
+                    Price: Low to High
+                </option>
+
+                <option
+                    value="priceHigh"
+                    <%= sort === "priceHigh"
+                    ? "selected"
+                    : ""
+                    %>
+                >
+                    Price: High to Low
+                </option>
+
+                <option
+                    value="a-z"
+                    <%= sort === "a-z"
+                    ? "selected"
+                    : ""
+                    %>
+                >
+                    A - Z
+                </option>
+
+                <option
+                    value="z-a"
+                    <%= sort === "z-a"
+                    ? "selected"
+                    : ""
+                    %>
+                >
+                    Z - A
+                </option>
+
+            </select>
+
+        </div>
+
+
+
+        <!-- BUTTON -->
+
+        <button
+            type="submit"
+            class="filter-apply-btn"
+        >
+
+            <i
+                data-lucide="sliders-horizontal"
+                size="18"
+            ></i>
+
+            Apply
+
+        </button>
+
+    </form>
+
+</section>

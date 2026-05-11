@@ -157,7 +157,7 @@ required
 
 <option
 value="<%= category._id %>"
-<%= category._id.toString() === product.categoryId.toString()
+<%= String(category._id) === String(product.categoryId)
 ? "selected"
 : "" %>
 >

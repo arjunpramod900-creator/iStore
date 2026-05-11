@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>iStore - Discover the Latest Apple Products</title>
+    <link rel="stylesheet" href="/css/components/header.css">
+    <link rel="stylesheet" href="/css/components/footer.css">
     <link rel="stylesheet" href="/css/home.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -12,7 +14,7 @@
 </head>
 <body>
     <!-- Header -->
-   <%- include("../partials/user/header") %>
+  <%- include("../partials/user/header", { page: 'home' }) %>
 
     <!-- Hero Section -->
     <section class="hero">

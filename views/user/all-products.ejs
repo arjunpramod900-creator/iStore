@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Products - iStore</title>
+    <link rel="stylesheet" href="/css/components/header.css">
+    <link rel="stylesheet" href="/css/components/footer.css">
+    <link rel="stylesheet" href="/css/all-products.css">
+    <link rel="stylesheet" href="/css/components/filter-bar.css">
+    <link rel="stylesheet" href="/css/components/product-card.css">
+    <link rel="stylesheet" href="/css/components/pagination.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+</head>
+<body>
+
+    <%- include('../partials/user/header', { page: 'products' }) %>
+
+    <main class="main-content">
+        <!-- Page Header -->
+        <header class="all-products-header">
+            <nav class="breadcrumbs">
+                <a href="/">Home</a>
+                <span>/</span>
+                <span class="current">Products</span>
+            </nav>
+            
+            <div class="header-content">
+                <div class="title-group">
+                    <h1>All Products</h1>
+                    <p>Browse all Apple devices and accessories. Curated technology for every lifestyle.</p>
+                </div>
+                    <div class="results-count">
+
+                        Showing
+
+                        <strong>
+                            <%= totalProducts %>
+                        </strong>
+
+                        Products
+
+                    </div>
+            </div>
+        </header>
+
+        <!--Filter Bar-->
+        <%- include('../partials/user/filter-bar',{categories,search,category,sort}) %>
+
+        <!-- Main Product Grid -->
+        <section class="product-grid-section">
+           <div class="product-grid">
+
+                <% if(products.length > 0){ %>
+
+                    <% products.forEach(product => { %>
+
+                        <%- include('../partials/user/product-card', { product }) %>
+
+                    <% }) %>
+
+                <% } else { %>
+
+                    <div class="empty-products">
+
+                        <h3>
+                            No Products Found
+                        </h3>
+
+                    </div>
+
+                <% } %>
+
+            </div>
+
+            <!-- Pagination -->
+            <%- include('../partials/user/pagination') %>
+        </section>
+
+        <!-- Featured Products Strip -->
+        <section class="featured-strip">
+            <div class="featured-strip-container">
+                <div class="strip-header">
+                    <h2>Featured Products</h2>
+                    <div class="strip-nav">
+                        <button class="nav-circle"><i data-lucide="chevron-left" size="18"></i></button>
+                        <button class="nav-circle"><i data-lucide="chevron-right" size="18"></i></button>
+                    </div>
+                </div>
+                <div class="strip-grid">
+                    <div class="strip-card">
+                        <img src="/assets/prod_iphone17pro.png" alt="iPhone" class="strip-img">
+                        <h3 class="strip-title">iPhone 17 Pro</h3>
+                        <a href="#" class="strip-link">₹1,19,900</a>
+                    </div>
+                    <div class="strip-card">
+                        <img src="/assets/prod_macbookm5.png" alt="MacBook" class="strip-img">
+                        <h3 class="strip-title">MacBook Pro M5</h3>
+                        <a href="#" class="strip-link">₹1,99,900</a>
+                    </div>
+                    <div class="strip-card">
+                        <img src="/assets/watch.png" alt="Watch" class="strip-img">
+                        <h3 class="strip-title">Apple Watch Ultra</h3>
+                        <a href="#" class="strip-link">₹89,900</a>
+                    </div>
+                    <div class="strip-card">
+                        <img src="/assets/airpods.png" alt="AirPods" class="strip-img">
+                        <h3 class="strip-title">AirPods Pro</h3>
+                        <a href="#" class="strip-link">₹24,900</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+   <%- include('../partials/user/footer') %>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        gsap.registerPlugin(ScrollTrigger);
+
+        // Entrance animations
+        gsap.from(".all-products-header .title-group h1", {
+            y: 30,
+            opacity: 0,
+            duration: 0.8,
+            ease: "power3.out"
+        });
+
+        gsap.from(".all-products-header .title-group p", {
+            y: 20,
+            opacity: 0,
+            duration: 0.8,
+            delay: 0.2,
+            ease: "power3.out"
+        });
+
+        gsap.from(".tab-btn", {
+            y: 10,
+            opacity: 0,
+            duration: 0.5,
+            stagger: 0.1,
+            delay: 0.4,
+            ease: "power3.out"
+        });
+
+        // Product grid animation
+       gsap.fromTo(
+
+    ".product-card",
+
+    {
+        y: 40,
+        opacity: 0
+    },
+
+    {
+        y: 0,
+        opacity: 1,
+        duration: 0.8,
+        stagger: 0.08,
+        ease: "power3.out",
+        clearProps: "all",
+
+        scrollTrigger: {
+            trigger: ".product-grid",
+            start: "top 85%"
+        }
+    }
+
+);
+        // Other sections
+        gsap.from(".featured-strip h2, .strip-card", {
+            scrollTrigger: {
+                trigger: ".featured-strip",
+                start: "top 80%",
+            },
+            y: 40,
+            opacity: 0,
+            duration: 0.8,
+            stagger: 0.1,
+            ease: "power3.out"
+        });
+
+    </script>
+</body>
+</html>

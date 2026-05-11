@@ -1,0 +1,586 @@
+/* =========================
+   FOOTER
+========================= */
+
+.footer {
+
+    width: 100%;
+
+    background:
+    linear-gradient(
+        180deg,
+        #4C0080 0%,
+        #3B0066 100%
+    );
+
+    padding: 72px 32px;
+
+    margin-top: 120px;
+
+    overflow: hidden;
+
+    position: relative;
+
+}
+
+
+
+/* subtle glow */
+
+.footer::before{
+
+    content: "";
+
+    position: absolute;
+
+    top: -120px;
+
+    right: -120px;
+
+    width: 320px;
+
+    height: 320px;
+
+    background:
+    radial-gradient(
+        circle,
+        rgba(168,85,247,0.18) 0%,
+        transparent 70%
+    );
+
+    pointer-events: none;
+
+}
+
+
+
+/* =========================
+   CONTAINER
+========================= */
+
+.footer-container {
+
+    max-width: 1280px;
+
+    margin: 0 auto;
+
+    position: relative;
+
+    z-index: 2;
+
+}
+
+
+
+/* =========================
+   MAIN
+========================= */
+
+.footer-main {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: flex-start;
+
+    gap: 64px;
+
+    margin-bottom: 64px;
+
+}
+
+
+
+/* =========================
+   COLUMN 1
+========================= */
+
+.footer-col-1 {
+
+    max-width: 320px;
+
+}
+
+
+
+.footer-logo {
+
+    font-size: 30px;
+
+    font-weight: 800;
+
+    letter-spacing: -1.4px;
+
+    color: #FFFFFF;
+
+    margin-bottom: 22px;
+
+}
+
+
+
+.footer-desc {
+
+    font-size: 15px;
+
+    line-height: 1.9;
+
+    color:
+    rgba(255,255,255,0.72);
+
+}
+
+
+
+/* =========================
+   FOOTER COLUMNS
+========================= */
+
+.footer-col {
+
+    min-width: 180px;
+
+}
+
+
+
+.footer-heading {
+
+    font-size: 15px;
+
+    font-weight: 700;
+
+    letter-spacing: 0.4px;
+
+    color: #FFFFFF;
+
+    margin-bottom: 24px;
+
+}
+
+
+
+.footer-list {
+
+    list-style: none;
+
+    padding: 0;
+
+    margin: 0;
+
+}
+
+
+
+.footer-list li {
+
+    margin-bottom: 16px;
+
+}
+
+
+
+.footer-list a {
+
+    font-size: 15px;
+
+    font-weight: 500;
+
+    color:
+    rgba(255,255,255,0.70);
+
+    text-decoration: none;
+
+    transition: 0.3s ease;
+
+}
+
+
+
+.footer-list a:hover {
+
+    color: #FFFFFF;
+
+    padding-left: 4px;
+
+}
+
+
+
+/* =========================
+   FOOTER BOTTOM
+========================= */
+
+.footer-bottom {
+
+    padding-top: 28px;
+
+    border-top:
+    1px solid rgba(255,255,255,0.08);
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    gap: 24px;
+
+}
+
+
+
+/* =========================
+   SOCIALS
+========================= */
+
+.footer-socials {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 14px;
+
+}
+
+
+
+.social-icon {
+
+    width: 46px;
+
+    height: 46px;
+
+    border-radius: 50%;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    color: #FFFFFF;
+
+    text-decoration: none;
+
+    transition:
+    transform 0.35s ease,
+    box-shadow 0.35s ease;
+
+}
+
+
+
+.social-icon:hover {
+
+    transform:
+    translateY(-4px)
+    scale(1.05);
+
+}
+
+
+
+/* ICON SIZE */
+
+.social-icon svg {
+
+    width: 20px;
+
+    height: 20px;
+
+}
+
+
+
+/* SOCIAL COLORS */
+
+.social-icon.facebook {
+
+    background: #1877F2;
+
+    box-shadow:
+    0 10px 20px rgba(24,119,242,0.28);
+
+}
+
+
+
+.social-icon.instagram {
+
+    background:
+    linear-gradient(
+        45deg,
+        #f09433 0%,
+        #e6683c 25%,
+        #dc2743 50%,
+        #cc2366 75%,
+        #bc1888 100%
+    );
+
+    box-shadow:
+    0 10px 20px rgba(220,39,67,0.24);
+
+}
+
+
+
+.social-icon.twitter {
+
+    background: #000000;
+
+    box-shadow:
+    0 10px 20px rgba(0,0,0,0.24);
+
+}
+
+
+
+.social-icon.youtube {
+
+    background: #FF0000;
+
+    box-shadow:
+    0 10px 20px rgba(255,0,0,0.22);
+
+}
+
+
+
+/* =========================
+   COPYRIGHT
+========================= */
+
+.footer-copyright {
+
+    font-size: 13px;
+
+    font-weight: 500;
+
+    color:
+    rgba(255,255,255,0.55);
+
+}
+
+
+
+/* =========================
+   LARGE TABLETS
+========================= */
+
+@media (max-width: 1024px){
+
+    .footer{
+
+        padding:
+        64px 28px 110px;
+
+    }
+
+    .footer-main{
+
+        flex-wrap: wrap;
+
+        gap: 48px;
+
+    }
+
+}
+
+
+
+/* =========================
+   TABLETS / IPADS
+========================= */
+@media (max-width: 768px){
+
+    .footer{
+
+        padding:
+        56px 22px 140px;
+
+        margin-top: 90px;
+
+        text-align: center;
+
+    }
+
+    .footer-main{
+
+        flex-direction: column;
+
+        align-items: center;
+
+        justify-content: center;
+
+        gap: 56px;
+
+        margin-bottom: 54px;
+
+    }
+
+    .footer-col-1{
+
+        max-width: 100%;
+
+        display: flex;
+
+        flex-direction: column;
+
+        align-items: center;
+
+    }
+
+    .footer-col{
+
+        width: 100%;
+
+        display: flex;
+
+        flex-direction: column;
+
+        align-items: center;
+
+    }
+
+    .footer-desc{
+
+        max-width: 340px;
+
+        margin: 0 auto;
+
+    }
+
+    .footer-heading{
+
+        margin-bottom: 18px;
+
+        text-align: center;
+
+    }
+
+    .footer-list{
+
+        display: flex;
+
+        flex-direction: column;
+
+        align-items: center;
+
+    }
+
+    .footer-bottom{
+
+        flex-direction: column;
+
+        align-items: center;
+
+        justify-content: center;
+
+        gap: 28px;
+
+        text-align: center;
+
+    }
+
+    .footer-socials{
+
+        justify-content: center;
+
+        flex-wrap: wrap;
+
+    }
+
+}
+
+
+
+/* =========================
+   IPHONES
+========================= */
+
+@media (max-width: 480px){
+
+    .footer{
+
+        padding:
+        48px 18px 140px;
+
+    }
+
+    .footer-logo{
+
+        font-size: 26px;
+
+    }
+
+    .footer-desc{
+
+        font-size: 14px;
+
+        line-height: 1.8;
+
+    }
+
+    .footer-heading{
+
+        font-size: 14px;
+
+    }
+
+    .footer-list a{
+
+        font-size: 14px;
+
+    }
+
+    .social-icon{
+
+        width: 42px;
+
+        height: 42px;
+
+    }
+
+    .social-icon svg{
+
+        width: 18px;
+
+        height: 18px;
+
+    }
+
+    .footer-copyright{
+
+        font-size: 12px;
+
+        line-height: 1.6;
+
+    }
+
+    .footer-list{
+
+        align-items: center;
+
+    }
+
+    .footer-col{
+
+        align-items: center;
+
+    }
+
+    .footer-col-1{
+
+        align-items: center;
+
+    }
+
+    .footer-desc{
+
+        text-align: center;
+
+    }
+}

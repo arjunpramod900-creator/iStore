@@ -1,13 +1,49 @@
+<%
+    const currentPage =
+    typeof page !== "undefined"
+        ? page
+        : "";
+%>
+
 <!-- Header -->
 <header class="header">
+
     <nav class="nav">
-        <a href="/" class="logo">iStore</a>
+
+        <a href="/" class="logo">
+            iStore
+        </a>
 
         <div class="nav-links">
-            <a href="/" class="nav-link active">Home</a>
-            <a href="/categories" class="nav-link">Categories</a>
-            <a href="/products" class="nav-link">Products</a>
-            <a href="/deals" class="nav-link">Deals</a>
+
+            <a
+                href="/"
+                class="nav-link <%= currentPage === 'home' ? 'active' : '' %>"
+            >
+                Home
+            </a>
+
+            <a
+                href="/categories"
+                class="nav-link <%= currentPage === 'categories' ? 'active' : '' %>"
+            >
+                Categories
+            </a>
+
+            <a
+                href="/products"
+                class="nav-link <%= currentPage === 'products' ? 'active' : '' %>"
+            >
+                Products
+            </a>
+
+            <a
+                href="/deals"
+                class="nav-link <%= currentPage === 'deals' ? 'active' : '' %>"
+            >
+                Deals
+            </a>
+
         </div>
 
         <div class="nav-icons">
@@ -26,26 +62,26 @@
 
             <% if (userId) { %>
 
-                <a href="/profile"
-                   class="nav-icon"
-                   title="Profile">
+                <a
+                    href="/profile"
+                    class="nav-icon"
+                    title="Profile"
+                >
 
-                   <i data-lucide="user"></i>
-                 <div>
+                    <i data-lucide="user"></i>
 
-                
-                </div>
-                
-                    
+                    <div></div>
 
                 </a>
 
             <% } else { %>
 
-               <a href="/login"
-                class="login-btn">
+                <a
+                    href="/login"
+                    class="login-btn"
+                >
 
-                Login
+                    Login
 
                 </a>
 
@@ -54,4 +90,55 @@
         </div>
 
     </nav>
+
 </header>
+
+<!-- Mobile Bottom Navigation -->
+
+<div class="mobile-bottom-nav">
+
+    <a
+        href="/"
+        class="mobile-nav-item <%= currentPage === 'home' ? 'active' : '' %>"
+    >
+
+        <i data-lucide="house"></i>
+
+        <span>Home</span>
+
+    </a>
+
+    <a
+        href="/categories"
+        class="mobile-nav-item <%= currentPage === 'categories' ? 'active' : '' %>"
+    >
+
+        <i data-lucide="layout-grid"></i>
+
+        <span>Categories</span>
+
+    </a>
+
+    <a
+        href="/products"
+        class="mobile-nav-item <%= currentPage === 'products' ? 'active' : '' %>"
+    >
+
+        <i data-lucide="shopping-bag"></i>
+
+        <span>Products</span>
+
+    </a>
+
+    <a
+        href="/deals"
+        class="mobile-nav-item <%= currentPage === 'deals' ? 'active' : '' %>"
+    >
+
+        <i data-lucide="badge-percent"></i>
+
+        <span>Deals</span>
+
+    </a>
+
+</div>

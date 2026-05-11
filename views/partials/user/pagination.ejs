@@ -1,0 +1,46 @@
+<section class="pagination-section">
+
+    <div class="pagination-container">
+
+        <!-- PREVIOUS -->
+
+        <% if(currentPage > 1){ %>
+
+            <a
+                href="?page=<%= currentPage - 1 %>&search=<%= search %>&category=<%= category %>&sort=<%= sort %>"
+                class="page-nav-btn"
+            >
+                Previous
+            </a>
+
+        <% } %>
+
+        <!-- PAGE NUMBERS -->
+
+        <% for(let i = 1; i <= totalPages; i++){ %>
+
+            <a
+                href="?page=<%= i %>&search=<%= search %>&category=<%= category %>&sort=<%= sort %>"
+                class="page-btn <%= currentPage === i ? 'active' : '' %>"
+            >
+                <%= i %>
+            </a>
+
+        <% } %>
+
+        <!-- NEXT -->
+
+        <% if(currentPage < totalPages){ %>
+
+            <a
+                href="?page=<%= currentPage + 1 %>&search=<%= search %>&category=<%= category %>&sort=<%= sort %>"
+                class="page-nav-btn"
+            >
+                Next
+            </a>
+
+        <% } %>
+
+    </div>
+
+</section>
