@@ -388,33 +388,61 @@ async (
 
 
 
-    /* DEFAULT / ACTIVE VARIANT */
+/* =========================================
+   ALL ACTIVE VARIANTS
+========================================= */
 
-    const variant =
+const variants =
 
-    await Variant.findOne({
+await Variant.find({
 
-        productId: product._id,
+    productId: product._id,
 
-        isDeleted: false,
+    isDeleted: false,
 
-        isActive: true
+    isActive: true
 
-    })
+})
 
-    .sort({
+.sort({
 
-        isDefault: -1,
+    isDefault: -1,
 
-        createdAt: 1
+    createdAt: 1
 
-    })
+})
 
-    .lean()
+.lean()
 
+/* NO VARIANTS */
 
+if(!variants.length){
 
-    product.variant = variant
+    return {
+
+        product: null
+
+    }
+
+}
+
+/* DEFAULT VARIANT */
+
+const defaultVariant =
+
+variants.find(
+
+    variant => variant.isDefault
+
+)
+
+|| variants[0]
+
+/* ATTACH */
+
+product.variant = defaultVariant
+
+product.variants = variants
 
 
 

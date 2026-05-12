@@ -141,6 +141,138 @@ body {
     padding-top: 16px;
 }
 
+.stock-status{
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+    margin-top: -12px;
+
+    margin-bottom: 24px;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+}
+
+.stock-status.in-stock{
+
+    color: #15803D;
+
+}
+
+.stock-status.out-stock{
+
+    color: #DC2626;
+
+}
+
+.stock-status::before{
+
+    content: "";
+
+    width: 10px;
+
+    height: 10px;
+
+    border-radius: 999px;
+
+    background: currentColor;
+
+}
+
+.ram-options{
+
+    display: flex;
+
+    gap: 12px;
+
+    flex-wrap: wrap;
+
+}
+
+.ram-btn,
+
+.storage-btn{
+
+    padding: 12px 24px;
+
+    border: 2px solid var(--border-light);
+
+    border-radius: 24px;
+
+    background: white;
+
+    cursor: pointer;
+
+    transition: all 0.25s ease;
+
+}
+
+.ram-btn.active,
+
+.storage-btn.active{
+
+    border-color: var(--brand-purple);
+
+    background: rgba(76,0,128,0.06);
+
+    color: var(--brand-purple);
+
+    font-weight: 700;
+
+}
+
+.ram-btn.disabled,
+
+.storage-btn.disabled{
+
+    opacity: 0.35;
+
+    cursor: not-allowed;
+
+    text-decoration: line-through;
+
+}
+
+.unavailable{
+
+    opacity: 0.35;
+
+    filter: grayscale(1);
+
+    cursor: not-allowed;
+
+    position: relative;
+
+}
+
+.variant-message{
+
+    font-size: 14px;
+
+    color: #DC2626;
+
+    margin-bottom: 14px;
+
+    font-weight: 600;
+
+}
+
+.color-btn.unavailable,
+.ram-btn.unavailable,
+.storage-btn.unavailable{
+
+    opacity: 0.45;
+
+}
+
+
+
 .product-summary {
     font-size: 16px;
     line-height: 26px;

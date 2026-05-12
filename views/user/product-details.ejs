@@ -37,7 +37,13 @@
                 <!-- Gallery Column -->
                 <div class="gallery-column">
                     <div class="main-image-container" id="mainView">
-                        <img src="<%= (product.variant && product.variant.images && product.variant.images[0]) || product.thumbnail %>" alt="<%= product.name %>" id="mainImage">
+                        <img
+
+    src="<%= product.variant.images?.[0] || product.thumbnail %>"
+
+    alt="<%= product.name %>"
+
+    id="mainImage" >
                     </div>
                     <div class="thumbnail-grid">
                         <% if(product.variant && product.variant.images) { %>
@@ -64,32 +70,236 @@
                         <span class="rating-text"><%= product.rating || 4.5 %> stars (<%= product.reviewCount || '1,240' %> reviews)</span>
                     </div>
 
-                    <p class="product-price">₹<%= (product.variant && product.variant.price) ? product.variant.price.toLocaleString() : '0' %></p>
+                 <div class="price-wrapper">
+
+    <p
+
+        class="stock-status
+
+        <%= product.variant.stock > 0
+        ? 'in-stock'
+        : 'out-stock'
+        %>"
+
+        id="stockStatus"
+
+    >
+
+        <%= product.variant.stock > 0
+        ? 'In Stock'
+        : 'Out of Stock'
+        %>
+
+    </p>
+
+    <p
+
+        class="variant-message"
+
+        id="variantMessage"
+
+    ></p>
+
+    <p
+
+        class="product-price"
+
+        id="productPrice"
+
+    >
+
+        ₹<%= product.variant.price.toLocaleString() %>
+
+    </p>
+
+</div>
                     
                     <p class="product-summary">
                         <%= product.description %>
                     </p>
 
                     <!-- Configuration Section -->
-                    <div class="config-container">
-                        <div class="config-group">
-                            <span class="config-label">Select Color</span>
-                            <div class="color-options">
-                                <button class="color-btn active" style="background-color: #0F172A;" title="Space Black" onclick="selectConfig(this, 'color')"></button>
-                                <button class="color-btn" style="background-color: #E2E8F0;" title="Silver" onclick="selectConfig(this, 'color')"></button>
-                                <button class="color-btn" style="background-color: #4C0080;" title="Deep Purple" onclick="selectConfig(this, 'color')"></button>
-                            </div>
-                        </div>
+                  
+<div class="config-container">
 
-                        <div class="config-group">
-                            <span class="config-label">Storage</span>
-                            <div class="storage-options">
-                                <button class="storage-btn active" onclick="selectConfig(this, 'storage')">128GB</button>
-                                <button class="storage-btn" onclick="selectConfig(this, 'storage')">256GB</button>
-                                <button class="storage-btn" onclick="selectConfig(this, 'storage')">512GB</button>
-                            </div>
-                        </div>
-                    </div>
+    <!-- COLOR -->
+
+    <div class="config-group">
+
+        <span class="config-label">
+
+            Select Color
+
+        </span>
+
+        <div class="color-options">
+
+            <%
+
+            const uniqueColors =
+
+            [...new Set(
+
+                product.variants.map(
+
+                    variant =>
+
+        variant.color
+
+        ?.trim()
+
+                )
+
+            )]
+
+            %>
+
+            <% uniqueColors.forEach(color => { %>
+
+                <button
+
+                    class="color-btn
+
+                    <%= product.variant.color === color
+                    ? 'active'
+                    : ''
+                    %>"
+
+                    data-color="<%= color %>"
+
+                    title="<%= color %>"
+
+                    style="background-color:
+
+                    <%= color === 'Black'
+                    ? '#111111'
+                    : color === 'Silver'
+                    ? '#D1D5DB'
+                    : color === 'Purple'
+                    ? '#6D28D9'
+                    : '#CBD5E1'
+                    %>"
+
+                ></button>
+
+            <% }) %>
+
+        </div>
+
+    </div>
+
+    <!-- RAM -->
+
+    <div class="config-group">
+
+        <span class="config-label">
+
+            RAM
+
+        </span>
+
+        <div class="ram-options">
+
+            <%
+
+            const uniqueRAMs =
+
+            [...new Set(
+
+                product.variants.map(
+
+                    variant =>
+
+        variant.RAM
+
+        ?.trim()
+
+        .toUpperCase()
+                )
+
+            )]
+
+            %>
+
+            <% uniqueRAMs.forEach(ram => { %>
+
+                <button
+
+                    class="ram-btn
+
+                    <%= product.variant.RAM === ram
+                    ? 'active'
+                    : ''
+                    %>"
+
+                    data-ram="<%= ram %>"
+
+                >
+
+                    <%= ram %>
+
+                </button>
+
+            <% }) %>
+
+        </div>
+
+    </div>
+
+    <!-- STORAGE -->
+
+    <div class="config-group">
+
+        <span class="config-label">
+
+            Storage
+
+        </span>
+
+        <div class="storage-options">
+
+            <%
+
+            const uniqueStorages =
+
+            [...new Set(
+
+                product.variants.map(
+
+                   variant => variant.storage.trim().toUpperCase()
+
+                )
+
+            )]
+
+            %>
+
+            <% uniqueStorages.forEach(storage => { %>
+
+                <button
+
+                    class="storage-btn
+
+                    <%= product.variant.storage === storage
+                    ? 'active'
+                    : ''
+                    %>"
+
+                    data-storage="<%= storage %>"
+
+                >
+
+                    <%= storage %>
+
+                </button>
+
+            <% }) %>
+
+        </div>
+
+    </div>
+
+</div>
 
                     <!-- Actions -->
                     <div class="action-row">
@@ -333,5 +543,625 @@ data-variant-id="<%= product.variant?._id %>"
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script src="/js/wishlist.js"></script>
+
+<script>
+
+/* =========================================
+   VARIANTS
+========================================= */
+
+const variants =
+<%- JSON.stringify(product.variants) %>
+
+const cartVariantIds =
+<%- JSON.stringify(cartVariantIds) %>
+
+const wishlistVariantIds =
+<%- JSON.stringify(wishlistVariantIds) %>
+
+/* =========================================
+   CURRENT STATE
+========================================= */
+
+let selectedColor =
+"<%= product.variant.color %>"
+
+let selectedRAM =
+"<%= product.variant.RAM %>"
+
+let selectedStorage =
+"<%= product.variant.storage %>"
+
+/* =========================================
+   ELEMENTS
+========================================= */
+
+const mainImage =
+document.getElementById("mainImage")
+
+const priceElement =
+document.getElementById("productPrice")
+
+const stockElement =
+document.getElementById("stockStatus")
+
+const variantMessage =
+document.getElementById("variantMessage")
+
+const cartButton =
+document.querySelector(".add-to-cart-btn")
+
+const wishlistButton =
+document.querySelector(".wishlist-toggle")
+
+const thumbnailGrid =
+document.querySelector(".thumbnail-grid")
+
+/* =========================================
+   FIND BEST VARIANT
+========================================= */
+
+function findBestVariant(
+
+    type,
+
+    value
+
+){
+
+    let variant = null
+
+    /* =====================================
+       COLOR PRIORITY
+    ===================================== */
+
+    if(type === "color"){
+
+        variant = variants.find(v => {
+
+            return (
+
+                v.color === value &&
+                v.RAM === selectedRAM &&
+                v.storage === selectedStorage
+
+            )
+
+        })
+
+        ||
+
+        variants.find(v => {
+
+            return (
+
+                v.color === value &&
+                v.RAM === selectedRAM
+
+            )
+
+        })
+
+        ||
+
+        variants.find(v => {
+
+            return (
+
+                v.color === value &&
+                v.storage === selectedStorage
+
+            )
+
+        })
+
+        ||
+
+        variants.find(v => {
+
+            return v.color === value
+
+        })
+
+    }
+
+    /* =====================================
+       RAM PRIORITY
+    ===================================== */
+
+    if(type === "ram"){
+
+        variant = variants.find(v => {
+
+            return (
+
+                v.RAM === value &&
+                v.color === selectedColor &&
+                v.storage === selectedStorage
+
+            )
+
+        })
+
+        ||
+
+        variants.find(v => {
+
+            return (
+
+                v.RAM === value &&
+                v.color === selectedColor
+
+            )
+
+        })
+
+        ||
+
+        variants.find(v => {
+
+            return (
+
+                v.RAM === value &&
+                v.storage === selectedStorage
+
+            )
+
+        })
+
+        ||
+
+        variants.find(v => {
+
+            return v.RAM === value
+
+        })
+
+    }
+
+    /* =====================================
+       STORAGE PRIORITY
+    ===================================== */
+
+    if(type === "storage"){
+
+        variant = variants.find(v => {
+
+            return (
+
+                v.storage === value &&
+                v.color === selectedColor &&
+                v.RAM === selectedRAM
+
+            )
+
+        })
+
+        ||
+
+        variants.find(v => {
+
+            return (
+
+                v.storage === value &&
+                v.color === selectedColor
+
+            )
+
+        })
+
+        ||
+
+        variants.find(v => {
+
+            return (
+
+                v.storage === value &&
+                v.RAM === selectedRAM
+
+            )
+
+        })
+
+        ||
+
+        variants.find(v => {
+
+            return v.storage === value
+
+        })
+
+    }
+
+    return variant || variants[0]
+
+}
+
+/* =========================================
+   RENDER THUMBNAILS
+========================================= */
+
+function renderThumbnails(images){
+
+    thumbnailGrid.innerHTML = ""
+
+    images.forEach((image,index) => {
+
+        thumbnailGrid.innerHTML +=
+
+        `
+            <button
+
+                class="thumb-btn ${index === 0 ? "active" : ""}"
+
+                onclick="changeImage('${image}', this)"
+
+            >
+
+                <img
+                    src="${image}"
+                    alt="Thumbnail"
+                >
+
+            </button>
+        `
+
+    })
+
+}
+
+/* =========================================
+   REFRESH OPTIONS
+========================================= */
+function refreshOptions(){
+
+    /* RAM */
+
+    document.querySelectorAll(".ram-btn")
+    .forEach(button => {
+
+        const exists = variants.some(v => {
+
+            return v.RAM === button.dataset.ram
+
+        })
+
+        button.classList.toggle(
+            "unavailable",
+            !exists
+        )
+
+        button.classList.toggle(
+            "active",
+            selectedRAM === button.dataset.ram
+        )
+
+    })
+
+    /* STORAGE */
+
+    document.querySelectorAll(".storage-btn")
+    .forEach(button => {
+
+        const exists = variants.some(v => {
+
+            return v.storage === button.dataset.storage
+
+        })
+
+        button.classList.toggle(
+            "unavailable",
+            !exists
+        )
+
+        button.classList.toggle(
+            "active",
+            selectedStorage === button.dataset.storage
+        )
+
+    })
+
+    /* COLOR */
+
+    document.querySelectorAll(".color-btn")
+    .forEach(button => {
+
+        const exists = variants.some(v => {
+
+            return v.color === button.dataset.color
+
+        })
+
+        button.classList.toggle(
+            "unavailable",
+            !exists
+        )
+
+        button.classList.toggle(
+            "active",
+            selectedColor === button.dataset.color
+        )
+
+    })
+
+}
+/* =========================================
+   UPDATE UI
+========================================= */
+
+function updateVariantUI(variant){
+
+    /* UPDATE STATE FIRST */
+
+    selectedColor =
+    variant.color
+
+    selectedRAM =
+    variant.RAM
+
+    selectedStorage =
+    variant.storage
+
+    /* REFRESH OPTIONS */
+
+    refreshOptions()
+
+    /* MESSAGE */
+
+    variantMessage.innerText = ""
+
+    /* PRICE */
+
+    priceElement.innerText =
+    `₹${variant.price.toLocaleString()}`
+
+    /* IMAGE */
+
+    if(variant.images?.length){
+
+        gsap.to(mainImage, {
+
+            opacity: 0,
+
+            duration: 0.15,
+
+            onComplete: () => {
+
+                mainImage.src =
+                variant.images[0]
+
+                gsap.to(mainImage, {
+
+                    opacity: 1,
+
+                    duration: 0.3
+
+                })
+
+            }
+
+        })
+
+       renderThumbnails(
+    variant.images
+)
+
+setTimeout(() => {
+
+    const firstThumb =
+    document.querySelector(".thumb-btn")
+
+    if(firstThumb){
+
+        firstThumb.classList.add("active")
+
+    }
+
+},0)
+
+    }
+
+    /* STOCK */
+
+    if(variant.stock > 0){
+
+        stockElement.innerText =
+        "In Stock"
+
+        stockElement.className =
+        "stock-status in-stock"
+
+        cartButton.disabled = false
+
+    }
+
+    else{
+
+        stockElement.innerText =
+        "Out of Stock"
+
+        stockElement.className =
+        "stock-status out-stock"
+
+        cartButton.disabled = true
+
+    }
+
+    /* UPDATE DATASETS */
+
+    cartButton.dataset.variantId =
+    variant._id
+
+    wishlistButton.dataset.variantId =
+    variant._id
+
+    /* CART */
+
+    if(
+
+        cartVariantIds.includes(
+            variant._id.toString()
+        )
+
+    ){
+
+        cartButton.classList.add(
+            "added"
+        )
+
+        cartButton.innerHTML =
+
+        `
+            <i
+                data-lucide="shopping-bag"
+                size="18"
+            ></i>
+
+            Go to Cart
+        `
+
+    }
+
+    else{
+
+        cartButton.classList.remove(
+            "added"
+        )
+
+        cartButton.innerHTML =
+
+        `
+            <i
+                data-lucide="shopping-cart"
+                size="18"
+            ></i>
+
+            Add to Cart
+        `
+
+    }
+
+    /* WISHLIST */
+
+    if(
+
+        wishlistVariantIds.includes(
+            variant._id.toString()
+        )
+
+    ){
+
+        wishlistButton.classList.add(
+            "active"
+        )
+
+    }
+
+    else{
+
+        wishlistButton.classList.remove(
+            "active"
+        )
+
+    }
+
+    lucide.createIcons()
+
+}
+
+/* =========================================
+   COLOR EVENTS
+========================================= */
+
+document.querySelectorAll(".color-btn")
+.forEach(button => {
+
+    button.addEventListener("click", () => {
+
+
+        const variant =
+        findBestVariant(
+
+            "color",
+
+            button.dataset.color
+
+        )
+
+        updateVariantUI(variant)
+
+    })
+
+})
+
+/* =========================================
+   RAM EVENTS
+========================================= */
+
+document.querySelectorAll(".ram-btn")
+.forEach(button => {
+
+    button.addEventListener("click", () => {
+
+        const variant =
+        findBestVariant(
+
+            "ram",
+
+            button.dataset.ram
+
+        )
+
+        updateVariantUI(variant)
+
+    })
+
+})
+
+/* =========================================
+   STORAGE EVENTS
+========================================= */
+
+document.querySelectorAll(".storage-btn")
+.forEach(button => {
+
+    button.addEventListener("click", () => {
+
+
+        const variant =
+        findBestVariant(
+
+            "storage",
+
+            button.dataset.storage
+
+        )
+
+        updateVariantUI(variant)
+
+    })
+
+})
+
+/* =========================================
+   INIT
+========================================= */
+
+updateVariantUI(
+
+    variants.find(v => {
+
+        return v._id ===
+        "<%= product.variant._id %>"
+
+    })
+
+    ||
+
+    variants[0]
+
+)
+
+</script>
 </body>
 </html>
