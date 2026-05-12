@@ -56,9 +56,20 @@
                 <i data-lucide="heart"></i>
             </div>
 
-            <div class="nav-icon">
-                <i data-lucide="shopping-cart"></i>
-            </div>
+           <a href="/cart" class="nav-icon <%= currentPage === 'cart' ? 'active' : '' %>">
+
+                 <i data-lucide="shopping-cart"></i>
+                     <% if(typeof cartCount !== "undefined" && cartCount > 0){ %>
+
+                    <span class="cart-count">
+
+                        <%= cartCount %>
+
+                    </span>
+
+                 <% } %>
+                
+            </a>
 
             <% if (userId) { %>
 

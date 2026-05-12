@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Your Shopping Cart - iStore</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/css/components/header.css">
+    <link rel="stylesheet" href="/css/components/footer.css">
+    <link rel="stylesheet" href="/css/components/product-card.css">
+    <link rel="stylesheet" href="/css/cart.css">
+
+    <!-- Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet"
+    >
+
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- GSAP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+</head>
+
+<body>
+
+    <%- include('../partials/user/header', { page: 'cart' }) %>
+
+    <%
+        const shipping =
+        cart.subtotal >= 5000 ? 0 : 99
+
+        const estimatedTax =
+        Math.floor(cart.subtotal * 0.02)
+
+        const finalTotal =
+        cart.subtotal + shipping + estimatedTax
+    %>
+
+    <main class="cart-page">
+
+        <div class="cart-container">
+
+            <!-- Breadcrumb -->
+            <div class="cart-breadcrumbs">
+
+                <a
+                    href="/"
+                    class="bc-item"
+                    style="text-decoration: none; color: inherit;"
+                >
+                    Home
+                </a>
+
+                <div class="bc-sep"></div>
+
+                <span class="bc-item current">
+                    Cart
+                </span>
+
+            </div>
+
+            <div class="cart-layout">
+
+                <!-- LEFT -->
+                <section class="cart-left">
+
+                    <h1 class="cart-title">
+
+                        Your Shopping Cart
+                        (<%= cart.totalItems %>)
+
+                    </h1>
+
+                    <div class="cart-items-list">
+
+                        <% if(cart.items.length === 0){ %>
+
+                            <!-- EMPTY CART -->
+
+                            <div class="empty-cart">
+
+    <div class="empty-cart-glow"></div>
+
+    <div class="empty-cart-icon">
+
+        <i
+            data-lucide="shopping-cart"
+            size="64"
+        ></i>
+
+    </div>
+
+    <span class="empty-cart-label">
+
+        iStore Cart
+
+    </span>
+
+    <h2>
+
+        Your cart is empty
+
+    </h2>
+
+    <p>
+
+        Add your favorite Apple products,
+        accessories, and premium tech
+        to begin your shopping experience.
+
+    </p>
+
+    <div class="empty-cart-actions">
+
+        <a
+            href="/products"
+            class="empty-primary-btn"
+        >
+
+            Explore Products
+
+        </a>
+
+        <a
+            href="/"
+            class="empty-secondary-btn"
+        >
+
+            Back to Home
+
+        </a>
+
+    </div>
+
+</div>
+
+                        <% } else { %>
+
+                            <!-- CART ITEMS -->
+
+                            <% cart.items.forEach(item => { %>
+
+                                <div class="cart-item-card">
+
+                                    <!-- IMAGE -->
+
+                                    <div class="item-img-box">
+
+                                        <img
+                                            src="<%= item.variantId.images?.[0] || item.productId.thumbnail %>"
+                                            alt="<%= item.productId.name %>"
+                                        >
+
+                                    </div>
+
+                                    <!-- CONTENT -->
+
+                                    <div class="item-content">
+
+                                        <div class="item-header">
+
+                                            <div class="item-info">
+
+                                                <h3>
+                                                    <%= item.productId.name %>
+                                                </h3>
+
+                                                <p>
+                                                    <%= item.productId.categoryId?.name || "Apple Product" %>
+                                                </p>
+
+                                                <!-- TAGS -->
+
+                                                <div class="item-tags">
+
+                                                    <% if(item.variantId.color){ %>
+
+                                                        <span class="tag">
+
+                                                            <%= item.variantId.color %>
+
+                                                        </span>
+
+                                                    <% } %>
+
+                                                    <% if(item.variantId.storage){ %>
+
+                                                        <span class="tag">
+
+                                                            <%= item.variantId.storage %>
+
+                                                        </span>
+
+                                                    <% } %>
+
+                                                </div>
+
+                                                <!-- STOCK WARNING -->
+
+                                                <% if(item.variantId.stock <= 3){ %>
+
+                                                    <div class="stock-warning">
+
+                                                        Only
+                                                        <%= item.variantId.stock %>
+                                                        left in stock
+
+                                                    </div>
+
+                                                <% } %>
+
+                                            </div>
+
+                                            <!-- PRICE -->
+
+                                            <div class="item-price">
+
+                                                ₹<%= item.price.toLocaleString() %>
+
+                                            </div>
+
+                                        </div>
+
+                                        <!-- ACTIONS -->
+
+                                        <div class="item-actions">
+
+                                            <!-- QUANTITY -->
+
+                                            <div class="quantity-ctrl">
+
+                                                <button
+                                                    class="qty-btn decrease-btn"
+                                                    data-variant-id="<%= item.variantId._id %>"
+                                                >
+
+                                                    <i
+                                                        data-lucide="minus"
+                                                        size="14"
+                                                    ></i>
+
+                                                </button>
+
+                                                <span class="qty-val" data-qty="<%= item.variantId._id %>">
+
+                                                    <%= item.quantity %>
+
+                                                </span>
+
+                                                <button
+                                                    class="qty-btn increase-btn"
+                                                    data-variant-id="<%= item.variantId._id %>"
+
+                                                    <%= item.quantity >= item.variantId.stock ||
+                                                        item.quantity >= 5
+                                                        ? "disabled"
+                                                        : ""
+                                                    %>
+                                                >
+
+                                                    <i
+                                                        data-lucide="plus"
+                                                        size="14"
+                                                    ></i>
+
+                                                </button>
+
+                                            </div>
+
+                                            <!-- SUBTOTAL -->
+
+                                            <div class="item-subtotal" data-subtotal="<%= item.variantId._id %>">
+
+                                                ₹<%= (item.price * item.quantity).toLocaleString() %>
+
+                                            </div>
+
+                                            <!-- REMOVE -->
+
+                                            <button
+                                                class="remove-btn"
+                                                data-variant-id="<%= item.variantId._id %>"
+                                            >
+
+                                                <i
+                                                    data-lucide="trash-2"
+                                                    size="16"
+                                                ></i>
+
+                                                Remove
+
+                                            </button>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            <% }) %>
+
+                            <!-- COUPON -->
+
+                            <div class="coupon-section">
+
+                                <span class="coupon-label">
+
+                                    Apply Coupon
+
+                                </span>
+
+                                <div class="coupon-input-group">
+
+                                    <input
+                                        type="text"
+                                        class="coupon-input"
+                                        placeholder="Enter Coupon Code"
+                                    >
+
+                                    <button class="coupon-btn">
+
+                                        Apply
+
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+                        <% } %>
+
+                    </div>
+
+                </section>
+
+                <!-- RIGHT -->
+
+                <aside class="cart-right">
+
+                    <div class="summary-card">
+
+                        <h2 class="summary-title">
+
+                            Order Summary
+
+                        </h2>
+
+                        <div class="summary-list">
+
+                            <!-- SUBTOTAL -->
+
+                            <div class="summary-item">
+
+                                <span class="summary-label">
+
+                                    Subtotal
+
+                                </span>
+
+                                <span class="summary-value" id="cartSubtotal">
+                                    ₹<%= cart.subtotal.toLocaleString() %>
+                                </span>
+
+                            </div>
+
+                            <!-- SHIPPING -->
+
+                            <div class="summary-item">
+
+                                <span class="summary-label">
+
+                                    Shipping
+
+                                </span>
+
+                                <span class="summary-value">
+
+                                    <%= shipping === 0
+                                        ? "Free"
+                                        : "₹" + shipping.toLocaleString()
+                                    %>
+
+                                </span>
+
+                            </div>
+
+                            <!-- ITEMS -->
+
+                            <div class="summary-item">
+
+                                <span class="summary-label">
+
+                                    Items
+
+                                </span>
+
+                                <span class="summary-value">
+
+                                    <span id="cartItemsCount">
+
+                                        <%= cart.totalItems %>
+
+                                    </span>
+
+                                </span>
+
+                            </div>
+
+                            <!-- TAX -->
+
+                            <div class="summary-item">
+
+                                <span class="summary-label">
+
+                                    Estimated Tax
+
+                                </span>
+
+                                <span class="summary-value">
+
+                                    ₹<%= estimatedTax.toLocaleString() %>
+
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                        <!-- TOTAL -->
+
+                        <div class="summary-total-row">
+
+                            <span class="total-label">
+
+                                Total
+
+                            </span>
+
+                            <span class="total-value" id="cartTotal">
+
+                                ₹<%= finalTotal.toLocaleString() %>
+
+                            </span>
+
+                        </div>
+
+                        <!-- ACTIONS -->
+
+                        <div class="summary-actions">
+
+                            <button
+                                class="checkout-btn"
+
+                                <%= cart.items.length === 0
+                                    ? "disabled"
+                                    : ""
+                                %>
+                            >
+
+                                Proceed to Checkout
+
+                            </button>
+
+                            <button
+                                class="continue-btn"
+                                style="margin-top: 12px;"
+                                onclick="window.location.href='/products'"
+                            >
+
+                                Continue Shopping
+
+                            </button>
+
+                        </div>
+
+                        <!-- TRUST -->
+
+                        <div class="payment-trust">
+
+                            <i
+                                data-lucide="credit-card"
+                                size="24"
+                            ></i>
+
+                            <i
+                                data-lucide="shield-check"
+                                size="24"
+                            ></i>
+
+                            <i
+                                data-lucide="award"
+                                size="24"
+                            ></i>
+
+                        </div>
+
+                    </div>
+
+                    <!-- TRUST MESSAGE -->
+
+                    <div class="trust-msg">
+
+                        <i
+                            data-lucide="info"
+                            class="trust-icon"
+                            size="20"
+                        ></i>
+
+                        <p class="trust-text">
+
+                            Items in your cart are not reserved.
+                            Complete checkout to secure your selection.
+
+                        </p>
+
+                    </div>
+
+                </aside>
+
+            </div>
+
+            <!-- RECOMMENDATIONS -->
+
+            <% if(cart.items.length > 0){ %>
+
+                <section class="recommendations-section">
+
+                    <div class="rec-header">
+
+                        <div class="rec-title-group">
+
+                            <h2>
+
+                                You May Also Like
+
+                            </h2>
+
+                            <p>
+
+                                Recommended based on your cart
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <div
+                        class="product-grid"
+                        style="grid-template-columns: repeat(4, 1fr);"
+                    >
+
+                        <% if(typeof recommendations !== "undefined" && recommendations.length > 0){ %>
+
+                            <% recommendations.forEach(relProduct => { %>
+
+                                <%- include('../partials/user/product-card', { product: relProduct }) %>
+
+                            <% }) %>
+
+                        <% } %>
+
+                    </div>
+
+                </section>
+
+            <% } %>
+
+        </div>
+
+    </main>
+
+    <%- include('../partials/user/footer') %>
+
+    <!-- JS -->
+
+    <script>
+
+        lucide.createIcons()
+
+        // Entrance Animation
+
+        gsap.from(
+
+            ".cart-left",
+
+            {
+
+                x: -30,
+                opacity: 0,
+                duration: 0.8,
+                ease: "power2.out"
+
+            }
+
+        )
+
+        gsap.from(
+
+            ".cart-right",
+
+            {
+
+                x: 30,
+                opacity: 0,
+                duration: 0.8,
+                ease: "power2.out"
+
+            }
+
+        )
+
+        gsap.from(
+
+            ".cart-item-card",
+
+            {
+
+                y: 20,
+                opacity: 0,
+                duration: 0.6,
+                stagger: 0.08,
+                delay: 0.3,
+                ease: "power2.out"
+
+            }
+
+        )
+
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script src="/js/cart.js"></script>
+
+</body>
+</html>

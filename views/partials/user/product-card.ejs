@@ -61,7 +61,11 @@
 
     <!-- Add To Cart -->
 
-    <button class="add-to-cart-btn">
+    <button
+    class="add-to-cart-btn"
+    data-product-id="<%= product._id %>"
+    data-variant-id="<%= product.variant?._id %>"
+>
 
         <i
             data-lucide="shopping-cart"

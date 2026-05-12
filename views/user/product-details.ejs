@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= product.name %> - iStore</title>
+    <!-- CSS Includes -->
+    <link rel="stylesheet" href="/css/components/header.css">
+    <link rel="stylesheet" href="/css/components/footer.css">
+    <link rel="stylesheet" href="/css/components/product-card.css">
+    <link rel="stylesheet" href="/css/product-details.css">
+    <link rel="stylesheet" href="/css/components/product-gallery.css">
+    <!-- Fonts and Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+</head>
+<body>
+    <%- include('../partials/user/header', { page: 'products' }) %>
+
+    <main class="product-detail-page">
+        <div class="product-container">
+            <!-- Nav - Breadcrumbs -->
+            <nav class="breadcrumbs">
+                <a href="/" class="breadcrumb-link">Home</a>
+                <span class="breadcrumb-sep">/</span>
+                <a href="/products" class="breadcrumb-link">Products</a>
+                <span class="breadcrumb-sep">/</span>
+                <a href="/products?category=<%= product.categoryId._id %>" class="breadcrumb-link"><%= product.categoryId.name %></a>
+                <span class="breadcrumb-sep">/</span>
+                <span class="breadcrumb-current"><%= product.name %></span>
+            </nav>
+
+            <!-- Hero Section -->
+            <section class="product-hero">
+                <!-- Gallery Column -->
+                <div class="gallery-column">
+                    <div class="main-image-container" id="mainView">
+                        <img src="<%= (product.variant && product.variant.images && product.variant.images[0]) || product.thumbnail %>" alt="<%= product.name %>" id="mainImage">
+                    </div>
+                    <div class="thumbnail-grid">
+                        <% if(product.variant && product.variant.images) { %>
+                            <% product.variant.images.forEach((img, index) => { %>
+                                <button class="thumb-btn <%= index === 0 ? 'active' : '' %>" onclick="changeImage('<%= img %>', this)">
+                                    <img src="<%= img %>" alt="View <%= index + 1 %>">
+                                </button>
+                            <% }) %>
+                        <% } %>
+                    </div>
+                </div>
+
+                <!-- Info Column -->
+                <div class="info-column">
+                    <p class="product-label"><%= product.categoryId.name %></p>
+                    <h1 class="product-title"><%= product.name %></h1>
+                    
+                    <div class="rating-row">
+                        <div class="stars">
+                            <% for(let i=0; i<5; i++) { %>
+                                <i data-lucide="star" fill="<%= i < Math.floor(product.rating || 4.5) ? '#EAB308' : 'none' %>" size="20"></i>
+                            <% } %>
+                        </div>
+                        <span class="rating-text"><%= product.rating || 4.5 %> stars (<%= product.reviewCount || '1,240' %> reviews)</span>
+                    </div>
+
+                    <p class="product-price">₹<%= (product.variant && product.variant.price) ? product.variant.price.toLocaleString() : '0' %></p>
+                    
+                    <p class="product-summary">
+                        <%= product.description %>
+                    </p>
+
+                    <!-- Configuration Section -->
+                    <div class="config-container">
+                        <div class="config-group">
+                            <span class="config-label">Select Color</span>
+                            <div class="color-options">
+                                <button class="color-btn active" style="background-color: #0F172A;" title="Space Black" onclick="selectConfig(this, 'color')"></button>
+                                <button class="color-btn" style="background-color: #E2E8F0;" title="Silver" onclick="selectConfig(this, 'color')"></button>
+                                <button class="color-btn" style="background-color: #4C0080;" title="Deep Purple" onclick="selectConfig(this, 'color')"></button>
+                            </div>
+                        </div>
+
+                        <div class="config-group">
+                            <span class="config-label">Storage</span>
+                            <div class="storage-options">
+                                <button class="storage-btn active" onclick="selectConfig(this, 'storage')">128GB</button>
+                                <button class="storage-btn" onclick="selectConfig(this, 'storage')">256GB</button>
+                                <button class="storage-btn" onclick="selectConfig(this, 'storage')">512GB</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="action-row">
+                        <button
+    class="btn-primary add-to-cart-btn"
+    id="addToCartBtn"
+    data-product-id="<%= product._id %>"
+    data-variant-id="<%= product.variant?._id %>"
+>
+
+    Add to Cart
+
+</button>
+                        <button class="btn-secondary">Buy Now</button>
+                        <button class="btn-wishlist">
+                            <i data-lucide="heart" size="24"></i>
+                        </button>
+                    </div>
+
+                    <!-- Trust Badges -->
+                    <div class="trust-badges">
+                        <div class="badge-item">
+                            <i data-lucide="truck" size="22"></i>
+                            <span>Free Express Delivery</span>
+                        </div>
+                        <div class="badge-item">
+                            <i data-lucide="shield-check" size="22"></i>
+                            <span>1 Year Apple Warranty</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Bento Section: Description & Specs -->
+            <section class="bento-section">
+                <!-- Features Card -->
+                <div class="features-card">
+                    <h2 class="bento-title">Product Description</h2>
+                    <div class="features-grid">
+                        <% (product.features || [
+                            { title: 'Titanium Strength', desc: 'Crafted with aerospace-grade titanium that’s strong yet remarkably light. The refined brushed texture feels incredibly premium in hand.' },
+                            { title: 'A19 Bionic Chip', desc: 'Our fastest chip ever. Incredible efficiency for all-day battery life and desktop-class gaming performance on the go.' },
+                            { title: 'Pro Camera System', desc: '48MP main camera with advanced computational photography. Capture stunning low-light photos and cinematic 4K video.' },
+                            { title: 'OLED ProMotion', desc: 'Super Retina XDR display with adaptive 120Hz refresh rate. Colors are more vivid and motion is smoother than ever before.' }
+                        ]).forEach(feature => { %>
+                            <div class="feature-item">
+                                <h3><%= feature.title %></h3>
+                                <p><%= feature.desc %></p>
+                            </div>
+                        <% }) %>
+                    </div>
+                </div>
+
+                <!-- Specifications Card -->
+                <div class="specs-card">
+                    <h2 class="bento-title" style="font-size: 20px; margin-bottom: 0;">Specifications</h2>
+                    <div class="specs-table">
+                        <% Object.entries(product.specs || {
+                            'Display': '6.7-inch OLED',
+                            'Processor': 'Apple A19',
+                            'Camera': '48MP Triple',
+                            'Battery': '4500mAh',
+                            'Storage': 'Up to 512GB'
+                        }).forEach(([label, value]) => { %>
+                            <div class="spec-row">
+                                <span class="spec-label"><%= label %></span>
+                                <span class="spec-value"><%= value %></span>
+                            </div>
+                        <% }) %>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Related Products -->
+            <section class="related-section">
+                <div class="related-header">
+                    <h3 class="bento-title">You May Also Like</h3>
+                    <a href="/products" class="view-all-link">View all recommendations</a>
+                </div>
+                <div class="related-grid">
+                    <% (relatedProducts || []).forEach(relProduct => { %>
+                        <%- include('../partials/user/product-card', { product: relProduct }) %>
+                    <% }) %>
+                </div>
+            </section>
+
+            <!-- Customer Reviews -->
+            <section class="reviews-section">
+                <h3 class="bento-title">Customer Reviews</h3>
+                <div class="reviews-grid">
+                    <% (product.reviews || [
+                        { user: 'Arjun Reddy', initial: 'AR', color: '#F1DAFF', text: 'The transition to the 17 Pro has been seamless. The camera capabilities for night photography are genuinely mind-blowing. Truly a piece of art.', stars: 5 },
+                        { user: 'Meera Sharma', initial: 'MS', color: '#ECDCFF', text: 'Absolutely stunning design. The new violet finish is deep and premium. The processing power handles all my editing apps with ease.', stars: 5 }
+                    ]).forEach(review => { %>
+                        <div class="review-card">
+                            <div class="review-header">
+                                <div class="avatar" style="background-color: <%= review.color %>;">
+                                    <%= review.initial %>
+                                </div>
+                                <div class="review-info">
+                                    <h4><%= review.user %></h4>
+                                    <div class="stars">
+                                        <% for(let i=0; i<5; i++) { %>
+                                            <i data-lucide="star" fill="<%= i < review.stars ? '#EAB308' : 'none' %>" size="15"></i>
+                                        <% } %>
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="review-body">"<%= review.text %>"</p>
+                        </div>
+                    <% }) %>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <%- include('../partials/user/footer') %>
+
+    <script>
+        lucide.createIcons();
+        gsap.registerPlugin(ScrollTrigger);
+
+        function changeImage(src, btn) {
+            const mainImg = document.getElementById('mainImage');
+            
+            gsap.to(mainImg, {
+                opacity: 0,
+                scale: 0.95,
+                duration: 0.2,
+                onComplete: () => {
+                    mainImg.src = src;
+                    gsap.to(mainImg, {
+                        opacity: 1,
+                        scale: 1,
+                        duration: 0.4,
+                        ease: "power2.out"
+                    });
+                }
+            });
+
+            document.querySelectorAll('.thumb-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        function selectConfig(btn, type) {
+            const selector = type === 'color' ? '.color-btn' : '.storage-btn';
+            document.querySelectorAll(selector).forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            gsap.from(btn, {
+                scale: 0.9,
+                duration: 0.3,
+                ease: "back.out(1.7)"
+            });
+        }
+
+        // Entrance Animations
+        gsap.from(".gallery-column", { x: -50, opacity: 0, duration: 1, ease: "power3.out" });
+        gsap.from(".info-column > *", { 
+            y: 30, 
+            opacity: 0, 
+            duration: 0.8, 
+            stagger: 0.1, 
+            ease: "power3.out" 
+        });
+
+        // Scroll Reveal Animations
+        gsap.from(".bento-section", {
+            scrollTrigger: {
+                trigger: ".bento-section",
+                start: "top 80%"
+            },
+            y: 50,
+            opacity: 0,
+            duration: 1,
+            ease: "power2.out"
+        });
+
+        gsap.from(".related-section", {
+            scrollTrigger: {
+                trigger: ".related-section",
+                start: "top 80%"
+            },
+            y: 50,
+            opacity: 0,
+            duration: 1,
+            ease: "power2.out"
+        });
+
+
+
+    </script>
+    <script src="/js/addToCart.js"></script>
+</body>
+</html>

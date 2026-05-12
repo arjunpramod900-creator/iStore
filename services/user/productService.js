@@ -268,3 +268,153 @@ async (query) => {
     }
 
 }
+
+/* =========================================
+   LOAD PRODUCT DETAILS
+========================================= */
+
+export const loadProductDetailsService =
+
+async (productId) => {
+
+    /* PRODUCT */
+
+    const product =
+
+    await Product.findOne({
+
+        _id: productId,
+
+        isDeleted: false,
+
+        isActive: true
+
+    })
+
+    .populate("categoryId")
+
+    .lean()
+
+
+
+    /* PRODUCT NOT FOUND */
+
+    if(!product){
+
+        return {
+
+            product: null
+
+        }
+
+    }
+
+
+
+    /* DEFAULT / ACTIVE VARIANT */
+
+    const variant =
+
+    await Variant.findOne({
+
+        productId: product._id,
+
+        isDeleted: false,
+
+        isActive: true
+
+    })
+
+    .sort({
+
+        isDefault: -1,
+
+        createdAt: 1
+
+    })
+
+    .lean()
+
+
+
+    product.variant = variant
+
+
+
+    /* RELATED PRODUCTS */
+
+    let relatedProducts =
+
+    await Product.find({
+
+        _id: {
+
+            $ne: product._id
+
+        },
+
+        categoryId: product.categoryId._id,
+
+        isDeleted: false,
+
+        isActive: true
+
+    })
+
+    .populate("categoryId")
+
+    .limit(4)
+
+    .lean()
+
+
+
+    /* ATTACH VARIANTS */
+
+    for(const related of relatedProducts){
+
+        const relatedVariant =
+
+        await Variant.findOne({
+
+            productId: related._id,
+
+            isDeleted: false,
+
+            isActive: true,
+
+            stock: { $gt: 0 }
+
+        })
+
+        .lean()
+
+
+
+        related.variant = relatedVariant
+
+    }
+
+
+
+    /* REMOVE EMPTY VARIANTS */
+
+    relatedProducts =
+
+    relatedProducts.filter(
+
+        item => item.variant
+
+    )
+
+
+
+    return {
+
+        product,
+
+        relatedProducts
+
+    }
+
+}

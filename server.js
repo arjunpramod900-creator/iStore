@@ -12,6 +12,8 @@ import profileRoutes from "./routes/user/profileRoutes.js"
 
 import productRoutes from "./routes/user/productRoutes.js"
 
+import cartRoutes from "./routes/user/cartRoutes.js"
+
 import noCache from "./middleware/noCache.js"
 
 import adminNoCache from "./middleware/adminNoCache.js"
@@ -103,7 +105,7 @@ app.use(
 /* ================================
    GLOBAL USER BLOCK CHECK
 ================================ */
-app.use(userBlockCheckMiddleware)  // already skips /admin and non-logged-in users
+// app.use(userBlockCheckMiddleware)  // already skips /admin and non-logged-in users
 
 /* ================================
 
@@ -203,6 +205,11 @@ app.use(
 
 )
 
+/* USER CART ROUTES */
+app.use(
+  "/cart",
+  cartRoutes
+)
 
 
 /* ================================
