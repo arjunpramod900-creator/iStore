@@ -2,14 +2,22 @@
 
     <!-- Wishlist -->
 
-    <button class="wishlist-toggle">
+    <button
 
-        <i
-            data-lucide="heart"
-            size="18"
-        ></i>
+    class="wishlist-toggle <%= wishlistVariantIds?.includes(product.variant?._id?.toString()) ? 'active' : '' %>"
 
-    </button>
+    data-product-id="<%= product._id %>"
+
+    data-variant-id="<%= product.variant?._id %>"
+
+>
+
+    <i
+        data-lucide="heart"
+        size="18"
+    ></i>
+
+</button>
 
 
     <!-- Clickable Product Area -->
@@ -61,19 +69,51 @@
 
     <!-- Add To Cart -->
 
-    <button
-    class="add-to-cart-btn"
-    data-product-id="<%= product._id %>"
-    data-variant-id="<%= product.variant?._id %>"
+   <!-- Add To Cart -->
+
+<button
+
+class="add-to-cart-btn
+
+<%= cartVariantIds?.includes(
+    product.variant?._id?.toString()
+)
+? 'added'
+: ''
+%>"
+
+data-product-id="<%= product._id %>"
+
+data-variant-id="<%= product.variant?._id %>"
+
 >
 
-        <i
-            data-lucide="shopping-cart"
-            size="18"
-        ></i>
+<% if(
 
-        Add to Cart
+    cartVariantIds?.includes(
+        product.variant?._id?.toString()
+    )
 
-    </button>
+){ %>
+
+    <i
+        data-lucide="shopping-bag"
+        size="18"
+    ></i>
+
+    Go to Cart
+
+<% } else { %>
+
+    <i
+        data-lucide="shopping-cart"
+        size="18"
+    ></i>
+
+    Add to Cart
+
+<% } %>
+
+</button>
 
 </div>

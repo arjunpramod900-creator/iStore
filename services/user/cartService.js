@@ -4,6 +4,8 @@ import Product from "../../models/Product.js"
 
 import Variant from "../../models/Variant.js"
 
+import Wishlist from "../../models/Wishlist.js"
+
 
 
 /* =========================================
@@ -350,7 +352,31 @@ await Variant.findOne({
         })
 
     }
+    /* REMOVE FROM WISHLIST */
 
+        const wishlist =
+        await Wishlist.findOne({
+
+            userId
+
+        })
+
+        if(wishlist){
+
+            wishlist.items =
+            wishlist.items.filter(
+
+                item =>
+
+                item.variantId.toString()
+                !==
+                variantId.toString()
+
+            )
+
+            await wishlist.save()
+
+        }
 
 
     await cart.save()
@@ -600,24 +626,162 @@ async ({
 
     }
 
+    const removedItem =
 
-
-    cart.items =
-    cart.items.filter(
+    cart.items.find(
 
         item =>
 
         item.variantId.toString()
-        !==
+        ===
         variantId.toString()
 
     )
 
+   const removedCartItem =
+cart.items.find(
 
+    item =>
+
+    item.variantId.toString()
+    ===
+    variantId.toString()
+
+)
+
+cart.items =
+cart.items.filter(
+
+    item =>
+
+    item.variantId.toString()
+    !==
+    variantId.toString()
+
+)
+
+    /* RESTORE TO WISHLIST */
+
+let wishlist =
+await Wishlist.findOne({
+
+    userId
+
+})
+
+if(!wishlist){
+
+    wishlist =
+    new Wishlist({
+
+        userId,
+
+        items: []
+
+    })
+
+}
+
+const alreadyExists =
+wishlist.items.find(
+
+    item =>
+
+    item.variantId.toString()
+    ===
+    variantId.toString()
+
+)
+
+if(!alreadyExists){
+
+    const removedCartItem =
+    cart.items.find(
+
+        item =>
+
+        item.variantId.toString()
+        ===
+        variantId.toString()
+
+    )
+
+    if(removedCartItem){
+
+        wishlist.items.push({
+
+            productId:
+            removedCartItem.productId,
+
+            variantId
+
+        })
+
+    }
+
+    await wishlist.save()
+
+}
 
     await cart.save()
 
+/* =========================================
+   RESTORE TO WISHLIST
+========================================= */
 
+    if(removedItem){
+
+        let wishlist =
+
+        await Wishlist.findOne({
+
+            userId
+
+        })
+
+        if(!wishlist){
+
+            wishlist =
+
+            new Wishlist({
+
+                userId,
+
+                items: []
+
+            })
+
+        }
+
+        const alreadyExists =
+
+        wishlist.items.find(
+
+            item =>
+
+            item.variantId.toString()
+            ===
+            variantId.toString()
+
+        )
+
+        if(!alreadyExists){
+
+            wishlist.items.push({
+
+                productId:
+                removedItem.productId,
+
+                variantId:
+                removedItem.variantId
+
+            })
+
+            await wishlist.save()
+
+        }
+
+    }
 
     return {
 

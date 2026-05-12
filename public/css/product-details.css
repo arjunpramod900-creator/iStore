@@ -213,47 +213,128 @@ body {
 
 /* Actions */
 .action-row {
+
     display: flex;
-    gap: 16px;
-    margin-bottom: 40px;
+
     align-items: center;
+
+    gap: 16px;
+
+    margin-bottom: 40px;
+
+    width: 100%;
+
 }
 
 .btn-primary {
-    width: 234px;
+
+    flex: 1;
+
     height: 72px;
-    background: linear-gradient(135deg, var(--brand-purple) 0%, var(--brand-purple-light) 100%);
-    box-shadow: 0px 10px 20px rgba(106, 13, 173, 0.2);
+
+    background: linear-gradient(
+        135deg,
+        var(--brand-purple) 0%,
+        var(--brand-purple-light) 100%
+    );
+
+    box-shadow:
+    0px 10px 20px rgba(106, 13, 173, 0.2);
+
     border-radius: 24px;
+
     border: none;
+
     color: white;
+
     font-size: 18px;
+
     font-weight: 700;
+
     cursor: pointer;
+
 }
 
 .btn-secondary {
-    width: 238px;
+
+    flex: 1;
+
     height: 72px;
+
     border: 2px solid var(--brand-purple);
+
     border-radius: 24px;
+
     background: transparent;
+
     color: var(--brand-purple);
+
     font-size: 18px;
+
     font-weight: 700;
+
     cursor: pointer;
+
 }
 
 .btn-wishlist {
-    width: 64px;
-    height: 64px;
+
+    width: 72px;
+
+    min-width: 72px;
+
+    height: 72px;
+
     border: 2px solid var(--border-light);
+
     border-radius: 24px;
+
     background: white;
+
     display: flex;
+
     align-items: center;
+
     justify-content: center;
+
     cursor: pointer;
+
+    transition: all 0.3s ease;
+
+    flex-shrink: 0;
+
+}
+
+.btn-wishlist.active{
+
+    background: #E5484D;
+
+    border-color: #E5484D;
+
+}
+
+.btn-wishlist.active svg{
+
+    fill: white;
+
+    stroke: white;
+
+}
+
+.action-row .btn-wishlist{
+
+    position: relative !important;
+
+    top: unset !important;
+
+    right: unset !important;
+
+    left: unset !important;
+
+    bottom: unset !important;
+
+    transform: none !important;
+
 }
 
 /* Trust Badges */

@@ -156,6 +156,19 @@
     color: #EF4444;
 }
 
+.wishlist-toggle.active{
+
+    color: #EF4444;
+
+}
+
+.wishlist-toggle.active svg{
+
+    fill: #EF4444;
+
+    stroke: #EF4444;
+
+}
 .card-content{
 
     padding-top: 24px;
@@ -403,6 +416,22 @@
         font-size: 13px;
 
         gap: 6px;
+
+    }
+
+    .wishlist-toggle.active{
+
+    background: #603763;
+
+    color: white;
+
+    border-color: #603763;
+
+    }
+
+    .wishlist-toggle.active svg{
+
+        fill: white;
 
     }
 

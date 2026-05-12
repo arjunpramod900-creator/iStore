@@ -7,6 +7,12 @@ from "../../models/Variant.js"
 import Category
 from "../../models/Category.js"
 
+import Wishlist
+from "../../models/Wishlist.js"
+
+import Cart 
+from "../../models/Cart.js"
+
 
 
 /* =========================================
@@ -14,7 +20,13 @@ from "../../models/Category.js"
 ========================================= */
 
 export const loadAllProductsService =
-async (query) => {
+async (
+
+    query,
+
+    userId
+
+) => {
 
     /* PAGINATION */
 
@@ -241,8 +253,63 @@ async (query) => {
 
     })
 
+    /* WISHLIST ITEMS */
+
+    let wishlistVariantIds = []
+
+    if(userId){
+
+        const wishlist =
+        await Wishlist.findOne({
+
+            userId
+
+        })
+
+        if(wishlist){
+
+            wishlistVariantIds =
+
+            wishlist.items.map(
+
+                item =>
+
+                item.variantId.toString()
+
+            )
+
+        }
+
+    }
 
 
+
+    let cartVariantIds = []
+
+if(userId){
+
+    const cart =
+    await Cart.findOne({
+
+        userId
+
+    })
+
+    if(cart){
+
+        cartVariantIds =
+
+        cart.items.map(
+
+            item =>
+
+            item.variantId.toString()
+
+        )
+
+    }
+
+}
     /* RETURN */
 
     return {
@@ -263,7 +330,11 @@ async (query) => {
 
         category,
 
-        sort
+        sort,
+
+        wishlistVariantIds,
+
+        cartVariantIds
 
     }
 
@@ -275,7 +346,13 @@ async (query) => {
 
 export const loadProductDetailsService =
 
-async (productId) => {
+async (
+
+    productId,
+
+    userId
+
+) => {
 
     /* PRODUCT */
 
@@ -407,13 +484,72 @@ async (productId) => {
 
     )
 
+    /* WISHLIST ITEMS */
+
+let wishlistVariantIds = []
+
+if(userId){
+
+    const wishlist =
+    await Wishlist.findOne({
+
+        userId
+
+    })
+
+    if(wishlist){
+
+        wishlistVariantIds =
+
+        wishlist.items.map(
+
+            item =>
+
+            item.variantId.toString()
+
+        )
+
+    }
+
+}
+
+let cartVariantIds = []
+
+if(userId){
+
+    const cart =
+    await Cart.findOne({
+
+        userId
+
+    })
+
+    if(cart){
+
+        cartVariantIds =
+
+        cart.items.map(
+
+            item =>
+
+            item.variantId.toString()
+
+        )
+
+    }
+
+}
 
 
     return {
 
         product,
 
-        relatedProducts
+        relatedProducts,
+
+        wishlistVariantIds,
+
+        cartVariantIds
 
     }
 

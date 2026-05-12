@@ -52,9 +52,21 @@
                 <i data-lucide="search"></i>
             </div>
 
-            <div class="nav-icon">
-                <i data-lucide="heart"></i>
-            </div>
+            <a href="/wishlist" class="nav-icon <%= currentPage === 'wishlist' ? 'active' : '' %>">
+
+                        <i data-lucide="heart"></i>
+
+                        <% if(typeof wishlistCount !== "undefined" && wishlistCount > 0){ %>
+
+                            <span class="cart-count">
+
+                                <%= wishlistCount %>
+
+                            </span>
+
+                        <% } %>
+
+                    </a>
 
            <a href="/cart" class="nav-icon <%= currentPage === 'cart' ? 'active' : '' %>">
 

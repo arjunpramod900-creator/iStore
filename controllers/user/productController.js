@@ -22,9 +22,11 @@ async (req, res) => {
 
         await loadAllProductsService(
 
-            req.query
+    req.query,
 
-        )
+    req.session.userId
+
+)
 
 
 
@@ -80,9 +82,11 @@ async (req, res) => {
 
         await loadProductDetailsService(
 
-            productId
+    productId,
 
-        )
+    req.session.userId
+
+)
 
 
 

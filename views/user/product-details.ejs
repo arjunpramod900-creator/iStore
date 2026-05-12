@@ -93,20 +93,66 @@
 
                     <!-- Actions -->
                     <div class="action-row">
-                        <button
-    class="btn-primary add-to-cart-btn"
-    id="addToCartBtn"
-    data-product-id="<%= product._id %>"
-    data-variant-id="<%= product.variant?._id %>"
+                       <button
+
+class="btn-primary add-to-cart-btn
+
+<%= cartVariantIds?.includes(
+    product.variant?._id?.toString()
+)
+? 'added'
+: ''
+%>"
+
+id="addToCartBtn"
+
+data-product-id="<%= product._id %>"
+
+data-variant-id="<%= product.variant?._id %>"
+
 >
+
+<% if(
+
+    cartVariantIds?.includes(
+        product.variant?._id?.toString()
+    )
+
+){ %>
+
+    Go to Cart
+
+<% } else { %>
 
     Add to Cart
 
+<% } %>
+
 </button>
                         <button class="btn-secondary">Buy Now</button>
-                        <button class="btn-wishlist">
-                            <i data-lucide="heart" size="24"></i>
-                        </button>
+                     <button
+
+class="btn-wishlist wishlist-toggle
+
+<%= wishlistVariantIds?.includes(
+    product.variant?._id?.toString()
+)
+? 'active'
+: ''
+%>"
+
+data-product-id="<%= product._id %>"
+
+data-variant-id="<%= product.variant?._id %>"
+
+>
+
+    <i
+        data-lucide="heart"
+        size="24"
+    ></i>
+
+</button>
                     </div>
 
                     <!-- Trust Badges -->
@@ -171,7 +217,7 @@
                 </div>
                 <div class="related-grid">
                     <% (relatedProducts || []).forEach(relProduct => { %>
-                        <%- include('../partials/user/product-card', { product: relProduct }) %>
+                        <%- include('../partials/user/product-card',{product: relProduct,wishlistVariantIds}) %>
                     <% }) %>
                 </div>
             </section>
@@ -283,5 +329,9 @@
 
     </script>
     <script src="/js/addToCart.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script src="/js/wishlist.js"></script>
 </body>
 </html>

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Wishlist - iStore</title>
+    <!-- CSS Includes -->
+    <link rel="stylesheet" href="/css/components/header.css">
+    <link rel="stylesheet" href="/css/components/footer.css">
+    <link rel="stylesheet" href="/css/wishlist.css">
+    <!-- Fonts and Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+</head>
+<body>
+    <%- include('../partials/user/header', { page: 'wishlist' }) %>
+
+    <main class="wishlist-page">
+        <div class="wishlist-container">
+            <!-- Header Section -->
+            <header class="wishlist-header">
+                <div class="header-content">
+                    <h1>My Wishlist</h1>
+                    <p>Save your favorite products for later.</p>
+                </div>
+                <button class="btn-add-all">Add All to Cart</button>
+            </header>
+
+            <!-- Wishlist Grid -->
+            <% if(wishlistItems.length > 0) { %>
+                <div class="wishlist-grid" id="wishlistGrid">
+                    <% wishlistItems.forEach(item => { %>
+                        <div class="wishlist-card" id="card-<%= item._id %>">
+                            <!-- Image Section -->
+                            <div class="card-image-box">
+                                <button class="btn-remove" onclick="removeFromWishlist('<%= item._id %>')">
+                                    <i data-lucide="trash-2" size="18"></i>
+                                </button>
+                                <img src="<%= item.thumbnail %>" alt="<%= item.name %>">
+                            </div>
+
+                            <!-- Content Section -->
+                            <div class="card-body">
+                                <span class="status-badge <%= item.status === 'IN STOCK' ? 'in-stock' : 'out-of-stock' %>">
+                                    <%= item.status %>
+                                </span>
+                                <h3 class="card-title"><%= item.name %></h3>
+                                <p class="card-variant">
+                                    <%= item.variant.storage ? item.variant.storage + ', ' : '' %><%= item.variant.color %>
+                                </p>
+                                <p class="card-price">₹<%= item.variant.price.toLocaleString() %></p>
+                                
+                                <% if(item.status === 'IN STOCK') { %>
+                                    <button class="btn-action btn-add-cart" onclick="moveToCart('<%= item._id %>')">
+                                        Add to Cart
+                                    </button>
+                                <% } else { %>
+                                    <button class="btn-action btn-notify">
+                                        Notify Me
+                                    </button>
+                                <% } %>
+                            </div>
+                        </div>
+                    <% }) %>
+                </div>
+            <% } else { %>
+                <div class="empty-wishlist">
+                    <i data-lucide="heart" size="64" style="opacity: 0.1; margin-bottom: 24px;"></i>
+                    <h2>Your wishlist is empty</h2>
+                    <p>Looks like you haven't added anything yet.</p>
+                    <a href="/products" class="btn-add-all" style="display: inline-block; margin-top: 24px; text-decoration: none;">Browse Products</a>
+                </div>
+            <% } %>
+        </div>
+    </main>
+
+    <%- include('../partials/user/footer') %>
+
+   <script>
+
+    lucide.createIcons()
+
+    gsap.from(
+
+        ".header-content > *",
+
+        {
+
+            y: 20,
+            opacity: 0,
+            duration: 0.8,
+            stagger: 0.2
+
+        }
+
+    )
+
+    gsap.from(
+
+        ".wishlist-card",
+
+        {
+
+            y: 40,
+            opacity: 0,
+            duration: 0.6,
+            stagger: 0.1,
+            ease: "power2.out",
+            delay: 0.3
+
+        }
+
+    )
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script src="/js/wishlist.js"></script>
+</body>
+</html>

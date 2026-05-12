@@ -493,23 +493,138 @@ if(!result.isConfirmed){
 
                 if(data.success){
 
-                    const cartCard =
-                    button.closest(
+    /* REMOVE CARD */
 
-                        ".cart-item-card"
+    const cartCard =
+    button.closest(
 
-                    )
+        ".cart-item-card"
 
-                    if(cartCard){
+    )
 
-                        cartCard.remove()
+    if(cartCard){
 
-                    }
+        gsap.to(
 
-                    location.reload()
+            cartCard,
+
+            {
+
+                opacity: 0,
+
+                y: -20,
+
+                duration: 0.35,
+
+                ease: "power2.out",
+
+                onComplete: () => {
+
+                    cartCard.remove()
 
                 }
 
+            }
+
+        )
+
+    }
+
+    /* RESTORE PRODUCT BUTTON */
+
+    const addToCartButtons =
+
+    document.querySelectorAll(
+
+        `.add-to-cart-btn[data-variant-id="${variantId}"]`
+
+    )
+
+   addToCartButtons.forEach(btn => {
+
+    btn.classList.remove(
+        "added"
+    )
+
+    btn.disabled = false
+
+    btn.innerHTML =
+
+        `
+            <i
+                data-lucide="shopping-cart"
+                size="18"
+            ></i>
+
+            Add to Cart
+        `
+
+    })
+
+    /* RESTORE WISHLIST */
+
+    const wishlistButtons =
+
+    document.querySelectorAll(
+
+        `.wishlist-toggle[data-variant-id="${variantId}"]`
+
+    )
+
+    wishlistButtons.forEach(btn => {
+
+        btn.classList.add(
+            "active"
+        )
+
+    })
+
+    lucide.createIcons()
+
+    /* SUCCESS TOAST */
+
+    Swal.fire({
+
+        toast: true,
+
+        position: "top-end",
+
+        icon: "success",
+
+        title:
+        "Removed from cart",
+
+        showConfirmButton: false,
+
+        timer: 1800,
+
+        background: "#FFFFFF",
+
+        color: "#111111"
+
+    })
+
+    /* EMPTY CHECK */
+
+    setTimeout(() => {
+
+        const remainingCards =
+
+        document.querySelectorAll(
+
+            ".cart-item-card"
+
+        )
+
+        if(remainingCards.length === 0){
+
+            location.reload()
+
+        }
+
+    }, 400)
+
+}
                 else{
 
                     alert(
