@@ -108,48 +108,57 @@ async (
 
 
 
-    /* ATTACH ACTIVE VARIANT */
+   /* =========================================
+   FLATTEN PRODUCT VARIANTS
+========================================= */
 
-    for(const product of products){
+let flattenedProducts = []
 
-        const variant =
-        await Variant.findOne({
+for(const product of products){
 
-            productId: product._id,
+    const variants =
 
-            isDeleted: false,
+    await Variant.find({
 
-            isActive: true,
+        productId: product._id,
 
-            stock: { $gt: 0 }
+        isDeleted: false,
 
-        })
+        isActive: true,
 
-        .sort({
+        stock: { $gt: 0 }
 
-            createdAt: 1
+    })
 
-        })
+    .sort({
 
-        .lean()
+        createdAt: 1
 
+    })
 
+    .lean()
 
-        product.variant = variant
+    if(!variants.length){
+
+        continue
 
     }
 
+    variants.forEach(variant => {
 
+        flattenedProducts.push({
 
-    /* REMOVE PRODUCTS
-       WITHOUT VALID VARIANTS */
+            ...product,
 
-    products =
-    products.filter(
+            variant
 
-        product => product.variant
+        })
 
-    )
+    })
+
+}
+
+products = flattenedProducts
 
 
 
@@ -350,7 +359,9 @@ async (
 
     productId,
 
-    userId
+    userId,
+
+    variantId
 
 ) => {
 
@@ -432,11 +443,25 @@ const defaultVariant =
 
 variants.find(
 
+    variant =>
+
+    variant._id.toString()
+    ===
+    variantId
+
+)
+
+||
+
+variants.find(
+
     variant => variant.isDefault
 
 )
 
-|| variants[0]
+||
+
+variants[0]
 
 /* ATTACH */
 

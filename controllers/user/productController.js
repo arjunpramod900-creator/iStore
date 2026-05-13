@@ -84,7 +84,9 @@ async (req, res) => {
 
     productId,
 
-    req.session.userId
+    req.session.userId,
+
+    req.query.variant
 
 )
 
