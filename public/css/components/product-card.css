@@ -216,6 +216,76 @@
     margin-bottom: 24px;
 }
 
+/* =========================
+
+   VARIANT DETAILS
+
+========================= */
+
+.variant-details{
+
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 8px;
+
+    margin-bottom: 18px;
+
+}
+
+.variant-pill{
+
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 6px;
+
+    padding: 7px 12px;
+
+    border-radius: 999px;
+
+    background: #F6F2F7;
+
+    border: 1px solid rgba(96,55,99,0.08);
+
+    font-size: 11px;
+
+    font-weight: 700;
+
+    letter-spacing: 0.4px;
+
+    color: #603763;
+
+    text-transform: uppercase;
+
+    transition: all 0.25s ease;
+
+}
+
+.product-card:hover .variant-pill{
+
+    background: #F1E8F4;
+
+    border-color: rgba(96,55,99,0.16);
+
+}
+
+.color-dot{
+
+    width: 10px;
+
+    height: 10px;
+
+    border-radius: 50%;
+
+    border: 1px solid rgba(0,0,0,0.08);
+
+    flex-shrink: 0;
+
+}
+
 
 .add-to-cart-btn {
     width: 100%;
@@ -306,6 +376,21 @@
         border-radius: 24px;
 
     }
+    .variant-details{
+
+    gap: 6px;
+
+    margin-bottom: 14px;
+
+}
+
+.variant-pill{
+
+    font-size: 10px;
+
+    padding: 6px 10px;
+
+}
 
     .card-content{
 

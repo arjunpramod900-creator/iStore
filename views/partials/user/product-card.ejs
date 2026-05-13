@@ -61,6 +61,57 @@
                 ₹<%= product.variant?.price?.toLocaleString() %>
 
             </p>
+            <!-- Variant Details -->
+
+<div class="variant-details">
+
+    <% if(product.variant?.RAM){ %>
+
+        <span class="variant-pill">
+
+            <%= product.variant.RAM %>
+
+        </span>
+
+    <% } %>
+
+    <% if(product.variant?.storage){ %>
+
+        <span class="variant-pill">
+
+            <%= product.variant.storage %>
+
+        </span>
+
+    <% } %>
+
+    <% if(product.variant?.color){ %>
+
+        <span class="variant-pill color-pill">
+
+            <span
+
+                class="color-dot"
+
+                style="background:
+                <%= product.variant.color === 'Black'
+                ? '#111111'
+                : product.variant.color === 'Silver'
+                ? '#D1D5DB'
+                : product.variant.color === 'Purple'
+                ? '#6D28D9'
+                : '#CBD5E1'
+                %>"
+
+            ></span>
+
+            <%= product.variant.color %>
+
+        </span>
+
+    <% } %>
+
+</div>
 
         </div>
 

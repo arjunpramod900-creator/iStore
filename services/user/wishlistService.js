@@ -123,7 +123,10 @@ async (userId) => {
             ||
             "Apple Product",
 
-            variant: {
+           variant: {
+
+                RAM:
+                item.variantId.RAM,
 
                 color:
                 item.variantId.color,
