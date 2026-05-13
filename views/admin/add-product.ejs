@@ -288,6 +288,33 @@
                     2000×2000px
 
                 </p>
+                <!-- VARIANT IMAGES -->
+
+<div class="variant-images-wrapper">
+
+    <label class="form-label">
+        Variant Gallery Images
+    </label>
+
+    <input
+        type="file"
+        name="variantImages"
+        id="variantImages"
+        accept="image/*"
+        multiple
+        required
+    >
+
+    <p class="image-note">
+        Upload minimum 3 images
+    </p>
+
+    <div
+        class="variant-preview-grid"
+        id="variantPreviewGrid"
+    ></div>
+
+</div>
 
             </section>
 
@@ -655,6 +682,64 @@
         }
 
     )
+
+    /* =========================
+   VARIANT IMAGE PREVIEW
+========================= */
+
+const variantInput =
+document.getElementById(
+    "variantImages"
+)
+
+const variantPreviewGrid =
+document.getElementById(
+    "variantPreviewGrid"
+)
+
+variantInput.addEventListener(
+
+    "change",
+
+    function(){
+
+        variantPreviewGrid.innerHTML = ""
+
+        const files =
+        Array.from(this.files)
+
+        files.forEach(file => {
+
+            const reader =
+            new FileReader()
+
+            reader.onload = function(e){
+
+                const preview =
+
+                `
+                    <div class="variant-preview-item">
+
+                        <img
+                            src="${e.target.result}"
+                            alt="Variant"
+                        >
+
+                    </div>
+                `
+
+                variantPreviewGrid.innerHTML +=
+                preview
+
+            }
+
+            reader.readAsDataURL(file)
+
+        })
+
+    }
+
+)
 
 </script>
 

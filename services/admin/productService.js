@@ -308,10 +308,19 @@ export const createProductService = async (data) => {
     storage:           body.storage,
     color:             body.color,
     RAM:               body.RAM,
-    stock:             body.stock,
-    price:             body.price,
-    comparePrice:      body.comparePrice,
-    discountPercentage: body.discountPercentage,
+    stock: Number(body.stock),
+
+price: Number(body.price),
+
+comparePrice:
+body.comparePrice
+? Number(body.comparePrice)
+: 0,
+
+discountPercentage:
+body.discountPercentage
+? Number(body.discountPercentage)
+: 0,
     isDefault:         body.isDefault,
     isActive:          body.isActive === "true",
     images:            ["placeholder", "placeholder", "placeholder"]
@@ -328,14 +337,13 @@ export const createProductService = async (data) => {
 
   if (files?.thumbnail?.[0]) {
     const file = files.thumbnail[0]
-    const maxSize = 5 * 1024 * 1024
-
+    const maxSize = 10 * 1024 * 1024
     if (!allowedMimeTypes.includes(file.mimetype)) {
       throw new Error("Only JPG, PNG and WEBP images are allowed")
     }
 
     if (file.size > maxSize) {
-      throw new Error("Thumbnail must be below 5MB")
+      throw new Error("Thumbnail must be below 10MB")
     }
 
     thumbnail = await uploadImage(file.buffer)
@@ -913,17 +921,19 @@ body.color,
 RAM:
 body.RAM,
 
-stock:
-body.stock,
+stock: Number(body.stock),
 
-price:
-body.price,
+price: Number(body.price),
 
 comparePrice:
-body.comparePrice,
+body.comparePrice
+? Number(body.comparePrice)
+: 0,
 
 discountPercentage:
-body.discountPercentage,
+body.discountPercentage
+? Number(body.discountPercentage)
+: 0,
 
 images
 
