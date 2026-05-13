@@ -4,6 +4,8 @@ import Product from "../../models/Product.js"
 
 import Variant from "../../models/Variant.js"
 
+import Cart from "../../models/Cart.js"
+
 
 /* =========================================
    LOAD WISHLIST
@@ -209,6 +211,37 @@ async ({
 
             message:
             "Variant unavailable"
+
+        }
+
+    }
+
+    const cart =
+    await Cart.findOne({
+
+        userId
+
+    })
+
+    const alreadyInCart =
+    cart?.items?.find(
+
+        item =>
+
+        item.variantId.toString()
+        ===
+        variantId.toString()
+
+    )
+
+    if(alreadyInCart){
+
+        return {
+
+            success: false,
+
+            message:
+            "Already added to cart"
 
         }
 
