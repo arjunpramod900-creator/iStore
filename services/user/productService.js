@@ -51,6 +51,9 @@ async (
     const sort =
     query.sort || "latest"
 
+    const price = 
+    query.price || ""
+
 
 
     /* PRODUCT FILTER */
@@ -160,7 +163,50 @@ for(const product of products){
 
 products = flattenedProducts
 
+/* PRICE FILTER */
 
+if(price){
+
+    products = products.filter(product => {
+
+        const variantPrice =
+        product.variant.price
+
+        if(price === "0-50000"){
+
+            return variantPrice < 50000
+
+        }
+
+        if(price === "50000-100000"){
+
+            return (
+                variantPrice >= 50000 &&
+                variantPrice <= 100000
+            )
+
+        }
+
+        if(price === "100000-150000"){
+
+            return (
+                variantPrice >= 100000 &&
+                variantPrice <= 150000
+            )
+
+        }
+
+        if(price === "150000+"){
+
+            return variantPrice > 150000
+
+        }
+
+        return true
+
+    })
+
+}
 
     /* SORTING */
 
@@ -340,6 +386,8 @@ if(userId){
         category,
 
         sort,
+
+        price,
 
         wishlistVariantIds,
 

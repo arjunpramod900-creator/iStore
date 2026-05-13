@@ -467,6 +467,7 @@ data-variant-id="<%= product.variant?._id %>"
 
     <script>
         lucide.createIcons();
+        
         gsap.registerPlugin(ScrollTrigger);
 
         function changeImage(src, btn) {
@@ -540,7 +541,7 @@ data-variant-id="<%= product.variant?._id %>"
 
     </script>
     <script src="/js/toast.js"></script>
-    
+
     <script src="/js/addToCart.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -1165,6 +1166,210 @@ updateVariantUI(
 
 )
 
+</script>
+<script>
+/* =========================================
+   PREMIUM PRECISE IMAGE ZOOM
+========================================= */
+
+const imageContainer =
+document.getElementById("mainView")
+
+const zoomImage =
+document.getElementById("mainImage")
+
+if(
+
+    imageContainer &&
+    zoomImage &&
+    window.innerWidth > 768
+
+){
+
+    imageContainer.addEventListener(
+
+        "mousemove",
+
+        (e) => {
+
+            const rect =
+
+            imageContainer.getBoundingClientRect()
+
+            const x =
+            ((e.clientX - rect.left)
+            / rect.width) * 100
+
+            const y =
+            ((e.clientY - rect.top)
+            / rect.height) * 100
+
+            zoomImage.style.transformOrigin =
+            `${x}% ${y}%`
+
+            zoomImage.style.transform =
+            "scale(2)"
+
+        }
+
+    )
+
+    imageContainer.addEventListener(
+
+        "mouseleave",
+
+        () => {
+
+            zoomImage.style.transformOrigin =
+            "center center"
+
+            zoomImage.style.transform =
+            "scale(1)"
+
+        }
+
+    )
+
+}
+</script>
+
+<!-- =========================================
+     FULLSCREEN IMAGE VIEWER
+========================================= -->
+
+<div class="fullscreen-viewer" id="fullscreenViewer">
+
+    <button
+        class="fullscreen-close"
+        id="fullscreenClose"
+    >
+
+        ✕
+
+    </button>
+
+    <img
+        src=""
+        alt="Fullscreen Product"
+        id="fullscreenImage"
+    >
+
+</div>
+<script>
+/* =========================================
+   FULLSCREEN IMAGE VIEWER
+========================================= */
+
+const fullscreenViewer =
+document.getElementById(
+    "fullscreenViewer"
+)
+
+const fullscreenImage =
+document.getElementById(
+    "fullscreenImage"
+)
+
+const fullscreenClose =
+document.getElementById(
+    "fullscreenClose"
+)
+
+/* OPEN */
+imageContainer.addEventListener(
+
+    "click",
+
+    () => {
+
+        /* RESET ZOOM */
+
+        zoomImage.style.transform =
+        "scale(1)"
+
+        zoomImage.style.transformOrigin =
+        "center center"
+
+        /* LOAD FULL IMAGE */
+
+        fullscreenImage.src =
+        zoomImage.src
+
+        /* OPEN VIEWER */
+
+        fullscreenViewer.classList.add(
+            "active"
+        )
+
+        document.body.style.overflow =
+        "hidden"
+
+    }
+
+)
+
+/* CLOSE BUTTON */
+
+fullscreenClose.addEventListener(
+
+    "click",
+
+    closeFullscreen
+
+)
+
+/* CLICK OUTSIDE */
+
+fullscreenViewer.addEventListener(
+
+    "click",
+
+    (e) => {
+
+        if(
+
+            e.target === fullscreenViewer
+
+        ){
+
+            closeFullscreen()
+
+        }
+
+    }
+
+)
+
+/* ESC KEY */
+
+document.addEventListener(
+
+    "keydown",
+
+    (e) => {
+
+        if(e.key === "Escape"){
+
+            closeFullscreen()
+
+        }
+
+    }
+
+)
+
+/* CLOSE FUNCTION */
+
+function closeFullscreen(){
+
+    fullscreenViewer.classList.remove(
+        "active"
+    )
+
+    document.body.style.overflow =
+    ""
+
+}
 </script>
 </body>
 </html>

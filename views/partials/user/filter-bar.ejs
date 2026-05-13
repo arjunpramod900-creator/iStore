@@ -81,7 +81,67 @@
 
         </div>
 
+        <!-- PRICE RANGE -->
 
+        <div class="filter-select-wrapper">
+
+            <i
+                data-lucide="indian-rupee"
+                class="filter-icon"
+            ></i>
+
+            <select
+                name="price"
+                class="premium-filter-select"
+            >
+
+                <option value="">
+                    All Prices
+                </option>
+
+                <option
+                    value="0-50000"
+                    <%= price === "0-50000"
+                    ? "selected"
+                    : ""
+                    %>
+                >
+                    Under ₹50,000
+                </option>
+
+                <option
+                    value="50000-100000"
+                    <%= price === "50000-100000"
+                    ? "selected"
+                    : ""
+                    %>
+                >
+                    ₹50,000 - ₹1,00,000
+                </option>
+
+                <option
+                    value="100000-150000"
+                    <%= price === "100000-150000"
+                    ? "selected"
+                    : ""
+                    %>
+                >
+                    ₹1,00,000 - ₹1,50,000
+                </option>
+
+                <option
+                    value="150000+"
+                    <%= price === "150000+"
+                    ? "selected"
+                    : ""
+                    %>
+                >
+                    Above ₹1,50,000
+                </option>
+
+            </select>
+
+        </div>
 
         <!-- SORT -->
 
