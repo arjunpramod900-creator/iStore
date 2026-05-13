@@ -660,43 +660,47 @@ cart.items.filter(
 
 )
 
-    /* RESTORE TO WISHLIST */
 
-let wishlist =
-await Wishlist.findOne({
+    await cart.save()
 
-    userId
 
-})
 
-if(!wishlist){
+  /* =========================================
+   RESTORE ONLY IF MOVED FROM WISHLIST
+========================================= */
 
-    wishlist =
-    new Wishlist({
+if(
 
-        userId,
+    removedItem &&
+    removedItem.movedFromWishlist
 
-        items: []
+){
+
+    let wishlist =
+
+    await Wishlist.findOne({
+
+        userId
 
     })
 
-}
+    if(!wishlist){
 
-const alreadyExists =
-wishlist.items.find(
+        wishlist =
 
-    item =>
+        new Wishlist({
 
-    item.variantId.toString()
-    ===
-    variantId.toString()
+            userId,
 
-)
+            items: []
 
-if(!alreadyExists){
+        })
 
-    const removedCartItem =
-    cart.items.find(
+    }
+
+    const alreadyExists =
+
+    wishlist.items.find(
 
         item =>
 
@@ -706,90 +710,36 @@ if(!alreadyExists){
 
     )
 
-    if(removedCartItem){
+    if(!alreadyExists){
 
         wishlist.items.push({
 
             productId:
-            removedCartItem.productId,
+            removedItem.productId,
 
-            variantId
+            variantId:
+            removedItem.variantId
 
         })
 
-    }
+        await wishlist.save()
 
-    await wishlist.save()
+    }
 
 }
 
-    await cart.save()
-
-/* =========================================
-   RESTORE TO WISHLIST
-========================================= */
-
-    if(removedItem){
-
-        let wishlist =
-
-        await Wishlist.findOne({
-
-            userId
-
-        })
-
-        if(!wishlist){
-
-            wishlist =
-
-            new Wishlist({
-
-                userId,
-
-                items: []
-
-            })
-
-        }
-
-        const alreadyExists =
-
-        wishlist.items.find(
-
-            item =>
-
-            item.variantId.toString()
-            ===
-            variantId.toString()
-
-        )
-
-        if(!alreadyExists){
-
-            wishlist.items.push({
-
-                productId:
-                removedItem.productId,
-
-                variantId:
-                removedItem.variantId
-
-            })
-
-            await wishlist.save()
-
-        }
-
-    }
-
     return {
 
-        success: true,
+    success: true,
 
-        message:
-        "Item removed"
+    message:
+    "Item removed",
 
-    }
+    restoredToWishlist:
+
+    removedItem &&
+    removedItem.movedFromWishlist
+
+}
 
 }

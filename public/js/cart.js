@@ -561,25 +561,30 @@ if(!result.isConfirmed){
 
     })
 
-    /* RESTORE WISHLIST */
-
-    const wishlistButtons =
-
-    document.querySelectorAll(
-
-        `.wishlist-toggle[data-variant-id="${variantId}"]`
-
-    )
-
-    wishlistButtons.forEach(btn => {
-
-        btn.classList.add(
-            "active"
-        )
-
-    })
+   
 
     lucide.createIcons()
+    /* RESTORE WISHLIST UI ONLY IF VALID */
+
+    if(data.restoredToWishlist){
+
+        const wishlistButtons =
+
+        document.querySelectorAll(
+
+            `.wishlist-toggle[data-variant-id="${variantId}"]`
+
+        )
+
+        wishlistButtons.forEach(btn => {
+
+            btn.classList.add(
+                "active"
+            )
+
+        })
+
+    }
 
     /* SUCCESS TOAST */
 

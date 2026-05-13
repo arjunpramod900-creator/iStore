@@ -516,18 +516,19 @@ async ({
 
         cart.items.push({
 
-            productId:
-            wishlistItem.productId,
+        productId:
+        wishlistItem.productId,
 
-            variantId,
+        variantId,
 
-            quantity: 1,
+        quantity: 1,
 
-            price:
-            variant.price
+        price:
+        variant.price,
 
-        })
+        movedFromWishlist: true
 
+    })
     }
 
     /* REMOVE FROM WISHLIST */

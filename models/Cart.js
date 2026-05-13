@@ -34,9 +34,17 @@ const cartItemSchema = new mongoose.Schema({
 
     price: {
 
-        type: Number,
+    type: Number,
 
-        required: true
+    required: true
+
+    },
+
+    movedFromWishlist: {
+
+        type: Boolean,
+
+        default: false
 
     }
 
