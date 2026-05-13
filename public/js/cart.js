@@ -263,7 +263,9 @@ increaseButtons.forEach(button => {
 
                 else{
 
-                    alert(
+                    showToast(
+
+                        "info",
 
                         data.message
 
@@ -277,7 +279,9 @@ increaseButtons.forEach(button => {
 
                 console.log(error)
 
-                alert(
+                showToast(
+
+                    "error",
 
                     "Something went wrong"
 
@@ -367,7 +371,9 @@ decreaseButtons.forEach(button => {
 
                 else{
 
-                    alert(
+                    showToast(
+
+                        "info",
 
                         data.message
 
@@ -381,7 +387,9 @@ decreaseButtons.forEach(button => {
 
                 console.log(error)
 
-                alert(
+                showToast(
+
+                    "error",
 
                     "Something went wrong"
 
@@ -427,47 +435,47 @@ removeButtons.forEach(button => {
                 const variantId =
                 button.dataset.variantId
 
-               const result =
-await Swal.fire({
+                const result =
+                await Swal.fire({
 
-    title: "Remove Item?",
+                    title: "Remove Item?",
 
-    text:
-    "This product will be removed from your cart.",
+                    text:
+                    "This product will be removed from your cart.",
 
-    icon: "warning",
+                    icon: "warning",
 
-    showCancelButton: true,
+                    showCancelButton: true,
 
-    confirmButtonText: "Remove",
+                    confirmButtonText: "Remove",
 
-    cancelButtonText: "Cancel",
+                    cancelButtonText: "Cancel",
 
-    background: "#FFFFFF",
+                    background: "#FFFFFF",
 
-    color: "#111111",
+                    color: "#111111",
 
-    reverseButtons: true,
+                    reverseButtons: true,
 
-    customClass: {
+                    customClass: {
 
-        popup: "cart-swal-popup",
+                        popup: "cart-swal-popup",
 
-        confirmButton:
-        "cart-swal-confirm",
+                        confirmButton:
+                        "cart-swal-confirm",
 
-        cancelButton:
-        "cart-swal-cancel"
+                        cancelButton:
+                        "cart-swal-cancel"
 
-    }
+                    }
 
-})
+                })
 
-if(!result.isConfirmed){
+                if(!result.isConfirmed){
 
-    return
+                    return
 
-}
+                }
 
                 button.disabled = true
 
@@ -493,146 +501,137 @@ if(!result.isConfirmed){
 
                 if(data.success){
 
-    /* REMOVE CARD */
+                    /* REMOVE CARD */
 
-    const cartCard =
-    button.closest(
+                    const cartCard =
+                    button.closest(
 
-        ".cart-item-card"
+                        ".cart-item-card"
 
-    )
+                    )
 
-    if(cartCard){
+                    if(cartCard){
 
-        gsap.to(
+                        gsap.to(
 
-            cartCard,
+                            cartCard,
 
-            {
+                            {
 
-                opacity: 0,
+                                opacity: 0,
 
-                y: -20,
+                                y: -20,
 
-                duration: 0.35,
+                                duration: 0.35,
 
-                ease: "power2.out",
+                                ease: "power2.out",
 
-                onComplete: () => {
+                                onComplete: () => {
 
-                    cartCard.remove()
+                                    cartCard.remove()
+
+                                }
+
+                            }
+
+                        )
+
+                    }
+
+                    /* RESTORE PRODUCT BUTTON */
+
+                    const addToCartButtons =
+
+                    document.querySelectorAll(
+
+                        `.add-to-cart-btn[data-variant-id="${variantId}"]`
+
+                    )
+
+                    addToCartButtons.forEach(btn => {
+
+                        btn.classList.remove(
+                            "added"
+                        )
+
+                        btn.disabled = false
+
+                        btn.innerHTML =
+
+                        `
+                            <i
+                                data-lucide="shopping-cart"
+                                size="18"
+                            ></i>
+
+                            Add to Cart
+                        `
+
+                    })
+
+                    lucide.createIcons()
+
+                    /* RESTORE WISHLIST UI ONLY IF VALID */
+
+                    if(data.restoredToWishlist){
+
+                        const wishlistButtons =
+
+                        document.querySelectorAll(
+
+                            `.wishlist-toggle[data-variant-id="${variantId}"]`
+
+                        )
+
+                        wishlistButtons.forEach(btn => {
+
+                            btn.classList.add(
+                                "active"
+                            )
+
+                        })
+
+                    }
+
+                    /* SUCCESS TOAST */
+
+                    showToast(
+
+                        "success",
+
+                        "Removed from cart"
+
+                    )
+
+                    /* EMPTY CHECK */
+
+                    setTimeout(() => {
+
+                        const remainingCards =
+
+                        document.querySelectorAll(
+
+                            ".cart-item-card"
+
+                        )
+
+                        if(remainingCards.length === 0){
+
+                            location.reload()
+
+                        }
+
+                    }, 400)
+
+                    return
 
                 }
 
-            }
-
-        )
-
-    }
-
-    /* RESTORE PRODUCT BUTTON */
-
-    const addToCartButtons =
-
-    document.querySelectorAll(
-
-        `.add-to-cart-btn[data-variant-id="${variantId}"]`
-
-    )
-
-   addToCartButtons.forEach(btn => {
-
-    btn.classList.remove(
-        "added"
-    )
-
-    btn.disabled = false
-
-    btn.innerHTML =
-
-        `
-            <i
-                data-lucide="shopping-cart"
-                size="18"
-            ></i>
-
-            Add to Cart
-        `
-
-    })
-
-   
-
-    lucide.createIcons()
-    /* RESTORE WISHLIST UI ONLY IF VALID */
-
-    if(data.restoredToWishlist){
-
-        const wishlistButtons =
-
-        document.querySelectorAll(
-
-            `.wishlist-toggle[data-variant-id="${variantId}"]`
-
-        )
-
-        wishlistButtons.forEach(btn => {
-
-            btn.classList.add(
-                "active"
-            )
-
-        })
-
-    }
-
-    /* SUCCESS TOAST */
-
-    Swal.fire({
-
-        toast: true,
-
-        position: "top-end",
-
-        icon: "success",
-
-        title:
-        "Removed from cart",
-
-        showConfirmButton: false,
-
-        timer: 1800,
-
-        background: "#FFFFFF",
-
-        color: "#111111"
-
-    })
-
-    /* EMPTY CHECK */
-
-    setTimeout(() => {
-
-        const remainingCards =
-
-        document.querySelectorAll(
-
-            ".cart-item-card"
-
-        )
-
-        if(remainingCards.length === 0){
-
-            location.reload()
-
-        }
-
-    }, 400)
-
-}
                 else{
 
-                    alert(
+                    showToast(
+
+                        "info",
 
                         data.message
 
@@ -646,7 +645,9 @@ if(!result.isConfirmed){
 
                 console.log(error)
 
-                alert(
+                showToast(
+
+                    "error",
 
                     "Something went wrong"
 

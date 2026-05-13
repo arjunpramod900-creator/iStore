@@ -171,26 +171,13 @@ addToCartButtons.forEach(
 
                         /* TOAST */
 
-                        Swal.fire({
+                       showToast(
 
-                            toast: true,
+                            "success",
 
-                            position: "top-end",
+                            "Added to cart"
 
-                            icon: "success",
-
-                            title:
-                            "Added to cart",
-
-                            showConfirmButton: false,
-
-                            timer: 1800,
-
-                            background: "#FFFFFF",
-
-                            color: "#111111"
-
-                        })
+                        )
 
                     }
 
@@ -215,25 +202,13 @@ addToCartButtons.forEach(
 
                         lucide.createIcons()
 
-                        Swal.fire({
+                       showToast(
 
-                            toast: true,
+                            "info",
 
-                            position: "top-end",
+                            data.message
 
-                            icon: "info",
-
-                            title: data.message,
-
-                            showConfirmButton: false,
-
-                            timer: 1800,
-
-                            background: "#FFFFFF",
-
-                            color: "#111111"
-
-                        })
+                        )
 
                     }
 

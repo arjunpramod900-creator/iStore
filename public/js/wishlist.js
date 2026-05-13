@@ -62,25 +62,13 @@ wishlistButtons.forEach(button => {
         "active"
     )
 
-    Swal.fire({
+    showToast(
 
-        toast: true,
+    "success",
 
-        position: "top-end",
+    data.message
 
-        icon: "success",
-
-        title: data.message,
-
-        showConfirmButton: false,
-
-        timer: 1800,
-
-        background: "#FFFFFF",
-
-        color: "#111111"
-
-    })
+)
 
 }
 
@@ -184,52 +172,26 @@ else{
 
             lucide.createIcons()
 
-            Swal.fire({
+            showToast(
 
-                toast: true,
+                "success",
 
-                position: "top-end",
+                "Removed from wishlist"
 
-                icon: "success",
-
-                title:
-                "Removed from wishlist",
-
-                showConfirmButton: false,
-
-                timer: 1800,
-
-                background: "#FFFFFF",
-
-                color: "#111111"
-
-            })
-
+            )
         }
 
     }
 
     else{
 
-        Swal.fire({
+        showToast(
 
-            toast: true,
+            "info",
 
-            position: "top-end",
+            data.message
 
-            icon: "info",
-
-            title: data.message,
-
-            showConfirmButton: false,
-
-            timer: 1800,
-
-            background: "#FFFFFF",
-
-            color: "#111111"
-
-        })
+        )
 
     }
 
@@ -276,7 +238,7 @@ async function removeFromWishlist(
 
         cancelButtonText: "Cancel",
 
-        confirmButtonColor: "#603763",
+        confirmButtonColor: "#510098",
 
         cancelButtonColor: "#E5E7EB",
 
@@ -349,25 +311,13 @@ async function removeFromWishlist(
 
             )
 
-            Swal.fire({
+            showToast(
 
-                toast: true,
+                "success",
 
-                position: "top-end",
+                "Removed from wishlist"
 
-                icon: "success",
-
-                title: "Removed from wishlist",
-
-                showConfirmButton: false,
-
-                timer: 1800,
-
-                background: "#FFFFFF",
-
-                color: "#111111"
-
-            })
+            )
 
         }
 
@@ -469,49 +419,25 @@ async function moveToCart(
 
             )
 
-            Swal.fire({
+            showToast(
 
-                toast: true,
+                "success",
 
-                position: "top-end",
+                "Moved to cart"
 
-                icon: "success",
-
-                title: "Moved to cart",
-
-                showConfirmButton: false,
-
-                timer: 1800,
-
-                background: "#FFFFFF",
-
-                color: "#111111"
-
-            })
+            )
 
         }
 
         else{
 
-            Swal.fire({
+            showToast(
 
-                toast: true,
+                "info",
 
-                position: "top-end",
+                data.message
 
-                icon: "info",
-
-                title: data.message,
-
-                showConfirmButton: false,
-
-                timer: 1800,
-
-                background: "#FFFFFF",
-
-                color: "#111111"
-
-            })
+            )
 
         }
 
