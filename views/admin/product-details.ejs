@@ -388,17 +388,40 @@
 
                     <div class="detail-item">
 
-                        <span class="detail-label">
-                            Base Price
-                        </span>
+    <span class="detail-label">
+        Base Price
+    </span>
 
-                        <span class="detail-value price">
+    <div class="price-showcase">
 
-                            ₹<%= basePrice.toLocaleString() %>
+        <span class="detail-value price">
 
-                        </span>
+            ₹<%= basePrice.toLocaleString() %>
 
-                    </div>
+        </span>
+
+        <% if(
+            variants[0]?.comparePrice &&
+            variants[0]?.comparePrice > variants[0]?.price
+        ) { %>
+
+            <span class="compare-price-large">
+
+                ₹<%= variants[0].comparePrice.toLocaleString() %>
+
+            </span>
+
+            <span class="discount-badge">
+
+                <%= variants[0].discountPercentage %>% OFF
+
+            </span>
+
+        <% } %>
+
+    </div>
+
+</div>
 
                 </div>
 
@@ -596,6 +619,7 @@
     data-ram="<%= variant.RAM %>"
     data-color="<%= variant.color %>"
     data-price="<%= variant.price %>"
+    data-compareprice="<%= variant.comparePrice %>"
     data-stock="<%= variant.stock %>"
     data-images='<%- JSON.stringify(variant.images) %>'
 >
@@ -628,11 +652,38 @@
                                         <%= variant.color %>
                                     </td>
 
-                                    <td class="font-bold">
+                                    <td class="price-cell">
 
-                                        ₹<%= variant.price.toLocaleString() %>
+    <div class="variant-price-wrap">
 
-                                    </td>
+        <span class="sale-price">
+
+            ₹<%= variant.price.toLocaleString() %>
+
+        </span>
+
+        <% if(
+            variant.comparePrice &&
+            variant.comparePrice > variant.price
+        ) { %>
+
+            <span class="compare-price">
+
+                ₹<%= variant.comparePrice.toLocaleString() %>
+
+            </span>
+
+            <span class="discount-badge">
+
+                <%= variant.discountPercentage %>% OFF
+
+            </span>
+
+        <% } %>
+
+    </div>
+
+</td>
 
                                     <td>
 
@@ -681,6 +732,7 @@
                                                     data-storage="<%= variant.storage %>"
                                                     data-ram="<%= variant.RAM %>"
                                                     data-price="<%= variant.price %>"
+                                                    data-compareprice="<%= variant.comparePrice %>"
                                                     data-stock="<%= variant.stock %>"
                                                     data-images='<%- JSON.stringify(variant.images) %>'>
 
@@ -1040,7 +1092,7 @@
                         SKU & Pricing
                     </h4>
 
-                    <div class="variant-grid-2">
+                    <div class="variant-grid-3">
 
                         <div class="field">
 
@@ -1058,17 +1110,31 @@
 
                         <div class="field">
 
-                            <label>
-                                Price
-                            </label>
+    <label>
+        Price
+    </label>
 
-                            <input
-                                type="number"
-                                id="variantPrice"
-                                placeholder="119900"
-                            >
+    <input
+        type="number"
+        id="variantPrice"
+        placeholder="119900"
+    >
 
-                        </div>
+</div>
+
+<div class="field">
+
+    <label>
+        Compare Price
+    </label>
+
+    <input
+        type="number"
+        id="variantComparePrice"
+        placeholder="139900"
+    >
+
+</div>
 
                     </div>
 
@@ -1098,19 +1164,7 @@
 
                         </div>
 
-                        <div class="field">
-
-                            <label>
-                                Threshold
-                            </label>
-
-                            <input
-                                type="number"
-                                id="variantThreshold"
-                                placeholder="10"
-                            >
-
-                        </div>
+                        
 
                     </div>
 
@@ -2193,6 +2247,11 @@ document
         ).value = button.dataset.price;
 
         document.getElementById(
+            "variantComparePrice"
+        ).value =
+        button.dataset.compareprice || "";
+
+        document.getElementById(
             "variantStock"
         ).value = button.dataset.stock;
 
@@ -2226,7 +2285,8 @@ const previewInputs = [
     "variantColor",
     "variantStorage",
     "variantRAM",
-    "variantPrice"
+    "variantPrice",
+    "variantComparePrice"
 
 ];
 
@@ -2261,10 +2321,50 @@ previewInputs.forEach((id) => {
         ).innerText =
         `${color} • ${storage} • ${ram}`;
 
-        document.getElementById(
-            "previewPrice"
-        ).innerText =
-        `₹${Number(price).toLocaleString()}`;
+       const comparePrice =
+document.getElementById(
+    "variantComparePrice"
+).value;
+
+const discount =
+comparePrice > price
+? Math.round(
+    (
+        (comparePrice - price)
+        / comparePrice
+    ) * 100
+)
+: 0;
+
+document.getElementById(
+    "previewPrice"
+).innerHTML = `
+
+    <div class="preview-price-main">
+
+        ₹${Number(price).toLocaleString()}
+
+    </div>
+
+    ${
+        comparePrice > price
+        ? `
+            <div class="preview-compare-price">
+
+                ₹${Number(comparePrice).toLocaleString()}
+
+            </div>
+
+            <div class="discount-badge">
+
+                ${discount}% OFF
+
+            </div>
+        `
+        : ""
+    }
+
+`;
 
     });
 
@@ -2714,11 +2814,51 @@ variantRows.forEach((row) => {
 
         /* UPDATE PRICE */
 
-        document.querySelector(
-            ".detail-value.price"
-        ).innerText =
-        `₹${Number(price).toLocaleString()}`;
+       const priceContainer =
+document.querySelector(
+    ".price-showcase"
+);
 
+const comparePrice =
+row.dataset.compareprice;
+
+const discount =
+comparePrice > price
+? Math.round(
+    (
+        (comparePrice - price)
+        / comparePrice
+    ) * 100
+)
+: 0;
+
+priceContainer.innerHTML = `
+
+    <span class="detail-value price">
+
+        ₹${Number(price).toLocaleString()}
+
+    </span>
+
+    ${
+        comparePrice > price
+        ? `
+            <span class="compare-price-large">
+
+                ₹${Number(comparePrice).toLocaleString()}
+
+            </span>
+
+            <span class="discount-badge">
+
+                ${discount}% OFF
+
+            </span>
+        `
+        : ""
+    }
+
+`;
         /* UPDATE MAIN IMAGE */
 
         if(images.length){
@@ -2887,6 +3027,16 @@ document
 
         document.getElementById(
             "variantPrice"
+        ).value
+
+    );
+
+    formData.append(
+
+        "comparePrice",
+
+        document.getElementById(
+            "variantComparePrice"
         ).value
 
     );

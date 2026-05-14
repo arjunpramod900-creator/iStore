@@ -302,6 +302,21 @@ export const createProductService = async (data) => {
   }
 
   /* 5. VALIDATE VARIANT SCHEMA */
+  if(
+
+    body.comparePrice &&
+
+    Number(body.comparePrice) <= Number(body.price)
+
+){
+
+    throw new Error(
+
+        "Compare price must be greater than price"
+
+    )
+
+}
   const variantDataForValidation = {
     productId: "placeholder",   // real _id not available yet, just for schema check
     SKU:               body.SKU,
@@ -318,8 +333,18 @@ body.comparePrice
 : 0,
 
 discountPercentage:
-body.discountPercentage
-? Number(body.discountPercentage)
+
+Number(body.comparePrice) > Number(body.price)
+
+? Math.round(
+
+    (
+        (Number(body.comparePrice) - Number(body.price))
+        / Number(body.comparePrice)
+    ) * 100
+
+)
+
 : 0,
     isDefault:         body.isDefault,
     isActive:          body.isActive === "true",
@@ -384,7 +409,20 @@ body.discountPercentage
     stock:             body.stock,
     price:             body.price,
     comparePrice:      body.comparePrice,
-    discountPercentage: body.discountPercentage,
+    discountPercentage:
+
+Number(body.comparePrice) > Number(body.price)
+
+? Math.round(
+
+    (
+        (Number(body.comparePrice) - Number(body.price))
+        / Number(body.comparePrice)
+    ) * 100
+
+)
+
+: 0,
     isDefault:         body.isDefault,
     isActive:          body.isActive === "true",
     images
@@ -476,6 +514,22 @@ thumbnail
 
 /* UPDATE VARIANT */
 
+if(
+
+    body.comparePrice &&
+
+    Number(body.comparePrice) <= Number(body.price)
+
+){
+
+    throw new Error(
+
+        "Compare price must be greater than price"
+
+    )
+
+}
+
 await Variant.findOneAndUpdate(
 
 {
@@ -502,7 +556,19 @@ comparePrice:
 body.comparePrice,
 
 discountPercentage:
-body.discountPercentage,
+
+Number(body.comparePrice) > Number(body.price)
+
+? Math.round(
+
+    (
+        (Number(body.comparePrice) - Number(body.price))
+        / Number(body.comparePrice)
+    ) * 100
+
+)
+
+: 0,
 
 isActive:
 body.isActive === "true",
@@ -905,6 +971,22 @@ images.push(uploaded)
 
 /* VARIANT DATA */
 
+if(
+
+    body.comparePrice &&
+
+    Number(body.comparePrice) <= Number(body.price)
+
+){
+
+    throw new Error(
+
+        "Compare price must be greater than price"
+
+    )
+
+}
+
 const variantData = {
 
 productId,
@@ -931,8 +1013,18 @@ body.comparePrice
 : 0,
 
 discountPercentage:
-body.discountPercentage
-? Number(body.discountPercentage)
+
+Number(body.comparePrice) > Number(body.price)
+
+? Math.round(
+
+    (
+        (Number(body.comparePrice) - Number(body.price))
+        / Number(body.comparePrice)
+    ) * 100
+
+)
+
 : 0,
 
 images
@@ -1109,6 +1201,21 @@ throw new Error(
 }
 
 /* UPDATE */
+if(
+
+    body.comparePrice &&
+
+    Number(body.comparePrice) <= Number(body.price)
+
+){
+
+    throw new Error(
+
+        "Compare price must be greater than price"
+
+    )
+
+}
 
 await Variant.findByIdAndUpdate(
 
@@ -1138,7 +1245,19 @@ comparePrice:
 body.comparePrice,
 
 discountPercentage:
-body.discountPercentage,
+
+Number(body.comparePrice) > Number(body.price)
+
+? Math.round(
+
+    (
+        (Number(body.comparePrice) - Number(body.price))
+        / Number(body.comparePrice)
+    ) * 100
+
+)
+
+: 0,
 
 images
 

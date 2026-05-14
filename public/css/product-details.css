@@ -385,6 +385,78 @@ body {
     padding-top: 16px;
 }
 
+.price-stack{
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 10px;
+
+    margin-bottom: 28px;
+
+}
+
+.price-row{
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 14px;
+
+    flex-wrap: wrap;
+
+}
+
+.compare-price{
+
+    font-size: 22px;
+
+    color: #9CA3AF;
+
+    text-decoration: line-through;
+
+    font-weight: 500;
+
+}
+
+.discount-badge{
+
+    padding: 8px 14px;
+
+    border-radius: 999px;
+
+    background: rgba(22,163,74,0.12);
+
+    color: #15803D;
+
+    font-size: 13px;
+
+    font-weight: 700;
+
+    letter-spacing: 0.4px;
+
+}
+
+.tax-text{
+
+    font-size: 14px;
+
+    color: var(--text-muted);
+
+}
+
+.emi-text{
+
+    font-size: 14px;
+
+    color: var(--brand-purple);
+
+    font-weight: 600;
+
+}
+
 .stock-status{
 
     font-size: 14px;

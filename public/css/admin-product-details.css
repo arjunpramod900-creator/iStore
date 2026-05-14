@@ -1101,6 +1101,37 @@ body {
 
 }
 
+.variant-price-wrap{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+}
+
+.compare-price,
+.compare-price-large,
+.preview-compare-price{
+    font-size:13px;
+    color:#8E8E93;
+    text-decoration:line-through;
+}
+
+.discount-badge{
+    width:fit-content;
+    padding:4px 10px;
+    border-radius:999px;
+    background:#E8FFF0;
+    color:#0A7D32;
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:.4px;
+}
+
+.price-showcase{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+}
+
 /* =========================================
    ANALYTICS + LOGS
 ========================================= */

@@ -71,7 +71,11 @@
                         <span class="rating-text"><%= product.rating || 4.5 %> stars (<%= product.reviewCount || '1,240' %> reviews)</span>
                     </div>
 
-                 <div class="price-wrapper">
+<!-- =========================================
+     PRICE SECTION
+========================================= -->
+
+<div class="price-wrapper">
 
     <p
 
@@ -101,17 +105,85 @@
 
     ></p>
 
-    <p
+    <div class="price-stack">
 
-        class="product-price"
+        <div class="price-row">
 
-        id="productPrice"
+            <h2
+                class="product-price"
+                id="productPrice"
+            >
+                ₹<%= product.variant.price.toLocaleString() %>
+            </h2>
 
-    >
+            <!-- UPDATED -->
 
-        ₹<%= product.variant.price.toLocaleString() %>
+            <span
+                class="compare-price"
 
-    </p>
+                id="comparePrice"
+
+                style="
+                display:
+                <%= product.variant.comparePrice > product.variant.price
+                    ? 'inline-flex'
+                    : 'none'
+                %>
+                "
+            >
+
+                ₹<%= product.variant.comparePrice?.toLocaleString() || '' %>
+
+            </span>
+
+            <span
+                class="discount-badge"
+
+                id="discountBadge"
+
+                style="
+                display:
+                <%= product.variant.comparePrice > product.variant.price
+                    ? 'inline-flex'
+                    : 'none'
+                %>
+                "
+            >
+
+               <%= product.variant.comparePrice > 0
+
+? Math.round(
+
+    (
+        (product.variant.comparePrice - product.variant.price)
+        / product.variant.comparePrice
+    ) * 100
+
+)
+
+: 0
+
+%>% OFF
+
+            </span>
+
+        </div>
+
+        <p class="tax-text">
+            Inclusive of all taxes
+        </p>
+
+        <!-- UPDATED -->
+
+        <p
+            class="emi-text"
+            id="emiText"
+        >
+            EMI starting from ₹
+            <%= Math.round(product.variant.price / 12).toLocaleString() %>/month
+        </p>
+
+    </div>
 
 </div>
                     
@@ -228,10 +300,10 @@
 
                     class="ram-btn
 
-                    <%= product.variant.RAM === ram
-                    ? 'active'
-                    : ''
-                    %>"
+                   <%= product.variant.RAM.trim().toUpperCase() === ram
+? 'active'
+: ''
+%>
 
                     data-ram="<%= ram %>"
 
@@ -280,11 +352,10 @@
                 <button
 
                     class="storage-btn
-
-                    <%= product.variant.storage === storage
-                    ? 'active'
-                    : ''
-                    %>"
+<%= product.variant.storage.trim().toUpperCase() === storage
+? 'active'
+: ''
+%>
 
                     data-storage="<%= storage %>"
 
@@ -339,8 +410,13 @@ data-variant-id="<%= product.variant?._id %>"
 
 <% } %>
 
-</button>
-                        <button class="btn-secondary">Buy Now</button>
+                    </button>
+                        <button
+                            class="btn-secondary"
+                            id="buyNowBtn"
+                        >
+                            Buy Now
+                        </button>
                      <button
 
 class="btn-wishlist wishlist-toggle
@@ -555,7 +631,12 @@ data-variant-id="<%= product.variant?._id %>"
 ========================================= */
 
 const variants =
-<%- JSON.stringify(product.variants) %>
+
+<%- JSON.stringify(
+
+product.variants.filter(v => !v.isDeleted)
+
+) %>
 
 const cartVariantIds =
 <%- JSON.stringify(cartVariantIds) %>
@@ -586,6 +667,12 @@ document.getElementById("mainImage")
 const priceElement =
 document.getElementById("productPrice")
 
+const comparePriceElement =
+document.getElementById("comparePrice")
+
+const discountBadge =
+document.getElementById("discountBadge")
+
 const stockElement =
 document.getElementById("stockStatus")
 
@@ -600,6 +687,12 @@ document.querySelector(".wishlist-toggle")
 
 const thumbnailGrid =
 document.querySelector(".thumbnail-grid")
+
+const emiText =
+document.getElementById("emiText")
+
+const buyNowBtn =
+document.getElementById("buyNowBtn")
 
 /* =========================================
    FIND BEST VARIANT
@@ -625,9 +718,11 @@ function findBestVariant(
 
             return (
 
-                v.color === value &&
-                v.RAM === selectedRAM &&
-                v.storage === selectedStorage
+                v.color?.trim() === value?.trim()&&
+                v.RAM?.trim().toUpperCase() ===
+selectedRAM?.trim().toUpperCase() &&
+                v.storage?.trim().toUpperCase() ===
+selectedStorage?.trim().toUpperCase()
 
             )
 
@@ -639,8 +734,9 @@ function findBestVariant(
 
             return (
 
-                v.color === value &&
-                v.RAM === selectedRAM
+               v.color?.trim() === value?.trim() &&
+                v.RAM?.trim().toUpperCase() ===
+selectedRAM?.trim().toUpperCase()
 
             )
 
@@ -652,8 +748,9 @@ function findBestVariant(
 
             return (
 
-                v.color === value &&
-                v.storage === selectedStorage
+                v.color?.trim() === value?.trim() &&
+                v.storage?.trim().toUpperCase() ===
+selectedStorage?.trim().toUpperCase()
 
             )
 
@@ -663,7 +760,7 @@ function findBestVariant(
 
         variants.find(v => {
 
-            return v.color === value
+            return v.color?.trim() === value?.trim()
 
         })
 
@@ -679,9 +776,10 @@ function findBestVariant(
 
             return (
 
-                v.RAM === value &&
+                v.RAM?.trim().toUpperCase() === value?.trim().toUpperCase() &&
                 v.color === selectedColor &&
-                v.storage === selectedStorage
+                v.storage?.trim().toUpperCase() ===
+selectedStorage?.trim().toUpperCase()
 
             )
 
@@ -693,7 +791,7 @@ function findBestVariant(
 
             return (
 
-                v.RAM === value &&
+                v.RAM?.trim().toUpperCase() === value?.trim().toUpperCase() &&
                 v.color === selectedColor
 
             )
@@ -706,8 +804,9 @@ function findBestVariant(
 
             return (
 
-                v.RAM === value &&
-                v.storage === selectedStorage
+                v.RAM?.trim().toUpperCase() === value?.trim().toUpperCase() &&
+                v.storage?.trim().toUpperCase() ===
+selectedStorage?.trim().toUpperCase()
 
             )
 
@@ -717,7 +816,7 @@ function findBestVariant(
 
         variants.find(v => {
 
-            return v.RAM === value
+            return v.RAM?.trim().toUpperCase() === value?.trim().toUpperCase()
 
         })
 
@@ -733,9 +832,11 @@ function findBestVariant(
 
             return (
 
-                v.storage === value &&
+                v.storage?.trim().toUpperCase() ===
+value?.trim().toUpperCase() &&
                 v.color === selectedColor &&
-                v.RAM === selectedRAM
+                v.RAM?.trim().toUpperCase() ===
+selectedRAM?.trim().toUpperCase()
 
             )
 
@@ -747,7 +848,8 @@ function findBestVariant(
 
             return (
 
-                v.storage === value &&
+                v.storage?.trim().toUpperCase() ===
+value?.trim().toUpperCase() &&
                 v.color === selectedColor
 
             )
@@ -760,8 +862,10 @@ function findBestVariant(
 
             return (
 
-                v.storage === value &&
-                v.RAM === selectedRAM
+                v.storage?.trim().toUpperCase() ===
+value?.trim().toUpperCase() &&
+                v.RAM?.trim().toUpperCase() ===
+selectedRAM?.trim().toUpperCase()
 
             )
 
@@ -771,7 +875,8 @@ function findBestVariant(
 
         variants.find(v => {
 
-            return v.storage === value
+            return v.storage?.trim().toUpperCase() ===
+value?.trim().toUpperCase()
 
         })
 
@@ -817,6 +922,7 @@ function renderThumbnails(images){
 /* =========================================
    REFRESH OPTIONS
 ========================================= */
+
 function refreshOptions(){
 
     /* RAM */
@@ -826,7 +932,16 @@ function refreshOptions(){
 
         const exists = variants.some(v => {
 
-            return v.RAM === button.dataset.ram
+            return (
+
+                v.RAM?.trim().toUpperCase() ===
+button.dataset.ram?.trim().toUpperCase() &&
+
+                v.stock > 0 &&
+
+                !v.isDeleted
+
+            )
 
         })
 
@@ -849,7 +964,16 @@ function refreshOptions(){
 
         const exists = variants.some(v => {
 
-            return v.storage === button.dataset.storage
+            return (
+
+                v.storage?.trim().toUpperCase() ===
+button.dataset.storage?.trim().toUpperCase() &&
+
+                v.stock > 0 &&
+
+                !v.isDeleted
+
+            )
 
         })
 
@@ -872,7 +996,16 @@ function refreshOptions(){
 
         const exists = variants.some(v => {
 
-            return v.color === button.dataset.color
+            return (
+
+                v.color?.trim() ===
+                button.dataset.color?.trim() &&
+
+                v.stock > 0 &&
+
+                !v.isDeleted
+
+            )
 
         })
 
@@ -919,6 +1052,68 @@ function updateVariantUI(variant){
     priceElement.innerText =
     `₹${variant.price.toLocaleString()}`
 
+    /* COMPARE PRICE + DISCOUNT */
+
+    if(
+
+        comparePriceElement &&
+        discountBadge &&
+        variant.comparePrice &&
+        variant.comparePrice > variant.price
+
+    ){
+
+        /* COMPARE PRICE */
+
+        comparePriceElement.innerText =
+
+        `₹${variant.comparePrice.toLocaleString()}`
+
+        comparePriceElement.style.display =
+        "inline-flex"
+
+        /* DISCOUNT */
+
+        const discountPercentage =
+
+        Math.round(
+
+            (
+                (variant.comparePrice - variant.price)
+                / variant.comparePrice
+            ) * 100
+
+        )
+
+        discountBadge.innerText =
+
+        `${discountPercentage}% OFF`
+
+        discountBadge.style.display =
+        "inline-flex"
+
+    }
+
+    /* HIDE IF NO DISCOUNT */
+
+    else{
+
+        if(comparePriceElement){
+
+            comparePriceElement.style.display =
+            "none"
+
+        }
+
+        if(discountBadge){
+
+            discountBadge.style.display =
+            "none"
+
+        }
+
+    }
+
     /* IMAGE */
 
     if(variant.images?.length){
@@ -932,7 +1127,10 @@ function updateVariantUI(variant){
             onComplete: () => {
 
                 mainImage.src =
-                variant.images[0]
+
+                variant.images?.[0]
+
+                || "<%= product.thumbnail %>"
 
                 gsap.to(mainImage, {
 
@@ -946,22 +1144,22 @@ function updateVariantUI(variant){
 
         })
 
-       renderThumbnails(
-    variant.images
-)
+        renderThumbnails(
+            variant.images
+        )
 
-setTimeout(() => {
+        setTimeout(() => {
 
-    const firstThumb =
-    document.querySelector(".thumb-btn")
+            const firstThumb =
+            document.querySelector(".thumb-btn")
 
-    if(firstThumb){
+            if(firstThumb){
 
-        firstThumb.classList.add("active")
+                firstThumb.classList.add("active")
 
-    }
+            }
 
-},0)
+        },0)
 
     }
 
@@ -991,12 +1189,40 @@ setTimeout(() => {
 
     }
 
+    /* LOW STOCK */
+
+    if(
+
+        variant.stock > 0 &&
+        variant.stock <= 5
+
+    ){
+
+        variantMessage.innerText =
+
+        `Only ${variant.stock} left in stock`
+
+    }
+
+    /* EMI */
+
+    emiText.innerText =
+
+    `EMI starting from ₹${Math.round(
+
+        variant.price / 12
+
+    ).toLocaleString()}/month`
+
     /* UPDATE DATASETS */
 
     cartButton.dataset.variantId =
     variant._id
 
     wishlistButton.dataset.variantId =
+    variant._id
+
+    buyNowBtn.dataset.variantId =
     variant._id
 
     /* CART */
@@ -1069,10 +1295,29 @@ setTimeout(() => {
 
     }
 
-    lucide.createIcons()
+    /* URL UPDATE */
+
+    const url = new URL(window.location)
+
+    url.searchParams.set(
+
+        "variant",
+
+        variant._id
+
+    )
+
+    window.history.replaceState(
+
+        {},
+
+        "",
+
+        url
+
+    )
 
 }
-
 /* =========================================
    COLOR EVENTS
 ========================================= */
