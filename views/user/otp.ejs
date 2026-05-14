@@ -278,8 +278,9 @@ input.value = paste[i]
 /* ============================
    TIMER
 ============================ */
-
-let timeLeft = 30
+/* ============================
+   PREMIUM RESEND TIMER
+============================ */
 
 const timerText =
 document.getElementById("timerText")
@@ -287,27 +288,89 @@ document.getElementById("timerText")
 const resendBtn =
 document.getElementById("resendBtn")
 
-const timerInterval =
-setInterval(() => {
+const TIMER_DURATION = 30
 
-if (timeLeft <= 0) {
+/* UNIQUE STORAGE KEY */
 
-clearInterval(timerInterval)
+const storageKey =
+`otpTimer_${otpType}`
 
-timerText.style.display = "none"
+/* GET EXISTING TIMER */
 
-resendBtn.style.display = "block"
+let endTime =
+localStorage.getItem(storageKey)
 
-return
+/* CREATE TIMER IF NOT EXISTS */
+
+if(!endTime){
+
+    endTime =
+
+    Date.now() +
+    (TIMER_DURATION * 1000)
+
+    localStorage.setItem(
+
+        storageKey,
+
+        endTime
+
+    )
 
 }
 
-timerText.innerHTML =
-`Resend OTP in ${timeLeft}s`
+/* TIMER FUNCTION */
 
-timeLeft--
+function updateTimer(){
 
-}, 1000)
+    const now = Date.now()
+
+    const remaining =
+
+    Math.floor(
+
+        (endTime - now) / 1000
+
+    )
+
+    /* TIMER FINISHED */
+
+    if(remaining <= 0){
+
+        timerText.style.display =
+        "none"
+
+        resendBtn.style.display =
+        "inline-block"
+
+        localStorage.removeItem(
+            storageKey
+        )
+
+        return
+
+    }
+
+    /* UPDATE UI */
+
+    timerText.innerHTML =
+
+    `Resend OTP in <strong>${remaining}s</strong>`
+
+    resendBtn.style.display =
+    "none"
+
+    requestAnimationFrame(() => {
+
+        setTimeout(updateTimer, 1000)
+
+    })
+
+}
+
+/* START TIMER */
+
+updateTimer()
 
 
 
@@ -347,8 +410,21 @@ endpoint =
 
 
 
-const response =
-await axios.post(endpoint)
+const response = await axios.post(
+
+    endpoint,
+
+    otpType === "reset"
+
+    ? {
+
+        email: localStorage.getItem("resetEmail")
+
+      }
+
+    : {}
+
+)
 
 
 

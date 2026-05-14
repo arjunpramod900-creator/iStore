@@ -6,6 +6,7 @@
     <title>Verify Your Email - iStore</title>
     <link rel="stylesheet" href="/css/verify-emailpass-otp.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
@@ -73,175 +74,497 @@ method="POST">
     </main>
 
     <footer class="otp-page-footer">
-        © 2024 iStore Editorial. All rights reserved.
+        © 2026 iStore Editorial. All rights reserved.
     </footer>
 
-    <script>
-        // Lucide icons
-        lucide.createIcons();
+   <script>
 
-        // OTP Input Auto-focus Logic
-        const otpInputs = document.querySelectorAll('.otp-input-group input');
-        
-        otpInputs.forEach((input, index) => {
-            input.addEventListener('input', (e) => {
-                if (e.target.value.length === 1 && index < otpInputs.length - 1) {
-                    otpInputs[index + 1].focus();
+    /* =========================
+       LUCIDE ICONS
+    ========================= */
+
+    lucide.createIcons()
+
+
+
+    /* =========================
+       OTP INPUT AUTO FOCUS
+    ========================= */
+
+    const otpInputs =
+
+    document.querySelectorAll(
+        '.otp-input-group input'
+    )
+
+    otpInputs.forEach(
+
+        (input, index) => {
+
+            input.addEventListener(
+
+                'input',
+
+                (e) => {
+
+                    e.target.value =
+
+                    e.target.value.replace(
+                        /[^0-9]/g,
+                        ""
+                    )
+
+                    if (
+
+                        e.target.value.length === 1 &&
+
+                        index < otpInputs.length - 1
+
+                    ) {
+
+                        otpInputs[index + 1].focus()
+
+                    }
+
                 }
-            });
 
-            input.addEventListener('keydown', (e) => {
-                if (e.key === 'Backspace' && e.target.value === '' && index > 0) {
-                    otpInputs[index - 1].focus();
+            )
+
+
+
+            input.addEventListener(
+
+                'keydown',
+
+                (e) => {
+
+                    if (
+
+                        e.key === 'Backspace' &&
+
+                        e.target.value === '' &&
+
+                        index > 0
+
+                    ) {
+
+                        otpInputs[index - 1].focus()
+
+                    }
+
                 }
-            });
-        });
 
-        // Timer Logic
-        let timeLeft = 299; // 5 minutes (4:59)
-        const timerElement = document.getElementById('countdown');
+            )
 
-        const updateTimer = () => {
-            const minutes = Math.floor(timeLeft / 60);
-            const seconds = timeLeft % 60;
-            timerElement.textContent = `Code expires in ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-            
-            if (timeLeft > 0) {
-                timeLeft--;
-            } else {
-                clearInterval(timerInterval);
-                timerElement.textContent = "Code expired";
-                timerElement.style.color = "#DC2626";
+        }
+
+    )
+
+
+
+    /* =========================
+       OTP PASTE SUPPORT
+    ========================= */
+
+    otpInputs[0].addEventListener(
+
+        "paste",
+
+        (e) => {
+
+            const paste =
+
+            e.clipboardData.getData("text")
+
+            if (paste.length === 6) {
+
+                otpInputs.forEach(
+
+                    (input, i) => {
+
+                        input.value = paste[i]
+
+                    }
+
+                )
+
             }
-        };
 
-        const timerInterval = setInterval(updateTimer, 1000);
+        }
 
-        // Entrance animation
-        gsap.from(".brand-anchor", {
+    )
+
+
+
+    /* =========================
+       COMBINE OTP INPUTS
+    ========================= */
+
+    const form =
+
+    document.querySelector(".otp-form")
+
+    if (form) {
+
+        form.addEventListener(
+
+            "submit",
+
+            function () {
+
+                let otpValue = ""
+
+                otpInputs.forEach(
+
+                    input => {
+
+                        otpValue += input.value
+
+                    }
+
+                )
+
+                document.getElementById(
+
+                    "otpHidden"
+
+                ).value = otpValue
+
+            }
+
+        )
+
+    }
+
+
+
+    /* =========================
+       PREMIUM RESEND TIMER
+    ========================= */
+
+    const timerElement =
+
+    document.getElementById("countdown")
+
+    const resendLink =
+
+    document.querySelector(".resend-link")
+
+
+
+    /* FLOW */
+
+    const flow =
+
+    "<%= flow %>"
+
+
+
+    /* TIMER */
+
+    const TIMER_DURATION = 30
+
+
+
+    /* STORAGE KEY */
+
+    const storageKey =
+
+    `emailOtpTimer_${flow}`
+
+
+
+    /* GET SAVED TIMER */
+
+    let endTime =
+
+    localStorage.getItem(storageKey)
+
+
+
+    /* CREATE TIMER */
+
+    if (!endTime) {
+
+        endTime =
+
+        Date.now() +
+
+        (TIMER_DURATION * 1000)
+
+        localStorage.setItem(
+
+            storageKey,
+
+            endTime
+
+        )
+
+    }
+
+
+
+    /* UPDATE TIMER */
+
+    function updateTimer() {
+
+        const now = Date.now()
+
+        const remaining =
+
+        Math.floor(
+
+            (endTime - now) / 1000
+
+        )
+
+
+
+        /* TIMER FINISHED */
+
+        if (remaining <= 0) {
+
+            timerElement.innerHTML =
+
+            `<span style="color:#16A34A;">
+            You can resend OTP now
+            </span>`
+
+            resendLink.style.pointerEvents =
+
+            "auto"
+
+            resendLink.style.opacity =
+
+            "1"
+
+            localStorage.removeItem(
+
+                storageKey
+
+            )
+
+            return
+
+        }
+
+
+
+        /* DISABLE RESEND */
+
+        resendLink.style.pointerEvents =
+
+        "none"
+
+        resendLink.style.opacity =
+
+        "0.45"
+
+
+
+        /* UPDATE UI */
+
+        timerElement.textContent =
+
+        `Resend available in 00:${remaining
+            .toString()
+            .padStart(2, "0")}`
+
+
+
+        setTimeout(updateTimer, 1000)
+
+    }
+
+
+
+    /* START TIMER */
+
+    updateTimer()
+
+
+
+    /* =========================
+       RESEND OTP
+    ========================= */
+
+    if (resendLink) {
+
+        resendLink.addEventListener(
+
+            "click",
+
+            async (e) => {
+
+                e.preventDefault()
+
+                try {
+
+                    let endpoint = ""
+
+
+
+                    /* PASSWORD FLOW */
+
+                    if (flow === "password") {
+
+                        endpoint =
+
+                        "/send-change-password-otp"
+
+                    }
+
+
+
+                    /* EMAIL FLOW */
+
+                    else if (flow === "email") {
+
+                        endpoint =
+
+                        "/send-email-change-otp"
+
+                    }
+
+
+
+                    /* SEND REQUEST */
+
+                    await axios.post(endpoint)
+
+
+
+                    /* RESET TIMER */
+
+                    endTime =
+
+                    Date.now() +
+
+                    (TIMER_DURATION * 1000)
+
+
+
+                    localStorage.setItem(
+
+                        storageKey,
+
+                        endTime
+
+                    )
+
+
+
+                    /* RESTART TIMER */
+
+                    updateTimer()
+
+
+
+                    /* SUCCESS */
+
+                    Swal.fire({
+
+                        icon: "success",
+
+                        title: "OTP Resent",
+
+                        text: "Check your email",
+
+                        timer: 1500,
+
+                        showConfirmButton: false
+
+                    })
+
+                }
+
+                catch (error) {
+
+                    Swal.fire({
+
+                        icon: "error",
+
+                        title: "Failed",
+
+                        text:
+                        "Could not resend OTP"
+
+                    })
+
+                }
+
+            }
+
+        )
+
+    }
+
+
+
+    /* =========================
+       GSAP ANIMATIONS
+    ========================= */
+
+    gsap.from(
+
+        ".brand-anchor",
+
+        {
+
             y: -20,
+
             opacity: 0,
+
             duration: 0.8,
-            ease: "power2.out"
-        });
 
-        gsap.from(".otp-card", {
+            ease: "power2.out"
+
+        }
+
+    )
+
+
+
+    gsap.from(
+
+        ".otp-card",
+
+        {
+
             y: 30,
+
             opacity: 0,
+
             duration: 1,
+
             ease: "power3.out",
+
             delay: 0.2
-        });
 
-        gsap.from(".blur-overlay", {
+        }
+
+    )
+
+
+
+    gsap.from(
+
+        ".blur-overlay",
+
+        {
+
             opacity: 0,
+
             scale: 0.8,
+
             duration: 1.5,
+
             ease: "power2.out"
-        });
 
+        }
 
-        /* =========================
-   COMBINE OTP INPUTS
-========================= */
-const form =
-document.querySelector(".otp-form")
+    )
 
-if (form) {
-
-form.addEventListener(
-"submit",
-function () {
-
-let otpValue = ""
-
-otpInputs.forEach(
-input => {
-
-otpValue += input.value
-
-})
-
-document.getElementById(
-"otpHidden"
-).value = otpValue
-
-}
-)
-
-}
-
-
-/* =========================
-   RESEND OTP LOGIC
-========================= */
-
-/* Get flow from URL */
-
-const flow =
-"<%= flow %>"
-
-/* Select resend link */
-
-const resendLink =
-document.querySelector(".resend-link")
-
-if (resendLink) {
-
-resendLink.addEventListener(
-"click",
-
-async (e) => {
-
-e.preventDefault()
-
-try {
-
-/* Choose correct endpoint */
-
-let endpoint = ""
-
-if (flow === "password") {
-
-endpoint =
-"/send-change-password-otp"
-
-}
-
-else if (flow === "email") {
-
-endpoint =
-"/send-email-change-otp"
-
-}
-
-/* Send OTP */
-
-await axios.post(endpoint)
-
-/* Reset timer */
-
-timeLeft = 299
-
-timerElement.style.color = ""
-
-/* Success message */
-
-alert("OTP resent successfully")
-
-}
-
-catch (error) {
-
-alert("Failed to resend OTP")
-
-}
-
-}
-
-)
-
-}
-    </script>
+</script>
 </body>
 </html>

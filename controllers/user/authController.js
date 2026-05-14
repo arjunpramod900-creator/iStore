@@ -589,7 +589,7 @@ const sendForgotOTP = async (req, res) => {
 
 try {
 
-let email = req.body.email
+let email = req.body?.email
 
 
 
@@ -599,7 +599,16 @@ email =
 req.session.resetEmail
 
 }
+if (!email) {
 
+return res.status(400).json({
+
+success: false,
+message: "Email missing"
+
+})
+
+}
 
 
 const user =
@@ -705,10 +714,37 @@ try {
 const userId =
 req.session.userId
 
-const {
-newEmail,
-confirmEmail
-} = req.body
+let newEmail
+let confirmEmail
+
+/* FIRST TIME REQUEST */
+
+if(req.body && req.body.newEmail){
+
+    newEmail =
+    req.body.newEmail
+
+    confirmEmail =
+    req.body.confirmEmail
+
+    /* SAVE IN SESSION */
+
+    req.session.newEmail =
+    newEmail
+
+}
+
+/* RESEND OTP REQUEST */
+
+else{
+
+    newEmail =
+    req.session.newEmail
+
+    confirmEmail =
+    req.session.newEmail
+
+}
 
 
 
