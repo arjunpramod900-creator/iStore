@@ -10,6 +10,18 @@ import {
 
 } from "../../controllers/user/productController.js"
 
+import {
+
+    addReview
+
+} from "../../controllers/user/reviewController.js"
+
+import {
+
+    isLoggedIn
+
+} from "../../middleware/authMiddleware.js"
+
 
 
 /* ================================
@@ -35,6 +47,21 @@ router.get(
     "/products/:id",
 
     loadProductDetails
+
+)
+
+
+/* ================================
+   PRODUCT REVIEWS
+================================ */
+
+router.post(
+
+    "/review/add",
+
+    isLoggedIn,
+
+    addReview
 
 )
 

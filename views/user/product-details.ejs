@@ -512,29 +512,130 @@ data-variant-id="<%= product.variant?._id %>"
             <!-- Customer Reviews -->
             <section class="reviews-section">
                 <h3 class="bento-title">Customer Reviews</h3>
-                <div class="reviews-grid">
-                    <% (product.reviews || [
-                        { user: 'Arjun Reddy', initial: 'AR', color: '#F1DAFF', text: 'The transition to the 17 Pro has been seamless. The camera capabilities for night photography are genuinely mind-blowing. Truly a piece of art.', stars: 5 },
-                        { user: 'Meera Sharma', initial: 'MS', color: '#ECDCFF', text: 'Absolutely stunning design. The new violet finish is deep and premium. The processing power handles all my editing apps with ease.', stars: 5 }
-                    ]).forEach(review => { %>
-                        <div class="review-card">
-                            <div class="review-header">
-                                <div class="avatar" style="background-color: <%= review.color %>;">
-                                    <%= review.initial %>
-                                </div>
-                                <div class="review-info">
-                                    <h4><%= review.user %></h4>
-                                    <div class="stars">
-                                        <% for(let i=0; i<5; i++) { %>
-                                            <i data-lucide="star" fill="<%= i < review.stars ? '#EAB308' : 'none' %>" size="15"></i>
-                                        <% } %>
-                                    </div>
-                                </div>
-                            </div>
-                            <p class="review-body">"<%= review.text %>"</p>
+                <div class="review-form">
+
+    <h4>Write a Review</h4>
+
+    <form id="reviewForm">
+
+        <input
+            type="hidden"
+            id="reviewProductId"
+            value="<%= product._id %>"
+        >
+
+       
+
+        <div class="review-input-group">
+
+            <select id="reviewRating">
+
+            <option value="5">5 Stars</option>
+            <option value="4">4 Stars</option>
+            <option value="3">3 Stars</option>
+            <option value="2">2 Stars</option>
+            <option value="1">1 Star</option>
+
+            </select>
+
+            <textarea
+
+                id="reviewComment"
+
+                placeholder="Write your review"
+
+            ></textarea>
+        </div>
+
+        <button type="submit">
+
+            Submit Review
+
+        </button>
+
+    </form>
+
+</div>
+               <div class="reviews-grid">
+
+    <% if(product.reviews?.length){ %>
+
+        <% product.reviews.forEach(review => { %>
+
+            <div class="review-card">
+
+                <div class="review-header">
+
+                    <div class="avatar">
+
+                        <%= review.userId?.name
+?.split(' ')
+?.map(word => word[0])
+?.join('')
+?.slice(0,2)
+?.toUpperCase() || 'U' %>
+
+                    </div>
+
+                    <div class="review-info">
+
+                        <h4>
+
+                            <%= review.userId?.name || 'User' %>
+
+                        </h4>
+                        <p class="review-date">
+    <%= new Date(review.createdAt)
+    .toLocaleDateString("en-IN",{
+        day:"numeric",
+        month:"short",
+        year:"numeric"
+    }) %>
+</p>
+
+                        <div class="stars">
+
+                            <% for(let i = 0; i < 5; i++){ %>
+
+                                <i
+
+                                    data-lucide="star"
+
+                                    fill="<%= i < review.rating ? '#EAB308' : 'none' %>"
+
+                                    size="15"
+
+                                ></i>
+
+                            <% } %>
+
                         </div>
-                    <% }) %>
+
+                    </div>
+
                 </div>
+
+                <p class="review-body">
+
+                    "<%= review.comment %>"
+
+                </p>
+
+            </div>
+
+        <% }) %>
+
+    <% } else { %>
+
+        <p class="no-reviews">
+
+            No reviews yet
+
+        </p>
+
+    <% } %>
+
+</div>
             </section>
         </div>
     </main>
@@ -1615,6 +1716,134 @@ function closeFullscreen(){
     ""
 
 }
+</script>
+<script>
+
+document.getElementById(
+
+    "reviewForm"
+
+)?.addEventListener(
+
+    "submit",
+
+    async (e) => {
+
+        e.preventDefault()
+
+        try{
+
+            const productId =
+
+            document.getElementById(
+                "reviewProductId"
+            ).value
+
+            const rating =
+
+            document.getElementById(
+                "reviewRating"
+            ).value
+
+            const comment =
+
+            document.getElementById(
+                "reviewComment"
+            ).value
+
+            const response =
+
+            await fetch(
+
+                "/review/add",
+
+                {
+
+                    method: "POST",
+
+                    headers: {
+
+                        "Content-Type":
+                        "application/json"
+
+                    },
+
+                    body: JSON.stringify({
+
+                        productId,
+
+                        rating,
+
+                        comment
+
+                    })
+
+                }
+
+            )
+
+            const data =
+            await response.json()
+
+            if(data.success){
+
+                Swal.fire({
+
+                    icon: "success",
+
+                    title: data.message,
+
+                    confirmButtonColor:
+                    "#603763"
+
+                })
+
+                setTimeout(() => {
+
+                    location.reload()
+
+                },1000)
+
+            }
+
+            else{
+
+                Swal.fire({
+
+                    icon: "error",
+
+                    title: data.message,
+
+                    confirmButtonColor:
+                    "#603763"
+
+                })
+
+            }
+
+        }
+
+        catch(error){
+
+            console.log(error)
+
+            Swal.fire({
+
+                icon: "error",
+
+                title: "Something went wrong",
+
+                confirmButtonColor:
+                "#603763"
+
+            })
+
+        }
+
+    }
+
+)
+
 </script>
 </body>
 </html>

@@ -22,6 +22,14 @@ const reviewSchema = new mongoose.Schema({
 
     },
 
+    variantId: {
+
+        type: mongoose.Schema.Types.ObjectId,
+
+        ref: "Variant"
+
+    },
+
     rating: {
 
         type: Number,
@@ -34,11 +42,21 @@ const reviewSchema = new mongoose.Schema({
 
     },
 
-    comment: {
+    title: {
 
         type: String,
 
         trim: true
+
+    },
+
+    comment: {
+
+        type: String,
+
+        trim: true,
+
+        default: ""
 
     },
 
@@ -79,6 +97,9 @@ reviewSchema.index(
 )
 
 export default mongoose.model(
+
     "Review",
+
     reviewSchema
+
 )

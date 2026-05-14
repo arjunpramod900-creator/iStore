@@ -92,16 +92,11 @@ async (req, res) => {
 
 
 
-        if(!data.product){
+       if(!data.product){
 
-            return res.status(404).send(
+    return res.redirect("/products")
 
-                "Product Not Found"
-
-            )
-
-        }
-
+}
 
 
         res.render(

@@ -13,6 +13,9 @@ from "../../models/Wishlist.js"
 import Cart 
 from "../../models/Cart.js"
 
+import Review
+from "../../models/Review.js"
+
 
 
 /* =========================================
@@ -517,6 +520,72 @@ product.variant = defaultVariant
 
 product.variants = variants
 
+
+/* =========================================
+   REVIEWS
+========================================= */
+
+const reviews =
+
+await Review.find({
+
+    productId: product._id,
+
+    isDeleted: false
+
+})
+
+.populate(
+
+    "userId",
+
+    "name"
+
+)
+
+.sort({
+
+    createdAt: -1
+
+})
+
+.lean()
+
+/* AVERAGE RATING */
+
+const totalReviews =
+reviews.length
+
+const averageRating =
+
+totalReviews
+
+? (
+
+    reviews.reduce(
+
+        (acc, item) =>
+
+        acc + item.rating,
+
+        0
+
+    ) / totalReviews
+
+).toFixed(1)
+
+: 0
+
+/* ATTACH */
+
+product.reviews =
+reviews
+
+product.rating =
+averageRating
+
+product.reviewCount =
+totalReviews
 
 
     /* RELATED PRODUCTS */
