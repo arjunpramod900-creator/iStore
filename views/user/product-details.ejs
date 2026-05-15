@@ -294,26 +294,16 @@
 
             %>
 
-            <% uniqueRAMs.forEach(ram => { %>
+          <% uniqueRAMs.forEach(ram => { %>
 
-                <button
+    <button
+        class="ram-btn <%= product.variant.RAM.trim().toUpperCase() === ram ? 'active' : '' %>"
+        data-ram="<%= ram %>"
+    >
+        <%= ram %>
+    </button>
 
-                    class="ram-btn
-
-                   <%= product.variant.RAM.trim().toUpperCase() === ram
-? 'active'
-: ''
-%>
-
-                    data-ram="<%= ram %>"
-
-                >
-
-                    <%= ram %>
-
-                </button>
-
-            <% }) %>
+<% }) %>
 
         </div>
 
@@ -347,25 +337,16 @@
 
             %>
 
-            <% uniqueStorages.forEach(storage => { %>
+           <% uniqueStorages.forEach(storage => { %>
 
-                <button
+    <button
+        class="storage-btn <%= product.variant.storage.trim().toUpperCase() === storage ? 'active' : '' %>"
+        data-storage="<%= storage %>"
+    >
+        <%= storage %>
+    </button>
 
-                    class="storage-btn
-<%= product.variant.storage.trim().toUpperCase() === storage
-? 'active'
-: ''
-%>
-
-                    data-storage="<%= storage %>"
-
-                >
-
-                    <%= storage %>
-
-                </button>
-
-            <% }) %>
+<% }) %>
 
         </div>
 
@@ -725,6 +706,7 @@ data-variant-id="<%= product.variant?._id %>"
 
     <script src="/js/wishlist.js"></script>
 
+
 <script>
 
 /* =========================================
@@ -734,10 +716,10 @@ data-variant-id="<%= product.variant?._id %>"
 const variants =
 
 <%- JSON.stringify(
-
 product.variants.filter(v => !v.isDeleted)
-
 ) %>
+
+console.log(variants)
 
 const cartVariantIds =
 <%- JSON.stringify(cartVariantIds) %>
@@ -746,17 +728,30 @@ const wishlistVariantIds =
 <%- JSON.stringify(wishlistVariantIds) %>
 
 /* =========================================
+   NORMALIZE
+========================================= */
+
+function normalize(value){
+
+    return value
+    ?.toString()
+    ?.trim()
+    ?.toUpperCase()
+
+}
+
+/* =========================================
    CURRENT STATE
 ========================================= */
 
 let selectedColor =
-"<%= product.variant.color %>"
+normalize("<%= product.variant.color %>")
 
 let selectedRAM =
-"<%= product.variant.RAM %>"
+normalize("<%= product.variant.RAM %>")
 
 let selectedStorage =
-"<%= product.variant.storage %>"
+normalize("<%= product.variant.storage %>")
 
 /* =========================================
    ELEMENTS
@@ -799,191 +794,59 @@ document.getElementById("buyNowBtn")
    FIND BEST VARIANT
 ========================================= */
 
-function findBestVariant(
 
-    type,
 
-    value
-
-){
-
-    let variant = null
+function findBestVariant(type, value){
 
     /* =====================================
-       COLOR PRIORITY
+       COLOR CLICK
     ===================================== */
 
     if(type === "color"){
 
-        variant = variants.find(v => {
+        return variants.find(v => {
 
             return (
-
-                v.color?.trim() === value?.trim()&&
-                v.RAM?.trim().toUpperCase() ===
-selectedRAM?.trim().toUpperCase() &&
-                v.storage?.trim().toUpperCase() ===
-selectedStorage?.trim().toUpperCase()
-
+                normalize(v.color) === normalize(value)
             )
-
-        })
-
-        ||
-
-        variants.find(v => {
-
-            return (
-
-               v.color?.trim() === value?.trim() &&
-                v.RAM?.trim().toUpperCase() ===
-selectedRAM?.trim().toUpperCase()
-
-            )
-
-        })
-
-        ||
-
-        variants.find(v => {
-
-            return (
-
-                v.color?.trim() === value?.trim() &&
-                v.storage?.trim().toUpperCase() ===
-selectedStorage?.trim().toUpperCase()
-
-            )
-
-        })
-
-        ||
-
-        variants.find(v => {
-
-            return v.color?.trim() === value?.trim()
 
         })
 
     }
 
     /* =====================================
-       RAM PRIORITY
+       RAM CLICK
     ===================================== */
 
     if(type === "ram"){
 
-        variant = variants.find(v => {
+        return variants.find(v => {
 
             return (
-
-                v.RAM?.trim().toUpperCase() === value?.trim().toUpperCase() &&
-                v.color === selectedColor &&
-                v.storage?.trim().toUpperCase() ===
-selectedStorage?.trim().toUpperCase()
-
+                normalize(v.RAM) === normalize(value)
             )
-
-        })
-
-        ||
-
-        variants.find(v => {
-
-            return (
-
-                v.RAM?.trim().toUpperCase() === value?.trim().toUpperCase() &&
-                v.color === selectedColor
-
-            )
-
-        })
-
-        ||
-
-        variants.find(v => {
-
-            return (
-
-                v.RAM?.trim().toUpperCase() === value?.trim().toUpperCase() &&
-                v.storage?.trim().toUpperCase() ===
-selectedStorage?.trim().toUpperCase()
-
-            )
-
-        })
-
-        ||
-
-        variants.find(v => {
-
-            return v.RAM?.trim().toUpperCase() === value?.trim().toUpperCase()
 
         })
 
     }
 
     /* =====================================
-       STORAGE PRIORITY
+       STORAGE CLICK
     ===================================== */
 
     if(type === "storage"){
 
-        variant = variants.find(v => {
+        return variants.find(v => {
 
             return (
-
-                v.storage?.trim().toUpperCase() ===
-value?.trim().toUpperCase() &&
-                v.color === selectedColor &&
-                v.RAM?.trim().toUpperCase() ===
-selectedRAM?.trim().toUpperCase()
-
+                normalize(v.storage) === normalize(value)
             )
-
-        })
-
-        ||
-
-        variants.find(v => {
-
-            return (
-
-                v.storage?.trim().toUpperCase() ===
-value?.trim().toUpperCase() &&
-                v.color === selectedColor
-
-            )
-
-        })
-
-        ||
-
-        variants.find(v => {
-
-            return (
-
-                v.storage?.trim().toUpperCase() ===
-value?.trim().toUpperCase() &&
-                v.RAM?.trim().toUpperCase() ===
-selectedRAM?.trim().toUpperCase()
-
-            )
-
-        })
-
-        ||
-
-        variants.find(v => {
-
-            return v.storage?.trim().toUpperCase() ===
-value?.trim().toUpperCase()
 
         })
 
     }
 
-    return variant || variants[0]
+    return variants[0]
 
 }
 
@@ -1001,11 +864,8 @@ function renderThumbnails(images){
 
         `
             <button
-
                 class="thumb-btn ${index === 0 ? "active" : ""}"
-
                 onclick="changeImage('${image}', this)"
-
             >
 
                 <img
@@ -1020,9 +880,7 @@ function renderThumbnails(images){
 
 }
 
-/* =========================================
-   REFRESH OPTIONS
-========================================= */
+
 
 function refreshOptions(){
 
@@ -1035,25 +893,28 @@ function refreshOptions(){
 
             return (
 
-                v.RAM?.trim().toUpperCase() ===
-button.dataset.ram?.trim().toUpperCase() &&
+                normalize(v.RAM) ===
+                normalize(button.dataset.ram) &&
+
+                normalize(v.color) ===
+                normalize(selectedColor) &&
 
                 v.stock > 0 &&
-
                 !v.isDeleted
 
             )
 
         })
 
-        button.classList.toggle(
-            "unavailable",
-            !exists
-        )
+        // button.classList.toggle(
+        //     "unavailable",
+        //     !exists
+        // )
 
         button.classList.toggle(
             "active",
-            selectedRAM === button.dataset.ram
+            normalize(selectedRAM) ===
+            normalize(button.dataset.ram)
         )
 
     })
@@ -1067,25 +928,31 @@ button.dataset.ram?.trim().toUpperCase() &&
 
             return (
 
-                v.storage?.trim().toUpperCase() ===
-button.dataset.storage?.trim().toUpperCase() &&
+                normalize(v.storage) ===
+                normalize(button.dataset.storage) &&
+
+                normalize(v.color) ===
+                normalize(selectedColor) &&
+
+                normalize(v.RAM) ===
+                normalize(selectedRAM) &&
 
                 v.stock > 0 &&
-
                 !v.isDeleted
 
             )
 
         })
 
-        button.classList.toggle(
-            "unavailable",
-            !exists
-        )
+        // button.classList.toggle(
+        //     "unavailable",
+        //     !exists
+        // )
 
         button.classList.toggle(
             "active",
-            selectedStorage === button.dataset.storage
+            normalize(selectedStorage) ===
+            normalize(button.dataset.storage)
         )
 
     })
@@ -1099,52 +966,47 @@ button.dataset.storage?.trim().toUpperCase() &&
 
             return (
 
-                v.color?.trim() ===
-                button.dataset.color?.trim() &&
+                normalize(v.color) ===
+                normalize(button.dataset.color) &&
 
                 v.stock > 0 &&
-
                 !v.isDeleted
 
             )
 
         })
 
-        button.classList.toggle(
-            "unavailable",
-            !exists
-        )
+        // button.classList.toggle(
+        //     "unavailable",
+        //     !exists
+        // )
 
         button.classList.toggle(
             "active",
-            selectedColor === button.dataset.color
+            normalize(selectedColor) ===
+            normalize(button.dataset.color)
         )
 
     })
 
 }
+
 /* =========================================
    UPDATE UI
 ========================================= */
 
 function updateVariantUI(variant){
 
-    /* UPDATE STATE FIRST */
-
     selectedColor =
-    variant.color
+    normalize(variant.color)
 
     selectedRAM =
-    variant.RAM
+    normalize(variant.RAM)
 
     selectedStorage =
-    variant.storage
-
-    /* REFRESH OPTIONS */
+    normalize(variant.storage)
 
     refreshOptions()
-
-    /* MESSAGE */
 
     variantMessage.innerText = ""
 
@@ -1153,7 +1015,7 @@ function updateVariantUI(variant){
     priceElement.innerText =
     `₹${variant.price.toLocaleString()}`
 
-    /* COMPARE PRICE + DISCOUNT */
+    /* COMPARE PRICE */
 
     if(
 
@@ -1164,16 +1026,11 @@ function updateVariantUI(variant){
 
     ){
 
-        /* COMPARE PRICE */
-
         comparePriceElement.innerText =
-
         `₹${variant.comparePrice.toLocaleString()}`
 
         comparePriceElement.style.display =
         "inline-flex"
-
-        /* DISCOUNT */
 
         const discountPercentage =
 
@@ -1187,7 +1044,6 @@ function updateVariantUI(variant){
         )
 
         discountBadge.innerText =
-
         `${discountPercentage}% OFF`
 
         discountBadge.style.display =
@@ -1195,23 +1051,13 @@ function updateVariantUI(variant){
 
     }
 
-    /* HIDE IF NO DISCOUNT */
-
     else{
 
-        if(comparePriceElement){
+        comparePriceElement.style.display =
+        "none"
 
-            comparePriceElement.style.display =
-            "none"
-
-        }
-
-        if(discountBadge){
-
-            discountBadge.style.display =
-            "none"
-
-        }
+        discountBadge.style.display =
+        "none"
 
     }
 
@@ -1219,48 +1065,12 @@ function updateVariantUI(variant){
 
     if(variant.images?.length){
 
-        gsap.to(mainImage, {
-
-            opacity: 0,
-
-            duration: 0.15,
-
-            onComplete: () => {
-
-                mainImage.src =
-
-                variant.images?.[0]
-
-                || "<%= product.thumbnail %>"
-
-                gsap.to(mainImage, {
-
-                    opacity: 1,
-
-                    duration: 0.3
-
-                })
-
-            }
-
-        })
+        mainImage.src =
+        variant.images[0]
 
         renderThumbnails(
             variant.images
         )
-
-        setTimeout(() => {
-
-            const firstThumb =
-            document.querySelector(".thumb-btn")
-
-            if(firstThumb){
-
-                firstThumb.classList.add("active")
-
-            }
-
-        },0)
 
     }
 
@@ -1300,7 +1110,6 @@ function updateVariantUI(variant){
     ){
 
         variantMessage.innerText =
-
         `Only ${variant.stock} left in stock`
 
     }
@@ -1310,12 +1119,10 @@ function updateVariantUI(variant){
     emiText.innerText =
 
     `EMI starting from ₹${Math.round(
-
         variant.price / 12
-
     ).toLocaleString()}/month`
 
-    /* UPDATE DATASETS */
+    /* DATASETS */
 
     cartButton.dataset.variantId =
     variant._id
@@ -1326,99 +1133,8 @@ function updateVariantUI(variant){
     buyNowBtn.dataset.variantId =
     variant._id
 
-    /* CART */
-
-    if(
-
-        cartVariantIds.includes(
-            variant._id.toString()
-        )
-
-    ){
-
-        cartButton.classList.add(
-            "added"
-        )
-
-        cartButton.innerHTML =
-
-        `
-            <i
-                data-lucide="shopping-bag"
-                size="18"
-            ></i>
-
-            Go to Cart
-        `
-
-    }
-
-    else{
-
-        cartButton.classList.remove(
-            "added"
-        )
-
-        cartButton.innerHTML =
-
-        `
-            <i
-                data-lucide="shopping-cart"
-                size="18"
-            ></i>
-
-            Add to Cart
-        `
-
-    }
-
-    /* WISHLIST */
-
-    if(
-
-        wishlistVariantIds.includes(
-            variant._id.toString()
-        )
-
-    ){
-
-        wishlistButton.classList.add(
-            "active"
-        )
-
-    }
-
-    else{
-
-        wishlistButton.classList.remove(
-            "active"
-        )
-
-    }
-
-    /* URL UPDATE */
-
-    const url = new URL(window.location)
-
-    url.searchParams.set(
-
-        "variant",
-
-        variant._id
-
-    )
-
-    window.history.replaceState(
-
-        {},
-
-        "",
-
-        url
-
-    )
-
 }
+
 /* =========================================
    COLOR EVENTS
 ========================================= */
@@ -1428,14 +1144,10 @@ document.querySelectorAll(".color-btn")
 
     button.addEventListener("click", () => {
 
-
         const variant =
         findBestVariant(
-
             "color",
-
             button.dataset.color
-
         )
 
         updateVariantUI(variant)
@@ -1455,11 +1167,8 @@ document.querySelectorAll(".ram-btn")
 
         const variant =
         findBestVariant(
-
             "ram",
-
             button.dataset.ram
-
         )
 
         updateVariantUI(variant)
@@ -1477,14 +1186,10 @@ document.querySelectorAll(".storage-btn")
 
     button.addEventListener("click", () => {
 
-
         const variant =
         findBestVariant(
-
             "storage",
-
             button.dataset.storage
-
         )
 
         updateVariantUI(variant)

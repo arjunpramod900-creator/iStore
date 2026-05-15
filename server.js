@@ -35,6 +35,8 @@ import categoryRoutes from "./routes/admin/categoryRoutes.js"
 
 
 
+
+
 const app = express()
 
 
@@ -172,15 +174,15 @@ PROTECTED HOME ROUTE
 ================================ */
 
 app.get(
-  
+
   "/",
-  
-  (req, res) => {
-    
+
+   (req, res) => {
+   
     res.render("user/home")
-    
+
   }
-  
+
 )
 
 

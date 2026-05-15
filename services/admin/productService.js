@@ -22,6 +22,19 @@ uploadImage
 }
 from "../../utils/uploadToCloudinary.js"
 
+/* ============================
+   NORMALIZE VARIANT VALUES
+============================ */
+
+const normalizeVariantValue = (value) => {
+
+return value
+?.toString()
+?.trim()
+?.toUpperCase()
+
+}
+
 
 
 /* ============================
@@ -320,9 +333,9 @@ export const createProductService = async (data) => {
   const variantDataForValidation = {
     productId: "placeholder",   // real _id not available yet, just for schema check
     SKU:               body.SKU,
-    storage:           body.storage,
-    color:             body.color,
-    RAM:               body.RAM,
+    storage: normalizeVariantValue(body.storage),
+color: normalizeVariantValue(body.color),
+RAM: normalizeVariantValue(body.RAM),
     stock: Number(body.stock),
 
 price: Number(body.price),
@@ -403,9 +416,9 @@ Number(body.comparePrice) > Number(body.price)
   await Variant.create({
     productId:         product._id,
     SKU:               body.SKU,
-    storage:           body.storage,
-    color:             body.color,
-    RAM:               body.RAM,
+   storage: normalizeVariantValue(body.storage),
+color: normalizeVariantValue(body.color),
+RAM: normalizeVariantValue(body.RAM),
     stock:             body.stock,
     price:             body.price,
     comparePrice:      body.comparePrice,
@@ -542,11 +555,11 @@ productId
 
 SKU: body.SKU,
 
-storage: body.storage,
+storage: normalizeVariantValue(body.storage),
 
-color: body.color,
+color: normalizeVariantValue(body.color),
 
-RAM: body.RAM,
+RAM: normalizeVariantValue(body.RAM),
 
 stock: body.stock,
 
@@ -995,13 +1008,13 @@ SKU:
 body.SKU,
 
 storage:
-body.storage,
+normalizeVariantValue(body.storage),
 
 color:
-body.color,
+normalizeVariantValue(body.color),
 
 RAM:
-body.RAM,
+normalizeVariantValue(body.RAM),
 
 stock: Number(body.stock),
 
@@ -1227,13 +1240,13 @@ SKU:
 body.SKU,
 
 storage:
-body.storage,
+normalizeVariantValue(body.storage),
 
 color:
-body.color,
+normalizeVariantValue(body.color),
 
 RAM:
-body.RAM,
+normalizeVariantValue(body.RAM),
 
 stock:
 body.stock,

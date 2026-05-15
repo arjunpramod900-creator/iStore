@@ -39,7 +39,7 @@ res.render("user/forgot-password")
 
 
 
-/* 🔐 Secure Reset Page */
+/*  Secure Reset Page */
 
 const loadResetPassword = (req, res) => {
 

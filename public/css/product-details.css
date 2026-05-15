@@ -547,23 +547,27 @@ body {
 
 .storage-btn.disabled{
 
-    opacity: 0.35;
+    opacity: 0.55;
 
-    cursor: not-allowed;
+    cursor: pointer;
 
-    text-decoration: line-through;
+    text-decoration: none;
+
+    pointer-events: auto;
 
 }
 
 .unavailable{
 
-    opacity: 0.35;
+    opacity: 0.55;
 
-    filter: grayscale(1);
+    filter: grayscale(0.2);
 
-    cursor: not-allowed;
+    cursor: pointer;
 
     position: relative;
+
+    pointer-events: auto;
 
 }
 
@@ -1599,4 +1603,26 @@ body {
 
     }
 
+}
+
+
+
+.info-column{
+    position: relative;
+    z-index: 50;
+}
+
+.ram-options,
+.storage-options,
+.color-options{
+    position: relative;
+    z-index: 60;
+}
+
+.ram-btn,
+.storage-btn,
+.color-btn{
+    position: relative;
+    z-index: 70;
+    pointer-events: auto;
 }
