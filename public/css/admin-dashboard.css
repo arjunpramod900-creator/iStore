@@ -40,9 +40,8 @@ body {
 
 /* MAIN DASHBOARD LAYOUT */
 .dashboard-main {
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 32px;
+    flex: 1;
+    padding: 40px 32px 64px;
     display: flex;
     flex-direction: column;
     gap: 40px;

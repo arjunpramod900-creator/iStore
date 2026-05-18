@@ -1,0 +1,285 @@
+<!-- ============================================================
+     ADMIN SIDEBAR  |  views/partials/admin/sidebar.ejs
+     All sidebar HTML, toggle button, overlay, and JS live here.
+     Pass `page` variable from the controller for active states.
+============================================================ -->
+
+<!-- ── MOBILE / TABLET OVERLAY BACKDROP ── -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<aside class="admin-sidebar" id="adminSidebar">
+
+    <!-- ── BRAND ── -->
+    <div class="sidebar-brand">
+        <div class="brand-row">
+            <div class="brand-logo">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                    <rect width="32" height="32" rx="8" fill="rgba(255,214,252,0.15)"/>
+                    <path d="M16 7C13.2386 7 11 9.23858 11 12C11 13.5931 11.7423 15.0091 12.9 15.9286C11.1435 16.8474 10 18.7057 10 20.8333C10 21.4777 10.5223 22 11.1667 22H20.8333C21.4777 22 22 21.4777 22 20.8333C22 18.7057 20.8565 16.8474 19.1 15.9286C20.2577 15.0091 21 13.5931 21 12C21 9.23858 18.7614 7 16 7Z" fill="#FFD6FC"/>
+                </svg>
+            </div>
+            <div class="brand-text">
+                <span class="brand-title">iStore Admin</span>
+                <span class="brand-sub">PREMIUM MANAGEMENT</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── NAV ── -->
+    <nav class="sidebar-nav">
+
+        <!-- GENERAL -->
+        <div class="nav-section">
+            <span class="nav-section-label">General</span>
+            <div class="nav-links">
+
+                <a href="/admin/dashboard"
+                   class="nav-link <%= page === 'dashboard' ? 'active' : '' %>"
+                   id="nav-dashboard">
+                    <span class="nav-icon">
+                        <i data-lucide="layout-dashboard" size="15"></i>
+                    </span>
+                    <span class="nav-text">Dashboard</span>
+                </a>
+
+                <a href="#"
+                   class="nav-link <%= page === 'reports' ? 'active' : '' %>"
+                   id="nav-reports">
+                    <span class="nav-icon">
+                        <i data-lucide="bar-chart-2" size="15"></i>
+                    </span>
+                    <span class="nav-text">Reports</span>
+                </a>
+
+            </div>
+        </div>
+
+        <!-- MANAGEMENT (includes Offers + Coupons) -->
+        <div class="nav-section">
+            <span class="nav-section-label">Management</span>
+            <div class="nav-links">
+
+                <a href="/admin/products"
+                   class="nav-link <%= page === 'products' ? 'active' : '' %>"
+                   id="nav-products">
+                    <span class="nav-icon">
+                        <i data-lucide="package" size="15"></i>
+                    </span>
+                    <span class="nav-text">Products</span>
+                </a>
+
+                <a href="/admin/categories"
+                   class="nav-link <%= page === 'categories' ? 'active' : '' %>"
+                   id="nav-categories">
+                    <span class="nav-icon">
+                        <i data-lucide="tag" size="15"></i>
+                    </span>
+                    <span class="nav-text">Categories</span>
+                </a>
+
+                <a href="#"
+                   class="nav-link <%= page === 'orders' ? 'active' : '' %>"
+                   id="nav-orders">
+                    <span class="nav-icon">
+                        <i data-lucide="shopping-bag" size="15"></i>
+                    </span>
+                    <span class="nav-text">Orders</span>
+                </a>
+
+                <a href="/admin/users"
+                   class="nav-link <%= page === 'users' ? 'active' : '' %>"
+                   id="nav-users">
+                    <span class="nav-icon">
+                        <i data-lucide="users" size="15"></i>
+                    </span>
+                    <span class="nav-text">Users</span>
+                </a>
+
+                <a href="#"
+                   class="nav-link <%= page === 'offers' ? 'active' : '' %>"
+                   id="nav-offers">
+                    <span class="nav-icon">
+                        <i data-lucide="percent" size="15"></i>
+                    </span>
+                    <span class="nav-text">Offers</span>
+                </a>
+
+                <a href="#"
+                   class="nav-link <%= page === 'coupons' ? 'active' : '' %>"
+                   id="nav-coupons">
+                    <span class="nav-icon">
+                        <i data-lucide="ticket" size="15"></i>
+                    </span>
+                    <span class="nav-text">Coupons</span>
+                </a>
+
+            </div>
+        </div>
+
+        <!-- SYSTEM -->
+        <div class="nav-section">
+            <span class="nav-section-label">System</span>
+            <div class="nav-links">
+
+                <a href="#"
+                   class="nav-link <%= page === 'settings' ? 'active' : '' %>"
+                   id="nav-settings">
+                    <span class="nav-icon">
+                        <i data-lucide="settings" size="15"></i>
+                    </span>
+                    <span class="nav-text">Settings</span>
+                </a>
+
+            </div>
+        </div>
+
+    </nav>
+
+    <!-- ── FOOTER: Logout on top, Profile below ── -->
+    <div class="sidebar-footer">
+
+        <!-- Logout (above profile card) -->
+        <a href="/admin/logout" class="sidebar-logout" id="btn-logout">
+            <span class="nav-icon">
+                <i data-lucide="log-out" size="15"></i>
+            </span>
+            <span class="logout-text">Logout</span>
+        </a>
+
+        <!-- Profile Card (below logout) -->
+        <div class="profile-card">
+            <div class="profile-avatar">
+                <i data-lucide="user" size="15" color="#FFD6FC"></i>
+            </div>
+            <div class="profile-info">
+                <span class="profile-name">Arjun Pramod</span>
+                <span class="profile-role">Admin</span>
+            </div>
+        </div>
+
+    </div>
+
+</aside>
+
+<!-- ── SIDEBAR TOGGLE BUTTON ──
+     Desktop: chevron tab anchored to sidebar right edge.
+     Mobile:  hamburger pill at top-left corner.
+     Both icons live here; CSS shows/hides the right one.
+-->
+<button class="sidebar-toggle-btn" id="sidebarToggleBtn"
+        title="Toggle Sidebar" aria-label="Toggle Sidebar">
+    <!-- Chevron icon (desktop only) -->
+    <svg class="toggle-icon icon-chevron"
+         viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" stroke-width="2.2"
+         stroke-linecap="round" stroke-linejoin="round"
+         aria-hidden="true">
+        <polyline points="15 18 9 12 15 6"></polyline>
+    </svg>
+    <!-- Hamburger icon (mobile/tablet only) -->
+    <svg class="toggle-icon icon-hamburger"
+         viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" stroke-width="2.2"
+         stroke-linecap="round" stroke-linejoin="round"
+         aria-hidden="true">
+        <line x1="3" y1="6"  x2="21" y2="6"></line>
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+</button>
+
+<!-- ============================================================
+     SIDEBAR JAVASCRIPT
+     All sidebar toggle logic lives here so sidebar.ejs is
+     the single source of truth for sidebar behaviour.
+============================================================ -->
+<script>
+(function () {
+    'use strict';
+
+    /* ── Config ── */
+    var STORAGE_KEY = 'istore_sidebar_state';
+    var MOBILE_BP   = 1024;   /* px — below this = overlay/drawer mode */
+
+    /* ── Elements ── */
+    var btn     = document.getElementById('sidebarToggleBtn');
+    var overlay = document.getElementById('sidebarOverlay');
+    var body    = document.body;
+
+    /* ─────────────────────────────────────────────────
+       isMobile()
+       Returns true when viewport width ≤ MOBILE_BP.
+    ───────────────────────────────────────────────── */
+    function isMobile() {
+        return window.innerWidth <= MOBILE_BP;
+    }
+
+    /* ─────────────────────────────────────────────────
+       applyInitialState()
+       Called on load and on every resize.
+       Desktop : honours localStorage collapsed pref.
+       Mobile  : always starts closed (drawer hidden).
+    ───────────────────────────────────────────────── */
+    function applyInitialState() {
+        if (isMobile()) {
+            /* Mobile/tablet — always start closed */
+            body.classList.remove('sidebar-collapsed');
+            body.classList.remove('sidebar-open');
+        } else {
+            /* Desktop — restore saved preference */
+            body.classList.remove('sidebar-open');
+            if (localStorage.getItem(STORAGE_KEY) === 'collapsed') {
+                body.classList.add('sidebar-collapsed');
+            } else {
+                body.classList.remove('sidebar-collapsed');
+            }
+        }
+    }
+
+    /* ─────────────────────────────────────────────────
+       toggle()
+       Desktop : toggles sidebar-collapsed on <body>.
+       Mobile  : toggles sidebar-open on <body>.
+    ───────────────────────────────────────────────── */
+    function toggle() {
+        if (isMobile()) {
+            body.classList.toggle('sidebar-open');
+            body.classList.remove('sidebar-collapsed');
+        } else {
+            var collapsed = body.classList.toggle('sidebar-collapsed');
+            body.classList.remove('sidebar-open');
+            try {
+                localStorage.setItem(STORAGE_KEY, collapsed ? 'collapsed' : 'open');
+            } catch (e) { /* storage blocked — ignore */ }
+        }
+    }
+
+    /* ─────────────────────────────────────────────────
+       closeDrawer()
+       Closes mobile drawer (overlay tap or Escape key).
+    ───────────────────────────────────────────────── */
+    function closeDrawer() {
+        body.classList.remove('sidebar-open');
+    }
+
+    /* ── Wire up events ── */
+    btn.addEventListener('click', toggle);
+    overlay.addEventListener('click', closeDrawer);
+
+    /* Escape key closes mobile drawer */
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && isMobile()) closeDrawer();
+    });
+
+    /* Re-evaluate mode on resize (handles orientation change) */
+    var resizeTimer;
+    window.addEventListener('resize', function () {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(applyInitialState, 120);
+    });
+
+    /* ── Apply immediately on page load ── */
+    applyInitialState();
+
+}());
+</script>

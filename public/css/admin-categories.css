@@ -30,9 +30,8 @@ body {
 }
 
 .dashboard-main {
-    padding: 96px 32px 64px;
-    max-width: 1280px;
-    margin: 0 auto;
+    flex: 1;
+    padding: 40px 32px 64px;
     display: flex;
     flex-direction: column;
     gap: 40px;

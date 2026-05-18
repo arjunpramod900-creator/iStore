@@ -1,0 +1,634 @@
+/* ============================================================
+   ADMIN SIDEBAR CSS  |  admin-sidebar.css
+   Replaces admin-header.css on every admin page.
+   Provides the full-page layout: sidebar + content area.
+============================================================ */
+
+/* ── GLOBAL RESET ── */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --sidebar-w: 256px;
+
+    /* Sidebar palette */
+    --sb-bg-from:        rgba(46, 15, 47, 0.97);
+    --sb-bg-to:          rgba(46, 15, 47, 0.93);
+    --sb-border:         rgba(255, 255, 255, 0.08);
+    --sb-section-label:  rgba(255, 255, 255, 0.30);
+    --sb-link-idle:      rgba(255, 255, 255, 0.60);
+    --sb-link-active-bg: rgba(255, 255, 255, 0.10);
+    --sb-link-active-tx: #FFFFFF;
+    --sb-icon-idle:      rgba(255, 255, 255, 0.60);
+    --sb-hover-bg:       rgba(255, 255, 255, 0.06);
+
+    /* Global page */
+    --bg-main:      #F5F5F7;
+    --text-primary: #2C1421;
+    --text-accent:  #701A75;
+    --text-purple:  #603763;
+    --border-color: rgba(127, 116, 125, 0.15);
+    --card-shadow:  0px 4px 40px rgba(46, 15, 47, 0.04);
+    --card-radius:  14px;
+    --transition:   all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+    --success:      #10B981;
+    --success-text: #059669;
+    --danger:       #EF4444;
+    --danger-text:  #BA1A1A;
+    --warning:      #F59E0B;
+    --white:        #FFFFFF;
+    --text-secondary: #4D444C;
+    --text-muted:   #A1A1AA;
+}
+
+html, body {
+    min-height: 100%;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg-main);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+}
+
+/* ── PAGE SHELL ──
+   Using padding-left on body so the sidebar offset always works
+   regardless of whether body gets display:flex from page CSS.  */
+body {
+    display: flex !important;
+    min-height: 100vh;
+    padding-left: var(--sidebar-w);
+}
+
+/* ============================================================
+   SIDEBAR
+============================================================ */
+.admin-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: var(--sidebar-w);
+    height: 100vh;
+    background: linear-gradient(180deg, var(--sb-bg-from) 0%, var(--sb-bg-to) 100%);
+    border-right: 1px solid var(--sb-border);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    z-index: 200;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+}
+
+.admin-main{
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+/* Subtle scrollbar inside sidebar */
+.admin-sidebar::-webkit-scrollbar { width: 3px; }
+.admin-sidebar::-webkit-scrollbar-track { background: transparent; }
+.admin-sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 9999px; }
+
+/* ── BRAND ── */
+.sidebar-brand {
+    padding: 32px 24px 24px;
+    flex-shrink: 0;
+}
+
+.brand-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.brand-logo {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.brand-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.brand-title {
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: #FFFFFF;
+    line-height: 1.4;
+}
+
+.brand-sub {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.50);
+    line-height: 1.5;
+}
+
+/* ── NAV ── */
+/*
+ * GUARD RULES — page-specific CSS files contain legacy rules like
+ * `.nav-links { display: none }` inside mobile media queries
+ * (old header-nav hide patterns). These !important overrides ensure
+ * the sidebar nav is ALWAYS visible regardless of load order.
+ */
+.admin-sidebar .nav-links { display: flex !important; }
+.admin-sidebar .nav-link  { display: flex !important; }
+.admin-sidebar .nav-text  { display: block !important; opacity: 1 !important; }
+.admin-sidebar .nav-icon  { display: flex !important; }
+
+.sidebar-nav {
+    flex: 1;
+    padding: 0 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    overflow-y: auto;
+}
+
+.sidebar-nav::-webkit-scrollbar { display: none; }
+
+.nav-section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.nav-section-label {
+    display: block;
+    padding: 0 16px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--sb-section-label);
+}
+
+.nav-links {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/* ── NAV LINK ── */
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding: 10px 16px;
+    border-radius: 12px;
+    text-decoration: none;
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+}
+
+.nav-link::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--sb-hover-bg);
+    opacity: 0;
+    border-radius: 12px;
+    transition: opacity 0.2s ease;
+}
+
+.nav-link:hover::before { opacity: 1; }
+
+.nav-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 15px;
+    height: 15px;
+    margin-right: 12px;
+    flex-shrink: 0;
+    color: var(--sb-icon-idle);
+    transition: color 0.2s ease;
+}
+
+.nav-icon svg { width: 15px; height: 15px; }
+
+.nav-text {
+    font-size: 12px;
+    font-weight: 300;
+    letter-spacing: 0.6px;
+    color: var(--sb-link-idle);
+    transition: color 0.2s ease, font-weight 0.2s ease;
+}
+
+.nav-link:hover .nav-text  { color: #FFFFFF; font-weight: 400; }
+.nav-link:hover .nav-icon  { color: #FFFFFF; }
+
+/* ── ACTIVE STATE ── */
+.nav-link.active {
+    background: var(--sb-link-active-bg);
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.10);
+}
+
+.nav-link.active .nav-text  {
+    color: var(--sb-link-active-tx);
+    font-weight: 600;
+}
+
+.nav-link.active .nav-icon  { color: #FFFFFF; }
+.nav-link.active::before    { opacity: 0 !important; }
+
+/* ── SIDEBAR FOOTER ── */
+.sidebar-footer {
+    padding: 32px 16px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex-shrink: 0;
+    padding-bottom: 24px;
+}
+
+/* Profile card */
+.profile-card {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+}
+
+.profile-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 9999px;
+    background: rgba(255, 214, 252, 0.20);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.profile-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.profile-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #FFFFFF;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.profile-role {
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.40);
+}
+
+/* Logout button */
+.sidebar-logout {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 12px 20px;
+    border-radius: 12px;
+    text-decoration: none;
+    transition: var(--transition);
+    gap: 0;
+}
+
+.sidebar-logout .nav-icon {
+    color: rgba(255, 255, 255, 0.60);
+    margin-right: 12px;
+}
+
+.logout-text {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.60);
+    transition: color 0.2s ease;
+}
+
+.sidebar-logout:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.sidebar-logout:hover .nav-icon,
+.sidebar-logout:hover .logout-text {
+    color: #FF6B6B;
+}
+
+/* ============================================================
+   PAGE CONTENT AREA
+   Every page's <main> should use class="admin-main"
+============================================================ */
+.admin-main,
+body > main.admin-main,
+body .admin-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+body{
+    overflow-y: auto;
+}
+/* ============================================================
+   OVERLAY BACKDROP  (shown on tablet & mobile)
+   Sits between content and the open drawer.
+============================================================ */
+.sidebar-overlay {
+    display: none;            /* hidden on desktop */
+    position: fixed;
+    inset: 0;
+    z-index: 190;             /* below sidebar (200) above content */
+    background: rgba(20, 8, 20, 0.52);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+/* ============================================================
+   SIDEBAR TRANSITIONS  (always-on so animation fires)
+============================================================ */
+.admin-sidebar {
+    transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body {
+    transition: padding-left 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================================================
+   TOGGLE BUTTON — BASE (desktop: chevron tab at sidebar edge)
+============================================================ */
+.sidebar-toggle-btn {
+    position: fixed;
+    top: 50%;
+    left: var(--sidebar-w);
+    transform: translateY(-50%) translateX(-50%);
+    z-index: 300;
+
+    width: 28px;
+    height: 48px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+
+    background: linear-gradient(180deg,
+        rgba(46, 15, 47, 0.98) 0%,
+        rgba(46, 15, 47, 0.94) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-left: none;
+    border-radius: 0 10px 10px 0;
+
+    cursor: pointer;
+    outline: none;
+
+    box-shadow: 4px 0 18px rgba(46, 15, 47, 0.22);
+
+    transition:
+        left       0.32s cubic-bezier(0.4, 0, 0.2, 1),
+        background 0.2s  ease,
+        box-shadow 0.2s  ease;
+}
+
+.sidebar-toggle-btn:hover {
+    background: linear-gradient(180deg,
+        rgba(64, 22, 66, 1) 0%,
+        rgba(52, 18, 54, 1) 100%);
+    box-shadow: 6px 0 26px rgba(46, 15, 47, 0.30);
+}
+
+/* Icon sizing shared */
+.sidebar-toggle-btn .toggle-icon {
+    width: 15px;
+    height: 15px;
+    color: rgba(255, 255, 255, 0.78);
+    flex-shrink: 0;
+    transition:
+        transform 0.32s cubic-bezier(0.4, 0, 0.2, 1),
+        color      0.2s  ease;
+}
+
+.sidebar-toggle-btn:hover .toggle-icon { color: #FFFFFF; }
+
+/* Desktop shows chevron, hides hamburger */
+.sidebar-toggle-btn .icon-chevron    { display: block; }
+.sidebar-toggle-btn .icon-hamburger  { display: none;  }
+
+/* ============================================================
+   DESKTOP COLLAPSED STATE — body.sidebar-collapsed
+   (Only applies above MOBILE_BP = 1024px)
+============================================================ */
+body.sidebar-collapsed .admin-sidebar {
+    transform: translateX(calc(-1 * var(--sidebar-w)));
+}
+
+body.sidebar-collapsed {
+    padding-left: 0 !important;
+}
+
+/* Button moves to left screen edge */
+body.sidebar-collapsed .sidebar-toggle-btn {
+    left: 14px;
+}
+
+/* Flip chevron to point right */
+body.sidebar-collapsed .sidebar-toggle-btn .icon-chevron {
+    transform: rotate(180deg);
+}
+
+/* ============================================================
+   TABLET & MOBILE  ≤ 1024px
+   Sidebar becomes a full-height overlay drawer.
+   Always starts closed; body.sidebar-open slides it in.
+============================================================ */
+@media (max-width: 1024px) {
+
+    /* No content offset on mobile — sidebar is an overlay */
+    body,
+    body.sidebar-collapsed {
+        padding-left: 0 !important;
+    }
+
+    /* Sidebar hidden by default, slides in on sidebar-open */
+    .admin-sidebar {
+        transform: translateX(-100%);
+        height: 100dvh;          /* dynamic viewport height for mobile chrome */
+        z-index: 200;
+    }
+
+    body.sidebar-open .admin-sidebar {
+        transform: translateX(0);
+    }
+
+    /* Show overlay */
+    .sidebar-overlay {
+        display: block;
+    }
+
+    body.sidebar-open .sidebar-overlay {
+        opacity: 1;
+        pointer-events: all;
+    }
+
+    /* ── Toggle button → hamburger pill at top-left ── */
+    .sidebar-toggle-btn {
+        top: 14px;
+        left: 14px;
+        transform: none;          /* no translateX centering needed */
+
+        width: 44px;
+        height: 44px;
+
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.12); /* all four sides */
+        border-left: 1px solid rgba(255, 255, 255, 0.12);
+
+        box-shadow: 0 4px 16px rgba(46, 15, 47, 0.24);
+    }
+
+    /* Show hamburger, hide chevron */
+    .sidebar-toggle-btn .icon-chevron   { display: none;  }
+    .sidebar-toggle-btn .icon-hamburger { display: block; }
+
+    /* When drawer is open, keep button visible but shift it to just
+       outside the sidebar so it acts as a "close" trigger */
+    body.sidebar-open .sidebar-toggle-btn {
+        left: calc(var(--sidebar-w) + 10px);
+        border-radius: 12px;
+    }
+
+    /* Spin hamburger into an X when open */
+    body.sidebar-open .sidebar-toggle-btn .icon-hamburger {
+        transform: rotate(90deg);
+        opacity: 0.7;
+    }
+
+    /* Content needs top padding so hamburger button
+       doesn't overlap the page heading */
+    .admin-main,
+    body > main.admin-main,
+    body .admin-main {
+        padding-top: 72px;
+    }
+
+    /* Ignore desktop collapsed class on mobile */
+    body.sidebar-collapsed .admin-sidebar {
+        transform: translateX(-100%);
+    }
+
+    body.sidebar-collapsed .sidebar-toggle-btn {
+        left: 14px;
+    }
+
+    body.sidebar-collapsed .sidebar-toggle-btn .icon-chevron {
+        transform: none;
+    }
+}
+
+/* ============================================================
+   SMALL MOBILE  ≤ 480px
+   Sidebar takes min(256px, 85vw) so it never full-bleeds.
+============================================================ */
+@media (max-width: 480px) {
+    .admin-sidebar {
+        width: min(var(--sidebar-w), 85vw);
+    }
+
+    body.sidebar-open .sidebar-toggle-btn {
+        left: calc(min(var(--sidebar-w), 85vw) + 8px);
+    }
+}
+
+
+/* ============================================================
+   SWEET ALERT PREMIUM THEME (shared across all admin pages)
+============================================================ */
+.swal2-popup {
+    border-radius: 24px !important;
+    background: rgba(255, 255, 255, 0.88) !important;
+    backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(208, 195, 204, 0.18) !important;
+    box-shadow: 0px 40px 80px rgba(46, 15, 47, 0.12) !important;
+    padding: 28px !important;
+    font-family: 'Inter', sans-serif !important;
+}
+
+.swal2-title {
+    color: #2C1421 !important;
+    font-size: 24px !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.5px !important;
+}
+
+.swal2-html-container {
+    color: #6B7280 !important;
+    font-size: 15px !important;
+    font-weight: 500 !important;
+}
+
+.swal2-confirm {
+    background: linear-gradient(135deg, #603763 0%, #7A4E7C 100%) !important;
+    border-radius: 14px !important;
+    padding: 12px 24px !important;
+    font-weight: 600 !important;
+    box-shadow: 0px 10px 30px rgba(96, 55, 99, 0.25) !important;
+}
+
+.swal2-cancel {
+    background: #F4F4F5 !important;
+    color: #4D444C !important;
+    border-radius: 14px !important;
+    padding: 12px 24px !important;
+    font-weight: 600 !important;
+}
+
+.swal2-toast {
+    background: rgba(255, 255, 255, 0.82) !important;
+    backdrop-filter: blur(18px) !important;
+    border: 1px solid rgba(208, 195, 204, 0.16) !important;
+    border-radius: 18px !important;
+    padding: 14px 18px !important;
+    box-shadow: 0px 20px 40px rgba(46, 15, 47, 0.12) !important;
+}
+
+.swal2-toast .swal2-title {
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    color: #2C1421 !important;
+}
+
+.swal2-success-ring { border-color: rgba(96, 55, 99, 0.18) !important; }
+.swal2-success-line-tip,
+.swal2-success-line-long { background-color: #603763 !important; }

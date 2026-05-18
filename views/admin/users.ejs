@@ -4,19 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Management - Admin | iStore</title>
-    <link rel="stylesheet" href="/css/admin-header.css">
+    <link rel="stylesheet" href="/css/components/admin-sidebar.css">
     <link rel="stylesheet" href="/css/admin-users.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&family=Liberation+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/admin-dashboard.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&family=Liberation+Mono&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
 
-    <!-- Top Navbar -->
-   <%- include("../partials/admin/header") %>
-
-    <main class="dashboard-main">
+     <!-- Sidebar Navbar -->
+   <%- include('../partials/admin/sidebar') %>
+   <main class="admin-main dashboard-main">
         
         <!-- Header -->
         <header class="page-header">
@@ -426,17 +425,17 @@ data-id="<%= user._id %>">
                 </div>
         </div>
 
+        <!-- Footer -->
+        <footer class="page-footer">
+            <span class="footer-text">© 2026 iStore Admin</span>
+            <div class="footer-links">
+                <a href="#" class="footer-link">PRIVACY POLICY</a>
+                <a href="#" class="footer-link">TERMS OF SERVICE</a>
+                <a href="#" class="footer-link">HELP CENTER</a>
+            </div>
+        </footer>
     </main>
 
-    <!-- Footer -->
-    <footer class="page-footer">
-        <span class="footer-text">© 2026 iStore Admin</span>
-        <div class="footer-links">
-            <a href="#" class="footer-link">PRIVACY POLICY</a>
-            <a href="#" class="footer-link">TERMS OF SERVICE</a>
-            <a href="#" class="footer-link">HELP CENTER</a>
-        </div>
-    </footer>
 
    <script>
   lucide.createIcons()

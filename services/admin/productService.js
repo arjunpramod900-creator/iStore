@@ -21,6 +21,7 @@ import {
 uploadImage
 }
 from "../../utils/uploadToCloudinary.js"
+import { application } from "express"
 
 /* ============================
    NORMALIZE VARIANT VALUES
@@ -1315,3 +1316,10 @@ export const getCategoriesService = async () => {
     isActive: true
   })
 }
+
+
+
+
+
+
+

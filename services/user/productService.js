@@ -36,7 +36,7 @@ async (
     const currentPage =
     Number(query.page) || 1
 
-    const limit = 8
+    const limit = 10
 
     const skip =
     (currentPage - 1) * limit

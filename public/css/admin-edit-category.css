@@ -29,12 +29,19 @@ body {
 
 /* Main Layout */
 .main-content {
-    padding: 112px 80px 80px;
-    max-width: 1400px;
-    margin: 0 auto;
+
+    flex: 1;
+
+    width: 100%;
+
+    padding: 40px 48px 64px;
+
     display: flex;
+
     flex-direction: column;
+
     gap: 40px;
+
 }
 
 /* Header & Breadcrumbs */

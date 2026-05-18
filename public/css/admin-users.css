@@ -29,13 +29,22 @@ body {
 
 
 /* MAIN LAYOUT */
-.dashboard-main {
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 96px 32px 48px;
+.dashboard-main{
+    flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 32px;
+
+    min-height: 100vh;
+
+    padding: 40px 32px 64px;
+}
+.dashboard-main > * {
+
+    width: 100%;
+
+}
+.page-footer{
+    margin-top: auto;
 }
 
 /* HEADER */
@@ -658,11 +667,21 @@ body {
 
 /* FOOTER */
 .page-footer {
+
+    width: 100%;
+
+    margin-top: auto;
+
     display: flex;
+
     justify-content: space-between;
+
     align-items: center;
+
     padding: 40px 32px;
+
     border-top: 1px solid rgba(208, 195, 204, 0.1);
+
 }
 
 .footer-text {
