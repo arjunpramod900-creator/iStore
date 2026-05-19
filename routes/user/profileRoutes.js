@@ -31,12 +31,12 @@ const router = express.Router()
 
 
 
-router.use((req, res, next) => {
-  if (req.originalUrl.startsWith("/admin")) return next("router")
-  next()
-})
+// router.use((req, res, next) => {
+//   if (req.originalUrl.startsWith("/admin")) return next("router")
+//   next()
+// })
 
-router.use(isLoggedIn, userBlockCheckMiddleware)
+// router.use(isLoggedIn, userBlockCheckMiddleware)
 
 
 
@@ -46,6 +46,8 @@ router.use(isLoggedIn, userBlockCheckMiddleware)
 
 router.get(
 "/edit-profile",
+isLoggedIn,
+userBlockCheckMiddleware,
 loadEditProfile
 )
 
@@ -57,6 +59,8 @@ loadEditProfile
 
 router.post(
 "/update-profile",
+isLoggedIn,
+userBlockCheckMiddleware,
 upload.single("profilePhoto"),
 updateProfile
 )
@@ -69,6 +73,8 @@ updateProfile
 
 router.get(
 "/change-email",
+isLoggedIn,
+userBlockCheckMiddleware,
 
 async (req, res) => {
 
@@ -114,6 +120,8 @@ res.redirect("/profile")
 
 router.post(
 "/send-email-change-otp",
+isLoggedIn,
+userBlockCheckMiddleware,
 authController.sendEmailChangeOTP
 )
 
@@ -125,6 +133,8 @@ authController.sendEmailChangeOTP
 
 router.get(
 "/verify-email-otp",
+isLoggedIn,
+userBlockCheckMiddleware,
 
 (req, res) => {
 
@@ -153,6 +163,8 @@ req.query.flow || "email"
 
 router.post(
 "/verify-email-change-otp",
+isLoggedIn,
+userBlockCheckMiddleware,
 authController.verifyEmailChangeOTP
 )
 
@@ -164,7 +176,7 @@ authController.verifyEmailChangeOTP
 router.get(
 "/change-password",
 isLoggedIn,
-
+userBlockCheckMiddleware,
 async (req, res) => {
 
 try {
@@ -209,6 +221,8 @@ res.redirect("/profile")
 
 router.post(
 "/send-change-password-otp",
+isLoggedIn,
+userBlockCheckMiddleware,
 authController.sendChangePasswordOTP
 )
 
@@ -220,6 +234,8 @@ authController.sendChangePasswordOTP
 
 router.post(
 "/verify-change-password-otp",
+isLoggedIn,
+userBlockCheckMiddleware,
 authController.verifyChangePasswordOTP
 )
 
@@ -231,6 +247,8 @@ authController.verifyChangePasswordOTP
 
 router.get(
 "/addresses",
+isLoggedIn,
+userBlockCheckMiddleware,
 loadAddresses
 )
 
@@ -242,6 +260,8 @@ loadAddresses
 
 router.post(
 "/add-address",
+isLoggedIn,
+userBlockCheckMiddleware,
 addAddress
 )
 
@@ -253,6 +273,8 @@ addAddress
 
 router.get(
 "/delete-address/:id",
+isLoggedIn,
+userBlockCheckMiddleware,
 deleteAddress
 )
 
@@ -264,6 +286,8 @@ deleteAddress
 
 router.post(
 "/edit-address/:id",
+isLoggedIn,
+userBlockCheckMiddleware,
 updateAddress
 )
 
