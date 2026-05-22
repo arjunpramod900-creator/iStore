@@ -138,7 +138,6 @@ async (req, res) => {
 
    try{
 
-
         const userId =
         req.session.userId
 
@@ -161,7 +160,27 @@ async (req, res) => {
 
         })
 
-       return res.status(200).json({
+        /* =========================================
+           FAILED RESPONSE
+        ========================================= */
+
+        if(!response.success){
+
+            return res.status(200).json({
+
+                success: false,
+
+                message: response.message
+
+            })
+
+        }
+
+        /* =========================================
+           SUCCESS RESPONSE
+        ========================================= */
+
+        return res.status(200).json({
 
     success: true,
 
@@ -171,7 +190,13 @@ async (req, res) => {
 
     cartSubtotal: response.cartSubtotal,
 
-    totalItems: response.totalItems
+    totalItems: response.totalItems,
+
+    shipping: response.shipping,
+
+    estimatedTax: response.estimatedTax,
+
+    finalTotal: response.finalTotal
 
 })
 
@@ -196,7 +221,6 @@ async (req, res) => {
     }
 
 }
-
 
 
 /* =========================================

@@ -88,3 +88,62 @@ window.showErrorAlert = (
     })
 
 }
+
+
+window.showLoginAlert = (
+
+    text = "Please login to continue."
+
+) => {
+
+    return Swal.fire({
+
+        icon: "info",
+
+        title: "Login Required",
+
+        text,
+
+        showCancelButton: true,
+
+        confirmButtonText: "Login",
+
+        cancelButtonText: "Cancel",
+
+        background: "#FFFFFF",
+
+        color: "#2C1421",
+
+        backdrop:
+        "rgba(17,17,17,0.55)",
+
+        borderRadius: "28px",
+
+        padding: "2rem",
+
+        buttonsStyling: false,
+
+    
+
+        customClass: {
+
+            popup:
+            "premium-alert-popup",
+
+            title:
+            "premium-alert-title",
+
+            htmlContainer:
+            "premium-alert-text",
+
+            confirmButton:
+            "premium-alert-confirm",
+
+            cancelButton:
+            "premium-alert-cancel"
+
+        }
+
+    })
+
+}

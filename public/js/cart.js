@@ -10,7 +10,9 @@ const updateCartUI = (
 
 ) => {
 
-    /* QUANTITY */
+    /* =========================================
+       QUANTITY
+    ========================================= */
 
     if(
 
@@ -31,13 +33,51 @@ const updateCartUI = (
             qtyElement.innerText =
             data.quantity
 
+            /* PREMIUM PULSE */
+
+            gsap.fromTo(
+
+                qtyElement,
+
+                {
+                    scale: 1.25,
+                    color: "#7C3AED"
+                },
+
+                {
+                    scale: 1,
+                    color: "#111111",
+                    duration: 0.35,
+                    ease: "power2.out"
+                }
+
+            )
+
+        }
+
+        /* =========================================
+           AUTO DISABLE PLUS BUTTON
+        ========================================= */
+
+        const increaseBtn =
+        document.querySelector(
+
+            `.increase-btn[data-variant-id="${variantId}"]`
+
+        )
+
+        if(increaseBtn){
+
+            increaseBtn.disabled =
+            data.quantity >= 5
+
         }
 
     }
 
-
-
-    /* ITEM SUBTOTAL */
+    /* =========================================
+       ITEM SUBTOTAL
+    ========================================= */
 
     if(
 
@@ -62,9 +102,9 @@ const updateCartUI = (
 
     }
 
-
-
-    /* CART SUBTOTAL */
+    /* =========================================
+       CART TOTALS
+    ========================================= */
 
     if(
 
@@ -87,25 +127,116 @@ const updateCartUI = (
 
         )
 
+        /* SUBTOTAL */
+
         if(cartSubtotal){
 
             cartSubtotal.innerText =
             `₹${data.cartSubtotal.toLocaleString()}`
 
+            gsap.fromTo(
+
+                cartSubtotal,
+
+                {
+                    scale: 1.06,
+                    color: "#7C3AED"
+                },
+
+                {
+                    scale: 1,
+                    color: "#111111",
+                    duration: 0.4,
+                    ease: "power2.out"
+                }
+
+            )
+
         }
+
+        /* FINAL TOTAL */
 
         if(cartTotal){
 
             cartTotal.innerText =
-            `₹${data.cartSubtotal.toLocaleString()}`
+            `₹${data.finalTotal.toLocaleString()}`
+
+            gsap.fromTo(
+
+                cartTotal,
+
+                {
+                    scale: 1.08,
+                    color: "#7C3AED"
+                },
+
+                {
+                    scale: 1,
+                    color: "#111111",
+                    duration: 0.45,
+                    ease: "power2.out"
+                }
+
+            )
+
+        }
+
+        /* =========================================
+           SHIPPING
+        ========================================= */
+
+        const shippingElement =
+        document.getElementById(
+
+            "shippingAmount"
+
+        )
+
+        if(
+
+            shippingElement &&
+            typeof data.shipping !==
+            "undefined"
+
+        ){
+
+            shippingElement.innerText =
+
+            data.shipping === 0
+            ? "Free"
+            : `₹${data.shipping.toLocaleString()}`
+
+        }
+
+        /* =========================================
+           TAX
+        ========================================= */
+
+        const taxElement =
+        document.getElementById(
+
+            "estimatedTax"
+
+        )
+
+        if(
+
+            taxElement &&
+            typeof data.estimatedTax !==
+            "undefined"
+
+        ){
+
+            taxElement.innerText =
+            `₹${data.estimatedTax.toLocaleString()}`
 
         }
 
     }
 
-
-
-    /* TOTAL ITEMS */
+    /* =========================================
+       TOTAL ITEMS
+    ========================================= */
 
     if(
 
@@ -131,7 +262,6 @@ const updateCartUI = (
     }
 
 }
-
 
 
 /* =========================================
@@ -265,12 +395,17 @@ increaseButtons.forEach(button => {
 
                     showToast(
 
-                        "info",
+                        data.message.includes("Maximum")
+                        ||
+                        data.message.includes("Stock")
+
+                        ? "warning"
+
+                        : "info",
 
                         data.message
 
                     )
-
                 }
 
             }
@@ -373,7 +508,13 @@ decreaseButtons.forEach(button => {
 
                     showToast(
 
-                        "info",
+                        data.message.includes("Maximum")
+                        ||
+                        data.message.includes("Stock")
+
+                        ? "warning"
+
+                        : "info",
 
                         data.message
 
@@ -602,6 +743,8 @@ removeButtons.forEach(button => {
                         "Removed from cart"
 
                     )
+
+                    navigator.vibrate?.(30)
 
                     /* EMPTY CHECK */
 

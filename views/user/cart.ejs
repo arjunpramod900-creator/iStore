@@ -378,14 +378,17 @@
 
                                 </span>
 
-                                <span class="summary-value">
+                                <span
+    class="summary-value"
+    id="shippingAmount"
+>
 
-                                    <%= shipping === 0
-                                        ? "Free"
-                                        : "₹" + shipping.toLocaleString()
-                                    %>
+    <%= shipping === 0
+        ? "Free"
+        : "₹" + shipping.toLocaleString()
+    %>
 
-                                </span>
+</span>
 
                             </div>
 
@@ -421,11 +424,14 @@
 
                                 </span>
 
-                                <span class="summary-value">
+                                <span
+    class="summary-value"
+    id="estimatedTax"
+>
 
-                                    ₹<%= estimatedTax.toLocaleString() %>
+    ₹<%= estimatedTax.toLocaleString() %>
 
-                                </span>
+</span>
 
                             </div>
 
@@ -634,7 +640,7 @@
 
     </script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
+    <script src="/js/toast.js"></script>
     <script src="/js/cart.js"></script>
 
 </body>

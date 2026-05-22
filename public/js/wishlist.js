@@ -37,6 +37,8 @@ wishlistButtons.forEach(button => {
                         headers: {
 
                             "Content-Type":
+                            "application/json",
+                            "Accept":
                             "application/json"
 
                         },
@@ -56,23 +58,47 @@ wishlistButtons.forEach(button => {
                 const data =
                 await response.json()
 
+
+                /* =========================================
+                    LOGIN REQUIRED
+                ========================================= */
+
+               if (data.requiresLogin) {
+
+                    showLoginAlert(
+
+                        "Please login to use wishlist."
+
+                    ).then((result) => {
+
+                        if(result.isConfirmed){
+
+                            window.location.href = "/login"
+
+                        }
+
+                    })
+
+                    return
+                }
+
                 if(data.success){
 
-    button.classList.add(
-        "active"
-    )
+                    button.classList.add(
+                        "active"
+                    )
 
-    showToast(
+                    showToast(
 
-    "success",
+                    "success",
 
-    data.message
+                    data.message
 
-)
+                )
 
-}
+                }
 
-else{
+                else{
 
     /* REMOVE FROM WISHLIST */
 

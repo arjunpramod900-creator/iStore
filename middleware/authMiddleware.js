@@ -35,7 +35,31 @@ res.setHeader(
 "no-store"
 )
 
-return res.redirect("/login")
+if (!req.session.userId) {
+
+    /* AJAX / FETCH REQUEST */
+
+    const isApiRequest =
+
+        req.xhr ||
+        req.headers.accept?.includes("application/json")
+
+    if (isApiRequest) {
+
+        return res.status(401).json({
+
+            success: false,
+
+            message: "Please login to continue",
+
+            requiresLogin: true
+
+        })
+
+    }
+
+    return res.redirect("/login")
+}
 
 }
 

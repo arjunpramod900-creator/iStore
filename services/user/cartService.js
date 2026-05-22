@@ -539,7 +539,7 @@ async ({
 
     }
 
-    const itemSubtotal =
+const itemSubtotal =
 item.price * item.quantity
 
 const cartSubtotal =
@@ -570,6 +570,36 @@ cart.items.reduce(
 
 )
 
+/* =========================================
+   SHIPPING
+========================================= */
+
+const shipping =
+
+cartSubtotal >= 5000
+? 0
+: 99
+
+/* =========================================
+   TAX
+========================================= */
+
+const estimatedTax =
+
+Math.floor(
+    cartSubtotal * 0.02
+)
+
+/* =========================================
+   FINAL TOTAL
+========================================= */
+
+const finalTotal =
+
+cartSubtotal +
+shipping +
+estimatedTax
+
     await cart.save()
 
 
@@ -583,7 +613,13 @@ return {
 
     cartSubtotal,
 
-    totalItems
+    totalItems,
+
+    shipping,
+
+    estimatedTax,
+
+    finalTotal
 
 }
 

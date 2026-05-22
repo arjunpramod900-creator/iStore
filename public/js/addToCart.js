@@ -63,6 +63,9 @@ addToCartButtons.forEach(
                             headers: {
 
                                 "Content-Type":
+                                "application/json",
+
+                                "Accept":
                                 "application/json"
 
                             },
@@ -83,6 +86,38 @@ addToCartButtons.forEach(
 
                     const data =
                     await response.json()
+
+                    /* =========================
+                        LOGIN REQUIRED
+                    ========================= */
+
+                   if (data.requiresLogin) {
+
+                        showLoginAlert(
+
+                            "Please login to add items to cart."
+
+                        ).then((result) => {
+
+                            if(result.isConfirmed){
+
+                                window.location.href = "/login"
+
+                            }
+
+                        })
+
+                        button.disabled = false
+
+                        button.innerHTML = `
+                            <i data-lucide="shopping-cart" size="18"></i>
+                            Add to Cart
+                        `
+
+                        lucide.createIcons()
+
+                        return
+                    }
 
                     /* =========================
                        SUCCESS
