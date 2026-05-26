@@ -1,0 +1,887 @@
+/* ============================================================
+   CHECKOUT PAGE CSS  |  checkout.css
+   iStore premium checkout — matches Figma spec.
+   Palette: Background #F9F9FB, Accent #4C0080, Text #1A1C1D
+============================================================ */
+
+/* ── RESET / ROOT ── */
+*, *::before, *::after { box-sizing: border-box; }
+
+:root {
+    --co-accent:       #4C0080;
+    --co-accent-light: rgba(76, 0, 128, 0.08);
+    --co-accent-border:rgba(76, 0, 128, 0.30);
+    --co-bg:           #F9F9FB;
+    --co-card-bg:      #F3F3F5;
+    --co-white:        #FFFFFF;
+    --co-text:         #1A1C1D;
+    --co-text-sub:     #4D4353;
+    --co-text-muted:   #6B7280;
+    --co-border:       rgba(207, 194, 213, 0.25);
+    --co-radius-lg:    24px;
+    --co-radius-md:    16px;
+    --co-radius-sm:    12px;
+    --co-shadow:       0px 20px 40px rgba(106, 13, 173, 0.08);
+    --co-transition:   all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    --font:            'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+body {
+    background: var(--co-bg);
+    font-family: var(--font);
+    color: var(--co-text);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ============================================================
+   PAGE SHELL
+============================================================ */
+.checkout-page {
+    min-height: 100vh;
+    background: var(--co-bg);
+}
+
+.checkout-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 96px 24px 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* ============================================================
+   BREADCRUMBS
+============================================================ */
+.co-breadcrumbs {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.bc-crumb {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--co-text-sub);
+    text-decoration: none;
+    line-height: 16px;
+    transition: color 0.15s ease;
+}
+
+.bc-crumb:hover { color: var(--co-accent); }
+.bc-crumb.active { color: var(--co-text); font-weight: 600; }
+
+.bc-sep {
+    display: flex;
+    align-items: center;
+    color: var(--co-text-sub);
+    opacity: 0.6;
+}
+
+/* ============================================================
+   PAGE HEADING
+============================================================ */
+.co-heading {
+    font-size: 36px;
+    font-weight: 400;
+    letter-spacing: -0.9px;
+    color: var(--co-accent);
+    line-height: 1.1;
+    margin: 0;
+}
+
+/* ============================================================
+   TWO-COLUMN LAYOUT
+============================================================ */
+.co-layout {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 32px;
+    align-items: start;
+}
+
+/* ============================================================
+   LEFT COLUMN — form sections
+============================================================ */
+.co-left {
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+}
+
+/* ── Section wrapper ── */
+.co-section {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.co-section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.co-section-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--co-accent);
+    width: 22px;
+    flex-shrink: 0;
+}
+
+.co-section-title {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: var(--co-text);
+    margin: 0;
+}
+
+/* ── Form card ── */
+.co-form-card {
+    background: var(--co-card-bg);
+    border-radius: var(--co-radius-lg);
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* ── Form grids ── */
+.co-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.co-form-grid--4 {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+/* ── Form field ── */
+.co-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.co-field--full { grid-column: 1 / -1; }
+
+.co-label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--co-text-sub);
+    line-height: 16px;
+}
+
+/* ── Input / Select ── */
+.co-input {
+    width: 100%;
+    height: 52px;
+    padding: 17px 16px 18px;
+    background: var(--co-white);
+    border: 1.5px solid transparent;
+    border-radius: var(--co-radius-md);
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--co-text);
+    outline: none;
+    transition: var(--co-transition);
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.co-input::placeholder { color: var(--co-text-muted); }
+
+.co-input:focus {
+    border-color: var(--co-accent-border);
+    box-shadow: 0 0 0 3px rgba(76, 0, 128, 0.08);
+}
+
+.co-select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 40px;
+    cursor: pointer;
+}
+
+/* ── Save-address checkbox ── */
+.co-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+}
+
+.co-checkbox {
+    width: 20px;
+    height: 20px;
+    accent-color: var(--co-accent);
+    border-radius: 4px;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.co-checkbox-text {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--co-text-sub);
+    line-height: 20px;
+}
+
+/* ============================================================
+   DELIVERY OPTIONS
+============================================================ */
+.co-delivery-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.co-delivery-card {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding: 24px;
+    border-radius: var(--co-radius-lg);
+    background: var(--co-card-bg);
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: var(--co-transition);
+}
+
+.co-delivery-card.selected {
+    background: var(--co-white);
+    border-color: var(--co-accent-border);
+}
+
+.co-delivery-card:hover:not(.selected) {
+    background: var(--co-white);
+    border-color: rgba(76, 0, 128, 0.12);
+}
+
+.co-radio-hidden { display: none; }
+
+.co-radio-dot {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--co-white);
+    border: 2px solid rgba(76, 0, 128, 0.20);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: var(--co-transition);
+}
+
+.co-delivery-card.selected .co-radio-dot {
+    background: var(--co-accent);
+    border-color: var(--co-accent);
+}
+
+.co-radio-dot-inner {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--co-white);
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.co-delivery-card.selected .co-radio-dot-inner { opacity: 1; }
+
+.co-delivery-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-left: 16px;
+    flex: 1;
+}
+
+.co-delivery-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--co-text);
+    line-height: 20px;
+}
+
+.co-delivery-desc {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--co-text-sub);
+    line-height: 16px;
+}
+
+.co-delivery-price {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--co-accent);
+    line-height: 20px;
+    white-space: nowrap;
+}
+
+.co-delivery-price.free { color: #10B981; }
+
+/* ============================================================
+   PAYMENT METHOD
+============================================================ */
+.co-payment-card {
+    background: var(--co-card-bg);
+    border-radius: var(--co-radius-lg);
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* ── Payment tabs ── */
+.co-payment-tabs {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.co-pay-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 16px 24px;
+    min-width: 100px;
+    background: var(--co-white);
+    border: 2px solid transparent;
+    border-radius: var(--co-radius-md);
+    cursor: pointer;
+    font-family: var(--font);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--co-text-sub);
+    transition: var(--co-transition);
+    flex: 1;
+}
+
+.co-pay-tab i { color: var(--co-text-sub); transition: color 0.2s ease; }
+
+.co-pay-tab:hover {
+    border-color: rgba(76, 0, 128, 0.12);
+    color: var(--co-accent);
+}
+
+.co-pay-tab:hover i { color: var(--co-accent); }
+
+.co-pay-tab.active {
+    border-color: rgba(76, 0, 128, 0.40);
+    color: var(--co-accent);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.co-pay-tab.active i { color: var(--co-accent); }
+
+/* ── Card details panel ── */
+.co-card-details {
+    border-top: 1px solid var(--co-border);
+    padding-top: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.co-card-details.hidden { display: none; }
+
+/* Card number with brand badges */
+.co-card-input-wrap {
+    position: relative;
+}
+
+.co-card-input-wrap .co-input {
+    padding-right: 88px;
+}
+
+.co-card-brand-badges {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    gap: 6px;
+}
+
+.co-card-badge {
+    width: 32px;
+    height: 20px;
+    border-radius: 4px;
+    background: #E4E4E7;
+    display: block;
+}
+
+.co-card-badge.mc { background: #D4D4D8; }
+
+/* ── UPI panel note ── */
+.co-panel-note {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--co-text-sub);
+    background: rgba(76, 0, 128, 0.05);
+    padding: 12px 16px;
+    border-radius: var(--co-radius-sm);
+}
+
+/* ── Wallet options ── */
+.co-wallet-options {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.co-wallet-opt {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 20px;
+    background: var(--co-white);
+    border-radius: var(--co-radius-md);
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: var(--co-transition);
+}
+
+.co-wallet-opt:has(input:checked) {
+    border-color: var(--co-accent-border);
+}
+
+.co-wallet-opt input { display: none; }
+
+.co-wallet-logo {
+    height: 24px;
+    object-fit: contain;
+    max-width: 80px;
+}
+
+/* ── COD notice ── */
+.co-cod-notice {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--co-white);
+    border-radius: var(--co-radius-md);
+    padding: 20px 24px;
+    color: var(--co-accent);
+}
+
+.co-cod-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--co-text);
+    margin: 0 0 4px;
+}
+
+.co-cod-desc {
+    font-size: 13px;
+    color: var(--co-text-sub);
+    margin: 0;
+}
+
+/* ============================================================
+   RIGHT COLUMN — Order Summary
+============================================================ */
+.co-right {
+    position: sticky;
+    top: 100px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* ── Summary card ── */
+.co-summary-card {
+    background: var(--co-white);
+    box-shadow: var(--co-shadow);
+    border-radius: var(--co-radius-lg);
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.co-summary-title {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: var(--co-text);
+    margin: 0;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #F3F3F5;
+}
+
+/* ── Summary items ── */
+.co-summary-items {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.co-summary-item {
+    display: flex;
+    align-items: center;
+    gap: 0;
+}
+
+.co-item-thumb {
+    width: 64px;
+    height: 64px;
+    background: #F3F3F5;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.co-item-thumb img {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+}
+
+.co-item-thumb--placeholder {
+    color: var(--co-text-sub);
+}
+
+.co-item-meta {
+    flex: 1;
+    padding-left: 16px;
+    min-width: 0;
+}
+
+.co-item-name {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--co-text);
+    line-height: 20px;
+    margin: 0 0 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.co-item-variant {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--co-text-sub);
+    line-height: 16px;
+    margin: 0;
+}
+
+.co-item-price {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--co-text);
+    padding-left: 16px;
+    white-space: nowrap;
+}
+
+/* ── Breakdown rows ── */
+.co-summary-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-top: 4px;
+    border-top: 1px solid #F3F3F5;
+}
+
+.co-breakdown-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--co-text-sub);
+    line-height: 20px;
+}
+
+.co-free { color: #10B981 !important; font-weight: 600; }
+
+.co-discount { color: var(--co-text-sub); }
+
+.co-discount-val {
+    color: #E53E3E;
+    font-weight: 600;
+}
+
+/* ── Grand total ── */
+.co-total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 16px;
+    border-top: 1px solid #F3F3F5;
+}
+
+.co-total-label {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--co-text);
+}
+
+.co-total-incl {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--co-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+
+.co-total-value {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--co-accent);
+    letter-spacing: -0.8px;
+    line-height: 1;
+}
+
+/* ── Place Order button ── */
+.co-place-order-btn {
+    width: 100%;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #4C0080 0%, #7B2CBF 100%);
+    color: #fff;
+    font-family: var(--font);
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    border: none;
+    border-radius: 18px;
+    cursor: pointer;
+    transition: var(--co-transition);
+    box-shadow: 0 8px 24px rgba(76, 0, 128, 0.28);
+}
+
+.co-place-order-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 32px rgba(76, 0, 128, 0.36);
+}
+
+.co-place-order-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 12px rgba(76, 0, 128, 0.20);
+}
+
+/* ── Secure checkout badge ── */
+.co-secure-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--co-text-sub);
+    text-align: center;
+    line-height: 1.4;
+}
+
+.co-secure-badge i { color: var(--co-accent); flex-shrink: 0; }
+
+/* ============================================================
+   COUPONS CARD
+============================================================ */
+.co-coupons-card {
+    background: var(--co-white);
+    box-shadow: var(--co-shadow);
+    border-radius: var(--co-radius-lg);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.co-coupons-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--co-text);
+    margin: 0;
+    letter-spacing: -0.3px;
+}
+
+.co-coupon-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.co-coupon {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    background: var(--co-card-bg);
+    border-radius: var(--co-radius-md);
+    border: 1.5px dashed rgba(76, 0, 128, 0.20);
+}
+
+.co-coupon-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.co-coupon-code {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--co-accent);
+    letter-spacing: 0.5px;
+}
+
+.co-coupon-desc {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--co-text-sub);
+}
+
+.co-coupon-apply-btn {
+    padding: 8px 18px;
+    background: var(--co-accent);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-family: var(--font);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--co-transition);
+    letter-spacing: 0.3px;
+}
+
+.co-coupon-apply-btn:hover {
+    background: #36005A;
+    transform: translateY(-1px);
+}
+
+/* Manual coupon input */
+.co-coupon-manual {
+    display: flex;
+    gap: 10px;
+}
+
+.co-coupon-input {
+    flex: 1;
+    height: 44px;
+    padding: 0 14px;
+    background: var(--co-card-bg);
+    border: 1.5px solid transparent;
+    border-radius: var(--co-radius-sm);
+    font-family: var(--font);
+    font-size: 14px;
+    color: var(--co-text);
+    outline: none;
+    transition: var(--co-transition);
+}
+
+.co-coupon-input:focus {
+    border-color: var(--co-accent-border);
+    background: var(--co-white);
+}
+
+.co-coupon-input::placeholder { color: var(--co-text-muted); }
+
+.co-coupon-manual-btn {
+    height: 44px;
+    padding: 0 20px;
+    background: var(--co-accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--co-radius-sm);
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: var(--co-transition);
+}
+
+.co-coupon-manual-btn:hover { background: #36005A; }
+
+/* ============================================================
+   RESPONSIVE — TABLET ≤ 1024px
+============================================================ */
+@media (max-width: 1024px) {
+    .co-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .co-right {
+        position: static;
+    }
+
+    .co-form-grid--4 {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+/* ============================================================
+   RESPONSIVE — MOBILE ≤ 640px
+============================================================ */
+@media (max-width: 640px) {
+    .checkout-container {
+        padding: 80px 16px 60px;
+        gap: 16px;
+    }
+
+    .co-heading { font-size: 28px; }
+
+    .co-form-card { padding: 20px 16px; }
+
+    .co-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .co-form-grid--4 {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .co-delivery-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .co-payment-tabs {
+        gap: 8px;
+    }
+
+    .co-pay-tab {
+        min-width: unset;
+        padding: 12px;
+        font-size: 9px;
+    }
+
+    .co-summary-card { padding: 20px 16px; }
+    .co-coupons-card { padding: 16px; }
+
+    .co-total-value { font-size: 22px; }
+}
+
+/* ============================================================
+   RESPONSIVE — SMALL MOBILE ≤ 480px
+============================================================ */
+@media (max-width: 480px) {
+    .co-form-grid--4 {
+        grid-template-columns: 1fr;
+    }
+}

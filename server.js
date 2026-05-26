@@ -16,6 +16,8 @@ import cartRoutes from "./routes/user/cartRoutes.js"
 
 import wishlistRoutes from "./routes/user/wishlistRoutes.js"
 
+import checkoutRoutes from "./routes/user/checkoutRoutes.js"
+
 import noCache from "./middleware/noCache.js"
 
 import adminNoCache from "./middleware/adminNoCache.js"
@@ -219,6 +221,13 @@ app.use(
 app.use(
     "/wishlist",
     wishlistRoutes
+)
+
+/* USER CHECKOUT ROUTES */
+
+app.use(
+    "/",
+    checkoutRoutes
 )
 
 

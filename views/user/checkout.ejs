@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout — iStore</title>
+    <meta name="description" content="Complete your iStore purchase. Secure checkout with multiple payment options.">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/css/components/header.css">
+    <link rel="stylesheet" href="/css/components/footer.css">
+    <link rel="stylesheet" href="/css/components/toast.css">
+    <link rel="stylesheet" href="/css/checkout.css">
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- GSAP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+</head>
+
+<body>
+
+    <%- include('../partials/user/header', { page: 'checkout' }) %>
+
+    <%
+        /* ── Compute totals ── */
+        const subtotal    = typeof cart !== 'undefined' ? cart.subtotal : 144700;
+        const couponDiscount = typeof appliedCoupon !== 'undefined' ? appliedCoupon.discount : 5000;
+        const shippingFee = 0;   /* Standard delivery is free */
+        const tax         = 2000;
+        const grandTotal  = subtotal - couponDiscount + shippingFee + tax;
+    %>
+
+    <main class="checkout-page" id="checkoutPage">
+
+        <div class="checkout-container">
+
+            <!-- ── BREADCRUMBS ── -->
+            <nav class="co-breadcrumbs" aria-label="Breadcrumb">
+                <a href="/" class="bc-crumb">Home</a>
+                <span class="bc-sep">
+                    <i data-lucide="chevron-right" size="12"></i>
+                </span>
+                <a href="/cart" class="bc-crumb">Cart</a>
+                <span class="bc-sep">
+                    <i data-lucide="chevron-right" size="12"></i>
+                </span>
+                <span class="bc-crumb active">Checkout</span>
+            </nav>
+
+            <!-- ── PAGE HEADING ── -->
+            <h1 class="co-heading">Checkout</h1>
+
+            <!-- ── TWO-COLUMN LAYOUT ── -->
+            <div class="co-layout">
+
+                <!-- ══════════════════════════════
+                     LEFT COLUMN — Forms
+                ══════════════════════════════ -->
+                <section class="co-left" id="coLeft">
+
+                    <!-- ── SECTION 1: SHIPPING DETAILS ── -->
+                    <div class="co-section" id="sectionShipping">
+
+                        <div class="co-section-header">
+                            <span class="co-section-icon">
+                                <i data-lucide="map-pin" size="16"></i>
+                            </span>
+                            <h2 class="co-section-title">Shipping Details</h2>
+                        </div>
+
+                        <div class="co-form-card">
+
+                            <div class="co-form-grid">
+
+                                <!-- Full Name -->
+                                <div class="co-field">
+                                    <label class="co-label" for="fullName">Full Name</label>
+                                    <input
+                                        type="text"
+                                        id="fullName"
+                                        name="fullName"
+                                        class="co-input"
+                                        placeholder="John Doe"
+                                        autocomplete="name"
+                                    >
+                                </div>
+
+                                <!-- Email -->
+                                <div class="co-field">
+                                    <label class="co-label" for="email">Email Address</label>
+                                    <input
+                                        type="email"
+                                        id="email"
+                                        name="email"
+                                        class="co-input"
+                                        placeholder="john@example.com"
+                                        autocomplete="email"
+                                    >
+                                </div>
+
+                                <!-- Phone -->
+                                <div class="co-field">
+                                    <label class="co-label" for="phone">Phone Number</label>
+                                    <input
+                                        type="tel"
+                                        id="phone"
+                                        name="phone"
+                                        class="co-input"
+                                        placeholder="+91 98765 43210"
+                                        autocomplete="tel"
+                                    >
+                                </div>
+
+                                <!-- Street Address -->
+                                <div class="co-field">
+                                    <label class="co-label" for="street">Street Address</label>
+                                    <input
+                                        type="text"
+                                        id="street"
+                                        name="street"
+                                        class="co-input"
+                                        placeholder="Apt 42, Skyline Towers"
+                                        autocomplete="street-address"
+                                    >
+                                </div>
+
+                            </div>
+
+                            <!-- City / State / Postal / Country row -->
+                            <div class="co-form-grid co-form-grid--4">
+
+                                <div class="co-field">
+                                    <label class="co-label" for="city">City</label>
+                                    <input
+                                        type="text"
+                                        id="city"
+                                        name="city"
+                                        class="co-input"
+                                        placeholder="Mumbai"
+                                        autocomplete="address-level2"
+                                    >
+                                </div>
+
+                                <div class="co-field">
+                                    <label class="co-label" for="state">State</label>
+                                    <input
+                                        type="text"
+                                        id="state"
+                                        name="state"
+                                        class="co-input"
+                                        placeholder="Maharashtra"
+                                        autocomplete="address-level1"
+                                    >
+                                </div>
+
+                                <div class="co-field">
+                                    <label class="co-label" for="postal">Postal Code</label>
+                                    <input
+                                        type="text"
+                                        id="postal"
+                                        name="postal"
+                                        class="co-input"
+                                        placeholder="400001"
+                                        autocomplete="postal-code"
+                                    >
+                                </div>
+
+                                <div class="co-field">
+                                    <label class="co-label" for="country">Country</label>
+                                    <select id="country" name="country" class="co-input co-select">
+                                        <option value="IN" selected>India</option>
+                                        <option value="US">United States</option>
+                                        <option value="GB">United Kingdom</option>
+                                        <option value="AU">Australia</option>
+                                        <option value="SG">Singapore</option>
+                                        <option value="AE">UAE</option>
+                                    </select>
+                                </div>
+
+                            </div>
+
+                            <!-- Save address checkbox -->
+                            <label class="co-checkbox-label" for="saveAddress">
+                                <input
+                                    type="checkbox"
+                                    id="saveAddress"
+                                    name="saveAddress"
+                                    class="co-checkbox"
+                                >
+                                <span class="co-checkbox-text">Save this address for future purchases</span>
+                            </label>
+
+                        </div>
+                    </div>
+
+                    <!-- ── SECTION 2: DELIVERY OPTIONS ── -->
+                    <div class="co-section" id="sectionDelivery">
+
+                        <div class="co-section-header">
+                            <span class="co-section-icon">
+                                <i data-lucide="truck" size="16"></i>
+                            </span>
+                            <h2 class="co-section-title">Delivery Options</h2>
+                        </div>
+
+                        <div class="co-delivery-grid">
+
+                            <!-- Standard Delivery (selected) -->
+                            <label class="co-delivery-card selected" id="deliveryStandard">
+                                <input
+                                    type="radio"
+                                    name="delivery"
+                                    value="standard"
+                                    class="co-radio-hidden"
+                                    checked
+                                >
+                                <span class="co-radio-dot">
+                                    <span class="co-radio-dot-inner"></span>
+                                </span>
+                                <span class="co-delivery-info">
+                                    <span class="co-delivery-name">Standard Delivery</span>
+                                    <span class="co-delivery-desc">3–5 Business Days</span>
+                                </span>
+                                <span class="co-delivery-price free">Free</span>
+                            </label>
+
+                            <!-- Express Delivery -->
+                            <label class="co-delivery-card" id="deliveryExpress">
+                                <input
+                                    type="radio"
+                                    name="delivery"
+                                    value="express"
+                                    class="co-radio-hidden"
+                                >
+                                <span class="co-radio-dot unselected">
+                                    <span class="co-radio-dot-inner"></span>
+                                </span>
+                                <span class="co-delivery-info">
+                                    <span class="co-delivery-name">Express Delivery</span>
+                                    <span class="co-delivery-desc">Next Day Delivery</span>
+                                </span>
+                                <span class="co-delivery-price">₹500</span>
+                            </label>
+
+                        </div>
+                    </div>
+
+                    <!-- ── SECTION 3: PAYMENT METHOD ── -->
+                    <div class="co-section" id="sectionPayment">
+
+                        <div class="co-section-header">
+                            <span class="co-section-icon">
+                                <i data-lucide="credit-card" size="16"></i>
+                            </span>
+                            <h2 class="co-section-title">Payment Method</h2>
+                        </div>
+
+                        <div class="co-payment-card">
+
+                            <!-- Payment method tabs -->
+                            <div class="co-payment-tabs">
+
+                                <button class="co-pay-tab active" data-method="card" id="tabCard">
+                                    <i data-lucide="credit-card" size="18"></i>
+                                    <span>Card</span>
+                                </button>
+
+                                <button class="co-pay-tab" data-method="upi" id="tabUpi">
+                                    <i data-lucide="smartphone" size="18"></i>
+                                    <span>UPI / Net</span>
+                                </button>
+
+                                <button class="co-pay-tab" data-method="wallet" data-lucide-icon="wallet" id="tabWallet">
+                                    <i data-lucide="wallet" size="18"></i>
+                                    <span>Wallet</span>
+                                </button>
+
+                                <button class="co-pay-tab" data-method="cod" id="tabCod">
+                                    <i data-lucide="banknote" size="18"></i>
+                                    <span>COD</span>
+                                </button>
+
+                            </div>
+
+                            <!-- ── CARD DETAILS ── -->
+                            <div class="co-card-details" id="panelCard">
+
+                                <div class="co-field co-field--full">
+                                    <label class="co-label" for="cardNumber">Card Number</label>
+                                    <div class="co-card-input-wrap">
+                                        <input
+                                            type="text"
+                                            id="cardNumber"
+                                            name="cardNumber"
+                                            class="co-input"
+                                            placeholder="0000 0000 0000 0000"
+                                            maxlength="19"
+                                            autocomplete="cc-number"
+                                        >
+                                        <span class="co-card-brand-badges">
+                                            <span class="co-card-badge visa"></span>
+                                            <span class="co-card-badge mc"></span>
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="co-form-grid">
+                                    <div class="co-field">
+                                        <label class="co-label" for="expiry">Expiry Date</label>
+                                        <input
+                                            type="text"
+                                            id="expiry"
+                                            name="expiry"
+                                            class="co-input"
+                                            placeholder="MM/YY"
+                                            maxlength="5"
+                                            autocomplete="cc-exp"
+                                        >
+                                    </div>
+                                    <div class="co-field">
+                                        <label class="co-label" for="cvv">CVV</label>
+                                        <input
+                                            type="password"
+                                            id="cvv"
+                                            name="cvv"
+                                            class="co-input"
+                                            placeholder="•••"
+                                            maxlength="4"
+                                            autocomplete="cc-csc"
+                                        >
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <!-- ── UPI PANEL ── -->
+                            <div class="co-card-details hidden" id="panelUpi">
+                                <div class="co-field co-field--full">
+                                    <label class="co-label" for="upiId">UPI ID</label>
+                                    <input
+                                        type="text"
+                                        id="upiId"
+                                        name="upiId"
+                                        class="co-input"
+                                        placeholder="yourname@upi"
+                                    >
+                                </div>
+                                <p class="co-panel-note">
+                                    <i data-lucide="info" size="14"></i>
+                                    You'll receive a payment request on your UPI app.
+                                </p>
+                            </div>
+
+                            <!-- ── WALLET PANEL ── -->
+                            <div class="co-card-details hidden" id="panelWallet">
+                                <div class="co-wallet-options">
+                                    <label class="co-wallet-opt">
+                                        <input type="radio" name="wallet" value="paytm" checked>
+                                        <img src="https://upload.wikimedia.org/wikipedia/commons/4/42/Paytm_logo.png" alt="Paytm" class="co-wallet-logo">
+                                    </label>
+                                    <label class="co-wallet-opt">
+                                        <input type="radio" name="wallet" value="phonepe">
+                                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/PhonePe_Logo.png/180px-PhonePe_Logo.png" alt="PhonePe" class="co-wallet-logo">
+                                    </label>
+                                    <label class="co-wallet-opt">
+                                        <input type="radio" name="wallet" value="amazonpay">
+                                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Amazon_logo.svg/200px-Amazon_logo.svg.png" alt="Amazon Pay" class="co-wallet-logo">
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- ── COD PANEL ── -->
+                            <div class="co-card-details hidden" id="panelCod">
+                                <div class="co-cod-notice">
+                                    <i data-lucide="package-check" size="24"></i>
+                                    <div>
+                                        <p class="co-cod-title">Cash on Delivery</p>
+                                        <p class="co-cod-desc">Pay in cash when your order arrives. A convenience fee of ₹29 may apply.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </section>
+
+                <!-- ══════════════════════════════
+                     RIGHT COLUMN — Order Summary
+                ══════════════════════════════ -->
+                <aside class="co-right" id="coRight">
+
+                    <!-- ORDER SUMMARY CARD -->
+                    <div class="co-summary-card">
+
+                        <h2 class="co-summary-title">Order Summary</h2>
+
+                        <!-- Items list -->
+                        <div class="co-summary-items">
+
+                            <% if (typeof cart !== 'undefined' && cart.items && cart.items.length > 0) { %>
+
+                                <% cart.items.forEach(item => { %>
+
+                                    <div class="co-summary-item">
+                                        <div class="co-item-thumb">
+                                            <img
+                                                src="<%= item.variantId.images?.[0] || item.productId.thumbnail || '/img/placeholder.png' %>"
+                                                alt="<%= item.productId.name %>"
+                                                loading="lazy"
+                                            >
+                                        </div>
+                                        <div class="co-item-meta">
+                                            <p class="co-item-name"><%= item.productId.name %></p>
+                                            <p class="co-item-variant">
+                                                <%= [item.variantId.color, item.variantId.storage].filter(Boolean).join(' • ') %>
+                                                <% if (item.quantity > 1) { %> &nbsp;·&nbsp; Qty: <%= item.quantity %><% } %>
+                                            </p>
+                                        </div>
+                                        <span class="co-item-price">₹<%= (item.price * item.quantity).toLocaleString('en-IN') %></span>
+                                    </div>
+
+                                <% }) %>
+
+                            <% } else { %>
+
+                                <!-- Demo items when no real cart data -->
+                                <div class="co-summary-item">
+                                    <div class="co-item-thumb co-item-thumb--placeholder">
+                                        <i data-lucide="smartphone" size="24"></i>
+                                    </div>
+                                    <div class="co-item-meta">
+                                        <p class="co-item-name">iPhone 17 Pro</p>
+                                        <p class="co-item-variant">Natural Titanium • 256GB</p>
+                                    </div>
+                                    <span class="co-item-price">₹1,19,900</span>
+                                </div>
+
+                                <div class="co-summary-item">
+                                    <div class="co-item-thumb co-item-thumb--placeholder">
+                                        <i data-lucide="headphones" size="24"></i>
+                                    </div>
+                                    <div class="co-item-meta">
+                                        <p class="co-item-name">AirPods Pro (2nd Gen)</p>
+                                        <p class="co-item-variant">Qty: 1</p>
+                                    </div>
+                                    <span class="co-item-price">₹24,800</span>
+                                </div>
+
+                            <% } %>
+
+                        </div>
+
+                        <!-- Summary totals -->
+                        <div class="co-summary-breakdown">
+
+                            <div class="co-breakdown-row">
+                                <span>Subtotal</span>
+                                <span id="coSubtotal">
+                                    ₹<%= typeof cart !== 'undefined' ? cart.subtotal.toLocaleString('en-IN') : '1,44,700' %>
+                                </span>
+                            </div>
+
+                            <div class="co-breakdown-row">
+                                <span>Shipping</span>
+                                <span class="co-free" id="coShipping">Free</span>
+                            </div>
+
+                            <div class="co-breakdown-row co-discount" id="coDiscountRow">
+                                <span>Discount (<span id="coCouponCode">FESTIVE5K</span>)</span>
+                                <span class="co-discount-val" id="coDiscount">−₹5,000</span>
+                            </div>
+
+                            <div class="co-breakdown-row">
+                                <span>Estimated Tax</span>
+                                <span id="coTax">₹2,000</span>
+                            </div>
+
+                        </div>
+
+                        <!-- Grand Total -->
+                        <div class="co-total-row">
+                            <div class="co-total-label">
+                                Total Amount
+                                <span class="co-total-incl">Incl. all taxes</span>
+                            </div>
+                            <span class="co-total-value" id="coGrandTotal">
+                                ₹<%= grandTotal.toLocaleString('en-IN') %>
+                            </span>
+                        </div>
+
+                        <!-- Place Order CTA -->
+                        <button class="co-place-order-btn" id="placeOrderBtn" type="button">
+                            Place Order
+                        </button>
+
+                        <!-- Secure checkout badge -->
+                        <div class="co-secure-badge">
+                            <i data-lucide="lock" size="14"></i>
+                            <span>Secure Checkout — Your payment information is protected</span>
+                        </div>
+
+                    </div>
+
+                    <!-- AVAILABLE COUPONS -->
+                    <div class="co-coupons-card">
+
+                        <h3 class="co-coupons-title">Available Coupons</h3>
+
+                        <div class="co-coupon-list">
+
+                            <div class="co-coupon" id="couponSave10">
+                                <div class="co-coupon-info">
+                                    <span class="co-coupon-code">SAVE10</span>
+                                    <span class="co-coupon-desc">10% Off on Your Order</span>
+                                </div>
+                                <button class="co-coupon-apply-btn" data-code="SAVE10">Apply</button>
+                            </div>
+
+                            <div class="co-coupon" id="couponWelcome">
+                                <div class="co-coupon-info">
+                                    <span class="co-coupon-code">WELCOME500</span>
+                                    <span class="co-coupon-desc">₹500 Off for NEW or ER*</span>
+                                </div>
+                                <button class="co-coupon-apply-btn" data-code="WELCOME500">Apply</button>
+                            </div>
+
+                        </div>
+
+                        <!-- Manual coupon entry -->
+                        <div class="co-coupon-manual">
+                            <input
+                                type="text"
+                                id="couponInput"
+                                class="co-coupon-input"
+                                placeholder="Enter promo code"
+                            >
+                            <button class="co-coupon-manual-btn" id="applyCouponBtn">Apply</button>
+                        </div>
+
+                    </div>
+
+                </aside>
+
+            </div>
+        </div>
+
+    </main>
+
+    <%- include('../partials/user/footer') %>
+
+    <!-- SweetAlert -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        lucide.createIcons();
+
+        /* ── Entrance animations ── */
+        gsap.from('#coLeft', { x: -30, opacity: 0, duration: 0.7, ease: 'power2.out' });
+        gsap.from('#coRight', { x: 30, opacity: 0, duration: 0.7, ease: 'power2.out' });
+        gsap.from('.co-section', { y: 20, opacity: 0, duration: 0.5, stagger: 0.12, delay: 0.2, ease: 'power2.out' });
+
+        /* ── Payment method tab switching ── */
+        const tabs   = document.querySelectorAll('.co-pay-tab');
+        const panels = {
+            card:   document.getElementById('panelCard'),
+            upi:    document.getElementById('panelUpi'),
+            wallet: document.getElementById('panelWallet'),
+            cod:    document.getElementById('panelCod'),
+        };
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                const method = tab.dataset.method;
+                Object.values(panels).forEach(p => p.classList.add('hidden'));
+                panels[method].classList.remove('hidden');
+                lucide.createIcons();
+            });
+        });
+
+        /* ── Delivery option selection ── */
+        const deliveryCards = document.querySelectorAll('.co-delivery-card');
+        deliveryCards.forEach(card => {
+            card.addEventListener('click', () => {
+                deliveryCards.forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+
+                /* Update shipping in summary */
+                const isExpress = card.querySelector('input[value="express"]');
+                const shippingEl = document.getElementById('coShipping');
+                if (isExpress && shippingEl) {
+                    shippingEl.textContent = '₹500';
+                    shippingEl.classList.remove('co-free');
+                } else if (shippingEl) {
+                    shippingEl.textContent = 'Free';
+                    shippingEl.classList.add('co-free');
+                }
+            });
+        });
+
+        /* ── Card number formatting ── */
+        const cardInput = document.getElementById('cardNumber');
+        if (cardInput) {
+            cardInput.addEventListener('input', e => {
+                let v = e.target.value.replace(/\D/g, '').slice(0, 16);
+                e.target.value = v.replace(/(.{4})/g, '$1 ').trim();
+            });
+        }
+
+        /* ── Expiry formatting ── */
+        const expiryInput = document.getElementById('expiry');
+        if (expiryInput) {
+            expiryInput.addEventListener('input', e => {
+                let v = e.target.value.replace(/\D/g, '').slice(0, 4);
+                if (v.length >= 2) v = v.slice(0,2) + '/' + v.slice(2);
+                e.target.value = v;
+            });
+        }
+
+        /* ── Coupon apply ── */
+        document.querySelectorAll('.co-coupon-apply-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const code = btn.dataset.code;
+                document.getElementById('couponInput').value = code;
+                applyCouponCode(code);
+            });
+        });
+
+        document.getElementById('applyCouponBtn').addEventListener('click', () => {
+            const code = document.getElementById('couponInput').value.trim().toUpperCase();
+            if (code) applyCouponCode(code);
+        });
+
+        function applyCouponCode(code) {
+            /* Optimistic UI — replace with real API call in original project */
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: `Coupon "${code}" applied!`,
+                showConfirmButton: false,
+                timer: 2000,
+                timerProgressBar: true,
+            });
+        }
+
+        /* ── Place Order ── */
+        document.getElementById('placeOrderBtn').addEventListener('click', () => {
+            const name   = document.getElementById('fullName').value.trim();
+            const email  = document.getElementById('email').value.trim();
+            const phone  = document.getElementById('phone').value.trim();
+            const street = document.getElementById('street').value.trim();
+
+            if (!name || !email || !phone || !street) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Incomplete Details',
+                    text: 'Please fill in all required shipping fields.',
+                    confirmButtonColor: '#4C0080',
+                    borderRadius: '20px',
+                });
+                return;
+            }
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Order Placed! 🎉',
+                text: 'Your order has been placed successfully. You\'ll receive a confirmation email shortly.',
+                confirmButtonColor: '#4C0080',
+                confirmButtonText: 'Continue Shopping',
+            }).then(result => {
+                if (result.isConfirmed) window.location.href = '/products';
+            });
+        });
+    </script>
+
+</body>
+</html>
