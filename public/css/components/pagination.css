@@ -1,117 +1,85 @@
-.pagination-section{
+.pagination-section {
+  padding: 60px 0 20px;
 
-    padding: 60px 0 20px;
+  display: flex;
 
-    display: flex;
-
-    justify-content: center;
-
+  justify-content: center;
 }
 
+.pagination-container {
+  display: flex;
 
+  align-items: center;
 
-.pagination-container{
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 10px;
-
+  gap: 10px;
 }
-
-
 
 /* PAGE NUMBER */
 
-.page-btn{
+.page-btn {
+  width: 46px;
 
-    width: 46px;
+  height: 46px;
 
-    height: 46px;
+  border-radius: 50%;
 
-    border-radius: 50%;
+  display: flex;
 
-    display: flex;
+  align-items: center;
 
-    align-items: center;
+  justify-content: center;
 
-    justify-content: center;
+  text-decoration: none;
 
-    text-decoration: none;
+  font-size: 15px;
 
-    font-size: 15px;
+  font-weight: 600;
 
-    font-weight: 600;
+  color: #6b6470;
 
-    color: #6B6470;
+  background: transparent;
 
-    background: transparent;
-
-    transition: 0.35s ease;
-
+  transition: 0.35s ease;
 }
 
+.page-btn:hover {
+  background: rgba(96, 55, 99, 0.08);
 
-
-.page-btn:hover{
-
-    background: rgba(96,55,99,0.08);
-
-    color: #1D1D1F;
-
+  color: #1d1d1f;
 }
-
-
 
 /* ACTIVE */
 
-.page-btn.active{
+.page-btn.active {
+  background: linear-gradient(135deg, #4c0080 0%, #6a0dad 100%);
 
-    background:
-    linear-gradient(
-    135deg,
-    #4C0080 0%,
-    #6A0DAD 100%
-);
+  color: white;
 
-    color: white;
-
-    box-shadow:
-    0 10px 24px rgba(76,0,128,0.24);
-
+  box-shadow: 0 10px 24px rgba(76, 0, 128, 0.24);
 }
-
-
 
 /* PREV NEXT */
 
-.page-nav-btn{
+.page-nav-btn {
+  padding: 0 10px;
 
-    padding: 0 10px;
+  height: 46px;
 
-    height: 46px;
+  display: flex;
 
-    display: flex;
+  align-items: center;
 
-    align-items: center;
+  text-decoration: none;
 
-    text-decoration: none;
+  font-size: 16px;
 
-    font-size: 16px;
+  font-weight: 600;
 
-    font-weight: 600;
+  color: #5e5664;
 
-    color: #5E5664;
-
-    transition: 0.3s ease;
-
+  transition: 0.3s ease;
 }
 
-
-
-.page-nav-btn:hover{
-
-    color: #1D1D1F;
-
+.page-nav-btn:hover {
+  color: #1d1d1f;
 }

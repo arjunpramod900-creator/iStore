@@ -1,180 +1,106 @@
-import Cart from "../../models/Cart.js"
+import Cart from "../../models/Cart.js";
 
-import Address from "../../models/Address.js"
+import Address from "../../models/Address.js";
 
+export const loadCheckoutService = async (userId) => {
+  /* LOAD CART */
 
+  const cart = await Cart.findOne({
+    userId,
+  })
 
-export const loadCheckoutService =
-async (userId) => {
-
-    /* LOAD CART */
-
-    const cart =
-    await Cart.findOne({
-
-        userId
-
+    .populate({
+      path: "items.productId",
     })
 
     .populate({
-
-        path: "items.productId"
-
+      path: "items.variantId",
     })
 
-    .populate({
+    .lean();
 
-        path: "items.variantId"
+  /* EMPTY CART */
 
-    })
-
-    .lean()
-
-
-
-
-    /* EMPTY CART */
-
-    if(
-
-        !cart ||
-
-        cart.items.length === 0
-
-    ){
-
-        return {
-
-            success: false,
-
-            message:
-            "Cart is empty"
-
-        }
-
-    }
-
-
-
-
-    /* VALID ITEMS */
-
-    const validItems =
-
-    cart.items.filter(item => {
-
-        return (
-
-            item.productId &&
-            item.variantId &&
-
-            item.productId.isActive &&
-            !item.productId.isDeleted &&
-
-            item.variantId.isActive &&
-            !item.variantId.isDeleted &&
-
-            item.variantId.stock > 0
-
-        )
-
-    })
-
-
-
-
-    /* CALCULATE TOTALS */
-
-    let subtotal = 0
-
-    let totalItems = 0
-
-
-
-    validItems.forEach(item => {
-
-        subtotal +=
-
-        item.price * item.quantity
-
-        totalItems +=
-
-        item.quantity
-
-    })
-
-
-
-
-    /* SHIPPING */
-
-    const deliveryCharge =
-
-    subtotal >= 5000
-    ? 0
-    : 99
-
-
-
-
-    /* TAX */
-
-    const taxAmount =
-
-    Math.floor(
-
-        subtotal * 0.02
-
-    )
-
-
-
-
-    /* FINAL */
-
-    const finalAmount =
-
-        subtotal +
-        taxAmount +
-        deliveryCharge
-
-
-
-
-    /* LOAD ADDRESSES */
-
-    const addressDoc =
-    await Address.findOne({
-
-        userId
-
-    })
-
-    .lean()
-
-
-
-
+  if (!cart || cart.items.length === 0) {
     return {
+      success: false,
 
-        success: true,
+      message: "Cart is empty",
+    };
+  }
 
-        cartItems: validItems,
+  /* VALID ITEMS */
 
-        addresses:
+  const validItems = cart.items.filter((item) => {
+    return (
+      item.productId &&
+      item.variantId &&
+      item.productId.isActive &&
+      !item.productId.isDeleted &&
+      item.variantId.isActive &&
+      !item.variantId.isDeleted &&
+      item.variantId.stock > 0
+    );
+  });
 
-        addressDoc?.addresses || [],
+  /* CALCULATE TOTALS */
 
-        subtotal,
+  let subtotal = 0;
 
-        totalItems,
+  let totalItems = 0;
 
-        taxAmount,
+  validItems.forEach((item) => {
+    subtotal += item.price * item.quantity;
 
-        deliveryCharge,
+    totalItems += item.quantity;
+  });
 
-        finalAmount
+  /* SHIPPING */
 
-    }
+  const deliveryCharge = subtotal >= 5000 ? 0 : 99;
 
-}
+  /* TAX */
+
+  const taxAmount = Math.floor(subtotal * 0.02);
+
+  /* FINAL */
+
+  const finalAmount = subtotal + taxAmount + deliveryCharge;
+
+  /* LOAD ADDRESSES */
+
+const addresses =
+await Address.find({
+
+    userId
+
+})
+
+.sort({
+
+    isDefault: -1,
+
+    createdAt: -1
+
+})
+
+.lean()
+
+  return {
+    success: true,
+
+    cartItems: validItems,
+
+    addresses,
+
+    subtotal,
+
+    totalItems,
+
+    taxAmount,
+
+    deliveryCharge,
+
+    finalAmount,
+  };
+};

@@ -1,160 +1,108 @@
-import express from "express"
+import express from "express";
 
-const router =
-express.Router()
+const router = express.Router();
 
 import {
+  renderAdminLogin,
+  adminLogin,
+  adminLogout,
+  renderForgotPassword,
+  sendAdminOTP,
+  renderAdminOTP,
+  verifyAdminOTP,
+  renderAdminResetPassword,
+  resetAdminPassword,
+  renderAdminDashboard,
+} from "../../controllers/admin/adminAuthController.js";
 
-renderAdminLogin,
-adminLogin,
-adminLogout,
-renderForgotPassword,
-sendAdminOTP,
-renderAdminOTP,
-verifyAdminOTP,
-renderAdminResetPassword,
-resetAdminPassword,
-renderAdminDashboard
+import adminAuthMiddleware from "../../middleware/adminAuthMiddleware.js";
 
-}
-
-from "../../controllers/admin/adminAuthController.js"
-
-import adminAuthMiddleware
-from "../../middleware/adminAuthMiddleware.js"
-
-import adminLoggedOut
-from "../../middleware/adminLoggedOut.js"
+import adminLoggedOut from "../../middleware/adminLoggedOut.js";
 
 /* ============================
    LOGIN PAGE
 ============================ */
-router.get(
-"/login",
-adminLoggedOut,
-renderAdminLogin
-)
+router.get("/login", adminLoggedOut, renderAdminLogin);
 
 /* ============================
    LOGIN POST
 ============================ */
 
-router.post(
-"/login",
-adminLogin
-
-)
-
+router.post("/login", adminLogin);
 
 /* ============================
    FORGOT PASSWORD PAGE
 ============================ */
 
-router.get(
-"/forgot-password",
-adminLoggedOut,
-renderForgotPassword
-
-)
-
-
+router.get("/forgot-password", adminLoggedOut, renderForgotPassword);
 
 /* ============================
    SEND OTP
 ============================ */
 
 router.post(
+  "/send-otp",
 
-"/send-otp",
-
-sendAdminOTP
-
-)
+  sendAdminOTP,
+);
 
 /* ============================
    OTP PAGE
 ============================ */
 
-router.get(
-"/verify-otp",
-adminLoggedOut,
-renderAdminOTP
-
-)
-
-
+router.get("/verify-otp", adminLoggedOut, renderAdminOTP);
 
 /* ============================
    VERIFY OTP
 ============================ */
 
 router.post(
+  "/verify-otp",
 
-"/verify-otp",
-
-verifyAdminOTP
-
-)
+  verifyAdminOTP,
+);
 
 /* ============================
    RESET PASSWORD PAGE
 ============================ */
-router.get(
-"/reset-password",
-adminLoggedOut,
-renderAdminResetPassword
-)
+router.get("/reset-password", adminLoggedOut, renderAdminResetPassword);
 
 /* ============================
    PASSWORD RESET
 ============================ */
-router.post(
-"/reset-password",
-resetAdminPassword
-)
+router.post("/reset-password", resetAdminPassword);
 
 /* ============================
    DASHBOARD
 ============================ */
 
-router.get(
-"/dashboard",
-adminAuthMiddleware,
-renderAdminDashboard,
-)
+router.get("/dashboard", adminAuthMiddleware, renderAdminDashboard);
 
 /* ============================
    LOGOUT
 ============================ */
 
 router.get(
+  "/logout",
 
-"/logout",
+  adminLogout,
+);
 
-adminLogout
-
-)
-
-export default router
-
+export default router;
 
 //for safari//
 router.get(
-"/check-session",
+  "/check-session",
 
-(req, res) => {
+  (req, res) => {
+    if (!req.session.adminId) {
+      return res.json({
+        active: false,
+      });
+    }
 
-if (!req.session.adminId) {
-
-return res.json({
-active: false
-})
-
-}
-
-res.json({
-active: true
-})
-
-}
-)
+    res.json({
+      active: true,
+    });
+  },
+);

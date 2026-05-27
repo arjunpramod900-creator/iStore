@@ -2,40 +2,26 @@
    NO CACHE MIDDLEWARE
 ========================= */
 
-const noCache = (
-
-  req,
-  res,
-  next
-
-) => {
-
+const noCache = (req, res, next) => {
   res.set(
-
     "Cache-Control",
 
-    "no-store, no-cache, must-revalidate, private"
-
-  )
+    "no-store, no-cache, must-revalidate, private",
+  );
 
   res.set(
-
     "Pragma",
 
-    "no-cache"
-
-  )
+    "no-cache",
+  );
 
   res.set(
-
     "Expires",
 
-    "0"
+    "0",
+  );
 
-  )
+  next();
+};
 
-  next()
-
-}
-
-export default noCache
+export default noCache;

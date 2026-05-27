@@ -56,81 +56,10 @@
 
 <% addresses.forEach(address => { %>
 
-<div class="address-card-v2">
-
-<div class="card-top">
-
-<div class="card-top-tags">
-
-<div class="tag-group">
-
-<% if(address.isDefault) { %>
-
-<span class="tag tag-primary">
-Default Address
-</span>
-
-<% } %>
-
-<span class="tag tag-secondary">
-<%= address.type %>
-</span>
-
-</div>
-
-<div class="type-icon">
-<i data-lucide="home"></i>
-</div>
-
-</div>
-
-
-<div class="address-content">
-
-<h3>
-
-<%= address.fullName %>
-
-</h3>
-
-<p class="address-phone">
-
-<%= address.phoneNumber %>
-
-</p>
-<p class="address-text"
-
-data-street="<%= address.addressLine1 %>"
-data-building=""
-data-city="<%= address.city %>"
-data-state="<%= address.state %>"
-data-pin="<%= address.pincode %>"
-data-country="<%= address.country %>"
-
->
-
-<%= address.addressLine1 %>,
-<%= address.city %>,
-<%= address.state %>,
-<%= address.pincode %>,
-<%= address.country %>
-
-</p>
-
-</div>
-
-</div>
-
-
- <div class="card-actions">
-                    <a href="#" class="deliver-here-btn">Deliver Here</a>
-                    <div class="action-links">
-                        <a href="#" class="action-link edit-trigger" data-id="<%= address._id %>">Edit Address</a>
-                      <a href="#" class="action-link delete-trigger" data-id="<%= address._id %>"> Delete Address</a>
-                    </div>
-                </div>
-
-</div>
+    <%- include(
+    "../partials/user/address-card",
+    { address }
+) %>
 
 <% }) %>
 

@@ -1,95 +1,62 @@
-import express from "express"
+import express from "express";
 
-const router = express.Router()
+const router = express.Router();
 
-import {
+import { isLoggedIn } from "../../middleware/authMiddleware.js";
 
-    isLoggedIn
-
-} from "../../middleware/authMiddleware.js"
-
-import userBlockCheckMiddleware
-from "../../middleware/userBlockCheckMiddleware.js"
+import userBlockCheckMiddleware from "../../middleware/userBlockCheckMiddleware.js";
 
 import {
-
-    addToCart,
-
-    loadCart,
-
-    updateCartQuantity,
-
-    removeCartItem
-
-} from "../../controllers/user/cartController.js"
-
-
+  addToCart,
+  loadCart,
+  updateCartQuantity,
+  removeCartItem,
+} from "../../controllers/user/cartController.js";
 
 /* =========================================
    PROTECTED CART ROUTES
 ========================================= */
 
 router.use(
+  isLoggedIn,
 
-    isLoggedIn,
-
-    userBlockCheckMiddleware
-
-)
-
-
+  userBlockCheckMiddleware,
+);
 
 /* =========================================
    LOAD CART PAGE
 ========================================= */
 
 router.get(
+  "/",
 
-    "/",
-
-    loadCart
-
-)
-
-
+  loadCart,
+);
 
 /* =========================================
    ADD TO CART
 ========================================= */
 
 router.post(
+  "/add",
 
-    "/add",
-
-    addToCart
-
-)
-
-
+  addToCart,
+);
 
 /* =========================================
    UPDATE QUANTITY
 ========================================= */
 
-router.post(
-    "/update-quantity",
-    updateCartQuantity
-)
-
-
+router.post("/update-quantity", updateCartQuantity);
 
 /* =========================================
    REMOVE ITEM
 ========================================= */
 
 router.delete(
+  "/remove-item/:variantId",
 
-    "/remove-item/:variantId",
+  removeCartItem,
+);
 
-    removeCartItem
-
-)
-
-
-
-export default router
+export default router;

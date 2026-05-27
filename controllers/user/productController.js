@@ -1,128 +1,68 @@
 import {
-
-    loadAllProductsService,
-
-    loadProductDetailsService
-
-} from "../../services/user/productService.js"
-
-
+  loadAllProductsService,
+  loadProductDetailsService,
+} from "../../services/user/productService.js";
 
 /* =========================================
    LOAD ALL PRODUCTS
 ========================================= */
 
-export const loadAllProducts =
+export const loadAllProducts = async (req, res) => {
+  try {
+    const data = await loadAllProductsService(
+      req.query,
 
-async (req, res) => {
+      req.session.userId,
+    );
 
-    try {
+    res.render(
+      "user/all-products",
 
-        const data =
+      {
+        ...data,
 
-        await loadAllProductsService(
+        page: "products",
+      },
+    );
+  } catch (error) {
+    console.log(error);
 
-    req.query,
-
-    req.session.userId
-
-)
-
-
-
-        res.render(
-
-            "user/all-products",
-
-            {
-
-                ...data,
-
-                page: "products"
-
-            }
-
-        )
-
-    }
-
-    catch(error) {
-
-        console.log(error)
-
-
-
-        res.redirect("/")
-
-    }
-
-}
-
-
-
-
+    res.redirect("/");
+  }
+};
 
 /* =========================================
    LOAD PRODUCT DETAILS
 ========================================= */
 
-export const loadProductDetails =
+export const loadProductDetails = async (req, res) => {
+  try {
+    const productId = req.params.id;
 
-async (req, res) => {
+    const data = await loadProductDetailsService(
+      productId,
 
-    try {
+      req.session.userId,
 
-        const productId =
+      req.query.variant,
+    );
 
-        req.params.id
-
-
-
-        const data =
-
-        await loadProductDetailsService(
-
-    productId,
-
-    req.session.userId,
-
-    req.query.variant
-
-)
-
-
-
-       if(!data.product){
-
-    return res.redirect("/products")
-
-}
-
-
-        res.render(
-
-            "user/product-details",
-
-            {
-
-                ...data,
-
-                page: "products"
-
-            }
-
-        )
-
+    if (!data.product) {
+      return res.redirect("/products");
     }
 
-    catch(error) {
+    res.render(
+      "user/product-details",
 
-        console.log(error)
+      {
+        ...data,
 
+        page: "products",
+      },
+    );
+  } catch (error) {
+    console.log(error);
 
-
-        res.redirect("/products")
-
-    }
-
-}
+    res.redirect("/products");
+  }
+};

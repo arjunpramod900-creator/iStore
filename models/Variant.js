@@ -1,139 +1,103 @@
-import mongoose from "mongoose"
+import mongoose from "mongoose";
 
 const variantSchema = new mongoose.Schema(
+  {
+    productId: {
+      type: mongoose.Schema.Types.ObjectId,
 
-{
+      ref: "Product",
 
-productId: {
+      required: true,
+    },
 
-type: mongoose.Schema.Types.ObjectId,
+    SKU: {
+      type: String,
 
-ref: "Product",
+      required: true,
 
-required: true
+      unique: true,
 
-},
+      trim: true,
+    },
 
-SKU: {
+    storage: {
+      type: String,
 
-type: String,
+      default: "",
+    },
 
-required: true,
+    color: {
+      type: String,
 
-unique: true,
+      default: "",
+    },
 
-trim: true
+    RAM: {
+      type: String,
 
-},
+      default: "",
+    },
 
-storage: {
+    images: [
+      {
+        type: String,
+      },
+    ],
 
-type: String,
+    stock: {
+      type: Number,
 
-default: ""
+      required: true,
 
-},
+      default: 0,
+    },
 
-color: {
+    price: {
+      type: Number,
 
-type: String,
+      required: true,
+    },
 
-default: ""
+    comparePrice: {
+      type: Number,
 
-},
+      default: 0,
+    },
 
-RAM: {
+    discountPercentage: {
+      type: Number,
 
-type: String,
+      default: 0,
+    },
 
-default: ""
+    isDefault: {
+      type: Boolean,
 
-},
+      default: false,
+    },
 
-images: [
+    isActive: {
+      type: Boolean,
 
-{
+      default: true,
+    },
 
-type: String
+    isDeleted: {
+      type: Boolean,
 
-}
+      default: false,
+    },
+  },
 
-],
-
-stock: {
-
-type: Number,
-
-required: true,
-
-default: 0
-
-},
-
-price: {
-
-type: Number,
-
-required: true
-
-},
-
-comparePrice: {
-
-type: Number,
-
-default: 0
-
-},
-
-discountPercentage: {
-
-type: Number,
-
-default: 0
-
-},
-
-isDefault: {
-
-type: Boolean,
-
-default: false
-
-},
-
-isActive: {
-
-type: Boolean,
-
-default: true
-
-},
-
-isDeleted: {
-
-type: Boolean,
-
-default: false
-
-}
-
-},
-
-{
-
-timestamps: true
-
-}
-
-)
+  {
+    timestamps: true,
+  },
+);
 
 const Variant = mongoose.model(
+  "Variant",
 
-"Variant",
+  variantSchema,
+);
 
-variantSchema
-
-)
-
-export default Variant
+export default Variant;

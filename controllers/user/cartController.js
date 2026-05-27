@@ -1,275 +1,172 @@
 import {
-
-    addToCartService,
-
-    loadCartService,
-
-    updateCartQuantityService,
-
-    removeCartItemService
-
-} from "../../services/user/cartService.js"
-
-
+  addToCartService,
+  loadCartService,
+  updateCartQuantityService,
+  removeCartItemService,
+} from "../../services/user/cartService.js";
 
 /* =========================================
    LOAD CART
 ========================================= */
 
 export const loadCart = async (
+  req,
 
-    req,
-
-    res
-
+  res,
 ) => {
+  try {
+    const userId = req.session.userId;
 
-    try{
+    const cart = await loadCartService(userId);
 
-        const userId =
-        req.session.userId
+    res.render(
+      "user/cart",
 
-        const cart =
-        await loadCartService(userId)
+      {
+        cart,
 
-        res.render(
+        page: "cart",
+      },
+    );
+  } catch (error) {
+    console.log("Load Cart Error:", error);
 
-            "user/cart",
-
-            {
-
-                cart,
-
-                page: "cart"
-
-            }
-
-        )
-
-    }
-
-    catch(error){
-
-        console.log(
-            "Load Cart Error:",
-            error
-        )
-
-        res.redirect("/")
-
-    }
-
-}
-
-
+    res.redirect("/");
+  }
+};
 
 /* =========================================
    ADD TO CART
 ========================================= */
 
 export const addToCart = async (
+  req,
 
-    req,
-
-    res
-
+  res,
 ) => {
+  try {
+    const userId = req.session.userId;
 
-    try{
+    const {
+      productId,
 
-        const userId =
-        req.session.userId
+      variantId,
 
-        const {
+      quantity,
+    } = req.body;
 
-            productId,
+    const response = await addToCartService({
+      userId,
 
-            variantId,
+      productId,
 
-            quantity
+      variantId,
 
-        } = req.body
+      quantity,
+    });
 
-        const response =
-        await addToCartService({
+    return res.status(200).json(response);
+  } catch (error) {
+    console.log("Add To Cart Error:", error);
 
-            userId,
+    return res.status(500).json({
+      success: false,
 
-            productId,
-
-            variantId,
-
-            quantity
-
-        })
-
-        return res.status(200).json(response)
-
-    }
-
-    catch(error){
-
-        console.log(
-            "Add To Cart Error:",
-            error
-        )
-
-        return res.status(500).json({
-
-            success: false,
-
-            message:
-            "Something went wrong"
-
-        })
-
-    }
-
-}
-
-
+      message: "Something went wrong",
+    });
+  }
+};
 
 /* =========================================
    UPDATE QUANTITY
 ========================================= */
 
-export const updateCartQuantity =
-async (req, res) => {
+export const updateCartQuantity = async (req, res) => {
+  try {
+    const userId = req.session.userId;
 
-   try{
+    const {
+      variantId,
 
-        const userId =
-        req.session.userId
+      type,
+    } = req.body;
 
-        const {
+    const response = await updateCartQuantityService({
+      userId,
 
-            variantId,
+      variantId,
 
-            type
+      type,
+    });
 
-        } = req.body
-
-        const response =
-        await updateCartQuantityService({
-
-            userId,
-
-            variantId,
-
-            type
-
-        })
-
-        /* =========================================
+    /* =========================================
            FAILED RESPONSE
         ========================================= */
 
-        if(!response.success){
+    if (!response.success) {
+      return res.status(200).json({
+        success: false,
 
-            return res.status(200).json({
+        message: response.message,
+      });
+    }
 
-                success: false,
-
-                message: response.message
-
-            })
-
-        }
-
-        /* =========================================
+    /* =========================================
            SUCCESS RESPONSE
         ========================================= */
 
-        return res.status(200).json({
+    return res.status(200).json({
+      success: true,
 
-    success: true,
+      quantity: response.quantity,
 
-    quantity: response.quantity,
+      itemSubtotal: response.itemSubtotal,
 
-    itemSubtotal: response.itemSubtotal,
+      cartSubtotal: response.cartSubtotal,
 
-    cartSubtotal: response.cartSubtotal,
+      totalItems: response.totalItems,
 
-    totalItems: response.totalItems,
+      shipping: response.shipping,
 
-    shipping: response.shipping,
+      estimatedTax: response.estimatedTax,
 
-    estimatedTax: response.estimatedTax,
+      finalTotal: response.finalTotal,
+    });
+  } catch (error) {
+    console.log("Update Quantity Error:", error);
 
-    finalTotal: response.finalTotal
+    return res.status(500).json({
+      success: false,
 
-})
-
-    }
-
-    catch(error){
-
-        console.log(
-            "Update Quantity Error:",
-            error
-        )
-
-        return res.status(500).json({
-
-            success: false,
-
-            message:
-            "Something went wrong"
-
-        })
-
-    }
-
-}
-
+      message: "Something went wrong",
+    });
+  }
+};
 
 /* =========================================
    REMOVE ITEM
 ========================================= */
 
-export const removeCartItem =
-async (req, res) => {
+export const removeCartItem = async (req, res) => {
+  try {
+    const userId = req.session.userId;
 
-    try{
+    const { variantId } = req.params;
 
-        const userId =
-        req.session.userId
+    const response = await removeCartItemService({
+      userId,
 
-        const {
+      variantId,
+    });
 
-            variantId
+    return res.status(200).json(response);
+  } catch (error) {
+    console.log("Remove Cart Item Error:", error);
 
-        } = req.params
+    return res.status(500).json({
+      success: false,
 
-        const response =
-        await removeCartItemService({
-
-            userId,
-
-            variantId
-
-        })
-
-        return res.status(200).json(response)
-
-    }
-
-    catch(error){
-
-        console.log(
-            "Remove Cart Item Error:",
-            error
-        )
-
-        return res.status(500).json({
-
-            success: false,
-
-            message:
-            "Something went wrong"
-
-        })
-
-    }
-
-}
+      message: "Something went wrong",
+    });
+  }
+};

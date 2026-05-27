@@ -3,609 +3,459 @@
 ========================= */
 
 .header {
+  position: fixed;
 
-    position: fixed;
+  top: 0;
 
-    top: 0;
+  left: 0;
 
-    left: 0;
+  width: 100%;
 
-    width: 100%;
+  height: 72px;
 
-    height: 72px;
+  background: rgba(255, 255, 255, 0.82);
 
-    background:
-    rgba(255,255,255,0.82);
+  backdrop-filter: blur(18px);
 
-    backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
 
-    -webkit-backdrop-filter: blur(18px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
 
-    border-bottom:
-    1px solid rgba(0,0,0,0.04);
-
-    z-index: 1000;
-
+  z-index: 1000;
 }
-
-
 
 /* =========================
    NAVBAR
 ========================= */
 
 .nav {
+  width: 100%;
 
-    width: 100%;
+  max-width: 1440px;
 
-    max-width: 1440px;
+  height: 72px;
 
-    height: 72px;
+  margin: 0 auto;
 
-    margin: 0 auto;
+  padding: 0 32px;
 
-    padding: 0 32px;
+  display: flex;
 
-    display: flex;
+  align-items: center;
 
-    align-items: center;
+  justify-content: space-between;
 
-    justify-content: space-between;
-
-    gap: 24px;
-
+  gap: 24px;
 }
-
-
 
 /* =========================
    LOGO
 ========================= */
 
 .logo {
+  font-size: 42px;
 
-    font-size: 42px;
+  font-weight: 800;
 
-    font-weight: 800;
+  letter-spacing: -2px;
 
-    letter-spacing: -2px;
+  color: #4c0080;
 
-    color: #4C0080;
+  text-decoration: none;
 
-    text-decoration: none;
-
-    line-height: 1;
-
+  line-height: 1;
 }
-
-
 
 /* =========================
    NAV LINKS
 ========================= */
 
 .nav-links {
+  display: flex;
 
-    display: flex;
+  align-items: center;
 
-    align-items: center;
+  gap: 8px;
 
-    gap: 8px;
-
-    height: 100%;
-
+  height: 100%;
 }
-
-
 
 .nav-link {
+  position: relative;
 
-    position: relative;
+  height: 72px;
 
-    height: 72px;
+  display: flex;
 
-    display: flex;
+  align-items: center;
 
-    align-items: center;
+  padding: 0 18px;
 
-    padding: 0 18px;
+  text-decoration: none;
 
-    text-decoration: none;
+  font-size: 15px;
 
-    font-size: 15px;
+  font-weight: 600;
 
-    font-weight: 600;
+  color: #5b5563;
 
-    color: #5B5563;
-
-    transition: 0.3s ease;
-
+  transition: 0.3s ease;
 }
-
-
 
 .nav-link:hover {
-
-    color: #4C0080;
-
+  color: #4c0080;
 }
-
-
 
 .nav-link.active {
-
-    color: #6D28D9;
-
+  color: #6d28d9;
 }
-
-
 
 .nav-link.active::after {
+  content: "";
 
-    content: "";
+  position: absolute;
 
-    position: absolute;
+  left: 16px;
 
-    left: 16px;
+  right: 16px;
 
-    right: 16px;
+  bottom: 0;
 
-    bottom: 0;
+  height: 2px;
 
-    height: 2px;
+  border-radius: 999px;
 
-    border-radius: 999px;
-
-    background:
-    linear-gradient(
-    90deg,
-    #7C3AED 0%,
-    #A855F7 100%
-);
-
+  background: linear-gradient(90deg, #7c3aed 0%, #a855f7 100%);
 }
-
-
 
 /* =========================
    NAV ICONS
 ========================= */
 
 .nav-icons {
+  display: flex;
 
-    display: flex;
+  align-items: center;
 
-    align-items: center;
-
-    gap: 10px;
-
+  gap: 10px;
 }
-
-
 
 .nav-icon {
+  width: 42px;
 
-    width: 42px;
+  height: 42px;
 
-    height: 42px;
+  border-radius: 50%;
 
-    border-radius: 50%;
+  display: flex;
 
-    display: flex;
+  align-items: center;
 
-    align-items: center;
+  justify-content: center;
 
-    justify-content: center;
+  color: #5b5563;
 
-    color: #5B5563;
+  transition: 0.3s ease;
 
-    transition: 0.3s ease;
-
-    text-decoration: none;
-
+  text-decoration: none;
 }
-
-
 
 .nav-icon svg {
+  width: 21px;
 
-    width: 21px;
+  height: 21px;
 
-    height: 21px;
-
-    stroke-width: 1.8;
-
+  stroke-width: 1.8;
 }
-
-
 
 .nav-icon:hover {
+  background: rgba(76, 0, 128, 0.06);
 
-    background:
-    rgba(76,0,128,0.06);
+  color: #4c0080;
 
-    color: #4C0080;
-
-    transform: translateY(-1px);
-
+  transform: translateY(-1px);
 }
-
-
 
 /* =========================
    LOGIN BUTTON
 ========================= */
 
 .login-btn {
+  height: 42px;
 
-    height: 42px;
+  padding: 0 24px;
 
-    padding: 0 24px;
+  border-radius: 999px;
 
-    border-radius: 999px;
+  background: linear-gradient(135deg, #4c0080 0%, #6a0dad 100%);
 
-    background:
-    linear-gradient(
-    135deg,
-    #4C0080 0%,
-    #6A0DAD 100%
-);
+  color: white;
 
-    color: white;
+  font-size: 14px;
 
-    font-size: 14px;
+  font-weight: 700;
 
-    font-weight: 700;
+  text-decoration: none;
 
-    text-decoration: none;
+  display: flex;
 
-    display: flex;
+  align-items: center;
 
-    align-items: center;
+  justify-content: center;
 
-    justify-content: center;
+  transition: 0.3s ease;
 
-    transition: 0.3s ease;
-
-    box-shadow:
-    0 8px 20px rgba(76,0,128,0.18);
-
+  box-shadow: 0 8px 20px rgba(76, 0, 128, 0.18);
 }
-
-
 
 .login-btn:hover {
+  transform: translateY(-2px);
 
-    transform: translateY(-2px);
-
-    box-shadow:
-    0 14px 24px rgba(76,0,128,0.22);
-
+  box-shadow: 0 14px 24px rgba(76, 0, 128, 0.22);
 }
-
-
 
 /* =========================
    MOBILE BOTTOM NAV
 ========================= */
 
-.mobile-bottom-nav{
+.mobile-bottom-nav {
+  position: fixed;
 
-    position: fixed;
+  left: 16px;
 
-    left: 16px;
+  right: 16px;
 
-    right: 16px;
+  bottom: 16px;
 
-    bottom: 16px;
+  top: auto;
 
-    top: auto;
+  height: 72px;
 
-    height: 72px;
+  background: rgba(255, 255, 255, 0.88);
 
-    background:
-    rgba(255,255,255,0.88);
+  backdrop-filter: blur(24px);
 
-    backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
 
-    -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.7);
 
-    border:
-    1px solid rgba(255,255,255,0.7);
+  border-radius: 28px;
 
-    border-radius: 28px;
+  display: none;
 
-    display: none;
+  align-items: center;
 
-    align-items: center;
+  justify-content: space-around;
 
-    justify-content: space-around;
+  z-index: 99999;
 
-    z-index: 99999;
+  box-shadow: 0 10px 40px rgba(17, 17, 17, 0.1);
 
-    box-shadow:
-    0 10px 40px rgba(17,17,17,0.10);
+  transform: translateZ(0);
 
-    transform: translateZ(0);
-
-    will-change: transform;
-
+  will-change: transform;
 }
-
-
 
 /* =========================
    MOBILE NAV ITEM
 ========================= */
 
-.mobile-nav-item{
+.mobile-nav-item {
+  flex: 1;
 
-    flex: 1;
+  height: 100%;
 
-    height: 100%;
+  display: flex;
 
-    display: flex;
+  flex-direction: column;
 
-    flex-direction: column;
+  align-items: center;
 
-    align-items: center;
+  justify-content: center;
 
-    justify-content: center;
+  gap: 4px;
 
-    gap: 4px;
+  text-decoration: none;
 
-    text-decoration: none;
+  color: #6b7280;
 
-    color: #6B7280;
+  transition: 0.3s ease;
 
-    transition: 0.3s ease;
-
-    position: relative;
-
+  position: relative;
 }
 
+.mobile-nav-item svg {
+  width: 22px;
 
+  height: 22px;
 
-.mobile-nav-item svg{
-
-    width: 22px;
-
-    height: 22px;
-
-    stroke-width: 1.8;
-
+  stroke-width: 1.8;
 }
 
+.mobile-nav-item span {
+  font-size: 11px;
 
+  font-weight: 700;
 
-.mobile-nav-item span{
-
-    font-size: 11px;
-
-    font-weight: 700;
-
-    letter-spacing: 0.2px;
-
+  letter-spacing: 0.2px;
 }
-
-
 
 /* =========================
    ACTIVE MOBILE NAV
 ========================= */
 
-.mobile-nav-item.active{
-
-    color: #6D28D9;
-
+.mobile-nav-item.active {
+  color: #6d28d9;
 }
 
+.mobile-nav-item.active::before {
+  content: "";
 
+  position: absolute;
 
-.mobile-nav-item.active::before{
+  top: 8px;
 
-    content: "";
+  width: 6px;
 
-    position: absolute;
+  height: 6px;
 
-    top: 8px;
+  border-radius: 50%;
 
-    width: 6px;
-
-    height: 6px;
-
-    border-radius: 50%;
-
-    background: #7C3AED;
-
+  background: #7c3aed;
 }
-
-
 
 /* =========================
    TABLET
 ========================= */
 
-@media (max-width: 992px){
+@media (max-width: 992px) {
+  .nav {
+    padding: 0 20px;
+  }
 
-    .nav{
+  .nav-links {
+    gap: 0;
+  }
 
-        padding: 0 20px;
+  .nav-link {
+    padding: 0 12px;
 
-    }
-
-    .nav-links{
-
-        gap: 0;
-
-    }
-
-    .nav-link{
-
-        padding: 0 12px;
-
-        font-size: 14px;
-
-    }
-
+    font-size: 14px;
+  }
 }
-
-
 
 /* =========================
    MOBILE
 ========================= */
 
-@media (max-width: 768px){
+@media (max-width: 768px) {
+  .header {
+    height: 64px;
+  }
 
-    .header{
+  .nav {
+    height: 64px;
 
-        height: 64px;
+    padding: 0 16px;
+  }
 
-    }
+  .logo {
+    font-size: 34px;
+  }
 
-    .nav{
+  .nav-links {
+    display: none;
+  }
 
-        height: 64px;
+  .nav-icons {
+    gap: 4px;
+  }
 
-        padding: 0 16px;
+  .nav-icon {
+    width: 38px;
 
-    }
+    height: 38px;
+  }
 
-    .logo{
+  .nav-icon svg {
+    width: 19px;
 
-        font-size: 34px;
+    height: 19px;
+  }
 
-    }
+  .login-btn {
+    height: 38px;
 
-    .nav-links{
+    padding: 0 18px;
 
-        display: none;
+    font-size: 13px;
+  }
 
-    }
-
-    .nav-icons{
-
-        gap: 4px;
-
-    }
-
-    .nav-icon{
-
-        width: 38px;
-
-        height: 38px;
-
-    }
-
-    .nav-icon svg{
-
-        width: 19px;
-
-        height: 19px;
-
-    }
-
-    .login-btn{
-
-        height: 38px;
-
-        padding: 0 18px;
-
-        font-size: 13px;
-
-    }
-
-    .mobile-bottom-nav{
-
-        display: flex;
-
-    }
-
+  .mobile-bottom-nav {
+    display: flex;
+  }
 }
-
-
 
 /* =========================
    SMALL MOBILE
 ========================= */
 
-@media (max-width: 480px){
+@media (max-width: 480px) {
+  .nav {
+    padding: 0 12px;
+  }
 
-    .nav{
+  .logo {
+    font-size: 30px;
+  }
 
-        padding: 0 12px;
+  .nav-icon {
+    width: 34px;
 
-    }
+    height: 34px;
+  }
 
-    .logo{
+  .nav-icon svg {
+    width: 18px;
 
-        font-size: 30px;
+    height: 18px;
+  }
 
-    }
+  .login-btn {
+    height: 34px;
 
-    .nav-icon{
+    padding: 0 14px;
 
-        width: 34px;
-
-        height: 34px;
-
-    }
-
-    .nav-icon svg{
-
-        width: 18px;
-
-        height: 18px;
-
-    }
-
-    .login-btn{
-
-        height: 34px;
-
-        padding: 0 14px;
-
-        font-size: 12px;
-
-    }
-
+    font-size: 12px;
+  }
 }
 /* =========================
    FORCE IOS BOTTOM NAV FIX
 ========================= */
 
-@media (max-width: 768px){
+@media (max-width: 768px) {
+  body {
+    padding-bottom: 110px;
+  }
 
-    body{
+  .mobile-bottom-nav {
+    position: fixed !important;
 
-        padding-bottom: 110px;
+    bottom: max(16px, env(safe-area-inset-bottom)) !important;
 
-    }
+    left: 16px !important;
 
-    .mobile-bottom-nav{
+    right: 16px !important;
 
-        position: fixed !important;
-
-        bottom: max(16px, env(safe-area-inset-bottom)) !important;
-
-        left: 16px !important;
-
-        right: 16px !important;
-
-        top: auto !important;
-
-        transform: none !important;
-
-        margin: 0 !important;
-
-    }
-
-}
-
-.header,
-.main-content{
+    top: auto !important;
 
     transform: none !important;
 
+    margin: 0 !important;
+  }
+}
+
+.header,
+.main-content {
+  transform: none !important;
 }

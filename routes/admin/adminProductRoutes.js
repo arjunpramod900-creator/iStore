@@ -1,124 +1,84 @@
-import express from "express"
+import express from "express";
 
-const router = express.Router()
+const router = express.Router();
 
+import multer from "multer";
 
-
-import multer from "multer"
-
-const storage = multer.memoryStorage()
+const storage = multer.memoryStorage();
 
 const upload = multer({
+  storage,
+});
 
-storage
-
-})
-
-
-
-import adminAuthMiddleware
-from "../../middleware/adminAuthMiddleware.js"
-
-
+import adminAuthMiddleware from "../../middleware/adminAuthMiddleware.js";
 
 import {
-
-loadProducts,
-
-renderAddProduct,
-
-addProduct,
-
-deleteProduct
-
-}
-
-from "../../controllers/admin/adminProductController.js"
-
-
+  loadProducts,
+  renderAddProduct,
+  addProduct,
+  deleteProduct,
+} from "../../controllers/admin/adminProductController.js";
 
 /* ============================
    PRODUCT MANAGEMENT
 ============================ */
 
 router.get(
+  "/products",
 
-"/products",
+  adminAuthMiddleware,
 
-adminAuthMiddleware,
-
-loadProducts
-
-)
-
-
+  loadProducts,
+);
 
 /* ============================
    RENDER ADD PRODUCT
 ============================ */
 
 router.get(
+  "/products/add",
 
-"/products/add",
+  adminAuthMiddleware,
 
-adminAuthMiddleware,
-
-renderAddProduct
-
-)
-
-
+  renderAddProduct,
+);
 
 /* ============================
    ADD PRODUCT
 ============================ */
 
 router.post(
+  "/products/add",
 
-"/products/add",
+  adminAuthMiddleware,
 
-adminAuthMiddleware,
+  upload.fields([
+    {
+      name: "thumbnail",
 
-upload.fields([
+      maxCount: 1,
+    },
 
-{
+    {
+      name: "variantImages",
 
-name: "thumbnail",
+      maxCount: 10,
+    },
+  ]),
 
-maxCount: 1
-
-},
-
-{
-
-name: "variantImages",
-
-maxCount: 10
-
-}
-
-]),
-
-addProduct
-
-)
-
-
+  addProduct,
+);
 
 /* ============================
    DELETE PRODUCT
 ============================ */
 
 router.patch(
+  "/products/:id",
 
-"/products/:id",
+  adminAuthMiddleware,
 
-adminAuthMiddleware,
+  deleteProduct,
+);
 
-deleteProduct
-
-)
-
-
-
-export default router
+export default router;

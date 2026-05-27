@@ -1,347 +1,221 @@
-import mongoose from "mongoose"
+import mongoose from "mongoose";
 
 const orderItemSchema = new mongoose.Schema({
+  productId: {
+    type: mongoose.Schema.Types.ObjectId,
 
-    productId: {
+    ref: "Product",
 
-        type: mongoose.Schema.Types.ObjectId,
+    required: true,
+  },
 
-        ref: "Product",
+  variantId: {
+    type: mongoose.Schema.Types.ObjectId,
 
-        required: true
+    ref: "Variant",
 
-    },
+    required: true,
+  },
 
-    variantId: {
+  productName: {
+    type: String,
 
-        type: mongoose.Schema.Types.ObjectId,
+    required: true,
+  },
 
-        ref: "Variant",
+  productImage: {
+    type: String,
 
-        required: true
+    required: true,
+  },
 
-    },
+  variantName: {
+    type: String,
 
-    productName: {
+    required: true,
+  },
 
-        type: String,
+  quantity: {
+    type: Number,
 
-        required: true
+    required: true,
+  },
 
-    },
+  price: {
+    type: Number,
 
-    productImage: {
+    required: true,
+  },
 
-        type: String,
+  itemStatus: {
+    type: String,
 
-        required: true
+    enum: ["Pending", "Cancelled", "Returned", "Delivered"],
 
-    },
-
-    variantName: {
-
-        type: String,
-
-        required: true
-
-    },
-
-    quantity: {
-
-        type: Number,
-
-        required: true
-
-    },
-
-    price: {
-
-        type: Number,
-
-        required: true
-
-    },
-
-    itemStatus: {
-
-        type: String,
-
-        enum: [
-
-            "Pending",
-
-            "Cancelled",
-
-            "Returned",
-
-            "Delivered"
-
-        ],
-
-        default: "Pending"
-
-    }
-
-})
-
-
+    default: "Pending",
+  },
+});
 
 const shippingAddressSchema = new mongoose.Schema({
+  fullName: String,
 
-    fullName: String,
+  phoneNumber: String,
 
-    phoneNumber: String,
+  addressLine1: String,
 
-    addressLine1: String,
+  city: String,
 
-    city: String,
+  state: String,
 
-    state: String,
+  country: String,
 
-    country: String,
+  pincode: String,
+});
 
-    pincode: String
-
-})
-
-
-
-const orderSchema = new mongoose.Schema({
-
+const orderSchema = new mongoose.Schema(
+  {
     userId: {
+      type: mongoose.Schema.Types.ObjectId,
 
-        type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
 
-        ref: "User",
-
-        required: true
-
+      required: true,
     },
 
     orderId: {
+      type: String,
 
-        type: String,
+      required: true,
 
-        required: true,
-
-        unique: true
-
+      unique: true,
     },
 
     items: [orderItemSchema],
 
-
-
     shippingAddress: shippingAddressSchema,
 
-
-
     paymentMethod: {
+      type: String,
 
-        type: String,
+      enum: ["COD", "RAZORPAY", "WALLET"],
 
-        enum: [
-
-            "COD",
-
-            "RAZORPAY",
-
-            "WALLET"
-
-        ],
-
-        default: "COD"
-
+      default: "COD",
     },
-
-
 
     paymentStatus: {
+      type: String,
 
-        type: String,
+      enum: ["Pending", "Paid", "Failed", "Refunded"],
 
-        enum: [
-
-            "Pending",
-
-            "Paid",
-
-            "Failed",
-
-            "Refunded"
-
-        ],
-
-        default: "Pending"
-
+      default: "Pending",
     },
-
-
 
     paymentId: {
+      type: String,
 
-        type: String,
-
-        default: null
-
+      default: null,
     },
-
-
 
     subtotal: {
+      type: Number,
 
-        type: Number,
-
-        required: true
-
+      required: true,
     },
-
-
 
     taxAmount: {
+      type: Number,
 
-        type: Number,
-
-        default: 0
-
+      default: 0,
     },
-
-
 
     deliveryCharge: {
+      type: Number,
 
-        type: Number,
-
-        default: 0
-
+      default: 0,
     },
-
-
 
     discountAmount: {
+      type: Number,
 
-        type: Number,
-
-        default: 0
-
+      default: 0,
     },
-
-
 
     finalAmount: {
+      type: Number,
 
-        type: Number,
-
-        required: true
-
+      required: true,
     },
-
-
 
     couponId: {
+      type: mongoose.Schema.Types.ObjectId,
 
-        type: mongoose.Schema.Types.ObjectId,
+      ref: "Coupon",
 
-        ref: "Coupon",
-
-        default: null
-
+      default: null,
     },
-
-
 
     couponCode: {
+      type: String,
 
-        type: String,
-
-        default: null
-
+      default: null,
     },
-
-
 
     orderStatus: {
+      type: String,
 
-        type: String,
+      enum: [
+        "Pending",
 
-        enum: [
+        "Processing",
 
-            "Pending",
+        "Shipped",
 
-            "Processing",
+        "Out for Delivery",
 
-            "Shipped",
+        "Delivered",
 
-            "Out for Delivery",
+        "Cancelled",
 
-            "Delivered",
+        "Returned",
+      ],
 
-            "Cancelled",
-
-            "Returned"
-
-        ],
-
-        default: "Pending"
-
+      default: "Pending",
     },
-
-
 
     cancelReason: {
+      type: String,
 
-        type: String,
-
-        default: null
-
+      default: null,
     },
-
-
 
     returnReason: {
+      type: String,
 
-        type: String,
-
-        default: null
-
+      default: null,
     },
-
-
 
     deliveredDate: {
+      type: Date,
 
-        type: Date,
-
-        default: null
-
+      default: null,
     },
 
-
-
     estimatedDelivery: {
+      type: Date,
 
-        type: Date,
+      default: null,
+    },
+  },
 
-        default: null
-
-    }
-
-},
-
-{
-
-    timestamps: true
-
-})
-
-
+  {
+    timestamps: true,
+  },
+);
 
 const Order = mongoose.model(
+  "Order",
 
-    "Order",
+  orderSchema,
+);
 
-    orderSchema
-
-)
-
-export default Order
+export default Order;

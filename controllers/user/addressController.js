@@ -1,243 +1,149 @@
-import { addressSchema } from "../../validators/addressValidator.js"
+import { addressSchema } from "../../validators/addressValidator.js";
 
-import Address from "../../models/Address.js"
-
-
+import Address from "../../models/Address.js";
 
 /* =========================
    LOAD ADDRESSES PAGE
 ========================= */
 
 export const loadAddresses = async (req, res) => {
+  try {
+    const userId = req.session.userId;
 
-try {
+    /* Get user addresses */
 
-const userId =
-req.session.userId
+    const addresses = await Address.find({
+      userId,
+    }).sort({
+      isDefault: -1,
 
+      createdAt: -1,
+    });
 
+    res.render("user/addresses", {
+      addresses,
+    });
+  } catch (error) {
+    console.log("Load Addresses Error:", error);
 
-/* Get user addresses */
-
-const addresses =
-await Address.find({
-
-userId
-
-}).sort({
-
-isDefault: -1,
-
-createdAt: -1
-
-})
-
-
-
-res.render(
-"user/addresses",
-{
-
-addresses
-
-}
-
-)
-
-}
-
-catch (error) {
-
-console.log(
-"Load Addresses Error:",
-error
-)
-
-res.redirect("/profile")
-
-}
-
-}
-
-
+    res.redirect("/profile");
+  }
+};
 
 /* =========================
    ADD NEW ADDRESS
 ========================= */
 
 export const addAddress = async (req, res) => {
+  try {
+    const userId = req.session.userId;
 
-try {
+    /* ZOD VALIDATION */
 
-const userId = req.session.userId
+    const result = addressSchema.safeParse(req.body);
 
-/* ZOD VALIDATION */
+    if (!result.success) {
+      return res.status(400).send(result.error.errors[0].message);
+    }
 
-const result = addressSchema.safeParse(req.body)
+    const data = result.data;
 
-if (!result.success) {
+    /* DEFAULT HANDLING */
 
-return res.status(400).send(
-result.error.errors[0].message
-)
+    if (data.isDefault) {
+      await Address.updateMany({ userId }, { isDefault: false });
+    }
 
-}
+    /* CREATE ADDRESS */
 
-const data = result.data
+    const newAddress = new Address({
+      fullName: data.fullName,
+      phoneNumber: data.phoneNumber,
+      addressLine1: data.addressLine1,
+      city: data.city,
+      state: data.state,
+      pincode: data.pincode,
+      country: data.country,
+      type: data.type,
+      userId,
+      isDefault: data.isDefault || false,
+    });
 
-/* DEFAULT HANDLING */
+    await newAddress.save();
 
-if (data.isDefault) {
+    res.redirect("/addresses");
+  } catch (error) {
+    console.log("Add Address Error:", error);
 
-await Address.updateMany(
-{ userId },
-{ isDefault: false }
-)
-
-}
-
-/* CREATE ADDRESS */
-
-const newAddress = new Address({
-
-fullName: data.fullName,
-phoneNumber: data.phoneNumber,
-addressLine1: data.addressLine1,
-city: data.city,
-state: data.state,
-pincode: data.pincode,
-country: data.country,
-type: data.type,
-userId,
-isDefault: data.isDefault || false
-
-})
-
-await newAddress.save()
-
-res.redirect("/addresses")
-
-}
-
-catch (error) {
-
-console.log("Add Address Error:", error)
-
-res.redirect("/addresses")
-
-}
-
-}
+    res.redirect("/addresses");
+  }
+};
 
 /* =========================
    DELETE ADDRESS
 ========================= */
 
 export const deleteAddress = async (req, res) => {
+  try {
+    const addressId = req.params.id;
 
-try {
+    await Address.findByIdAndDelete(addressId);
 
-const addressId =
-req.params.id
+    res.redirect("/addresses");
+  } catch (error) {
+    console.log("Delete Address Error:", error);
 
-
-
-await Address.findByIdAndDelete(
-
-addressId
-
-)
-
-
-
-res.redirect("/addresses")
-
-}
-
-catch (error) {
-
-console.log(
-"Delete Address Error:",
-error
-)
-
-res.redirect("/addresses")
-
-}
-
-}
-
-
+    res.redirect("/addresses");
+  }
+};
 
 /* =========================
    UPDATE ADDRESS
 ========================= */
 
 export const updateAddress = async (req, res) => {
+  try {
+    const addressId = req.params.id;
+    const userId = req.session.userId;
 
-try {
+    /* ZOD VALIDATION */
 
-const addressId = req.params.id
-const userId = req.session.userId
+    const result = addressSchema.safeParse(req.body);
 
-/* ZOD VALIDATION */
+    if (!result.success) {
+      return res.status(400).send(result.error.errors[0].message);
+    }
 
-const result = addressSchema.safeParse(req.body)
+    const data = result.data;
 
-if (!result.success) {
+    /* DEFAULT LOGIC */
 
-return res.status(400).send(
-result.error.errors[0].message
-)
+    if (data.isDefault) {
+      await Address.updateMany({ userId }, { isDefault: false });
+    }
 
-}
+    /* UPDATE ADDRESS */
 
-const data = result.data
+    await Address.findByIdAndUpdate(
+      addressId,
 
-/* DEFAULT LOGIC */
+      {
+        fullName: data.fullName,
+        phoneNumber: data.phoneNumber,
+        addressLine1: data.addressLine1,
+        city: data.city,
+        state: data.state,
+        pincode: data.pincode,
+        country: data.country,
+        type: data.type,
+        isDefault: data.isDefault || false,
+      },
+    );
 
-if (data.isDefault) {
+    res.redirect("/addresses");
+  } catch (error) {
+    console.log("Update Address Error:", error);
 
-await Address.updateMany(
-{ userId },
-{ isDefault: false }
-)
-
-}
-
-/* UPDATE ADDRESS */
-
-await Address.findByIdAndUpdate(
-
-addressId,
-
-{
-fullName: data.fullName,
-phoneNumber: data.phoneNumber,
-addressLine1: data.addressLine1,
-city: data.city,
-state: data.state,
-pincode: data.pincode,
-country: data.country,
-type: data.type,
-isDefault: data.isDefault || false
-}
-
-)
-
-res.redirect("/addresses")
-
-}
-
-catch (error) {
-
-console.log(
-"Update Address Error:",
-error
-)
-
-res.redirect("/addresses")
-
-}
-
-}
+    res.redirect("/addresses");
+  }
+};

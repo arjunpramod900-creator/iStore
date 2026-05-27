@@ -3,60 +3,45 @@
 ========================================= */
 
 window.showToast = (
+  icon,
 
-    icon,
-
-    title
-
+  title,
 ) => {
+  Swal.fire({
+    toast: true,
 
-    Swal.fire({
+    position: "top",
 
-        toast: true,
+    icon: icon,
 
-        position: "top",
+    title: title,
 
-        icon: icon,
+    showConfirmButton: false,
 
-        title: title,
+    timer: 2200,
 
-        showConfirmButton: false,
+    timerProgressBar: false,
 
-        timer: 2200,
+    background: "rgba(45, 0, 79, 0.88)",
 
-        timerProgressBar: false,
+    color: "#FFFFFF",
 
-        background:
-        "rgba(45, 0, 79, 0.88)",
+    backdrop: false,
 
-        color: "#FFFFFF",
+    customClass: {
+      popup: "istore-toast",
 
-        backdrop: false,
+      title: "istore-toast-title",
 
-        customClass: {
+      icon: "istore-toast-icon",
+    },
 
-            popup: "istore-toast",
+    showClass: {
+      popup: "animate__animated animate__fadeInDown",
+    },
 
-            title: "istore-toast-title",
-
-            icon: "istore-toast-icon"
-
-        },
-
-        showClass: {
-
-            popup:
-            "animate__animated animate__fadeInDown"
-
-        },
-
-        hideClass: {
-
-            popup:
-            "animate__animated animate__fadeOutUp"
-
-        }
-
-    })
-
-}
+    hideClass: {
+      popup: "animate__animated animate__fadeOutUp",
+    },
+  });
+};

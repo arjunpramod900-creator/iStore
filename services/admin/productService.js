@@ -1,274 +1,184 @@
-import Product
-from "../../models/Product.js"
+import Product from "../../models/Product.js";
 
-import Variant
-from "../../models/Variant.js"
+import Variant from "../../models/Variant.js";
 
-import Category
-from "../../models/Category.js"
+import Category from "../../models/Category.js";
 
-import {
-variantSchema
-}
-from "../../validators/variantValidator.js"
+import { variantSchema } from "../../validators/variantValidator.js";
 
-import {
-generateSlug
-}
-from "../../utils/generateSlug.js"
+import { generateSlug } from "../../utils/generateSlug.js";
 
-import {
-uploadImage
-}
-from "../../utils/uploadToCloudinary.js"
-import { application } from "express"
+import { uploadImage } from "../../utils/uploadToCloudinary.js";
+import { application } from "express";
 
 /* ============================
    NORMALIZE VARIANT VALUES
 ============================ */
 
 const normalizeVariantValue = (value) => {
-
-return value
-?.toString()
-?.trim()
-?.toUpperCase()
-
-}
-
-
+  return value?.toString()?.trim()?.toUpperCase();
+};
 
 /* ============================
    IMAGE VALIDATION
 ============================ */
 
-const allowedMimeTypes = [
-
-"image/jpeg",
-
-"image/jpg",
-
-"image/png",
-
-"image/webp"
-
-]
-
-
+const allowedMimeTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 
 /* ============================
    LOAD PRODUCTS
 ============================ */
 
-export const loadProductsService =
-async (query) => {
+export const loadProductsService = async (query) => {
+  const currentPage = Number(query.page) || 1;
 
-const currentPage =
-Number(query.page) || 1
+  const limit = 5;
 
-const limit = 5
+  const skip = (currentPage - 1) * limit;
 
-const skip =
-(currentPage - 1) * limit
+  const search = query.search || "";
 
-const search =
-query.search || ""
+  const category = query.category || "";
 
-const category =
-query.category || ""
+  const status = query.status || "all";
 
-const status =
-query.status || "all"
+  let filter = {};
 
-let filter = {}
+  /* TRASH FILTER*/
 
-/* TRASH FILTER*/
+  if (status === "trash") {
+    filter.isDeleted = true;
+  } else {
+    filter.isDeleted = false;
+  }
 
-if (status === "trash") {
+  /* SEARCH */
 
-filter.isDeleted = true
+  if (search) {
+    filter.name = {
+      $regex: search,
 
-}
+      $options: "i",
+    };
+  }
 
-else {
+  /* CATEGORY */
 
-filter.isDeleted = false
+  if (category) {
+    filter.categoryId = category;
+  }
 
-}
+  /* STATUS */
 
-/* SEARCH */
+  if (status === "active") {
+    filter.isActive = true;
+  }
 
-if(search){
+  if (status === "inactive") {
+    filter.isActive = false;
+  }
 
-filter.name = {
+  /* PRODUCTS */
 
-$regex: search,
+  const products = await Product.find(filter)
 
-$options: "i"
+    .populate("categoryId")
 
-}
+    .sort({
+      createdAt: -1,
+    })
 
-}
+    .skip(skip)
 
-/* CATEGORY */
+    .limit(limit)
 
-if(category){
+    .lean();
 
-filter.categoryId = category
+  /* VARIANT DETAILS */
 
-}
+  for (const product of products) {
+    const variants = await Variant.find({
+      productId: product._id,
 
-/* STATUS */
+      isDeleted: false,
+    });
 
-if(status === "active"){
+    product.variantCount = variants.length;
 
-filter.isActive = true
+    product.totalStock = variants.reduce(
+      (acc, item) => acc + item.stock,
 
-}
+      0,
+    );
 
-if(status === "inactive"){
+    product.defaultPrice = variants[0]?.price || 0;
 
-filter.isActive = false
+    product.defaultSKU = variants[0]?.SKU || "N/A";
+  }
 
-}
+  /* TOTAL */
 
-/* PRODUCTS */
+  const totalProducts = await Product.countDocuments(filter);
 
-const products =
-await Product.find(filter)
+  const totalPages = Math.ceil(totalProducts / limit);
 
-.populate("categoryId")
+  /* STATS */
 
-.sort({
+  const stats = {
+    total: await Product.countDocuments({
+      isDeleted: false,
+    }),
 
-createdAt: -1
+    active: await Product.countDocuments({
+      isDeleted: false,
 
-})
+      isActive: true,
+    }),
 
-.skip(skip)
+    inactive: await Product.countDocuments({
+      isDeleted: false,
 
-.limit(limit)
+      isActive: false,
+    }),
+  };
 
-.lean()
+  /* CATEGORIES */
 
-/* VARIANT DETAILS */
+  const categories = await Category.find({
+    isDeleted: false,
 
-for(const product of products){
+    isActive: true,
+  });
 
-const variants =
-await Variant.find({
+  return {
+    products,
 
-productId: product._id,
+    stats,
 
-isDeleted: false
+    categories,
 
-})
+    currentPage,
 
-product.variantCount =
-variants.length
+    totalPages,
 
-product.totalStock =
-variants.reduce(
+    totalProducts,
 
-(acc,item)=> acc + item.stock,
+    limit,
 
-0
+    search,
 
-)
+    category,
 
-product.defaultPrice =
-variants[0]?.price || 0
-
-product.defaultSKU =
-variants[0]?.SKU || "N/A"
-
-}
-
-/* TOTAL */
-
-const totalProducts =
-await Product.countDocuments(filter)
-
-const totalPages =
-Math.ceil(totalProducts / limit)
-
-/* STATS */
-
-const stats = {
-
-total:
-await Product.countDocuments({
-
-isDeleted:false
-
-}),
-
-active:
-await Product.countDocuments({
-
-isDeleted:false,
-
-isActive:true
-
-}),
-
-inactive:
-await Product.countDocuments({
-
-isDeleted:false,
-
-isActive:false
-
-})
-
-}
-
-/* CATEGORIES */
-
-const categories =
-await Category.find({
-
-isDeleted:false,
-
-isActive:true
-
-})
-
-return {
-
-products,
-
-stats,
-
-categories,
-
-currentPage,
-
-totalPages,
-
-totalProducts,
-
-limit,
-
-search,
-
-category,
-
-status
-
-}
-
-}
-
-
+    status,
+  };
+};
 
 /* ============================
    CREATE PRODUCT
 ============================ */
 
 export const createProductService = async (data) => {
-
-  const { body, files, validatedData } = data
+  const { body, files, validatedData } = data;
 
   const {
     name,
@@ -277,127 +187,106 @@ export const createProductService = async (data) => {
     isFeatured,
     isBestSeller,
     isDeal,
-    isActive
-  } = validatedData
+    isActive,
+  } = validatedData;
 
   /* 1. DUPLICATE CHECK */
   const existingProduct = await Product.findOne({
     name: { $regex: `^${name.trim()}$`, $options: "i" },
-    isDeleted: false
-  })
+    isDeleted: false,
+  });
 
   if (existingProduct) {
-    throw new Error("Product already exists")
+    throw new Error("Product already exists");
   }
 
   /* 2. CATEGORY CHECK */
-  const category = await Category.findById(categoryId)
+  const category = await Category.findById(categoryId);
 
   if (!category) {
-    throw new Error("Category not found")
+    throw new Error("Category not found");
   }
 
   /* 3. SKU CHECK */
-  const existingSKU = await Variant.findOne({ SKU: body.SKU })
+  const existingSKU = await Variant.findOne({ SKU: body.SKU });
 
   if (existingSKU) {
-    throw new Error("SKU already exists")
+    throw new Error("SKU already exists");
   }
 
   /* 4. VARIANT IMAGE VALIDATION (before any uploads or saves) */
   if (!files?.variantImages || files.variantImages.length < 3) {
-    throw new Error("Minimum 3 variant images are required")
+    throw new Error("Minimum 3 variant images are required");
   }
 
   for (const image of files.variantImages) {
     if (!allowedMimeTypes.includes(image.mimetype)) {
-      throw new Error("Only JPG, PNG and WEBP images are allowed")
+      throw new Error("Only JPG, PNG and WEBP images are allowed");
     }
   }
 
   /* 5. VALIDATE VARIANT SCHEMA */
-  if(
-
-    body.comparePrice &&
-
-    Number(body.comparePrice) <= Number(body.price)
-
-){
-
-    throw new Error(
-
-        "Compare price must be greater than price"
-
-    )
-
-}
+  if (body.comparePrice && Number(body.comparePrice) <= Number(body.price)) {
+    throw new Error("Compare price must be greater than price");
+  }
   const variantDataForValidation = {
-    productId: "placeholder",   // real _id not available yet, just for schema check
-    SKU:               body.SKU,
+    productId: "placeholder", // real _id not available yet, just for schema check
+    SKU: body.SKU,
     storage: normalizeVariantValue(body.storage),
-color: normalizeVariantValue(body.color),
-RAM: normalizeVariantValue(body.RAM),
+    color: normalizeVariantValue(body.color),
+    RAM: normalizeVariantValue(body.RAM),
     stock: Number(body.stock),
 
-price: Number(body.price),
+    price: Number(body.price),
 
-comparePrice:
-body.comparePrice
-? Number(body.comparePrice)
-: 0,
+    comparePrice: body.comparePrice ? Number(body.comparePrice) : 0,
 
-discountPercentage:
+    discountPercentage:
+      Number(body.comparePrice) > Number(body.price)
+        ? Math.round(
+            ((Number(body.comparePrice) - Number(body.price)) /
+              Number(body.comparePrice)) *
+              100,
+          )
+        : 0,
+    isDefault: body.isDefault,
+    isActive: body.isActive === "true",
+    images: ["placeholder", "placeholder", "placeholder"],
+  };
 
-Number(body.comparePrice) > Number(body.price)
-
-? Math.round(
-
-    (
-        (Number(body.comparePrice) - Number(body.price))
-        / Number(body.comparePrice)
-    ) * 100
-
-)
-
-: 0,
-    isDefault:         body.isDefault,
-    isActive:          body.isActive === "true",
-    images:            ["placeholder", "placeholder", "placeholder"]
-  }
-
-  const validation = variantSchema.safeParse(variantDataForValidation)
+  const validation = variantSchema.safeParse(variantDataForValidation);
 
   if (!validation.success) {
-    throw new Error(validation.error.errors[0].message)
+    throw new Error(validation.error.errors[0].message);
   }
 
   /* 6. UPLOAD THUMBNAIL */
-  let thumbnail = ""
+  let thumbnail = "";
 
   if (files?.thumbnail?.[0]) {
-    const file = files.thumbnail[0]
-    const maxSize = 10 * 1024 * 1024
+    const file = files.thumbnail[0];
+    const maxSize = 10 * 1024 * 1024;
     if (!allowedMimeTypes.includes(file.mimetype)) {
-      throw new Error("Only JPG, PNG and WEBP images are allowed")
+      throw new Error("Only JPG, PNG and WEBP images are allowed");
     }
 
     if (file.size > maxSize) {
-      throw new Error("Thumbnail must be below 10MB")
+      throw new Error("Thumbnail must be below 10MB");
     }
 
-    thumbnail = await uploadImage(file.buffer)
+    thumbnail = await uploadImage(file.buffer);
   }
 
   /* 7. UPLOAD VARIANT IMAGES */
-  let images = []
+  let images = [];
 
   for (const image of files.variantImages) {
-    const uploadedImage = await uploadImage(image.buffer)
-    images.push(uploadedImage)
+    const uploadedImage = await uploadImage(image.buffer);
+    images.push(uploadedImage);
   }
 
   /* 8. SAVE PRODUCT */
-  const slug = generateSlug(name)
+  const slug = generateSlug(name);
 
   const product = new Product({
     name,
@@ -405,905 +294,533 @@ Number(body.comparePrice) > Number(body.price)
     description,
     categoryId,
     thumbnail,
-    isFeatured:   isFeatured === true   || isFeatured === "true",
+    isFeatured: isFeatured === true || isFeatured === "true",
     isBestSeller: isBestSeller === true || isBestSeller === "true",
-    isDeal:       isDeal === true       || isDeal === "true",
-    isActive:     isActive === true     || isActive === "true"
-  })
+    isDeal: isDeal === true || isDeal === "true",
+    isActive: isActive === true || isActive === "true",
+  });
 
-  await product.save()
+  await product.save();
 
   /* 9. CREATE VARIANT */
   await Variant.create({
-    productId:         product._id,
-    SKU:               body.SKU,
-   storage: normalizeVariantValue(body.storage),
-color: normalizeVariantValue(body.color),
-RAM: normalizeVariantValue(body.RAM),
-    stock:             body.stock,
-    price:             body.price,
-    comparePrice:      body.comparePrice,
+    productId: product._id,
+    SKU: body.SKU,
+    storage: normalizeVariantValue(body.storage),
+    color: normalizeVariantValue(body.color),
+    RAM: normalizeVariantValue(body.RAM),
+    stock: body.stock,
+    price: body.price,
+    comparePrice: body.comparePrice,
     discountPercentage:
-
-Number(body.comparePrice) > Number(body.price)
-
-? Math.round(
-
-    (
-        (Number(body.comparePrice) - Number(body.price))
-        / Number(body.comparePrice)
-    ) * 100
-
-)
-
-: 0,
-    isDefault:         body.isDefault,
-    isActive:          body.isActive === "true",
-    images
-  })
-
-}
+      Number(body.comparePrice) > Number(body.price)
+        ? Math.round(
+            ((Number(body.comparePrice) - Number(body.price)) /
+              Number(body.comparePrice)) *
+              100,
+          )
+        : 0,
+    isDefault: body.isDefault,
+    isActive: body.isActive === "true",
+    images,
+  });
+};
 /* ============================
    UPDATE PRODUCT
 ============================ */
 
-export const updateProductService =
-async (
+export const updateProductService = async (
+  productId,
 
-productId,
-
-data
-
+  data,
 ) => {
+  const {
+    body,
 
-const {
+    files,
 
-body,
+    validatedData,
+  } = data;
 
-files,
+  const product = await Product.findById(productId);
 
-validatedData
+  if (!product) {
+    throw new Error("Product not found");
+  }
 
-} = data
+  /* THUMBNAIL */
 
-const product =
-await Product.findById(
-productId
-)
+  let thumbnail = product.thumbnail;
 
-if(!product){
+  if (files?.thumbnail?.[0]) {
+    const file = files.thumbnail[0];
 
-throw new Error(
-"Product not found"
-)
+    if (!allowedMimeTypes.includes(file.mimetype)) {
+      throw new Error("Only JPG, PNG and WEBP images are allowed");
+    }
 
-}
+    thumbnail = await uploadImage(file.buffer);
+  }
 
-/* THUMBNAIL */
+  /* UPDATE PRODUCT */
 
-let thumbnail =
-product.thumbnail
+  await Product.findByIdAndUpdate(
+    productId,
 
-if(files?.thumbnail?.[0]){
+    {
+      ...validatedData,
 
-const file =
-files.thumbnail[0]
+      thumbnail,
+    },
+  );
 
-if(
+  /* UPDATE VARIANT */
 
-!allowedMimeTypes.includes(
-file.mimetype
-)
+  if (body.comparePrice && Number(body.comparePrice) <= Number(body.price)) {
+    throw new Error("Compare price must be greater than price");
+  }
 
-){
+  await Variant.findOneAndUpdate(
+    {
+      productId,
+    },
 
-throw new Error(
-"Only JPG, PNG and WEBP images are allowed"
-)
+    {
+      SKU: body.SKU,
 
-}
+      storage: normalizeVariantValue(body.storage),
 
-thumbnail =
-await uploadImage(
-file.buffer
-)
+      color: normalizeVariantValue(body.color),
 
-}
+      RAM: normalizeVariantValue(body.RAM),
 
-/* UPDATE PRODUCT */
+      stock: body.stock,
 
-await Product.findByIdAndUpdate(
+      price: body.price,
 
-productId,
+      comparePrice: body.comparePrice,
 
-{
+      discountPercentage:
+        Number(body.comparePrice) > Number(body.price)
+          ? Math.round(
+              ((Number(body.comparePrice) - Number(body.price)) /
+                Number(body.comparePrice)) *
+                100,
+            )
+          : 0,
 
-...validatedData,
+      isActive: body.isActive === "true",
 
-thumbnail
+      isDeleted: false,
+    },
 
-}
+    {
+      new: true,
 
-)
-
-/* UPDATE VARIANT */
-
-if(
-
-    body.comparePrice &&
-
-    Number(body.comparePrice) <= Number(body.price)
-
-){
-
-    throw new Error(
-
-        "Compare price must be greater than price"
-
-    )
-
-}
-
-await Variant.findOneAndUpdate(
-
-{
-
-productId
-
-},
-
-{
-
-SKU: body.SKU,
-
-storage: normalizeVariantValue(body.storage),
-
-color: normalizeVariantValue(body.color),
-
-RAM: normalizeVariantValue(body.RAM),
-
-stock: body.stock,
-
-price: body.price,
-
-comparePrice:
-body.comparePrice,
-
-discountPercentage:
-
-Number(body.comparePrice) > Number(body.price)
-
-? Math.round(
-
-    (
-        (Number(body.comparePrice) - Number(body.price))
-        / Number(body.comparePrice)
-    ) * 100
-
-)
-
-: 0,
-
-isActive:
-body.isActive === "true",
-
-isDeleted: false
-
-},
-
-{
-
-new: true,
-
-upsert: true
-
-}
-
-)
-
-}
-
-
+      upsert: true,
+    },
+  );
+};
 
 /* ============================
    DELETE PRODUCT
 ============================ */
 
-export const deleteProductService =
-async (productId) => {
+export const deleteProductService = async (productId) => {
+  await Product.findByIdAndUpdate(
+    productId,
 
-await Product.findByIdAndUpdate(
+    {
+      isDeleted: true,
+    },
+  );
 
-productId,
+  await Variant.updateMany(
+    {
+      productId,
+    },
 
-{
-
-isDeleted: true
-
-}
-
-)
-
-await Variant.updateMany(
-
-{
-
-productId
-
-},
-
-{
-
-isDeleted: true
-
-}
-
-)
-
-}
+    {
+      isDeleted: true,
+    },
+  );
+};
 
 /* ============================
    RESTORE PRODUCT
 ============================ */
 
-export const restoreProductService =
-async (productId) => {
+export const restoreProductService = async (productId) => {
+  const product = await Product.findById(productId);
 
-const product =
-await Product.findById(productId)
+  if (!product) {
+    throw new Error("Product not found");
+  }
 
-if (!product) {
+  await Product.findByIdAndUpdate(
+    productId,
 
-throw new Error(
-"Product not found"
-)
+    {
+      isDeleted: false,
+    },
+  );
 
-}
+  /* RESTORE VARIANTS */
 
-await Product.findByIdAndUpdate(
+  await Variant.updateMany(
+    {
+      productId,
+    },
 
-productId,
-
-{
-
-isDeleted: false
-
-}
-
-)
-
-/* RESTORE VARIANTS */
-
-await Variant.updateMany(
-
-{
-
-productId
-
-},
-
-{
-
-isDeleted: false
-
-}
-
-)
-
-}
-
-
+    {
+      isDeleted: false,
+    },
+  );
+};
 
 /* ============================
    PERMANENT DELETE PRODUCT
 ============================ */
 
-export const permanentDeleteProductService =
-async (productId) => {
+export const permanentDeleteProductService = async (productId) => {
+  const product = await Product.findById(productId);
 
-const product =
-await Product.findById(productId)
+  if (!product) {
+    throw new Error("Product not found");
+  }
 
-if (!product) {
+  /* DELETE VARIANTS */
 
-throw new Error(
-"Product not found"
-)
+  await Variant.deleteMany({
+    productId,
+  });
 
-}
+  /* DELETE PRODUCT */
 
-/* DELETE VARIANTS */
-
-await Variant.deleteMany({
-
-productId
-
-})
-
-/* DELETE PRODUCT */
-
-await Product.findByIdAndDelete(
-productId
-)
-
-}
-
-
+  await Product.findByIdAndDelete(productId);
+};
 
 /* ============================
    RESTORE VARIANT
 ============================ */
 
-export const restoreVariantService =
-async (variantId) => {
+export const restoreVariantService = async (variantId) => {
+  const variant = await Variant.findById(variantId);
 
-const variant =
-await Variant.findById(variantId)
+  if (!variant) {
+    throw new Error("Variant not found");
+  }
 
-if (!variant) {
+  await Variant.findByIdAndUpdate(
+    variantId,
 
-throw new Error(
-"Variant not found"
-)
-
-}
-
-await Variant.findByIdAndUpdate(
-
-variantId,
-
-{
-
-isDeleted: false
-
-}
-
-)
-
-}
-
-
+    {
+      isDeleted: false,
+    },
+  );
+};
 
 /* ============================
    PERMANENT DELETE VARIANT
 ============================ */
 
-export const permanentDeleteVariantService =
-async (variantId) => {
+export const permanentDeleteVariantService = async (variantId) => {
+  const variant = await Variant.findById(variantId);
 
-const variant =
-await Variant.findById(variantId)
+  if (!variant) {
+    throw new Error("Variant not found");
+  }
 
-if (!variant) {
-
-throw new Error(
-"Variant not found"
-)
-
-}
-
-await Variant.findByIdAndDelete(
-variantId
-)
-
-}
+  await Variant.findByIdAndDelete(variantId);
+};
 
 /* ============================
    PRODUCT DETAILS
 ============================ */
 
-export const loadProductDetailsService =
-async (productId) => {
+export const loadProductDetailsService = async (productId) => {
+  const product = await Product.findById(productId)
 
-const product =
-await Product.findById(productId)
+    .populate("categoryId")
 
-.populate("categoryId")
+    .lean();
 
-.lean()
+  if (!product || product.isDeleted) {
+    throw new Error("Product not found");
+  }
 
-if(!product || product.isDeleted){
+  const variants = await Variant.find({
+    productId,
+  }).lean();
 
-throw new Error(
-"Product not found"
-)
+  const totalStock = variants
 
-}
+    .filter((item) => !item.isDeleted)
 
-const variants =
-await Variant.find({
+    .reduce(
+      (acc, item) => acc + item.stock,
 
-productId
+      0,
+    );
 
-}).lean()
+  const activeVariants = variants.filter((v) => !v.isDeleted);
 
-const totalStock =
-variants
+  const basePrice =
+    activeVariants.length > 0
+      ? Math.min(...activeVariants.map((v) => v.price))
+      : 0
+        ? Math.min(...variants.map((v) => v.price))
+        : 0;
 
-.filter(
-item => !item.isDeleted
-)
+  const totalVariants = variants.filter((variant) => !variant.isDeleted).length;
 
-.reduce(
+  return {
+    product,
 
-(acc,item)=> acc + item.stock,
+    variants,
 
-0
+    totalStock,
 
-)
+    basePrice,
 
-const activeVariants =
-
-variants.filter(
-v => !v.isDeleted
-)
-
-const basePrice =
-activeVariants.length > 0
-
-? Math.min(
-
-...activeVariants.map(v => v.price)
-
-)
-
-: 0
-
-? Math.min(
-
-...variants.map(v => v.price)
-
-)
-
-: 0
-
-const totalVariants =
-variants.filter(
-
-variant => !variant.isDeleted
-
-).length
-
-return {
-
-product,
-
-variants,
-
-totalStock,
-
-basePrice,
-
-totalVariants
-
-}
-
-}
-
-
+    totalVariants,
+  };
+};
 
 /* ============================
    ADD VARIANT
 ============================ */
 
-export const addVariantService =
-async (data) => {
+export const addVariantService = async (data) => {
+  const {
+    productId,
 
-const {
+    body,
 
-productId,
+    files,
+  } = data;
 
-body,
+  const product = await Product.findById(productId);
 
-files
+  if (!product || product.isDeleted) {
+    throw new Error("Product not found");
+  }
 
-} = data
+  const existingVariant = await Variant.findOne({
+    productId,
 
-const product =
-await Product.findById(
-productId
-)
+    color: body.color,
 
-if(!product || product.isDeleted){
+    storage: body.storage,
 
-throw new Error(
-"Product not found"
-)
-}
+    RAM: body.RAM,
 
-const existingVariant =
-await Variant.findOne({
+    isDeleted: false,
+  });
 
-productId,
+  if (existingVariant) {
+    throw new Error("Variant already exists");
+  }
 
-color:
-body.color,
+  /* MINIMUM 3 IMAGES */
 
-storage:
-body.storage,
+  if (!files?.variantImages || files.variantImages.length < 3) {
+    throw new Error("Minimum 3 images are required");
+  }
 
-RAM:
-body.RAM,
+  /* IMAGES */
 
-isDeleted:false
+  let images = [];
 
-})
+  for (const image of files.variantImages) {
+    if (!allowedMimeTypes.includes(image.mimetype)) {
+      throw new Error("Invalid image format");
+    }
 
-if(existingVariant){
+    const uploaded = await uploadImage(image.buffer);
 
-throw new Error(
-"Variant already exists"
-)
+    images.push(uploaded);
+  }
 
-}
+  /* VARIANT DATA */
 
-/* MINIMUM 3 IMAGES */
+  if (body.comparePrice && Number(body.comparePrice) <= Number(body.price)) {
+    throw new Error("Compare price must be greater than price");
+  }
 
-if(
+  const variantData = {
+    productId,
 
-!files?.variantImages ||
+    SKU: body.SKU,
 
-files.variantImages.length < 3
+    storage: normalizeVariantValue(body.storage),
 
-){
+    color: normalizeVariantValue(body.color),
 
-throw new Error(
-"Minimum 3 images are required"
-)
+    RAM: normalizeVariantValue(body.RAM),
 
-}
+    stock: Number(body.stock),
 
-/* IMAGES */
+    price: Number(body.price),
 
-let images = []
+    comparePrice: body.comparePrice ? Number(body.comparePrice) : 0,
 
-for(const image of files.variantImages){
+    discountPercentage:
+      Number(body.comparePrice) > Number(body.price)
+        ? Math.round(
+            ((Number(body.comparePrice) - Number(body.price)) /
+              Number(body.comparePrice)) *
+              100,
+          )
+        : 0,
 
-if(
+    images,
+  };
 
-!allowedMimeTypes.includes(
-image.mimetype
-)
+  /* VALIDATE */
 
-){
+  const validation = variantSchema.safeParse(variantData);
 
-throw new Error(
-"Invalid image format"
-)
+  if (!validation.success) {
+    throw new Error(validation.error.errors[0].message);
+  }
 
-}
+  /* CREATE */
 
-const uploaded =
-await uploadImage(
-image.buffer
-)
+  await Variant.create({
+    ...variantData,
 
-images.push(uploaded)
+    isActive: true,
 
-}
-
-/* VARIANT DATA */
-
-if(
-
-    body.comparePrice &&
-
-    Number(body.comparePrice) <= Number(body.price)
-
-){
-
-    throw new Error(
-
-        "Compare price must be greater than price"
-
-    )
-
-}
-
-const variantData = {
-
-productId,
-
-SKU:
-body.SKU,
-
-storage:
-normalizeVariantValue(body.storage),
-
-color:
-normalizeVariantValue(body.color),
-
-RAM:
-normalizeVariantValue(body.RAM),
-
-stock: Number(body.stock),
-
-price: Number(body.price),
-
-comparePrice:
-body.comparePrice
-? Number(body.comparePrice)
-: 0,
-
-discountPercentage:
-
-Number(body.comparePrice) > Number(body.price)
-
-? Math.round(
-
-    (
-        (Number(body.comparePrice) - Number(body.price))
-        / Number(body.comparePrice)
-    ) * 100
-
-)
-
-: 0,
-
-images
-
-}
-
-/* VALIDATE */
-
-const validation =
-variantSchema.safeParse(
-variantData
-)
-
-if(!validation.success){
-
-throw new Error(
-
-validation
-.error
-.errors[0]
-.message
-
-)
-
-}
-
-/* CREATE */
-
-await Variant.create({
-
-...variantData,
-
-isActive: true,
-
-isDeleted: false
-
-})
-
-}
-
-
+    isDeleted: false,
+  });
+};
 
 /* ============================
    UPDATE VARIANT
 ============================ */
 
-export const updateVariantService =
-async (
+export const updateVariantService = async (
+  variantId,
 
-variantId,
-
-data
-
+  data,
 ) => {
+  const {
+    body,
 
-const {
+    files,
+  } = data;
 
-body,
+  const variant = await Variant.findById(variantId);
 
-files
+  if (!variant) {
+    throw new Error("Variant not found");
+  }
 
-} = data
+  /* DUPLICATE */
 
-const variant =
-await Variant.findById(
-variantId
-)
+  const existingVariant = await Variant.findOne({
+    _id: { $ne: variantId },
 
-if(!variant){
+    productId: variant.productId,
 
-throw new Error(
-"Variant not found"
-)
+    color: body.color,
 
-}
+    storage: body.storage,
 
-/* DUPLICATE */
+    RAM: body.RAM,
 
-const existingVariant =
-await Variant.findOne({
+    isDeleted: false,
+  });
 
-_id: { $ne: variantId },
+  if (existingVariant) {
+    throw new Error("Variant already exists");
+  }
 
-productId:
-variant.productId,
+  /* EXISTING IMAGES */
 
-color:
-body.color,
+  let existingImages = [];
 
-storage:
-body.storage,
+  if (body.existingImages) {
+    existingImages = JSON.parse(body.existingImages);
+  }
 
-RAM:
-body.RAM,
+  /* NEW IMAGES */
 
-isDeleted:false
+  let newImages = [];
 
-})
+  if (files?.variantImages?.length) {
+    for (const image of files.variantImages) {
+      if (!allowedMimeTypes.includes(image.mimetype)) {
+        throw new Error("Invalid image format");
+      }
 
-if(existingVariant){
+      const uploadedImage = await uploadImage(image.buffer);
 
-throw new Error(
-"Variant already exists"
-)
+      newImages.push(uploadedImage);
+    }
+  }
 
-}
+  /* FINAL IMAGES */
 
-/* EXISTING IMAGES */
+  const images = [...existingImages, ...newImages];
 
-let existingImages = []
+  /* MINIMUM 3 IMAGES */
 
-if(body.existingImages){
+  if (images.length < 3) {
+    throw new Error("Minimum 3 images required");
+  }
 
-existingImages =
-JSON.parse(
-body.existingImages
-)
+  /* UPDATE */
+  if (body.comparePrice && Number(body.comparePrice) <= Number(body.price)) {
+    throw new Error("Compare price must be greater than price");
+  }
 
-}
+  await Variant.findByIdAndUpdate(
+    variantId,
 
-/* NEW IMAGES */
+    {
+      SKU: body.SKU,
 
-let newImages = []
+      storage: normalizeVariantValue(body.storage),
 
-if(files?.variantImages?.length){
+      color: normalizeVariantValue(body.color),
 
-for(const image of files.variantImages){
+      RAM: normalizeVariantValue(body.RAM),
 
-if(
+      stock: body.stock,
 
-!allowedMimeTypes.includes(
-image.mimetype
-)
+      price: body.price,
 
-){
+      comparePrice: body.comparePrice,
 
-throw new Error(
-"Invalid image format"
-)
+      discountPercentage:
+        Number(body.comparePrice) > Number(body.price)
+          ? Math.round(
+              ((Number(body.comparePrice) - Number(body.price)) /
+                Number(body.comparePrice)) *
+                100,
+            )
+          : 0,
 
-}
-
-const uploadedImage =
-await uploadImage(
-image.buffer
-)
-
-newImages.push(
-uploadedImage
-)
-
-}
-
-}
-
-/* FINAL IMAGES */
-
-const images = [
-
-...existingImages,
-
-...newImages
-
-]
-
-/* MINIMUM 3 IMAGES */
-
-if(images.length < 3){
-
-throw new Error(
-"Minimum 3 images required"
-)
-
-}
-
-/* UPDATE */
-if(
-
-    body.comparePrice &&
-
-    Number(body.comparePrice) <= Number(body.price)
-
-){
-
-    throw new Error(
-
-        "Compare price must be greater than price"
-
-    )
-
-}
-
-await Variant.findByIdAndUpdate(
-
-variantId,
-
-{
-
-SKU:
-body.SKU,
-
-storage:
-normalizeVariantValue(body.storage),
-
-color:
-normalizeVariantValue(body.color),
-
-RAM:
-normalizeVariantValue(body.RAM),
-
-stock:
-body.stock,
-
-price:
-body.price,
-
-comparePrice:
-body.comparePrice,
-
-discountPercentage:
-
-Number(body.comparePrice) > Number(body.price)
-
-? Math.round(
-
-    (
-        (Number(body.comparePrice) - Number(body.price))
-        / Number(body.comparePrice)
-    ) * 100
-
-)
-
-: 0,
-
-images
-
-}
-
-)
-
-}
-
-
+      images,
+    },
+  );
+};
 
 /* ============================
    DELETE VARIANT
 ============================ */
 
-export const deleteVariantService =
-async (variantId) => {
+export const deleteVariantService = async (variantId) => {
+  await Variant.findByIdAndUpdate(
+    variantId,
 
-await Variant.findByIdAndUpdate(
-
-variantId,
-
-{
-
-isDeleted:true
-
-}
-
-)
-
-}
-
-
+    {
+      isDeleted: true,
+    },
+  );
+};
 
 /* ============================
    GET CATEGORIES
@@ -1312,13 +829,6 @@ isDeleted:true
 export const getCategoriesService = async () => {
   return await Category.find({
     isDeleted: false,
-    isActive: true
-  })
-}
-
-
-
-
-
-
-
+    isActive: true,
+  });
+};

@@ -1,759 +1,410 @@
-import {
-productSchema
-}
-from "../../validators/productValidator.js"
+import { productSchema } from "../../validators/productValidator.js";
 
 import {
-createProductService,
-loadProductsService,
-updateProductService,
-deleteProductService,
-restoreProductService,
-permanentDeleteProductService,
-loadProductDetailsService,
-addVariantService,
-updateVariantService,
-deleteVariantService,
-restoreVariantService,
-permanentDeleteVariantService,          
-getCategoriesService
-}
-from "../../services/admin/productService.js"
-
-
+  createProductService,
+  loadProductsService,
+  updateProductService,
+  deleteProductService,
+  restoreProductService,
+  permanentDeleteProductService,
+  loadProductDetailsService,
+  addVariantService,
+  updateVariantService,
+  deleteVariantService,
+  restoreVariantService,
+  permanentDeleteVariantService,
+  getCategoriesService,
+} from "../../services/admin/productService.js";
 
 /* ============================
    LOAD PRODUCTS PAGE
 ============================ */
 
-export const loadProducts = async (
-req,
-res
-) => {
+export const loadProducts = async (req, res) => {
+  try {
+    const data = await loadProductsService(req.query);
 
-try {
+    res.render(
+      "admin/product-management",
 
-const data =
-await loadProductsService(
-req.query
-)
+      {
+        page: "products",
 
-res.render(
+        ...data,
 
-"admin/product-management",
+        req,
+      },
+    );
+  } catch (error) {
+    console.log("Load Products Error:", error);
 
-{
-
-page: "products",
-
-...data,
-
-req
-
-}
-
-)
-
-}
-
-catch (error) {
-
-console.log(
-"Load Products Error:",
-error
-)
-
-res.redirect(
-"/admin/dashboard"
-)
-
-}
-
-}
-
-
+    res.redirect("/admin/dashboard");
+  }
+};
 
 /* ============================
    RENDER ADD PRODUCT
 ============================ */
 
-export const renderAddProduct = async (
-req,
-res
-) => {
+export const renderAddProduct = async (req, res) => {
+  try {
+    const categories = await getCategoriesService();
 
-try {
+    res.render(
+      "admin/add-product",
 
-const categories = await getCategoriesService()
+      {
+        page: "products",
 
-res.render(
+        categories,
 
-"admin/add-product",
+        error: null,
+      },
+    );
+  } catch (error) {
+    console.log("Render Add Product Error:", error);
 
-{
-
-page: "products",
-
-categories,
-
-error: null
-
-}
-
-)
-
-}
-
-catch (error) {
-
-console.log(
-"Render Add Product Error:",
-error
-)
-
-res.redirect(
-"/admin/products"
-)
-
-}
-
-}
-
-
+    res.redirect("/admin/products");
+  }
+};
 
 /* ============================
    ADD PRODUCT
 ============================ */
 
-export const addProduct = async (
-req,
-res
-) => {
+export const addProduct = async (req, res) => {
+  try {
+    /* VALIDATE */
 
-try {
+    const productValidation = productSchema.safeParse(req.body);
 
-/* VALIDATE */
+    if (!productValidation.success) {
+      const categories = await getCategoriesService();
 
-const productValidation =
-productSchema.safeParse(
-req.body
-)
+      return res.status(400).render(
+        "admin/add-product",
 
-if (!productValidation.success) {
+        {
+          page: "products",
 
-  const categories =
-    await getCategoriesService()
+          categories,
 
-return res.status(400).render(
+          error: productValidation.error.errors[0].message,
+        },
+      );
+    }
 
-"admin/add-product",
+    /* CREATE PRODUCT */
 
-{
+    await createProductService({
+      body: req.body,
 
-page: "products",
+      files: req.files,
 
-categories,
+      validatedData: productValidation.data,
+    });
 
-error:
-productValidation
-.error
-.errors[0]
-.message
+    /* SUCCESS */
 
-}
+    res.redirect("/admin/products?success=added");
+  } catch (error) {
+    console.log("Add Product Error:", error);
+    const categories = await getCategoriesService();
 
-)
+    res.status(500).render(
+      "admin/add-product",
 
-}
+      {
+        page: "products",
 
-/* CREATE PRODUCT */
+        categories,
 
-await createProductService({
-
-body: req.body,
-
-files: req.files,
-
-validatedData:
-productValidation.data
-
-})
-
-/* SUCCESS */
-
-res.redirect(
-
-"/admin/products?success=added"
-
-)
-
-}
-
-catch (error) {
-
-console.log(
-"Add Product Error:",
-error
-)
-const categories = await getCategoriesService()
-
-res.status(500).render(
-
-"admin/add-product",
-
-{
-
-page: "products",
-
-categories,
-
-error:
-error.message
-
-}
-
-)
-
-}
-
-}
-
-
+        error: error.message,
+      },
+    );
+  }
+};
 
 /* ============================
    RENDER EDIT PRODUCT
 ============================ */
 
-export const renderEditProduct = async (
-req,
-res
-) => {
+export const renderEditProduct = async (req, res) => {
+  try {
+    const data = await loadProductDetailsService(req.params.id);
 
-try {
+    const categories = await getCategoriesService();
 
-const data =
-await loadProductDetailsService(
-req.params.id
-)
+    res.render(
+      "admin/edit-product",
 
-const categories = await getCategoriesService()
+      {
+        page: "products",
 
-res.render(
+        product: data.product,
 
-"admin/edit-product",
+        variant: data.variants[0],
 
-{
+        categories,
 
-page: "products",
+        error: null,
+      },
+    );
+  } catch (error) {
+    console.log("Render Edit Product Error:", error);
 
-product: data.product,
-
-variant:
-data.variants[0],
-
-categories,
-
-error: null
-
-}
-
-)
-
-}
-
-catch (error) {
-
-console.log(
-"Render Edit Product Error:",
-error
-)
-
-res.redirect(
-"/admin/products"
-)
-
-}
-
-}
-
-
+    res.redirect("/admin/products");
+  }
+};
 
 /* ============================
    UPDATE PRODUCT
 ============================ */
 
-export const updateProduct = async (
-req,
-res
-) => {
+export const updateProduct = async (req, res) => {
+  try {
+    const productValidation = productSchema.safeParse(req.body);
 
-try {
+    if (!productValidation.success) {
+      throw new Error(productValidation.error.errors[0].message);
+    }
 
-const productValidation =
-productSchema.safeParse(
-req.body
-)
+    await updateProductService(
+      req.params.id,
 
-if (!productValidation.success) {
+      {
+        body: req.body,
 
-throw new Error(
+        files: req.files,
 
-productValidation
-.error
-.errors[0]
-.message
+        validatedData: productValidation.data,
+      },
+    );
 
-)
+    res.redirect("/admin/products?success=updated");
+  } catch (error) {
+    console.log("Update Product Error:", error);
 
-}
-
-await updateProductService(
-
-req.params.id,
-
-{
-
-body: req.body,
-
-files: req.files,
-
-validatedData:
-productValidation.data
-
-}
-
-)
-
-res.redirect(
-
-"/admin/products?success=updated"
-
-)
-
-}
-
-catch (error) {
-
-console.log(
-"Update Product Error:",
-error
-)
-
-res.redirect(
-"/admin/products"
-)
-
-}
-
-}
-
-
+    res.redirect("/admin/products");
+  }
+};
 
 /* ============================
    DELETE PRODUCT
 ============================ */
 
-export const deleteProduct = async (
-req,
-res
-) => {
+export const deleteProduct = async (req, res) => {
+  try {
+    await deleteProductService(req.params.id);
 
-try {
+    res.json({
+      success: true,
 
-await deleteProductService(
-req.params.id
-)
+      message: "Product deleted successfully",
+    });
+  } catch (error) {
+    console.log("Delete Product Error:", error);
 
-res.json({
-
-success: true,
-
-message:
-"Product deleted successfully"
-
-})
-
-}
-
-catch (error) {
-
-console.log(
-"Delete Product Error:",
-error
-)
-
-res.json({
-
-success: false
-
-})
-
-}
-
-}
+    res.json({
+      success: false,
+    });
+  }
+};
 
 /* ============================
    RESTORE PRODUCT
 ============================ */
 
-export const restoreProduct = async (
-req,
-res
-) => {
+export const restoreProduct = async (req, res) => {
+  try {
+    await restoreProductService(req.params.id);
 
-try {
+    res.json({
+      success: true,
 
-await restoreProductService(
-req.params.id
-)
+      message: "Product restored successfully",
+    });
+  } catch (error) {
+    res.json({
+      success: false,
 
-res.json({
-
-success: true,
-
-message:
-"Product restored successfully"
-
-})
-
-}
-
-catch (error) {
-
-res.json({
-
-success: false,
-
-message: error.message
-
-})
-
-}
-
-}
-
-
+      message: error.message,
+    });
+  }
+};
 
 /* ============================
    PERMANENT DELETE PRODUCT
 ============================ */
 
-export const permanentDeleteProduct =
-async (req, res) => {
+export const permanentDeleteProduct = async (req, res) => {
+  try {
+    await permanentDeleteProductService(req.params.id);
 
-try {
+    res.json({
+      success: true,
 
-await permanentDeleteProductService(
-req.params.id
-)
+      message: "Product permanently deleted",
+    });
+  } catch (error) {
+    res.json({
+      success: false,
 
-res.json({
-
-success: true,
-
-message:
-"Product permanently deleted"
-
-})
-
-}
-
-catch (error) {
-
-res.json({
-
-success: false,
-
-message: error.message
-
-})
-
-}
-
-}
+      message: error.message,
+    });
+  }
+};
 
 /* ============================
    PRODUCT DETAILS PAGE
 ============================ */
 
-export const loadProductDetails = async (
-req,
-res
-) => {
+export const loadProductDetails = async (req, res) => {
+  try {
+    const data = await loadProductDetailsService(req.params.id);
 
-try {
+    res.render(
+      "admin/product-details",
 
-const data =
-await loadProductDetailsService(
-req.params.id
-)
+      {
+        page: "products",
 
-res.render(
+        ...data,
+      },
+    );
+  } catch (error) {
+    console.log("Load Product Details Error:", error);
 
-"admin/product-details",
-
-{
-
-page: "products",
-
-...data
-
-}
-
-)
-
-}
-
-catch (error) {
-
-console.log(
-"Load Product Details Error:",
-error
-)
-
-res.redirect(
-"/admin/products"
-)
-
-}
-
-}
-
-
+    res.redirect("/admin/products");
+  }
+};
 
 /* ============================
    ADD VARIANT
 ============================ */
 
-export const addVariant = async (
-req,
-res
-) => {
+export const addVariant = async (req, res) => {
+  try {
+    await addVariantService({
+      productId: req.params.productId,
 
-try {
+      body: req.body,
 
-await addVariantService({
+      files: req.files,
+    });
 
-productId:
-req.params.productId,
+    return res.json({
+      success: true,
 
-body: req.body,
+      message: "Variant added successfully",
+    });
+  } catch (error) {
+    console.log("Add Variant Error:", error);
 
-files: req.files
+    return res.json({
+      success: false,
 
-})
-
-return res.json({
-
-success: true,
-
-message:
-"Variant added successfully"
-
-})
-
-}
-
-catch(error) {
-
-console.log(
-"Add Variant Error:",
-error
-)
-
-return res.json({
-
-success: false,
-
-message:
-error.message
-
-})
-
-}
-
-}
-
-
+      message: error.message,
+    });
+  }
+};
 
 /* ============================
    UPDATE VARIANT
 ============================ */
 
-export const updateVariant = async (
-req,
-res
-) => {
+export const updateVariant = async (req, res) => {
+  try {
+    await updateVariantService(
+      req.params.variantId,
 
-try {
+      {
+        body: req.body,
 
-await updateVariantService(
+        files: req.files,
+      },
+    );
 
-req.params.variantId,
+    return res.json({
+      success: true,
 
-{
+      message: "Variant updated successfully",
+    });
+  } catch (error) {
+    console.log("Update Variant Error:", error);
 
-body: req.body,
+    return res.json({
+      success: false,
 
-files: req.files
-
-}
-
-)
-
-return res.json({
-
-success: true,
-
-message:
-"Variant updated successfully"
-
-})
-
-}
-
-catch(error) {
-
-console.log(
-"Update Variant Error:",
-error
-)
-
-return res.json({
-
-success: false,
-
-message:
-error.message
-
-})
-
-}
-
-}
-
-
+      message: error.message,
+    });
+  }
+};
 
 /* ============================
    DELETE VARIANT
 ============================ */
 
-export const deleteVariant = async (
-req,
-res
-) => {
+export const deleteVariant = async (req, res) => {
+  try {
+    await deleteVariantService(req.params.variantId);
 
-try {
+    return res.json({
+      success: true,
 
-await deleteVariantService(
-req.params.variantId
-)
+      message: "Variant deleted successfully",
+    });
+  } catch (error) {
+    console.log("Delete Variant Error:", error);
 
-return res.json({
+    return res.json({
+      success: false,
 
-success: true,
-
-message:
-"Variant deleted successfully"
-
-})
-
-}
-
-catch(error) {
-
-console.log(
-"Delete Variant Error:",
-error
-)
-
-return res.json({
-
-success: false,
-
-message:
-"Failed to delete variant"
-
-})
-
-}
-
-}
+      message: "Failed to delete variant",
+    });
+  }
+};
 
 /* ============================
    RESTORE VARIANT
 ============================ */
 
-export const restoreVariant =
-async (req, res) => {
+export const restoreVariant = async (req, res) => {
+  try {
+    await restoreVariantService(req.params.variantId);
 
-try {
+    res.json({
+      success: true,
 
-await restoreVariantService(
-req.params.variantId
-)
+      message: "Variant restored successfully",
+    });
+  } catch (error) {
+    res.json({
+      success: false,
 
-res.json({
-
-success: true,
-
-message:
-"Variant restored successfully"
-
-})
-
-}
-
-catch (error) {
-
-res.json({
-
-success: false,
-
-message: error.message
-
-})
-
-}
-
-}
-
-
+      message: error.message,
+    });
+  }
+};
 
 /* ============================
    PERMANENT DELETE VARIANT
 ============================ */
 
-export const permanentDeleteVariant =
-async (req, res) => {
+export const permanentDeleteVariant = async (req, res) => {
+  try {
+    await permanentDeleteVariantService(req.params.variantId);
 
-try {
+    res.json({
+      success: true,
 
-await permanentDeleteVariantService(
-req.params.variantId
-)
+      message: "Variant permanently deleted",
+    });
+  } catch (error) {
+    res.json({
+      success: false,
 
-res.json({
-
-success: true,
-
-message:
-"Variant permanently deleted"
-
-})
-
-}
-
-catch (error) {
-
-res.json({
-
-success: false,
-
-message: error.message
-
-})
-
-}
-
-}
+      message: error.message,
+    });
+  }
+};

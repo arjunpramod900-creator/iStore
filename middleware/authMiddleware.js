@@ -1,157 +1,86 @@
-import User from "../models/User.js"
-
-
+import User from "../models/User.js";
 
 /* =========================
    CHECK USER LOGGED IN
 ========================= */
 
-export const isLoggedIn = async (
+export const isLoggedIn = async (req, res, next) => {
+  try {
+    /* Skip admin routes */
 
-req,
-res,
-next
+    if (req.originalUrl.startsWith("/admin")) {
+      return next();
+    }
 
-) => {
+    /* If not logged in */
 
-try {
+    if (!req.session.userId) {
+      res.setHeader("Cache-Control", "no-store");
 
-/* Skip admin routes */
+      if (!req.session.userId) {
+        /* AJAX / FETCH REQUEST */
 
-if (req.originalUrl.startsWith("/admin")) {
+        const isApiRequest =
+          req.xhr || req.headers.accept?.includes("application/json");
 
-return next()
-
-}
-
-
-
-/* If not logged in */
-
-if (!req.session.userId) {
-
-res.setHeader(
-"Cache-Control",
-"no-store"
-)
-
-if (!req.session.userId) {
-
-    /* AJAX / FETCH REQUEST */
-
-    const isApiRequest =
-
-        req.xhr ||
-        req.headers.accept?.includes("application/json")
-
-    if (isApiRequest) {
-
-        return res.status(401).json({
-
+        if (isApiRequest) {
+          return res.status(401).json({
             success: false,
 
             message: "Please login to continue",
 
-            requiresLogin: true
+            requiresLogin: true,
+          });
+        }
 
-        })
-
+        return res.redirect("/login");
+      }
     }
 
-    return res.redirect("/login")
-}
-
-}
-
-
-
-/* =========================
+    /* =========================
    CHECK BLOCKED USER
 ========================= */
 
-const user =
-await User.findById(
-req.session.userId
-)
+    const user = await User.findById(req.session.userId);
 
+    if (!user || user.isBlocked) {
+      /* Remove only user session */
 
+      delete req.session.userId;
 
-if (!user || user.isBlocked) {
+      /* Redirect to HOME as guest */
 
-/* Remove only user session */
+      return res.redirect("/");
+    }
 
-delete req.session.userId
+    next();
+  } catch (error) {
+    console.log("isLoggedIn Middleware Error:", error);
 
-
-
-/* Redirect to HOME as guest */
-
-return res.redirect("/")
-
-}
-
-
-
-next()
-
-}
-
-catch (error) {
-
-console.log(
-"isLoggedIn Middleware Error:",
-error
-)
-
-return res.redirect("/login")
-
-}
-
-}
+    return res.redirect("/login");
+  }
+};
 
 /* =========================
    PREVENT LOGGED USERS
 ========================= */
 
-export const isLoggedOut = (
+export const isLoggedOut = (req, res, next) => {
+  if (req.session.userId) {
+    return res.redirect("/");
+  }
 
-req,
-res,
-next
-
-) => {
-
-if (req.session.userId) {
-
-return res.redirect("/")
-
-}
-
-
-next()
-
-}
-
-
+  next();
+};
 
 /* =========================
    CHECK RESET VERIFIED
 ========================= */
 
-export const isResetVerified = (
-
-  req,
-  res,
-  next
-
-) => {
-
+export const isResetVerified = (req, res, next) => {
   if (!req.session.resetVerified) {
-
-    return res.redirect("/login")
-
+    return res.redirect("/login");
   }
 
-  next()
-
-}
+  next();
+};

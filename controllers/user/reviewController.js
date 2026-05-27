@@ -1,97 +1,57 @@
-import Review from "../../models/Review.js"
+import Review from "../../models/Review.js";
 
-export const addReview = async (
+export const addReview = async (req, res) => {
+  try {
+    const userId = req.session.userId;
 
-    req,
-    res
+    const { productId, variantId, rating, comment } = req.body;
 
-) => {
-
-    try{
-
-        const userId =
-        req.session.userId
-
-        const {
-
-            productId,
-            variantId,
-            rating,
-            comment
-
-        } = req.body
-
-        /* =====================================
+    /* =====================================
            UPDATE IF REVIEW EXISTS
         ===================================== */
 
-        const review =
+    const review = await Review.findOneAndUpdate(
+      {
+        userId,
 
-        await Review.findOneAndUpdate(
+        productId,
 
-            {
+        isDeleted: false,
+      },
 
-                userId,
+      {
+        userId,
 
-                productId,
+        productId,
 
-                isDeleted: false
+        variantId,
 
-            },
+        rating,
 
-            {
+        comment,
+      },
 
-                userId,
+      {
+        new: true,
 
-                productId,
+        upsert: true,
+      },
+    );
 
-                variantId,
+    return res.status(200).json({
+      success: true,
 
-                rating,
+      message: "Review saved successfully",
 
-                comment
+      review,
+    });
+  } catch (error) {
+    console.log("ADD REVIEW ERROR:", error);
 
-            },
+    return res.status(500).json({
+      success: false,
 
-            {
-
-                new: true,
-
-                upsert: true
-
-            }
-
-        )
-
-        return res.status(200).json({
-
-            success: true,
-
-            message:
-            "Review saved successfully",
-
-            review
-
-        })
-
-    }
-
-    catch(error){
-
-        console.log(
-            "ADD REVIEW ERROR:",
-            error
-        )
-
-        return res.status(500).json({
-
-            success: false,
-
-            message:
-            "Something went wrong"
-
-        })
-
-    }
-
-}
+      message: "Something went wrong",
+    });
+  }
+};

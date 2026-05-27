@@ -1,116 +1,87 @@
-import mongoose from "mongoose"
+import mongoose from "mongoose";
 
 const productSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
 
-{
+      required: true,
 
-name: {
+      trim: true,
+    },
 
-type: String,
+    slug: {
+      type: String,
 
-required: true,
+      required: true,
 
-trim: true
+      unique: true,
 
-},
+      trim: true,
+    },
 
-slug: {
+    description: {
+      type: String,
 
-type: String,
+      required: true,
 
-required: true,
+      trim: true,
+    },
 
-unique: true,
+    categoryId: {
+      type: mongoose.Schema.Types.ObjectId,
 
-trim: true
+      ref: "Category",
 
-},
+      required: true,
+    },
 
-description: {
+    thumbnail: {
+      type: String,
 
-type: String,
+      default: "",
+    },
 
-required: true,
+    isFeatured: {
+      type: Boolean,
 
-trim: true
+      default: false,
+    },
 
-},
+    isBestSeller: {
+      type: Boolean,
 
-categoryId: {
+      default: false,
+    },
 
-type: mongoose.Schema.Types.ObjectId,
+    isDeal: {
+      type: Boolean,
 
-ref: "Category",
+      default: false,
+    },
 
-required: true
+    isActive: {
+      type: Boolean,
 
-},
+      default: true,
+    },
 
-thumbnail: {
+    isDeleted: {
+      type: Boolean,
 
-type: String,
+      default: false,
+    },
+  },
 
-default: ""
-
-},
-
-
-isFeatured: {
-
-type: Boolean,
-
-default: false
-
-},
-
-isBestSeller: {
-
-type: Boolean,
-
-default: false
-
-},
-
-isDeal: {
-
-type: Boolean,
-
-default: false
-
-},
-
-isActive: {
-
-type: Boolean,
-
-default: true
-
-},
-
-isDeleted: {
-
-type: Boolean,
-
-default: false
-
-}
-
-},
-
-{
-
-timestamps: true
-
-}
-
-)
+  {
+    timestamps: true,
+  },
+);
 
 const Product = mongoose.model(
+  "Product",
 
-"Product",
+  productSchema,
+);
 
-productSchema
-
-)
-
-export default Product
+export default Product;

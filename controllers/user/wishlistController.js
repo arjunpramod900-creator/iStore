@@ -1,206 +1,121 @@
 import {
-    loadWishlistService,
-
-    addToWishlistService,
-
-    removeWishlistItemService,
-
-    moveWishlistToCartService
-
-}
-
-from "../../services/user/wishlistService.js"
+  loadWishlistService,
+  addToWishlistService,
+  removeWishlistItemService,
+  moveWishlistToCartService,
+} from "../../services/user/wishlistService.js";
 
 /* =========================================
    LOAD WISHLIST
 ========================================= */
 
-export const loadWishlist =
-async (req, res) => {
+export const loadWishlist = async (req, res) => {
+  try {
+    const userId = req.session.userId;
 
-    try{
+    const wishlistItems = await loadWishlistService(userId);
 
-        const userId =
-        req.session.userId
+    res.render(
+      "user/wishlist",
 
-        const wishlistItems =
-        await loadWishlistService(
+      {
+        page: "wishlist",
 
-            userId
+        wishlistItems,
+      },
+    );
+  } catch (error) {
+    console.log(error);
 
-        )
-
-        res.render(
-
-            "user/wishlist",
-
-            {
-
-                page: "wishlist",
-
-                wishlistItems
-
-            }
-
-        )
-
-    }
-
-    catch(error){
-
-        console.log(error)
-
-        res.redirect("/")
-
-    }
-
-}
+    res.redirect("/");
+  }
+};
 /* =========================================
    ADD TO WISHLIST
 ========================================= */
 
-export const addToWishlist =
-async (req, res) => {
+export const addToWishlist = async (req, res) => {
+  try {
+    const userId = req.session.userId;
 
-    try{
+    const {
+      productId,
 
-        const userId =
-        req.session.userId
+      variantId,
+    } = req.body;
 
-        const {
+    const response = await addToWishlistService({
+      userId,
 
-            productId,
+      productId,
 
-            variantId
+      variantId,
+    });
 
-        } = req.body
+    return res.status(200).json(response);
+  } catch (error) {
+    console.log(error);
 
-        const response =
-        await addToWishlistService({
+    return res.status(500).json({
+      success: false,
 
-            userId,
-
-            productId,
-
-            variantId
-
-        })
-
-        return res.status(200).json(response)
-
-    }
-
-    catch(error){
-
-        console.log(error)
-
-        return res.status(500).json({
-
-            success: false,
-
-            message:
-            "Something went wrong"
-
-        })
-
-    }
-
-}
-
-
+      message: "Something went wrong",
+    });
+  }
+};
 
 /* =========================================
    REMOVE WISHLIST ITEM
 ========================================= */
 
-export const removeWishlistItem =
-async (req, res) => {
+export const removeWishlistItem = async (req, res) => {
+  try {
+    const userId = req.session.userId;
 
-    try{
+    const { variantId } = req.params;
 
-        const userId =
-        req.session.userId
+    const response = await removeWishlistItemService({
+      userId,
 
-        const {
+      variantId,
+    });
 
-            variantId
+    return res.status(200).json(response);
+  } catch (error) {
+    console.log(error);
 
-        } = req.params
+    return res.status(500).json({
+      success: false,
 
-        const response =
-        await removeWishlistItemService({
-
-            userId,
-
-            variantId
-
-        })
-
-        return res.status(200).json(response)
-
-    }
-
-    catch(error){
-
-        console.log(error)
-
-        return res.status(500).json({
-
-            success: false,
-
-            message:
-            "Something went wrong"
-
-        })
-
-    }
-
-}
+      message: "Something went wrong",
+    });
+  }
+};
 
 /* =========================================
    MOVE WISHLIST ITEM TO CART
 ========================================= */
 
-export const moveWishlistToCart =
-async (req, res) => {
+export const moveWishlistToCart = async (req, res) => {
+  try {
+    const userId = req.session.userId;
 
-    try{
+    const { variantId } = req.params;
 
-        const userId =
-        req.session.userId
+    const response = await moveWishlistToCartService({
+      userId,
 
-        const {
+      variantId,
+    });
 
-            variantId
+    return res.status(200).json(response);
+  } catch (error) {
+    console.log(error);
 
-        } = req.params
+    return res.status(500).json({
+      success: false,
 
-        const response =
-        await moveWishlistToCartService({
-
-            userId,
-
-            variantId
-
-        })
-
-        return res.status(200).json(response)
-
-    }
-
-    catch(error){
-
-        console.log(error)
-
-        return res.status(500).json({
-
-            success: false,
-
-            message:
-            "Something went wrong"
-
-        })
-
-    }
-
-}
+      message: "Something went wrong",
+    });
+  }
+};

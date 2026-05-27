@@ -1,175 +1,109 @@
-import { z } from "zod"
+import { z } from "zod";
 
 export const variantSchema = z.object({
+  SKU: z
 
-SKU: z
+    .string()
 
-.string()
+    .trim()
 
-.trim()
+    .min(
+      3,
 
-.min(
+      "SKU is required",
+    )
 
-3,
+    .max(
+      50,
 
-"SKU is required"
+      "SKU is too long",
+    ),
 
-)
+  storage: z
 
-.max(
+    .string()
 
-50,
+    .trim()
 
-"SKU is too long"
+    .optional(),
 
-),
+  color: z
 
+    .string()
 
+    .trim()
 
-storage: z
+    .optional(),
 
-.string()
+  RAM: z
 
-.trim()
+    .string()
 
-.optional(),
+    .trim()
 
+    .optional(),
 
+  stock: z.coerce
 
-color: z
+    .number()
 
-.string()
+    .min(
+      0,
 
-.trim()
+      "Stock cannot be negative",
+    ),
 
-.optional(),
+  price: z.coerce
 
+    .number()
 
+    .min(
+      1,
 
-RAM: z
+      "Price must be greater than 0",
+    ),
 
-.string()
+  comparePrice: z.coerce
 
-.trim()
+    .number()
 
-.optional(),
+    .min(0)
 
+    .optional(),
 
+  discountPercentage: z.coerce
 
-stock: z
+    .number()
 
-.coerce
+    .min(0)
 
-.number()
+    .max(
+      100,
 
-.min(
+      "Discount cannot exceed 100%",
+    )
 
-0,
+    .optional(),
 
-"Stock cannot be negative"
+  images: z
 
-),
+    .array(z.string())
 
+    .optional(),
 
+  isDefault: z
 
-price: z
+    .union([z.boolean(), z.string()])
 
-.coerce
+    .optional()
 
-.number()
+    .transform((val) => val === true || val === "true"),
 
-.min(
+  isActive: z
 
-1,
+    .union([z.boolean(), z.string()])
 
-"Price must be greater than 0"
+    .optional()
 
-),
-
-
-
-comparePrice: z
-
-.coerce
-
-.number()
-
-.min(0)
-
-.optional(),
-
-
-
-discountPercentage: z
-
-.coerce
-
-.number()
-
-.min(0)
-
-.max(
-
-100,
-
-"Discount cannot exceed 100%"
-
-)
-
-.optional(),
-
-
-
-images: z
-
-.array(
-
-z.string()
-
-)
-
-.optional(),
-
-
-
-isDefault: z
-
-.union([
-
-z.boolean(),
-z.string()
-
-])
-
-.optional()
-
-.transform(val =>
-
-val === true ||
-
-val === "true"
-
-),
-
-
-
-isActive: z
-
-.union([
-
-z.boolean(),
-z.string()
-
-])
-
-.optional()
-
-.transform(val =>
-
-val === true ||
-
-val === "true"
-
-)
-
-})
+    .transform((val) => val === true || val === "true"),
+});

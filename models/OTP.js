@@ -1,24 +1,22 @@
-import mongoose from "mongoose"
+import mongoose from "mongoose";
 
 const otpSchema = new mongoose.Schema(
-
   {
-
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User"
+      ref: "User",
     },
 
     email: {
       type: String,
       required: true,
       lowercase: true,
-      trim: true
+      trim: true,
     },
 
     code: {
       type: String,
-      required: true
+      required: true,
     },
 
     type: {
@@ -28,70 +26,48 @@ const otpSchema = new mongoose.Schema(
         "forgotPassword",
         "emailVerification",
         "emailChange",
-        "changePassword"
+        "changePassword",
       ],
-      required: true
+      required: true,
     },
 
     expiresAt: {
       type: Date,
-      required: true
-    }
-
+      required: true,
+    },
   },
 
   {
-
-    timestamps: true
-
-  }
-
-)
-
-
+    timestamps: true,
+  },
+);
 
 /* =================================
    TTL INDEX (AUTO DELETE OTP)
 ================================= */
 
 otpSchema.index(
-
   { expiresAt: 1 },
 
   {
-
-    expireAfterSeconds: 0
-
-  }
-
-)
-
-
+    expireAfterSeconds: 0,
+  },
+);
 
 /* =================================
    INDEX FOR FAST SEARCH
 ================================= */
 
-otpSchema.index(
-
-  {
-
-    email: 1,
-    code: 1,
-    type: 1
-
-  }
-
-)
-
-
+otpSchema.index({
+  email: 1,
+  code: 1,
+  type: 1,
+});
 
 const OTP = mongoose.model(
-
   "OTP",
 
-  otpSchema
+  otpSchema,
+);
 
-)
-
-export default OTP
+export default OTP;

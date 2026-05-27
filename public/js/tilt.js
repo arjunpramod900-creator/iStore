@@ -3,61 +3,43 @@
 ========================================= */
 
 document.addEventListener("DOMContentLoaded", () => {
+  const cards = document.querySelectorAll(".glass-card, .product-card");
 
-    const cards =
-        document.querySelectorAll(
-            '.glass-card, .product-card'
-        );
+  cards.forEach((card) => {
+    card.addEventListener("mousemove", (e) => {
+      const rect = card.getBoundingClientRect();
 
-    cards.forEach(card => {
+      const x = e.clientX - rect.left;
 
-        card.addEventListener('mousemove', (e) => {
+      const y = e.clientY - rect.top;
 
-            const rect =
-                card.getBoundingClientRect();
+      const centerX = rect.width / 2;
 
-            const x =
-                e.clientX - rect.left;
+      const centerY = rect.height / 2;
 
-            const y =
-                e.clientY - rect.top;
+      const rotateX = (y - centerY) / 15;
 
-            const centerX =
-                rect.width / 2;
+      const rotateY = (centerX - x) / 15;
 
-            const centerY =
-                rect.height / 2;
+      /* USE GSAP (NOT style.transform) */
 
-            const rotateX =
-                (y - centerY) / 15;
-
-            const rotateY =
-                (centerX - x) / 15;
-
-            /* USE GSAP (NOT style.transform) */
-
-            gsap.to(card, {
-                rotateX: rotateX,
-                rotateY: rotateY,
-                scale: 1.05,
-                duration: 0.2,
-                ease: "power2.out"
-            });
-
-        });
-
-        card.addEventListener('mouseleave', () => {
-
-            gsap.to(card, {
-                rotateX: 0,
-                rotateY: 0,
-                scale: 1,
-                duration: 0.4,
-                ease: "power2.out"
-            });
-
-        });
-
+      gsap.to(card, {
+        rotateX: rotateX,
+        rotateY: rotateY,
+        scale: 1.05,
+        duration: 0.2,
+        ease: "power2.out",
+      });
     });
 
+    card.addEventListener("mouseleave", () => {
+      gsap.to(card, {
+        rotateX: 0,
+        rotateY: 0,
+        scale: 1,
+        duration: 0.4,
+        ease: "power2.out",
+      });
+    });
+  });
 });

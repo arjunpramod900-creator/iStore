@@ -1,95 +1,71 @@
-import mongoose from "mongoose"
+import mongoose from "mongoose";
 
-const cartItemSchema = new mongoose.Schema({
-
+const cartItemSchema = new mongoose.Schema(
+  {
     productId: {
+      type: mongoose.Schema.Types.ObjectId,
 
-        type: mongoose.Schema.Types.ObjectId,
+      ref: "Product",
 
-        ref: "Product",
-
-        required: true
-
+      required: true,
     },
 
     variantId: {
+      type: mongoose.Schema.Types.ObjectId,
 
-        type: mongoose.Schema.Types.ObjectId,
+      ref: "Variant",
 
-        ref: "Variant",
-
-        required: true
-
+      required: true,
     },
 
     quantity: {
+      type: Number,
 
-        type: Number,
+      required: true,
 
-        required: true,
-
-        default: 1
-
+      default: 1,
     },
 
     price: {
+      type: Number,
 
-    type: Number,
-
-    required: true
-
+      required: true,
     },
 
     movedFromWishlist: {
+      type: Boolean,
 
-        type: Boolean,
+      default: false,
+    },
+  },
+  {
+    _id: false,
+  },
+);
 
-        default: false
-
-    }
-
-}, {
-
-    _id: false
-
-})
-
-
-
-const cartSchema = new mongoose.Schema({
-
+const cartSchema = new mongoose.Schema(
+  {
     userId: {
+      type: mongoose.Schema.Types.ObjectId,
 
-        type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
 
-        ref: "User",
+      required: true,
 
-        required: true,
-
-        unique: true
-
+      unique: true,
     },
 
-    items: [
-
-        cartItemSchema
-
-    ]
-
-}, {
-
-    timestamps: true
-
-})
-
-
+    items: [cartItemSchema],
+  },
+  {
+    timestamps: true,
+  },
+);
 
 const Cart = mongoose.model(
+  "Cart",
 
-    "Cart",
+  cartSchema,
+);
 
-    cartSchema
-
-)
-
-export default Cart
+export default Cart;

@@ -3,809 +3,469 @@
 ========================================= */
 
 const updateCartUI = (
+  variantId,
 
-    variantId,
-
-    data
-
+  data,
 ) => {
-
-    /* =========================================
+  /* =========================================
        QUANTITY
     ========================================= */
 
-    if(
+  if (typeof data.quantity !== "undefined") {
+    const qtyElement = document.querySelector(`[data-qty="${variantId}"]`);
 
-        typeof data.quantity !==
-        "undefined"
+    if (qtyElement) {
+      qtyElement.innerText = data.quantity;
 
-    ){
+      /* PREMIUM PULSE */
 
-        const qtyElement =
-        document.querySelector(
+      gsap.fromTo(
+        qtyElement,
 
-            `[data-qty="${variantId}"]`
+        {
+          scale: 1.25,
+          color: "#7C3AED",
+        },
 
-        )
+        {
+          scale: 1,
+          color: "#111111",
+          duration: 0.35,
+          ease: "power2.out",
+        },
+      );
+    }
 
-        if(qtyElement){
-
-            qtyElement.innerText =
-            data.quantity
-
-            /* PREMIUM PULSE */
-
-            gsap.fromTo(
-
-                qtyElement,
-
-                {
-                    scale: 1.25,
-                    color: "#7C3AED"
-                },
-
-                {
-                    scale: 1,
-                    color: "#111111",
-                    duration: 0.35,
-                    ease: "power2.out"
-                }
-
-            )
-
-        }
-
-        /* =========================================
+    /* =========================================
            AUTO DISABLE PLUS BUTTON
         ========================================= */
 
-        const increaseBtn =
-        document.querySelector(
+    const increaseBtn = document.querySelector(
+      `.increase-btn[data-variant-id="${variantId}"]`,
+    );
 
-            `.increase-btn[data-variant-id="${variantId}"]`
-
-        )
-
-        if(increaseBtn){
-
-            increaseBtn.disabled =
-            data.quantity >= 5
-
-        }
-
+    if (increaseBtn) {
+      increaseBtn.disabled = data.quantity >= 5;
     }
+  }
 
-    /* =========================================
+  /* =========================================
        ITEM SUBTOTAL
     ========================================= */
 
-    if(
+  if (typeof data.itemSubtotal !== "undefined") {
+    const subtotalElement = document.querySelector(
+      `[data-subtotal="${variantId}"]`,
+    );
 
-        typeof data.itemSubtotal !==
-        "undefined"
-
-    ){
-
-        const subtotalElement =
-        document.querySelector(
-
-            `[data-subtotal="${variantId}"]`
-
-        )
-
-        if(subtotalElement){
-
-            subtotalElement.innerText =
-            `₹${data.itemSubtotal.toLocaleString()}`
-
-        }
-
+    if (subtotalElement) {
+      subtotalElement.innerText = `₹${data.itemSubtotal.toLocaleString()}`;
     }
+  }
 
-    /* =========================================
+  /* =========================================
        CART TOTALS
     ========================================= */
 
-    if(
+  if (typeof data.cartSubtotal !== "undefined") {
+    const cartSubtotal = document.getElementById("cartSubtotal");
 
-        typeof data.cartSubtotal !==
-        "undefined"
+    const cartTotal = document.getElementById("cartTotal");
 
-    ){
+    /* SUBTOTAL */
 
-        const cartSubtotal =
-        document.getElementById(
+    if (cartSubtotal) {
+      cartSubtotal.innerText = `₹${data.cartSubtotal.toLocaleString()}`;
 
-            "cartSubtotal"
+      gsap.fromTo(
+        cartSubtotal,
 
-        )
+        {
+          scale: 1.06,
+          color: "#7C3AED",
+        },
 
-        const cartTotal =
-        document.getElementById(
+        {
+          scale: 1,
+          color: "#111111",
+          duration: 0.4,
+          ease: "power2.out",
+        },
+      );
+    }
 
-            "cartTotal"
+    /* FINAL TOTAL */
 
-        )
+    if (cartTotal) {
+      cartTotal.innerText = `₹${data.finalTotal.toLocaleString()}`;
 
-        /* SUBTOTAL */
+      gsap.fromTo(
+        cartTotal,
 
-        if(cartSubtotal){
+        {
+          scale: 1.08,
+          color: "#7C3AED",
+        },
 
-            cartSubtotal.innerText =
-            `₹${data.cartSubtotal.toLocaleString()}`
-
-            gsap.fromTo(
-
-                cartSubtotal,
-
-                {
-                    scale: 1.06,
-                    color: "#7C3AED"
-                },
-
-                {
-                    scale: 1,
-                    color: "#111111",
-                    duration: 0.4,
-                    ease: "power2.out"
-                }
-
-            )
-
-        }
-
-        /* FINAL TOTAL */
-
-        if(cartTotal){
-
-            cartTotal.innerText =
-            `₹${data.finalTotal.toLocaleString()}`
-
-            gsap.fromTo(
-
-                cartTotal,
-
-                {
-                    scale: 1.08,
-                    color: "#7C3AED"
-                },
-
-                {
-                    scale: 1,
-                    color: "#111111",
-                    duration: 0.45,
-                    ease: "power2.out"
-                }
-
-            )
-
-        }
-
-        /* =========================================
-           SHIPPING
-        ========================================= */
-
-        const shippingElement =
-        document.getElementById(
-
-            "shippingAmount"
-
-        )
-
-        if(
-
-            shippingElement &&
-            typeof data.shipping !==
-            "undefined"
-
-        ){
-
-            shippingElement.innerText =
-
-            data.shipping === 0
-            ? "Free"
-            : `₹${data.shipping.toLocaleString()}`
-
-        }
-
-        /* =========================================
-           TAX
-        ========================================= */
-
-        const taxElement =
-        document.getElementById(
-
-            "estimatedTax"
-
-        )
-
-        if(
-
-            taxElement &&
-            typeof data.estimatedTax !==
-            "undefined"
-
-        ){
-
-            taxElement.innerText =
-            `₹${data.estimatedTax.toLocaleString()}`
-
-        }
-
+        {
+          scale: 1,
+          color: "#111111",
+          duration: 0.45,
+          ease: "power2.out",
+        },
+      );
     }
 
     /* =========================================
+           SHIPPING
+        ========================================= */
+
+    const shippingElement = document.getElementById("shippingAmount");
+
+    if (shippingElement && typeof data.shipping !== "undefined") {
+      shippingElement.innerText =
+        data.shipping === 0 ? "Free" : `₹${data.shipping.toLocaleString()}`;
+    }
+
+    /* =========================================
+           TAX
+        ========================================= */
+
+    const taxElement = document.getElementById("estimatedTax");
+
+    if (taxElement && typeof data.estimatedTax !== "undefined") {
+      taxElement.innerText = `₹${data.estimatedTax.toLocaleString()}`;
+    }
+  }
+
+  /* =========================================
        TOTAL ITEMS
     ========================================= */
 
-    if(
+  if (typeof data.totalItems !== "undefined") {
+    const totalItems = document.getElementById("cartItemsCount");
 
-        typeof data.totalItems !==
-        "undefined"
-
-    ){
-
-        const totalItems =
-        document.getElementById(
-
-            "cartItemsCount"
-
-        )
-
-        if(totalItems){
-
-            totalItems.innerText =
-            data.totalItems
-
-        }
-
+    if (totalItems) {
+      totalItems.innerText = data.totalItems;
     }
-
-}
-
+  }
+};
 
 /* =========================================
    SAFE JSON RESPONSE
 ========================================= */
 
-const parseResponse = async (
+const parseResponse = async (response) => {
+  try {
+    return await response.json();
+  } catch (error) {
+    console.log(
+      "JSON Parse Error:",
 
-    response
+      error,
+    );
 
-) => {
+    return {
+      success: false,
 
-    try{
-
-        return await response.json()
-
-    }
-
-    catch(error){
-
-        console.log(
-
-            "JSON Parse Error:",
-
-            error
-
-        )
-
-        return {
-
-            success: false,
-
-            message:
-            "Invalid server response"
-
-        }
-
-    }
-
-}
-
-
+      message: "Invalid server response",
+    };
+  }
+};
 
 /* =========================================
    UPDATE QUANTITY
 ========================================= */
 
-const increaseButtons =
-document.querySelectorAll(
+const increaseButtons = document.querySelectorAll(".increase-btn");
 
-    ".increase-btn"
-
-)
-
-const decreaseButtons =
-document.querySelectorAll(
-
-    ".decrease-btn"
-
-)
-
-
+const decreaseButtons = document.querySelectorAll(".decrease-btn");
 
 /* =========================================
    INCREMENT
 ========================================= */
 
-increaseButtons.forEach(button => {
+increaseButtons.forEach((button) => {
+  button.addEventListener(
+    "click",
 
-    button.addEventListener(
+    async () => {
+      try {
+        const variantId = button.dataset.variantId;
 
-        "click",
+        button.disabled = true;
 
-        async () => {
+        const response = await fetch(
+          "/cart/update-quantity",
 
-            try{
+          {
+            method: "POST",
 
-                const variantId =
-                button.dataset.variantId
+            headers: {
+              "Content-Type": "application/json",
+            },
 
-                button.disabled = true
+            body: JSON.stringify({
+              variantId,
 
-                const response =
-                await fetch(
+              type: "increment",
+            }),
+          },
+        );
 
-                    "/cart/update-quantity",
+        const data = await parseResponse(response);
 
-                    {
+        if (data.success) {
+          updateCartUI(
+            variantId,
 
-                        method: "POST",
+            data,
+          );
+        } else {
+          showToast(
+            data.message.includes("Maximum") || data.message.includes("Stock")
+              ? "warning"
+              : "info",
 
-                        headers: {
-
-                            "Content-Type":
-                            "application/json"
-
-                        },
-
-                        body: JSON.stringify({
-
-                            variantId,
-
-                            type: "increment"
-
-                        })
-
-                    }
-
-                )
-
-                const data =
-                await parseResponse(
-
-                    response
-
-                )
-
-                if(data.success){
-
-                    updateCartUI(
-
-                        variantId,
-
-                        data
-
-                    )
-
-                }
-
-                else{
-
-                    showToast(
-
-                        data.message.includes("Maximum")
-                        ||
-                        data.message.includes("Stock")
-
-                        ? "warning"
-
-                        : "info",
-
-                        data.message
-
-                    )
-                }
-
-            }
-
-            catch(error){
-
-                console.log(error)
-
-                showToast(
-
-                    "error",
-
-                    "Something went wrong"
-
-                )
-
-            }
-
-            finally{
-
-                button.disabled = false
-
-            }
-
+            data.message,
+          );
         }
+      } catch (error) {
+        console.log(error);
 
-    )
+        showToast(
+          "error",
 
-})
-
-
+          "Something went wrong",
+        );
+      } finally {
+        button.disabled = false;
+      }
+    },
+  );
+});
 
 /* =========================================
    DECREMENT
 ========================================= */
 
-decreaseButtons.forEach(button => {
+decreaseButtons.forEach((button) => {
+  button.addEventListener(
+    "click",
 
-    button.addEventListener(
+    async () => {
+      try {
+        const variantId = button.dataset.variantId;
 
-        "click",
+        button.disabled = true;
 
-        async () => {
+        const response = await fetch(
+          "/cart/update-quantity",
 
-            try{
+          {
+            method: "POST",
 
-                const variantId =
-                button.dataset.variantId
+            headers: {
+              "Content-Type": "application/json",
+            },
 
-                button.disabled = true
+            body: JSON.stringify({
+              variantId,
 
-                const response =
-                await fetch(
+              type: "decrement",
+            }),
+          },
+        );
 
-                    "/cart/update-quantity",
+        const data = await parseResponse(response);
 
-                    {
+        if (data.success) {
+          updateCartUI(
+            variantId,
 
-                        method: "POST",
+            data,
+          );
+        } else {
+          showToast(
+            data.message.includes("Maximum") || data.message.includes("Stock")
+              ? "warning"
+              : "info",
 
-                        headers: {
-
-                            "Content-Type":
-                            "application/json"
-
-                        },
-
-                        body: JSON.stringify({
-
-                            variantId,
-
-                            type: "decrement"
-
-                        })
-
-                    }
-
-                )
-
-                const data =
-                await parseResponse(
-
-                    response
-
-                )
-
-                if(data.success){
-
-                    updateCartUI(
-
-                        variantId,
-
-                        data
-
-                    )
-
-                }
-
-                else{
-
-                    showToast(
-
-                        data.message.includes("Maximum")
-                        ||
-                        data.message.includes("Stock")
-
-                        ? "warning"
-
-                        : "info",
-
-                        data.message
-
-                    )
-
-                }
-
-            }
-
-            catch(error){
-
-                console.log(error)
-
-                showToast(
-
-                    "error",
-
-                    "Something went wrong"
-
-                )
-
-            }
-
-            finally{
-
-                button.disabled = false
-
-            }
-
+            data.message,
+          );
         }
+      } catch (error) {
+        console.log(error);
 
-    )
+        showToast(
+          "error",
 
-})
-
-
+          "Something went wrong",
+        );
+      } finally {
+        button.disabled = false;
+      }
+    },
+  );
+});
 
 /* =========================================
    REMOVE ITEM
 ========================================= */
 
-const removeButtons =
-document.querySelectorAll(
+const removeButtons = document.querySelectorAll(".remove-btn");
 
-    ".remove-btn"
+removeButtons.forEach((button) => {
+  button.addEventListener(
+    "click",
 
-)
+    async () => {
+      try {
+        const variantId = button.dataset.variantId;
 
-removeButtons.forEach(button => {
+        const result = await Swal.fire({
+          title: "Remove Item?",
 
-    button.addEventListener(
+          text: "This product will be removed from your cart.",
 
-        "click",
+          icon: "warning",
 
-        async () => {
+          showCancelButton: true,
 
-            try{
+          confirmButtonText: "Remove",
 
-                const variantId =
-                button.dataset.variantId
+          cancelButtonText: "Cancel",
 
-                const result =
-                await Swal.fire({
+          background: "#FFFFFF",
 
-                    title: "Remove Item?",
+          color: "#111111",
 
-                    text:
-                    "This product will be removed from your cart.",
+          reverseButtons: true,
 
-                    icon: "warning",
+          customClass: {
+            popup: "cart-swal-popup",
 
-                    showCancelButton: true,
+            confirmButton: "cart-swal-confirm",
 
-                    confirmButtonText: "Remove",
+            cancelButton: "cart-swal-cancel",
+          },
+        });
 
-                    cancelButtonText: "Cancel",
+        if (!result.isConfirmed) {
+          return;
+        }
 
-                    background: "#FFFFFF",
+        button.disabled = true;
 
-                    color: "#111111",
+        const response = await fetch(
+          `/cart/remove-item/${variantId}`,
 
-                    reverseButtons: true,
+          {
+            method: "DELETE",
+          },
+        );
 
-                    customClass: {
+        const data = await parseResponse(response);
 
-                        popup: "cart-swal-popup",
+        if (data.success) {
+          /* REMOVE CARD */
 
-                        confirmButton:
-                        "cart-swal-confirm",
+          const cartCard = button.closest(".cart-item-card");
 
-                        cancelButton:
-                        "cart-swal-cancel"
+          if (cartCard) {
+            gsap.to(
+              cartCard,
 
-                    }
+              {
+                opacity: 0,
 
-                })
+                y: -20,
 
-                if(!result.isConfirmed){
+                duration: 0.35,
 
-                    return
+                ease: "power2.out",
 
-                }
+                onComplete: () => {
+                  cartCard.remove();
+                },
+              },
+            );
+          }
 
-                button.disabled = true
+          /* RESTORE PRODUCT BUTTON */
 
-                const response =
-                await fetch(
+          const addToCartButtons = document.querySelectorAll(
+            `.add-to-cart-btn[data-variant-id="${variantId}"]`,
+          );
 
-                    `/cart/remove-item/${variantId}`,
+          addToCartButtons.forEach((btn) => {
+            btn.classList.remove("added");
 
-                    {
+            btn.disabled = false;
 
-                        method: "DELETE"
-
-                    }
-
-                )
-
-                const data =
-                await parseResponse(
-
-                    response
-
-                )
-
-                if(data.success){
-
-                    /* REMOVE CARD */
-
-                    const cartCard =
-                    button.closest(
-
-                        ".cart-item-card"
-
-                    )
-
-                    if(cartCard){
-
-                        gsap.to(
-
-                            cartCard,
-
-                            {
-
-                                opacity: 0,
-
-                                y: -20,
-
-                                duration: 0.35,
-
-                                ease: "power2.out",
-
-                                onComplete: () => {
-
-                                    cartCard.remove()
-
-                                }
-
-                            }
-
-                        )
-
-                    }
-
-                    /* RESTORE PRODUCT BUTTON */
-
-                    const addToCartButtons =
-
-                    document.querySelectorAll(
-
-                        `.add-to-cart-btn[data-variant-id="${variantId}"]`
-
-                    )
-
-                    addToCartButtons.forEach(btn => {
-
-                        btn.classList.remove(
-                            "added"
-                        )
-
-                        btn.disabled = false
-
-                        btn.innerHTML =
-
-                        `
+            btn.innerHTML = `
                             <i
                                 data-lucide="shopping-cart"
                                 size="18"
                             ></i>
 
                             Add to Cart
-                        `
+                        `;
+          });
 
-                    })
+          lucide.createIcons();
 
-                    lucide.createIcons()
+          /* RESTORE WISHLIST UI ONLY IF VALID */
 
-                    /* RESTORE WISHLIST UI ONLY IF VALID */
+          if (data.restoredToWishlist) {
+            const wishlistButtons = document.querySelectorAll(
+              `.wishlist-toggle[data-variant-id="${variantId}"]`,
+            );
 
-                    if(data.restoredToWishlist){
+            wishlistButtons.forEach((btn) => {
+              btn.classList.add("active");
+            });
+          }
 
-                        const wishlistButtons =
+          /* SUCCESS TOAST */
 
-                        document.querySelectorAll(
+          showToast(
+            "success",
 
-                            `.wishlist-toggle[data-variant-id="${variantId}"]`
+            "Removed from cart",
+          );
 
-                        )
+          navigator.vibrate?.(30);
 
-                        wishlistButtons.forEach(btn => {
+          /* EMPTY CHECK */
 
-                            btn.classList.add(
-                                "active"
-                            )
+          setTimeout(() => {
+            const remainingCards = document.querySelectorAll(".cart-item-card");
 
-                        })
-
-                    }
-
-                    /* SUCCESS TOAST */
-
-                    showToast(
-
-                        "success",
-
-                        "Removed from cart"
-
-                    )
-
-                    navigator.vibrate?.(30)
-
-                    /* EMPTY CHECK */
-
-                    setTimeout(() => {
-
-                        const remainingCards =
-
-                        document.querySelectorAll(
-
-                            ".cart-item-card"
-
-                        )
-
-                        if(remainingCards.length === 0){
-
-                            location.reload()
-
-                        }
-
-                    }, 400)
-
-                    return
-
-                }
-
-                else{
-
-                    showToast(
-
-                        "info",
-
-                        data.message
-
-                    )
-
-                }
-
+            if (remainingCards.length === 0) {
+              location.reload();
             }
+          }, 400);
 
-            catch(error){
+          return;
+        } else {
+          showToast(
+            "info",
 
-                console.log(error)
-
-                showToast(
-
-                    "error",
-
-                    "Something went wrong"
-
-                )
-
-            }
-
-            finally{
-
-                button.disabled = false
-
-            }
-
+            data.message,
+          );
         }
+      } catch (error) {
+        console.log(error);
 
-    )
+        showToast(
+          "error",
 
-})
+          "Something went wrong",
+        );
+      } finally {
+        button.disabled = false;
+      }
+    },
+  );
+});

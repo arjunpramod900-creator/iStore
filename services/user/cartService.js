@@ -1,610 +1,354 @@
-import Cart from "../../models/Cart.js"
+import Cart from "../../models/Cart.js";
 
-import Product from "../../models/Product.js"
+import Product from "../../models/Product.js";
 
-import Variant from "../../models/Variant.js"
+import Variant from "../../models/Variant.js";
 
-import Wishlist from "../../models/Wishlist.js"
-
-
+import Wishlist from "../../models/Wishlist.js";
 
 /* =========================================
    LOAD CART
 ========================================= */
 
-export const loadCartService =
-async (userId) => {
+export const loadCartService = async (userId) => {
+  const cart = await Cart.findOne({
+    userId,
+  })
 
-    const cart =
-    await Cart.findOne({
-
-        userId
-
+    .populate({
+      path: "items.productId",
     })
 
     .populate({
-
-        path: "items.productId"
-
+      path: "items.variantId",
     })
 
-    .populate({
+    .lean();
 
-        path: "items.variantId"
+  /* EMPTY CART */
 
-    })
+  if (!cart) {
+    return {
+      items: [],
 
-    .lean()
+      subtotal: 0,
 
+      totalItems: 0,
+    };
+  }
 
+  /* REMOVE INVALID ITEMS */
 
-    /* EMPTY CART */
+  cart.items = cart.items.filter((item) => {
+    return (
+      item.productId &&
+      item.variantId &&
+      item.productId.isActive &&
+      !item.productId.isDeleted &&
+      item.variantId.isActive &&
+      !item.variantId.isDeleted &&
+      item.variantId.stock > 0
+    );
+  });
 
-    if(!cart){
+  /* UPDATE CLEANED CART */
 
-        return {
+  await Cart.updateOne(
+    { _id: cart._id },
 
-            items: [],
+    {
+      $set: {
+        items: cart.items,
+      },
+    },
+  );
 
-            subtotal: 0,
+  /* CALCULATE TOTALS */
 
-            totalItems: 0
+  let subtotal = 0;
 
-        }
+  let totalItems = 0;
 
-    }
+  cart.items.forEach((item) => {
+    subtotal += item.price * item.quantity;
 
+    totalItems += item.quantity;
+  });
 
+  cart.subtotal = subtotal;
 
-    /* REMOVE INVALID ITEMS */
+  cart.totalItems = totalItems;
 
-    cart.items = cart.items.filter(item => {
-
-        return (
-
-            item.productId &&
-            item.variantId &&
-            item.productId.isActive &&
-            !item.productId.isDeleted &&
-            item.variantId.isActive &&
-            !item.variantId.isDeleted &&
-            item.variantId.stock > 0
-
-        )
-
-    })
-
-
-
-    /* UPDATE CLEANED CART */
-
-    await Cart.updateOne(
-
-        { _id: cart._id },
-
-        {
-
-            $set: {
-
-                items: cart.items
-
-            }
-
-        }
-
-    )
-
-
-
-    /* CALCULATE TOTALS */
-
-    let subtotal = 0
-
-    let totalItems = 0
-
-
-
-    cart.items.forEach(item => {
-
-        subtotal +=
-        item.price * item.quantity
-
-        totalItems +=
-        item.quantity
-
-    })
-
-
-
-    cart.subtotal =
-    subtotal
-
-    cart.totalItems =
-    totalItems
-
-
-
-    return cart
-
-}
-
+  return cart;
+};
 
 /* =========================================
    ADD TO CART
 ========================================= */
 
-export const addToCartService =
-async ({
+export const addToCartService = async ({
+  userId,
 
-    userId,
+  productId,
 
-    productId,
+  variantId,
 
-    variantId,
-
-    quantity
-
+  quantity,
 }) => {
+  quantity = Number(quantity) || 1;
 
-    quantity = Number(quantity) || 1
+  /* PRODUCT VALIDATION */
 
+  const product = await Product.findOne({
+    _id: productId,
 
+    isDeleted: false,
 
-    /* PRODUCT VALIDATION */
+    isActive: true,
+  });
 
-    const product =
-    await Product.findOne({
+  if (!product) {
+    return {
+      success: false,
 
-        _id: productId,
+      message: "Product unavailable",
+    };
+  }
 
-        isDeleted: false,
+  /* VARIANT VALIDATION */
 
-        isActive: true
-
-    })
-
-
-
-    if(!product){
-
-        return {
-
-            success: false,
-
-            message:
-            "Product unavailable"
-
-        }
-
-    }
-
-
-
-    /* VARIANT VALIDATION */
-
-   const variant =
-await Variant.findOne({
-
+  const variant = await Variant.findOne({
     _id: variantId,
 
     productId,
 
     isDeleted: false,
 
-    isActive: true
+    isActive: true,
+  });
 
-})
-
-
-
-    if(!variant){
-
-        return {
-
-            success: false,
-
-            message:
-            "Variant unavailable"
-
-        }
-
-    }
-
-
-
-    /* STOCK VALIDATION */
-
-    if(variant.stock <= 0){
-
-        return {
-
-            success: false,
-
-            message:
-            "Out of stock"
-
-        }
-
-    }
-
-
-
-    /* MAX LIMIT */
-
-    if(quantity > 5){
-
-        return {
-
-            success: false,
-
-            message:
-            "Maximum quantity is 5"
-
-        }
-
-    }
-
-
-
-    /* FIND CART */
-
-    let cart =
-    await Cart.findOne({
-
-        userId
-
-    })
-
-
-
-    /* CREATE CART */
-
-    if(!cart){
-
-        cart =
-        new Cart({
-
-            userId,
-
-            items: []
-
-        })
-
-    }
-
-
-
-    /* EXISTING ITEM */
-
-    const existingItem =
-    cart.items.find(
-
-        item =>
-
-        item.variantId.toString()
-        ===
-        variantId.toString()
-
-    )
-
-
-
-    /* IF EXISTS */
-
-    if(existingItem){
-
-        const newQuantity =
-        existingItem.quantity + quantity
-
-
-
-        if(newQuantity > 5){
-
-            return {
-
-                success: false,
-
-                message:
-                "Maximum quantity reached"
-
-            }
-
-        }
-
-
-
-        if(newQuantity > variant.stock){
-
-            return {
-
-                success: false,
-
-                message:
-                "Not enough stock"
-
-            }
-
-        }
-
-
-
-        existingItem.quantity =
-        newQuantity
-
-    }
-
-
-
-    /* NEW ITEM */
-
-    else{
-
-        cart.items.push({
-
-            productId,
-
-            variantId,
-
-            quantity,
-
-            price: variant.price
-
-        })
-
-    }
-    /* REMOVE FROM WISHLIST */
-
-        const wishlist =
-        await Wishlist.findOne({
-
-            userId
-
-        })
-
-        if(wishlist){
-
-            wishlist.items =
-            wishlist.items.filter(
-
-                item =>
-
-                item.variantId.toString()
-                !==
-                variantId.toString()
-
-            )
-
-            await wishlist.save()
-
-        }
-
-
-    await cart.save()
-
-
-
+  if (!variant) {
     return {
+      success: false,
 
-        success: true,
+      message: "Variant unavailable",
+    };
+  }
 
-        message:
-        "Product added to cart"
+  /* STOCK VALIDATION */
 
+  if (variant.stock <= 0) {
+    return {
+      success: false,
+
+      message: "Out of stock",
+    };
+  }
+
+  /* MAX LIMIT */
+
+  if (quantity > 5) {
+    return {
+      success: false,
+
+      message: "Maximum quantity is 5",
+    };
+  }
+
+  /* FIND CART */
+
+  let cart = await Cart.findOne({
+    userId,
+  });
+
+  /* CREATE CART */
+
+  if (!cart) {
+    cart = new Cart({
+      userId,
+
+      items: [],
+    });
+  }
+
+  /* EXISTING ITEM */
+
+  const existingItem = cart.items.find(
+    (item) => item.variantId.toString() === variantId.toString(),
+  );
+
+  /* IF EXISTS */
+
+  if (existingItem) {
+    const newQuantity = existingItem.quantity + quantity;
+
+    if (newQuantity > 5) {
+      return {
+        success: false,
+
+        message: "Maximum quantity reached",
+      };
     }
 
-}
+    if (newQuantity > variant.stock) {
+      return {
+        success: false,
 
+        message: "Not enough stock",
+      };
+    }
 
+    existingItem.quantity = newQuantity;
+  } else {
+
+  /* NEW ITEM */
+    cart.items.push({
+      productId,
+
+      variantId,
+
+      quantity,
+
+      price: variant.price,
+    });
+  }
+  /* REMOVE FROM WISHLIST */
+
+  const wishlist = await Wishlist.findOne({
+    userId,
+  });
+
+  if (wishlist) {
+    wishlist.items = wishlist.items.filter(
+      (item) => item.variantId.toString() !== variantId.toString(),
+    );
+
+    await wishlist.save();
+  }
+
+  await cart.save();
+
+  return {
+    success: true,
+
+    message: "Product added to cart",
+  };
+};
 
 /* =========================================
    UPDATE QUANTITY
 ========================================= */
 
-export const updateCartQuantityService =
-async ({
+export const updateCartQuantityService = async ({
+  userId,
 
-    userId,
+  variantId,
 
-    variantId,
-
-    type
-
+  type,
 }) => {
+  const cart = await Cart.findOne({
+    userId,
+  });
 
-    const cart =
-    await Cart.findOne({
+  if (!cart) {
+    return {
+      success: false,
 
-        userId
+      message: "Cart not found",
+    };
+  }
 
-    })
+  const item = cart.items.find(
+    (item) => item.variantId.toString() === variantId.toString(),
+  );
 
+  if (!item) {
+    return {
+      success: false,
 
+      message: "Cart item missing",
+    };
+  }
 
-    if(!cart){
+  const variant = await Variant.findById(variantId);
 
-        return {
+  if (!variant) {
+    return {
+      success: false,
 
-            success: false,
+      message: "Variant unavailable",
+    };
+  }
 
-            message:
-            "Cart not found"
+  /* INCREMENT */
 
-        }
+  if (type === "increment") {
+    if (item.quantity >= 5) {
+      return {
+        success: false,
 
+        message: "Maximum quantity reached",
+      };
     }
 
+    if (item.quantity >= variant.stock) {
+      return {
+        success: false,
 
-
-    const item =
-    cart.items.find(
-
-        item =>
-
-        item.variantId.toString()
-        ===
-        variantId.toString()
-
-    )
-
-
-
-    if(!item){
-
-        return {
-
-            success: false,
-
-            message:
-            "Cart item missing"
-
-        }
-
+        message: "Stock limit reached",
+      };
     }
 
+    item.quantity += 1;
+  }
 
+  /* DECREMENT */
 
-    const variant =
-    await Variant.findById(
-
-        variantId
-
-    )
-
-
-
-    if(!variant){
-
-        return {
-
-            success: false,
-
-            message:
-            "Variant unavailable"
-
-        }
-
+  if (type === "decrement") {
+    if (item.quantity > 1) {
+      item.quantity -= 1;
     }
+  }
 
+  const itemSubtotal = item.price * item.quantity;
 
-
-    /* INCREMENT */
-
-    if(type === "increment"){
-
-        if(item.quantity >= 5){
-
-            return {
-
-                success: false,
-
-                message:
-                "Maximum quantity reached"
-
-            }
-
-        }
-
-
-
-        if(item.quantity >= variant.stock){
-
-            return {
-
-                success: false,
-
-                message:
-                "Stock limit reached"
-
-            }
-
-        }
-
-
-
-        item.quantity += 1
-
-    }
-
-
-
-    /* DECREMENT */
-
-    if(type === "decrement"){
-
-        if(item.quantity > 1){
-
-            item.quantity -= 1
-
-        }
-
-    }
-
-const itemSubtotal =
-item.price * item.quantity
-
-const cartSubtotal =
-cart.items.reduce(
-
+  const cartSubtotal = cart.items.reduce(
     (total, cartItem) => {
-
-        return total +
-        (cartItem.price * cartItem.quantity)
-
+      return total + cartItem.price * cartItem.quantity;
     },
 
-    0
+    0,
+  );
 
-)
-
-const totalItems =
-cart.items.reduce(
-
+  const totalItems = cart.items.reduce(
     (total, cartItem) => {
-
-        return total +
-        cartItem.quantity
-
+      return total + cartItem.quantity;
     },
 
-    0
+    0,
+  );
 
-)
-
-/* =========================================
+  /* =========================================
    SHIPPING
 ========================================= */
 
-const shipping =
+  const shipping = cartSubtotal >= 5000 ? 0 : 99;
 
-cartSubtotal >= 5000
-? 0
-: 99
-
-/* =========================================
+  /* =========================================
    TAX
 ========================================= */
 
-const estimatedTax =
+  const estimatedTax = Math.floor(cartSubtotal * 0.02);
 
-Math.floor(
-    cartSubtotal * 0.02
-)
-
-/* =========================================
+  /* =========================================
    FINAL TOTAL
 ========================================= */
 
-const finalTotal =
+  const finalTotal = cartSubtotal + shipping + estimatedTax;
 
-cartSubtotal +
-shipping +
-estimatedTax
+  await cart.save();
 
-    await cart.save()
-
-
-return {
-
+  return {
     success: true,
 
     quantity: item.quantity,
@@ -619,163 +363,82 @@ return {
 
     estimatedTax,
 
-    finalTotal
-
-}
-
-}
-
-
+    finalTotal,
+  };
+};
 
 /* =========================================
    REMOVE ITEM
 ========================================= */
 
-export const removeCartItemService =
-async ({
+export const removeCartItemService = async ({
+  userId,
 
-    userId,
-
-    variantId
-
+  variantId,
 }) => {
+  const cart = await Cart.findOne({
+    userId,
+  });
 
-    const cart =
-    await Cart.findOne({
+  if (!cart) {
+    return {
+      success: false,
 
-        userId
+      message: "Cart not found",
+    };
+  }
 
-    })
+  const removedItem = cart.items.find(
+    (item) => item.variantId.toString() === variantId.toString(),
+  );
 
+  const removedCartItem = cart.items.find(
+    (item) => item.variantId.toString() === variantId.toString(),
+  );
 
+  cart.items = cart.items.filter(
+    (item) => item.variantId.toString() !== variantId.toString(),
+  );
 
-    if(!cart){
-
-        return {
-
-            success: false,
-
-            message:
-            "Cart not found"
-
-        }
-
-    }
-
-    const removedItem =
-
-    cart.items.find(
-
-        item =>
-
-        item.variantId.toString()
-        ===
-        variantId.toString()
-
-    )
-
-   const removedCartItem =
-cart.items.find(
-
-    item =>
-
-    item.variantId.toString()
-    ===
-    variantId.toString()
-
-)
-
-cart.items =
-cart.items.filter(
-
-    item =>
-
-    item.variantId.toString()
-    !==
-    variantId.toString()
-
-)
-
-
-    await cart.save()
-
-
+  await cart.save();
 
   /* =========================================
    RESTORE ONLY IF MOVED FROM WISHLIST
 ========================================= */
 
-if(
+  if (removedItem && removedItem.movedFromWishlist) {
+    let wishlist = await Wishlist.findOne({
+      userId,
+    });
 
-    removedItem &&
-    removedItem.movedFromWishlist
+    if (!wishlist) {
+      wishlist = new Wishlist({
+        userId,
 
-){
-
-    let wishlist =
-
-    await Wishlist.findOne({
-
-        userId
-
-    })
-
-    if(!wishlist){
-
-        wishlist =
-
-        new Wishlist({
-
-            userId,
-
-            items: []
-
-        })
-
+        items: [],
+      });
     }
 
-    const alreadyExists =
+    const alreadyExists = wishlist.items.find(
+      (item) => item.variantId.toString() === variantId.toString(),
+    );
 
-    wishlist.items.find(
+    if (!alreadyExists) {
+      wishlist.items.push({
+        productId: removedItem.productId,
 
-        item =>
+        variantId: removedItem.variantId,
+      });
 
-        item.variantId.toString()
-        ===
-        variantId.toString()
-
-    )
-
-    if(!alreadyExists){
-
-        wishlist.items.push({
-
-            productId:
-            removedItem.productId,
-
-            variantId:
-            removedItem.variantId
-
-        })
-
-        await wishlist.save()
-
+      await wishlist.save();
     }
+  }
 
-}
-
-    return {
-
+  return {
     success: true,
 
-    message:
-    "Item removed",
+    message: "Item removed",
 
-    restoredToWishlist:
-
-    removedItem &&
-    removedItem.movedFromWishlist
-
-}
-
-}
+    restoredToWishlist: removedItem && removedItem.movedFromWishlist,
+  };
+};

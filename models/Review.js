@@ -1,105 +1,82 @@
-import mongoose from "mongoose"
+import mongoose from "mongoose";
 
-const reviewSchema = new mongoose.Schema({
-
+const reviewSchema = new mongoose.Schema(
+  {
     userId: {
+      type: mongoose.Schema.Types.ObjectId,
 
-        type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
 
-        ref: "User",
-
-        required: true
-
+      required: true,
     },
 
     productId: {
+      type: mongoose.Schema.Types.ObjectId,
 
-        type: mongoose.Schema.Types.ObjectId,
+      ref: "Product",
 
-        ref: "Product",
-
-        required: true
-
+      required: true,
     },
 
     variantId: {
+      type: mongoose.Schema.Types.ObjectId,
 
-        type: mongoose.Schema.Types.ObjectId,
-
-        ref: "Variant"
-
+      ref: "Variant",
     },
 
     rating: {
+      type: Number,
 
-        type: Number,
+      required: true,
 
-        required: true,
+      min: 1,
 
-        min: 1,
-
-        max: 5
-
+      max: 5,
     },
 
     title: {
+      type: String,
 
-        type: String,
-
-        trim: true
-
+      trim: true,
     },
 
     comment: {
+      type: String,
 
-        type: String,
+      trim: true,
 
-        trim: true,
-
-        default: ""
-
+      default: "",
     },
 
     isDeleted: {
+      type: Boolean,
 
-        type: Boolean,
-
-        default: false
-
-    }
-
-}, {
-
-    timestamps: true
-
-})
+      default: false,
+    },
+  },
+  {
+    timestamps: true,
+  },
+);
 
 /* =====================================
    PREVENT DUPLICATE REVIEW
 ===================================== */
 
 reviewSchema.index(
+  {
+    userId: 1,
 
-    {
+    productId: 1,
+  },
 
-        userId: 1,
-
-        productId: 1
-
-    },
-
-    {
-
-        unique: true
-
-    }
-
-)
+  {
+    unique: true,
+  },
+);
 
 export default mongoose.model(
+  "Review",
 
-    "Review",
-
-    reviewSchema
-
-)
+  reviewSchema,
+);

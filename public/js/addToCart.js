@@ -2,278 +2,190 @@
    GLOBAL ADD TO CART
 ========================================= */
 
-const addToCartButtons =
-document.querySelectorAll(
-    ".add-to-cart-btn"
-)
+const addToCartButtons = document.querySelectorAll(".add-to-cart-btn");
 
-addToCartButtons.forEach(
+addToCartButtons.forEach((button) => {
+  button.addEventListener(
+    "click",
 
-    (button) => {
+    async (e) => {
+      e.preventDefault();
 
-        button.addEventListener(
+      const variantId = button.dataset.variantId;
 
-            "click",
+      const productId = button.dataset.productId;
 
-            async (e) => {
-
-                e.preventDefault()
-
-                const variantId =
-                button.dataset.variantId
-
-                const productId =
-                button.dataset.productId
-
-                /* =========================
+      /* =========================
                    GO TO CART
                 ========================= */
 
-                if(
+      if (button.classList.contains("added")) {
+        window.location.href = "/cart";
 
-                    button.classList.contains(
-                        "added"
-                    )
+        return;
+      }
 
-                ){
+      try {
+        button.disabled = true;
 
-                    window.location.href =
-                    "/cart"
+        button.innerHTML = "Adding...";
 
-                    return
+        const response = await fetch(
+          "/cart/add",
 
-                }
+          {
+            method: "POST",
 
-                try{
+            headers: {
+              "Content-Type": "application/json",
 
-                    button.disabled = true
+              Accept: "application/json",
+            },
 
-                    button.innerHTML =
-                    "Adding..."
+            body: JSON.stringify({
+              productId,
 
-                    const response =
-                    await fetch(
+              variantId,
 
-                        "/cart/add",
+              quantity: 1,
+            }),
+          },
+        );
 
-                        {
+        const data = await response.json();
 
-                            method: "POST",
-
-                            headers: {
-
-                                "Content-Type":
-                                "application/json",
-
-                                "Accept":
-                                "application/json"
-
-                            },
-
-                            body: JSON.stringify({
-
-                                productId,
-
-                                variantId,
-
-                                quantity: 1
-
-                            })
-
-                        }
-
-                    )
-
-                    const data =
-                    await response.json()
-
-                    /* =========================
+        /* =========================
                         LOGIN REQUIRED
                     ========================= */
 
-                   if (data.requiresLogin) {
+        if (data.requiresLogin) {
+          showLoginAlert("Please login to add items to cart.").then(
+            (result) => {
+              if (result.isConfirmed) {
+                window.location.href = "/login";
+              }
+            },
+          );
 
-                        showLoginAlert(
+          button.disabled = false;
 
-                            "Please login to add items to cart."
-
-                        ).then((result) => {
-
-                            if(result.isConfirmed){
-
-                                window.location.href = "/login"
-
-                            }
-
-                        })
-
-                        button.disabled = false
-
-                        button.innerHTML = `
+          button.innerHTML = `
                             <i data-lucide="shopping-cart" size="18"></i>
                             Add to Cart
-                        `
+                        `;
 
-                        lucide.createIcons()
+          lucide.createIcons();
 
-                        return
-                    }
+          return;
+        }
 
-                    /* =========================
+        /* =========================
                        SUCCESS
                     ========================= */
 
-                    if(data.success){
-
-                        /* =========================================
+        if (data.success) {
+          /* =========================================
                         UPDATE ALL CART BUTTONS
                         ========================================= */
 
-                        const cartButtons =
+          const cartButtons = document.querySelectorAll(
+            `.add-to-cart-btn[data-variant-id="${variantId}"]`,
+          );
 
-                        document.querySelectorAll(
+          cartButtons.forEach((cartButton) => {
+            cartButton.classList.add("added");
 
-                            `.add-to-cart-btn[data-variant-id="${variantId}"]`
+            cartButton.disabled = false;
 
-                        )
-
-                        cartButtons.forEach(cartButton => {
-
-                            cartButton.classList.add(
-                                "added"
-                            )
-
-                            cartButton.disabled = false
-
-                            cartButton.innerHTML =
-
-                            `
+            cartButton.innerHTML = `
                                 <i
                                     data-lucide="shopping-bag"
                                     size="18"
                                 ></i>
 
                                 Go to Cart
-                            `
+                            `;
+          });
 
-                        })
-
-                        /* =========================================
+          /* =========================================
                         REMOVE FROM ALL WISHLIST BUTTONS
                         ========================================= */
 
-                        const wishlistButtons =
+          const wishlistButtons = document.querySelectorAll(
+            `.wishlist-toggle[data-variant-id="${variantId}"]`,
+          );
 
-                        document.querySelectorAll(
+          wishlistButtons.forEach((wishlistButton) => {
+            wishlistButton.classList.remove("active");
+          });
 
-                            `.wishlist-toggle[data-variant-id="${variantId}"]`
+          lucide.createIcons();
 
-                        )
+          /* ANIMATION */
 
-                        wishlistButtons.forEach(wishlistButton => {
+          gsap.fromTo(
+            button,
 
-                            wishlistButton.classList.remove(
-                                "active"
-                            )
+            {
+              scale: 0.92,
+            },
 
-                        })
+            {
+              scale: 1,
 
-                        lucide.createIcons()
+              duration: 0.4,
 
-                        /* ANIMATION */
+              ease: "back.out(1.7)",
+            },
+          );
 
-                        gsap.fromTo(
+          /* TOAST */
 
-                            button,
+          showToast(
+            "success",
 
-                            {
+            "Added to cart",
+          );
+        } else {
 
-                                scale: 0.92
-
-                            },
-
-                            {
-
-                                scale: 1,
-
-                                duration: 0.4,
-
-                                ease: "back.out(1.7)"
-
-                            }
-
-                        )
-
-                        /* TOAST */
-
-                       showToast(
-
-                            "success",
-
-                            "Added to cart"
-
-                        )
-
-                    }
-
-                    /* =========================
+        /* =========================
                        FAILED
                     ========================= */
+          button.disabled = false;
 
-                    else{
-
-                        button.disabled = false
-
-                        button.innerHTML =
-
-                        `
+          button.innerHTML = `
                             <i
                                 data-lucide="shopping-cart"
                                 size="18"
                             ></i>
 
                             Add to Cart
-                        `
+                        `;
 
-                        lucide.createIcons()
+          lucide.createIcons();
 
-                       showToast(
+          showToast(
+            "info",
 
-                            "info",
+            data.message,
+          );
+        }
+      } catch (error) {
+        console.log(error);
 
-                            data.message
+        button.disabled = false;
 
-                        )
-
-                    }
-
-                }
-
-                catch(error){
-
-                    console.log(error)
-
-                    button.disabled = false
-
-                    button.innerHTML =
-
-                    `
+        button.innerHTML = `
                         <i
                             data-lucide="shopping-cart"
                             size="18"
                         ></i>
 
                         Add to Cart
-                    `
+                    `;
 
-                    lucide.createIcons()
-
-                }
-
-            }
-
-        )
-
-    }
-
-)
+        lucide.createIcons();
+      }
+    },
+  );
+});

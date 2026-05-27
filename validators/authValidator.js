@@ -1,147 +1,94 @@
-import { z } from "zod"
-
-
+import { z } from "zod";
 
 /* =========================
    Signup Validation Schema
 ========================= */
 
-export const signupSchema = z.object({
-
-  /* =========================
+export const signupSchema = z
+  .object({
+    /* =========================
      FULL NAME
   ========================= */
 
-  fullName: z
-    .string()
-    .trim()
+    fullName: z
+      .string()
+      .trim()
 
-    /* Minimum characters */
+      /* Minimum characters */
 
-    .min(
-      3,
-      "Name must be at least 3 characters"
-    )
+      .min(3, "Name must be at least 3 characters")
 
-    /* Maximum characters */
+      /* Maximum characters */
 
-    .max(
-      50,
-      "Name cannot exceed 50 characters"
-    )
+      .max(50, "Name cannot exceed 50 characters")
 
-    /* Prevent spaces-only names */
+      /* Prevent spaces-only names */
 
-    .refine(
+      .refine(
+        (val) => val.replace(/\s/g, "").length > 0,
 
-      (val) =>
-        val.replace(/\s/g, "").length > 0,
+        {
+          message: "Name cannot be empty or only spaces",
+        },
+      ),
 
-      {
-
-        message:
-          "Name cannot be empty or only spaces"
-
-      }
-
-    ),
-
-
-
-  /* =========================
+    /* =========================
      PHONE NUMBER (OPTIONAL)
   ========================= */
 
-  phoneNumber: z
-    .string()
-    .trim()
-    .optional()
-    .or(z.literal(""))
-    .refine(
+    phoneNumber: z
+      .string()
+      .trim()
+      .optional()
+      .or(z.literal(""))
+      .refine(
+        (val) => {
+          if (!val || val === "") return true;
 
-      (val) => {
+          return /^[0-9]{10}$/.test(val);
+        },
 
-        if (!val || val === "")
-          return true
+        {
+          message: "Phone number must be exactly 10 digits",
+        },
+      ),
 
-        return /^[0-9]{10}$/.test(val)
-
-      },
-
-      {
-
-        message:
-          "Phone number must be exactly 10 digits"
-
-      }
-
-    ),
-
-
-
-  /* =========================
+    /* =========================
      EMAIL
   ========================= */
 
-  email: z
-    .string()
-    .trim()
+    email: z
+      .string()
+      .trim()
 
-    .max(
-      100,
-      "Email cannot exceed 100 characters"
-    )
+      .max(100, "Email cannot exceed 100 characters")
 
-    .email(
-      "Invalid email address"
-    ),
+      .email("Invalid email address"),
 
-
-
-  /* =========================
+    /* =========================
      PASSWORD
   ========================= */
 
-  password: z
-    .string()
+    password: z
+      .string()
 
-    .min(
-      6,
-      "Password must be at least 6 characters"
-    )
+      .min(6, "Password must be at least 6 characters")
 
-    .max(
-      50,
-      "Password cannot exceed 50 characters"
-    ),
+      .max(50, "Password cannot exceed 50 characters"),
 
+    confirmPassword: z.string(),
+  })
 
-
-  confirmPassword:
-    z.string()
-
-})
-
-
-
-/* =========================
+  /* =========================
    PASSWORD MATCH CHECK
 ========================= */
 
-.refine(
+  .refine(
+    (data) => data.password === data.confirmPassword,
 
-  (data) =>
-    data.password ===
-    data.confirmPassword,
+    {
+      message: "Passwords do not match",
 
-  {
-
-    message:
-      "Passwords do not match",
-
-    path:
-      ["confirmPassword"]
-
-  }
-
-)
+      path: ["confirmPassword"],
+    },
+  );

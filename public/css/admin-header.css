@@ -1,64 +1,64 @@
 /* TOP NAVBAR */
 .top-navbar {
-    position: sticky;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 72px;
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border-bottom: 1px solid rgba(127, 116, 125, 0.1);
-    box-shadow: 0px 4px 20px rgba(46, 15, 47, 0.03);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 40px;
-    z-index: 100;
+  position: sticky;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 72px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(127, 116, 125, 0.1);
+  box-shadow: 0px 4px 20px rgba(46, 15, 47, 0.03);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 40px;
+  z-index: 100;
 }
 
 .nav-left {
-    display: flex;
-    align-items: center;
-    gap: 32px;
+  display: flex;
+  align-items: center;
+  gap: 32px;
 }
 
 .nav-logo {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--text-accent);
-    letter-spacing: -0.9px;
-    text-decoration: none;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-accent);
+  letter-spacing: -0.9px;
+  text-decoration: none;
 }
 
 .nav-links {
-    display: flex;
-    gap: 24px;
+  display: flex;
+  gap: 24px;
 }
 
 .nav-link {
-    font-size: 14px;
-    font-weight: 500;
-    color: #71717A;
-    text-decoration: none;
-    transition: var(--transition);
-    padding-bottom: 4px;
-    border-bottom: 2px solid transparent;
+  font-size: 14px;
+  font-weight: 500;
+  color: #71717a;
+  text-decoration: none;
+  transition: var(--transition);
+  padding-bottom: 4px;
+  border-bottom: 2px solid transparent;
 }
 
 .nav-link:hover {
-    color: var(--text-accent);
+  color: var(--text-accent);
 }
 
 .nav-link.active {
-    color: var(--text-accent);
-    border-bottom-color: #A21CAF;
+  color: var(--text-accent);
+  border-bottom-color: #a21caf;
 }
 
 .nav-right {
-    display: flex;
-    align-items: center;
-    gap: 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
 /* =========================
@@ -66,183 +66,165 @@
 ========================= */
 
 .search-bar {
+  position: relative;
 
-    position: relative;
-
-    width: 256px;
-
+  width: 256px;
 }
 
 /* INPUT */
 
 .search-input {
+  width: 100%;
 
-    width: 100%;
+  height: 36px;
 
-    height: 36px;
+  background: #fff0f5;
 
-    background: #FFF0F5;
+  border: 1px solid rgba(122, 78, 124, 0.1);
 
-    border: 1px solid rgba(122, 78, 124, 0.1);
+  border-radius: 9999px;
 
-    border-radius: 9999px;
+  padding-left: 16px;
 
-    padding-left: 16px;
+  padding-right: 42px; /* space for icon */
 
-    padding-right: 42px; /* space for icon */
+  font-size: 14px;
 
-    font-size: 14px;
+  color: var(--text-primary);
 
-    color: var(--text-primary);
-
-    transition: var(--transition);
-
+  transition: var(--transition);
 }
 
 .search-input:focus {
+  outline: none;
 
-    outline: none;
+  background: #ffffff;
 
-    background: #FFFFFF;
+  border-color: var(--text-accent);
 
-    border-color: var(--text-accent);
-
-    box-shadow: 0 4px 12px rgba(112, 26, 117, 0.08);
-
+  box-shadow: 0 4px 12px rgba(112, 26, 117, 0.08);
 }
 
 /* SEARCH BUTTON */
 
 .search-btn {
+  position: absolute;
 
-    position: absolute;
+  right: 8px;
 
-    right: 8px;
+  top: 50%;
 
-    top: 50%;
+  transform: translateY(-50%);
 
-    transform: translateY(-50%);
+  width: 28px;
 
-    width: 28px;
+  height: 28px;
 
-    height: 28px;
+  border-radius: 50%;
 
-    border-radius: 50%;
+  border: none;
 
-    border: none;
+  background: transparent;
 
-    background: transparent;
+  display: flex;
 
-    display: flex;
+  align-items: center;
 
-    align-items: center;
+  justify-content: center;
 
-    justify-content: center;
+  cursor: pointer;
 
-    cursor: pointer;
+  color: var(--text-muted);
 
-    color: var(--text-muted);
-
-    transition: var(--transition);
-
+  transition: var(--transition);
 }
 
 /* Hover effect */
 
 .search-btn:hover {
+  background: rgba(112, 26, 117, 0.1);
 
-    background: rgba(112, 26, 117, 0.1);
-
-    color: var(--text-accent);
-
+  color: var(--text-accent);
 }
 
 /* Icon size fix */
 
 .search-btn svg {
+  width: 16px;
 
-    width: 16px;
-
-    height: 16px;
-
+  height: 16px;
 }
 
 .icon-btn {
-    background: none;
-    border: none;
-    color: #71717A;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    transition: var(--transition);
+  background: none;
+  border: none;
+  color: #71717a;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  transition: var(--transition);
 }
 
 .icon-btn:hover {
-    background: rgba(112, 26, 117, 0.1);
-    color: var(--text-accent);
+  background: rgba(112, 26, 117, 0.1);
+  color: var(--text-accent);
 }
 
 .user-profile {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: #7A4E7C;
-    margin-left: 8px;
-    cursor: pointer;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #7a4e7c;
+  margin-left: 8px;
+  cursor: pointer;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .user-profile img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 /* ADMIN LOGOUT BUTTON */
 
 .admin-logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 
-display: flex;
-align-items: center;
-gap: 8px;
+  padding: 10px 16px;
 
-padding: 10px 16px;
+  background: #fff0f4;
 
-background: #FFF0F4;
+  border-radius: 10px;
 
-border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
 
-font-size: 13px;
-font-weight: 600;
+  color: #603763;
 
-color: #603763;
+  text-decoration: none;
 
-text-decoration: none;
-
-transition: 0.2s ease;
-
+  transition: 0.2s ease;
 }
 
 .admin-logout-btn:hover {
+  background: #603763;
 
-background: #603763;
-
-color: #FFFFFF;
-
+  color: #ffffff;
 }
 
 /* ICON */
 
 .admin-logout-btn i {
-
-width: 18px;
-height: 18px;
-
+  width: 18px;
+  height: 18px;
 }

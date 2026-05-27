@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="/css/components/footer.css">
     <link rel="stylesheet" href="/css/components/toast.css">
     <link rel="stylesheet" href="/css/checkout.css">
+    <link rel="stylesheet" href="/css/addresses.css?v=5.0">
 
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -26,14 +27,21 @@
 
     <%- include('../partials/user/header', { page: 'checkout' }) %>
 
-    <%
-        /* ── Compute totals ── */
-        const subtotal    = typeof cart !== 'undefined' ? cart.subtotal : 144700;
-        const couponDiscount = typeof appliedCoupon !== 'undefined' ? appliedCoupon.discount : 5000;
-        const shippingFee = 0;   /* Standard delivery is free */
-        const tax         = 2000;
-        const grandTotal  = subtotal - couponDiscount + shippingFee + tax;
-    %>
+   <%
+
+    const couponDiscount =
+
+    typeof appliedCoupon !== "undefined"
+
+    ? appliedCoupon.discount
+
+    : 0;
+
+    const grandTotal =
+
+    finalAmount - couponDiscount;
+
+%>
 
     <main class="checkout-page" id="checkoutPage">
 
@@ -73,129 +81,69 @@
                             <h2 class="co-section-title">Shipping Details</h2>
                         </div>
 
-                        <div class="co-form-card">
+                        <div class="checkout-addresses-grid">
+                            <input
+    type="hidden"
 
-                            <div class="co-form-grid">
+    id="selectedAddressId"
 
-                                <!-- Full Name -->
-                                <div class="co-field">
-                                    <label class="co-label" for="fullName">Full Name</label>
-                                    <input
-                                        type="text"
-                                        id="fullName"
-                                        name="fullName"
-                                        class="co-input"
-                                        placeholder="John Doe"
-                                        autocomplete="name"
-                                    >
-                                </div>
+    name="selectedAddressId"
 
-                                <!-- Email -->
-                                <div class="co-field">
-                                    <label class="co-label" for="email">Email Address</label>
-                                    <input
-                                        type="email"
-                                        id="email"
-                                        name="email"
-                                        class="co-input"
-                                        placeholder="john@example.com"
-                                        autocomplete="email"
-                                    >
-                                </div>
+    value="<%= addresses?.find(a => a.isDefault)?._id || '' %>"
+>
 
-                                <!-- Phone -->
-                                <div class="co-field">
-                                    <label class="co-label" for="phone">Phone Number</label>
-                                    <input
-                                        type="tel"
-                                        id="phone"
-                                        name="phone"
-                                        class="co-input"
-                                        placeholder="+91 98765 43210"
-                                        autocomplete="tel"
-                                    >
-                                </div>
+    <% if(addresses && addresses.length > 0){ %>
 
-                                <!-- Street Address -->
-                                <div class="co-field">
-                                    <label class="co-label" for="street">Street Address</label>
-                                    <input
-                                        type="text"
-                                        id="street"
-                                        name="street"
-                                        class="co-input"
-                                        placeholder="Apt 42, Skyline Towers"
-                                        autocomplete="street-address"
-                                    >
-                                </div>
+        <% addresses.forEach(address => { %>
 
-                            </div>
+            <div
 
-                            <!-- City / State / Postal / Country row -->
-                            <div class="co-form-grid co-form-grid--4">
+                class="
+                checkout-address-wrapper
+                <%= address.isDefault ? 'active' : '' %>
+                "
 
-                                <div class="co-field">
-                                    <label class="co-label" for="city">City</label>
-                                    <input
-                                        type="text"
-                                        id="city"
-                                        name="city"
-                                        class="co-input"
-                                        placeholder="Mumbai"
-                                        autocomplete="address-level2"
-                                    >
-                                </div>
+                data-address-id="<%= address._id %>"
 
-                                <div class="co-field">
-                                    <label class="co-label" for="state">State</label>
-                                    <input
-                                        type="text"
-                                        id="state"
-                                        name="state"
-                                        class="co-input"
-                                        placeholder="Maharashtra"
-                                        autocomplete="address-level1"
-                                    >
-                                </div>
+            >
 
-                                <div class="co-field">
-                                    <label class="co-label" for="postal">Postal Code</label>
-                                    <input
-                                        type="text"
-                                        id="postal"
-                                        name="postal"
-                                        class="co-input"
-                                        placeholder="400001"
-                                        autocomplete="postal-code"
-                                    >
-                                </div>
+                <%- include(
 
-                                <div class="co-field">
-                                    <label class="co-label" for="country">Country</label>
-                                    <select id="country" name="country" class="co-input co-select">
-                                        <option value="IN" selected>India</option>
-                                        <option value="US">United States</option>
-                                        <option value="GB">United Kingdom</option>
-                                        <option value="AU">Australia</option>
-                                        <option value="SG">Singapore</option>
-                                        <option value="AE">UAE</option>
-                                    </select>
-                                </div>
+                    "../partials/user/address-card",
 
-                            </div>
+                    { address }
 
-                            <!-- Save address checkbox -->
-                            <label class="co-checkbox-label" for="saveAddress">
-                                <input
-                                    type="checkbox"
-                                    id="saveAddress"
-                                    name="saveAddress"
-                                    class="co-checkbox"
-                                >
-                                <span class="co-checkbox-text">Save this address for future purchases</span>
-                            </label>
+                ) %>
 
-                        </div>
+            </div>
+
+        <% }) %>
+
+    <% } else { %>
+
+        <div class="co-empty-address">
+
+            <p>
+                No saved addresses found
+            </p>
+
+        </div>
+
+    <% } %>
+
+</div>
+
+<a
+
+    href="/addresses"
+
+    class="co-add-address-btn"
+
+>
+
+    + Add New Address
+
+</a>
                     </div>
 
                     <!-- ── SECTION 2: DELIVERY OPTIONS ── -->
@@ -403,7 +351,7 @@
                         <!-- Items list -->
                         <div class="co-summary-items">
 
-                            <% if (typeof cart !== 'undefined' && cart.items && cart.items.length > 0) { %>
+                            <% if (cart && cart.items && cart.items.length > 0) { %>
 
                                 <% cart.items.forEach(item => { %>
 
@@ -462,23 +410,39 @@
                             <div class="co-breakdown-row">
                                 <span>Subtotal</span>
                                 <span id="coSubtotal">
-                                    ₹<%= typeof cart !== 'undefined' ? cart.subtotal.toLocaleString('en-IN') : '1,44,700' %>
+                                    ₹<%= subtotal.toLocaleString('en-IN') %>
                                 </span>
                             </div>
 
                             <div class="co-breakdown-row">
-                                <span>Shipping</span>
-                                <span class="co-free" id="coShipping">Free</span>
-                            </div>
+    <span>Shipping</span>
+
+    <span
+        class="<%= deliveryCharge === 0 ? 'co-free' : '' %>"
+        id="coShipping"
+    >
+        <%= deliveryCharge === 0
+            ? 'Free'
+            : `₹${deliveryCharge.toLocaleString('en-IN')}` %>
+    </span>
+</div>
 
                             <div class="co-breakdown-row co-discount" id="coDiscountRow">
                                 <span>Discount (<span id="coCouponCode">FESTIVE5K</span>)</span>
-                                <span class="co-discount-val" id="coDiscount">−₹5,000</span>
+                                <span class="co-discount-val" id="coDiscount">
+
+    −₹<%= couponDiscount.toLocaleString('en-IN') %>
+
+</span>
                             </div>
 
                             <div class="co-breakdown-row">
                                 <span>Estimated Tax</span>
-                                <span id="coTax">₹2,000</span>
+                                <span id="coTax">
+
+                                    ₹<%= taxAmount.toLocaleString('en-IN') %>
+
+                                </span>
                             </div>
 
                         </div>
@@ -650,35 +614,133 @@
                 timerProgressBar: true,
             });
         }
+/* =========================================
+   PLACE ORDER
+========================================= */
 
-        /* ── Place Order ── */
-        document.getElementById('placeOrderBtn').addEventListener('click', () => {
-            const name   = document.getElementById('fullName').value.trim();
-            const email  = document.getElementById('email').value.trim();
-            const phone  = document.getElementById('phone').value.trim();
-            const street = document.getElementById('street').value.trim();
+document
+.getElementById("placeOrderBtn")
 
-            if (!name || !email || !phone || !street) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Incomplete Details',
-                    text: 'Please fill in all required shipping fields.',
-                    confirmButtonColor: '#4C0080',
-                    borderRadius: '20px',
-                });
-                return;
-            }
+.addEventListener(
+
+    "click",
+
+    () => {
+
+        /* ADDRESS ID */
+
+        const addressId =
+
+        document.getElementById(
+            "selectedAddressId"
+        ).value
+
+        /* NO ADDRESS */
+
+        if (!addressId) {
 
             Swal.fire({
-                icon: 'success',
-                title: 'Order Placed! 🎉',
-                text: 'Your order has been placed successfully. You\'ll receive a confirmation email shortly.',
-                confirmButtonColor: '#4C0080',
-                confirmButtonText: 'Continue Shopping',
-            }).then(result => {
-                if (result.isConfirmed) window.location.href = '/products';
-            });
-        });
+
+                icon: "warning",
+
+                title: "Select Address",
+
+                text:
+                "Please select a delivery address.",
+
+                confirmButtonColor:
+                "#4C0080"
+
+            })
+
+            return
+        }
+
+        console.log(
+            "Selected Address:",
+            addressId
+        )
+
+        /* TEMP SUCCESS */
+
+        Swal.fire({
+
+            icon: "success",
+
+            title:
+            "Address Selected",
+
+            text:
+            "Ready for order placement.",
+
+            confirmButtonColor:
+            "#4C0080"
+
+        })
+
+    }
+
+)
+
+        /* =========================================
+            ADDRESS SELECTION
+            ========================================= */
+
+            const addressCards =
+
+            document.querySelectorAll(
+
+                ".checkout-address-wrapper"
+
+            );
+
+           addressCards.forEach(card => {
+
+    card.addEventListener(
+
+        "click",
+
+        (event) => {
+
+            if (
+
+                event.target.closest(
+                    ".action-link"
+                ) ||
+
+                event.target.closest(
+                    ".deliver-here-btn"
+                )
+
+            ) {
+
+                return
+
+            }
+
+            addressCards.forEach(c => {
+
+                c.classList.remove(
+                    "active"
+                )
+
+            })
+
+            card.classList.add(
+                "active"
+            )
+
+            document.getElementById(
+                "selectedAddressId"
+            ).value =
+
+            card.dataset.addressId
+
+        }
+
+    )
+
+})
     </script>
 
 </body>

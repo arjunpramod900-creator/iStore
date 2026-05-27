@@ -1,131 +1,66 @@
-import dotenv from "dotenv"
-dotenv.config()
+import dotenv from "dotenv";
+dotenv.config();
 
-import bcrypt from "bcryptjs"
+import bcrypt from "bcryptjs";
 
-import connectDB from "../config/db.js"
+import connectDB from "../config/db.js";
 
-import Admin from "../models/Admin.js"
-
-
+import Admin from "../models/Admin.js";
 
 const createAdmin = async () => {
+  try {
+    /* CONNECT DATABASE */
 
-try {
+    await connectDB();
 
-/* CONNECT DATABASE */
+    /* ADMIN DETAILS */
 
-await connectDB()
+    const adminEmail = "matrixcodexv8@gmail.com";
 
+    const adminPassword = "matrix123";
 
+    /* CHECK EXISTING ADMIN */
 
-/* ADMIN DETAILS */
+    const existingAdmin = await Admin.findOne({
+      email: adminEmail,
+    });
 
-const adminEmail =
-"matrixcodexv8@gmail.com"
+    if (existingAdmin) {
+      console.log("⚠️ Admin already exists");
 
-const adminPassword =
-"matrix123"
+      process.exit();
+    }
 
+    /* HASH PASSWORD */
 
+    const hashedPassword = await bcrypt.hash(adminPassword, 10);
 
-/* CHECK EXISTING ADMIN */
+    /* CREATE ADMIN */
 
-const existingAdmin =
-await Admin.findOne({
+    const admin = new Admin({
+      username: "Admin",
 
-email: adminEmail
+      email: adminEmail,
 
-})
+      password: hashedPassword,
 
+      phoneNumber: "9999999999",
+    });
 
+    await admin.save();
 
-if (existingAdmin) {
+    console.log("✅ Admin created successfully");
 
-console.log(
-"⚠️ Admin already exists"
-)
+    console.log("📧 Email:", adminEmail);
 
-process.exit()
+    console.log("🔑 Password:", adminPassword);
 
-}
+    process.exit();
+  } catch (error) {
+    console.error("❌ Error creating admin:", error);
 
+    process.exit(1);
+  }
+};
 
-
-/* HASH PASSWORD */
-
-const hashedPassword =
-await bcrypt.hash(
-
-adminPassword,
-10
-
-)
-
-
-
-/* CREATE ADMIN */
-
-const admin =
-new Admin({
-
-username: "Admin",
-
-email: adminEmail,
-
-password: hashedPassword,
-
-phoneNumber: "9999999999"
-
-})
-
-
-
-await admin.save()
-
-
-
-console.log(
-
-"✅ Admin created successfully"
-
-)
-
-console.log(
-
-"📧 Email:",
-adminEmail
-
-)
-
-console.log(
-
-"🔑 Password:",
-adminPassword
-
-)
-
-
-
-process.exit()
-
-}
-
-catch (error) {
-
-console.error(
-
-"❌ Error creating admin:",
-error
-
-)
-
-process.exit(1)
-
-}
-
-}
-
-
-
-createAdmin()
+createAdmin();

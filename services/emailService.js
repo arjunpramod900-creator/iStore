@@ -1,73 +1,49 @@
-import nodemailer from "nodemailer"
-
-
+import nodemailer from "nodemailer";
 
 /* ================================
    Send Email Function
 ================================ */
 
-const sendEmail = async (
-
-  email,
-  subject,
-  message
-
-) => {
-
+const sendEmail = async (email, subject, message) => {
   try {
-
     /* DEBUG LOGS (important now) */
 
-    console.log("EMAIL_USER:", process.env.EMAIL_USER)
-    console.log("EMAIL_PASS:", process.env.EMAIL_PASS ? "Loaded ✅" : "Missing ❌")
-
+    console.log("EMAIL_USER:", process.env.EMAIL_USER);
+    console.log(
+      "EMAIL_PASS:",
+      process.env.EMAIL_PASS ? "Loaded ✅" : "Missing ❌",
+    );
 
     /* Create Transporter INSIDE function */
 
-    const transporter =
-      nodemailer.createTransport({
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
 
-        service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
 
-        auth: {
-
-          user: process.env.EMAIL_USER,
-
-          pass: process.env.EMAIL_PASS
-
-        }
-
-      })
-
+        pass: process.env.EMAIL_PASS,
+      },
+    });
 
     /* Send Email */
 
     await transporter.sendMail({
-
       from: process.env.EMAIL_USER,
 
       to: email,
 
       subject,
 
-      text: message
+      text: message,
+    });
 
-    })
+    console.log("Email sent successfully 📧");
+  } catch (error) {
+    console.log("Email sending failed ❌");
 
-
-    console.log("Email sent successfully 📧")
-
+    console.error(error);
   }
+};
 
-  catch (error) {
-
-    console.log("Email sending failed ❌")
-
-    console.error(error)
-
-  }
-
-}
-
-
-export default sendEmail
+export default sendEmail;

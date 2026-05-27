@@ -1,41 +1,25 @@
-import express from "express"
+import express from "express";
 
-import {
+import { isLoggedIn } from "../../middleware/authMiddleware.js";
 
-    isLoggedIn
+import userBlockCheckMiddleware from "../../middleware/userBlockCheckMiddleware.js";
 
-} from "../../middleware/authMiddleware.js"
+import { loadCheckoutPage } from "../../controllers/user/checkoutController.js";
 
-import userBlockCheckMiddleware
-from "../../middleware/userBlockCheckMiddleware.js"
-
-import {
-
-    loadCheckoutPage
-
-} from "../../controllers/user/checkoutController.js"
-
-const router =
-express.Router()
-
-
+const router = express.Router();
 
 /* =========================================
    LOAD CHECKOUT
 ========================================= */
 
 router.get(
+  "/checkout",
 
-    "/checkout",
+  isLoggedIn,
 
-    isLoggedIn,
+  userBlockCheckMiddleware,
 
-    userBlockCheckMiddleware,
+  loadCheckoutPage,
+);
 
-    loadCheckoutPage
-
-)
-
-
-
-export default router
+export default router;

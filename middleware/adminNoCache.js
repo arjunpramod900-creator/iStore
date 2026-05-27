@@ -1,29 +1,18 @@
 const adminNoCache = (req, res, next) => {
+  /* Strong cache control */
 
-/* Strong cache control */
+  res.setHeader(
+    "Cache-Control",
+    "no-store, no-cache, must-revalidate, proxy-revalidate, private",
+  );
 
-res.setHeader(
-"Cache-Control",
-"no-store, no-cache, must-revalidate, proxy-revalidate, private"
-)
+  res.setHeader("Pragma", "no-cache");
 
-res.setHeader(
-"Pragma",
-"no-cache"
-)
+  res.setHeader("Expires", "0");
 
-res.setHeader(
-"Expires",
-"0"
-)
+  res.setHeader("Surrogate-Control", "no-store");
 
-res.setHeader(
-"Surrogate-Control",
-"no-store"
-)
+  next();
+};
 
-next()
-
-}
-
-export default adminNoCache
+export default adminNoCache;

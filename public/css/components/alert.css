@@ -2,213 +2,181 @@
    PREMIUM ISTORE ALERT SYSTEM
 ========================================= */
 
-.premium-alert-popup{
+.premium-alert-popup {
+  width: 430px;
 
-    width: 430px;
+  padding: 2.2rem;
 
-    padding: 2.2rem;
+  border-radius: 32px !important;
 
-    border-radius: 32px !important;
+  background: rgba(255, 255, 255, 0.78) !important;
 
-    background:
-    rgba(255,255,255,0.78) !important;
+  backdrop-filter: blur(30px);
 
-    backdrop-filter:
-    blur(30px);
+  -webkit-backdrop-filter: blur(30px);
 
-    -webkit-backdrop-filter:
-    blur(30px);
+  border: 1px solid rgba(255, 255, 255, 0.32);
 
-    border:
-    1px solid rgba(255,255,255,0.32);
-
-    box-shadow:
+  box-shadow:
     0px 40px 80px rgba(78, 31, 88, 0.16),
-    inset 0px 1px 0px rgba(255,255,255,0.65);
+    inset 0px 1px 0px rgba(255, 255, 255, 0.65);
 
-    overflow: hidden;
+  overflow: hidden;
 }
 
 /* =========================================
    TITLE
 ========================================= */
 
-.premium-alert-title{
+.premium-alert-title {
+  font-family: "Inter", sans-serif;
 
-    font-family: 'Inter', sans-serif;
+  font-size: 30px !important;
 
-    font-size: 30px !important;
+  font-weight: 700 !important;
 
-    font-weight: 700 !important;
+  letter-spacing: -1.4px;
 
-    letter-spacing: -1.4px;
+  color: #2c1421;
 
-    color: #2C1421;
-
-    margin-bottom: 10px;
+  margin-bottom: 10px;
 }
 
 /* =========================================
    TEXT
 ========================================= */
 
-.premium-alert-text{
+.premium-alert-text {
+  font-family: "Inter", sans-serif;
 
-    font-family: 'Inter', sans-serif;
+  font-size: 15px !important;
 
-    font-size: 15px !important;
+  line-height: 1.7;
 
-    line-height: 1.7;
+  color: #6b7280;
 
-    color: #6B7280;
-
-    margin-top: 6px;
+  margin-top: 6px;
 }
 
 /* =========================================
    ACTIONS CONTAINER
 ========================================= */
 
-.swal2-actions{
+.swal2-actions {
+  width: 100%;
 
-    width: 100%;
+  margin-top: 2rem !important;
 
-    margin-top: 2rem !important;
-
-    gap: 14px;
+  gap: 14px;
 }
 
 /* =========================================
    LOGIN BUTTON
 ========================================= */
 
-.premium-alert-confirm{
+.premium-alert-confirm {
+  flex: 1;
 
-    flex: 1;
+  height: 56px;
 
-    height: 56px;
+  border: none !important;
 
-    border: none !important;
+  border-radius: 18px !important;
 
-    border-radius: 18px !important;
+  background: linear-gradient(
+    135deg,
+    #5b0ab2 0%,
+    #701a75 50%,
+    #8b5cf6 100%
+  ) !important;
 
-    background:
-    linear-gradient(
-        135deg,
-        #5B0AB2 0%,
-        #701A75 50%,
-        #8B5CF6 100%
-    ) !important;
+  color: #ffffff !important;
 
-    color: #FFFFFF !important;
+  font-size: 15px !important;
 
-    font-size: 15px !important;
+  font-weight: 600 !important;
 
-    font-weight: 600 !important;
+  letter-spacing: -0.2px;
 
-    letter-spacing: -0.2px;
+  box-shadow: 0px 18px 42px rgba(91, 10, 178, 0.28);
 
-    box-shadow:
-    0px 18px 42px rgba(91,10,178,0.28);
-
-    transition:
+  transition:
     transform 0.22s ease,
     box-shadow 0.22s ease !important;
 }
 
-.premium-alert-confirm:hover{
+.premium-alert-confirm:hover {
+  transform: translateY(-2px);
 
-    transform:
-    translateY(-2px);
-
-    box-shadow:
-    0px 24px 52px rgba(91,10,178,0.38);
+  box-shadow: 0px 24px 52px rgba(91, 10, 178, 0.38);
 }
 
 /* =========================================
    CANCEL BUTTON
 ========================================= */
 
-.premium-alert-cancel{
+.premium-alert-cancel {
+  flex: 1;
 
-    flex: 1;
+  height: 56px;
 
-    height: 56px;
+  border-radius: 18px !important;
 
-    border-radius: 18px !important;
+  border: 1px solid rgba(208, 195, 204, 0.18) !important;
 
-    border:
-    1px solid rgba(208,195,204,0.18) !important;
+  background: rgba(255, 255, 255, 0.72) !important;
 
-    background:
-    rgba(255,255,255,0.72) !important;
+  backdrop-filter: blur(10px);
 
-    backdrop-filter:
-    blur(10px);
+  color: #5a3e4b !important;
 
-    color: #5A3E4B !important;
+  font-size: 15px !important;
 
-    font-size: 15px !important;
+  font-weight: 600 !important;
 
-    font-weight: 600 !important;
-
-    transition:
-    all 0.22s ease !important;
+  transition: all 0.22s ease !important;
 }
 
-.premium-alert-cancel:hover{
+.premium-alert-cancel:hover {
+  background: rgba(255, 240, 244, 0.9) !important;
 
-    background:
-    rgba(255,240,244,0.9) !important;
-
-    transform:
-    translateY(-1px);
+  transform: translateY(-1px);
 }
 
 /* =========================================
    ICON
 ========================================= */
 
-.swal2-icon.swal2-info{
+.swal2-icon.swal2-info {
+  border-color: rgba(112, 26, 117, 0.18) !important;
 
-    border-color:
-    rgba(112,26,117,0.18) !important;
-
-    color:
-    #701A75 !important;
+  color: #701a75 !important;
 }
 
 /* =========================================
    BACKDROP
 ========================================= */
 
-.swal2-backdrop-show{
+.swal2-backdrop-show {
+  backdrop-filter: blur(8px);
 
-    backdrop-filter:
-    blur(8px);
-
-    -webkit-backdrop-filter:
-    blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 /* =========================================
    MOBILE
 ========================================= */
 
-@media(max-width: 480px){
+@media (max-width: 480px) {
+  .premium-alert-popup {
+    width: calc(100% - 32px);
 
-    .premium-alert-popup{
+    padding: 1.8rem;
 
-        width: calc(100% - 32px);
+    border-radius: 28px !important;
+  }
 
-        padding: 1.8rem;
-
-        border-radius: 28px !important;
-    }
-
-    .premium-alert-title{
-
-        font-size: 26px !important;
-    }
-
+  .premium-alert-title {
+    font-size: 26px !important;
+  }
 }

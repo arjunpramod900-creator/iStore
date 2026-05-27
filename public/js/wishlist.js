@@ -2,161 +2,97 @@
    ADD TO WISHLIST
 ========================================= */
 
-const wishlistButtons =
-document.querySelectorAll(
-    ".wishlist-toggle, .btn-wishlist"
-)
+const wishlistButtons = document.querySelectorAll(
+  ".wishlist-toggle, .btn-wishlist",
+);
 
-wishlistButtons.forEach(button => {
+wishlistButtons.forEach((button) => {
+  button.addEventListener(
+    "click",
 
-    button.addEventListener(
+    async (e) => {
+      e.preventDefault();
 
-        "click",
+      try {
+        const productId = button.dataset.productId;
 
-        async (e) => {
+        const variantId = button.dataset.variantId;
 
-            e.preventDefault()
+        const response = await fetch(
+          "/wishlist/add",
 
-            try{
+          {
+            method: "POST",
 
-                const productId =
-                button.dataset.productId
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
 
-                const variantId =
-                button.dataset.variantId
+            body: JSON.stringify({
+              productId,
 
-                const response =
-                await fetch(
+              variantId,
+            }),
+          },
+        );
 
-                    "/wishlist/add",
+        const data = await response.json();
 
-                    {
-
-                        method: "POST",
-
-                        headers: {
-
-                            "Content-Type":
-                            "application/json",
-                            "Accept":
-                            "application/json"
-
-                        },
-
-                        body: JSON.stringify({
-
-                            productId,
-
-                            variantId
-
-                        })
-
-                    }
-
-                )
-
-                const data =
-                await response.json()
-
-
-                /* =========================================
+        /* =========================================
                     LOGIN REQUIRED
                 ========================================= */
 
-               if (data.requiresLogin) {
-
-                    showLoginAlert(
-
-                        "Please login to use wishlist."
-
-                    ).then((result) => {
-
-                        if(result.isConfirmed){
-
-                            window.location.href = "/login"
-
-                        }
-
-                    })
-
-                    return
-                }
-
-                if(data.success){
-
-                    button.classList.add(
-                        "active"
-                    )
-
-                    showToast(
-
-                    "success",
-
-                    data.message
-
-                )
-
-                }
-
-                else{
-
-    /* REMOVE FROM WISHLIST */
-
-    if(
-
-        data.message ===
-        "Already in wishlist"
-
-    ){
-
-        const removeResponse =
-        await fetch(
-
-            `/wishlist/remove/${variantId}`,
-
-            {
-
-                method: "DELETE"
-
+        if (data.requiresLogin) {
+          showLoginAlert("Please login to use wishlist.").then((result) => {
+            if (result.isConfirmed) {
+              window.location.href = "/login";
             }
+          });
 
-        )
+          return;
+        }
 
-        const removeData =
-        await removeResponse.json()
+        if (data.success) {
+          button.classList.add("active");
 
-        if(removeData.success){
+          showToast(
+            "success",
 
-            button.classList.remove(
-                "active"
-            )
-           /* =========================================
+            data.message,
+          );
+        } else {
+          /* REMOVE FROM WISHLIST */
+
+          if (data.message === "Already in wishlist") {
+            const removeResponse = await fetch(
+              `/wishlist/remove/${variantId}`,
+
+              {
+                method: "DELETE",
+              },
+            );
+
+            const removeData = await removeResponse.json();
+
+            if (removeData.success) {
+              button.classList.remove("active");
+              /* =========================================
 
             UPDATE ALL CART BUTTONS
 
             ========================================= */
 
-            const cartButtons =
+              const cartButtons = document.querySelectorAll(
+                `.add-to-cart-btn[data-variant-id="${variantId}"]`,
+              );
 
-            document.querySelectorAll(
+              cartButtons.forEach((cartButton) => {
+                cartButton.classList.remove("added");
 
-                `.add-to-cart-btn[data-variant-id="${variantId}"]`
+                cartButton.disabled = false;
 
-            )
-
-            cartButtons.forEach(cartButton => {
-
-                cartButton.classList.remove(
-
-                    "added"
-
-                )
-
-                cartButton.disabled = false
-
-                cartButton.innerHTML =
-
-                `
+                cartButton.innerHTML = `
 
                     <i
 
@@ -168,343 +104,211 @@ wishlistButtons.forEach(button => {
 
                     Add to Cart
 
-                `
+                `;
+              });
 
-            })
-
-            /* =========================================
+              /* =========================================
 
             UPDATE ALL WISHLIST BUTTONS
 
             ========================================= */
 
-            const wishlistButtons =
+              const wishlistButtons = document.querySelectorAll(
+                `.wishlist-toggle[data-variant-id="${variantId}"]`,
+              );
 
-            document.querySelectorAll(
+              wishlistButtons.forEach((wishlistButton) => {
+                wishlistButton.classList.remove("active");
+              });
 
-                `.wishlist-toggle[data-variant-id="${variantId}"]`
+              lucide.createIcons();
 
-            )
-
-            wishlistButtons.forEach(wishlistButton => {
-
-                wishlistButton.classList.remove(
-
-                    "active"
-
-                )
-
-            })
-
-            lucide.createIcons()
-
-            showToast(
-
+              showToast(
                 "success",
 
-                "Removed from wishlist"
-
-            )
-        }
-
-    }
-
-    else{
-
-        showToast(
-
-            "info",
-
-            data.message
-
-        )
-
-    }
-
-}
-
+                "Removed from wishlist",
+              );
             }
+          } else {
+            showToast(
+              "info",
 
-            catch(error){
-
-                console.log(error)
-
-            }
-
+              data.message,
+            );
+          }
         }
-
-    )
-
-})
-
-
+      } catch (error) {
+        console.log(error);
+      }
+    },
+  );
+});
 
 /* =========================================
    REMOVE FROM WISHLIST
 ========================================= */
 
-async function removeFromWishlist(
+async function removeFromWishlist(variantId) {
+  const result = await Swal.fire({
+    title: "Remove Item?",
 
-    variantId
+    text: "This product will be removed from wishlist.",
 
-){
+    icon: "warning",
 
-    const result =
-    await Swal.fire({
+    showCancelButton: true,
 
-        title: "Remove Item?",
+    confirmButtonText: "Remove",
 
-        text: "This product will be removed from wishlist.",
+    cancelButtonText: "Cancel",
 
-        icon: "warning",
+    confirmButtonColor: "#510098",
 
-        showCancelButton: true,
+    cancelButtonColor: "#E5E7EB",
 
-        confirmButtonText: "Remove",
+    background: "#FFFFFF",
 
-        cancelButtonText: "Cancel",
+    color: "#111111",
 
-        confirmButtonColor: "#510098",
+    borderRadius: "24px",
+  });
 
-        cancelButtonColor: "#E5E7EB",
+  if (!result.isConfirmed) {
+    return;
+  }
 
-        background: "#FFFFFF",
+  try {
+    const response = await fetch(
+      `/wishlist/remove/${variantId}`,
 
-        color: "#111111",
+      {
+        method: "DELETE",
+      },
+    );
 
-        borderRadius: "24px"
+    const data = await response.json();
 
-    })
+    if (data.success) {
+      const card = document.getElementById(`card-${variantId}`);
 
-    if(!result.isConfirmed){
+      gsap.to(
+        card,
 
-        return
+        {
+          scale: 0.9,
 
+          opacity: 0,
+
+          y: -20,
+
+          duration: 0.4,
+
+          ease: "power2.inOut",
+
+          onComplete: () => {
+            card.remove();
+
+            checkEmptyWishlist();
+          },
+        },
+      );
+
+      showToast(
+        "success",
+
+        "Removed from wishlist",
+      );
     }
-
-    try{
-
-        const response =
-        await fetch(
-
-            `/wishlist/remove/${variantId}`,
-
-            {
-
-                method: "DELETE"
-
-            }
-
-        )
-
-        const data =
-        await response.json()
-
-        if(data.success){
-
-            const card =
-            document.getElementById(
-
-                `card-${variantId}`
-
-            )
-
-            gsap.to(
-
-                card,
-
-                {
-
-                    scale: 0.9,
-
-                    opacity: 0,
-
-                    y: -20,
-
-                    duration: 0.4,
-
-                    ease: "power2.inOut",
-
-                    onComplete: () => {
-
-                        card.remove()
-
-                        checkEmptyWishlist()
-
-                    }
-
-                }
-
-            )
-
-            showToast(
-
-                "success",
-
-                "Removed from wishlist"
-
-            )
-
-        }
-
-    }
-
-    catch(error){
-
-        console.log(error)
-
-    }
-
+  } catch (error) {
+    console.log(error);
+  }
 }
-
-
 
 /* =========================================
    MOVE TO CART
 ========================================= */
 
-async function moveToCart(
+async function moveToCart(variantId) {
+  try {
+    const response = await fetch(
+      `/wishlist/move-to-cart/${variantId}`,
 
-    variantId
+      {
+        method: "POST",
+      },
+    );
 
-){
+    const data = await response.json();
 
-    try{
+    if (data.success) {
+      const card = document.getElementById(`card-${variantId}`);
 
-        const response =
-        await fetch(
+      const button = card.querySelector(".btn-add-cart");
 
-            `/wishlist/move-to-cart/${variantId}`,
-
-            {
-
-                method: "POST"
-
-            }
-
-        )
-
-        const data =
-        await response.json()
-
-        if(data.success){
-
-            const card =
-            document.getElementById(
-
-                `card-${variantId}`
-
-            )
-
-            const button =
-            card.querySelector(
-                ".btn-add-cart"
-            )
-
-            button.innerHTML =
-
-            `
+      button.innerHTML = `
                 <i
                     data-lucide="check"
                     size="18"
                 ></i>
 
                 Added
-            `
+            `;
 
-            button.style.background =
-            "#603763"
+      button.style.background = "#603763";
 
-            lucide.createIcons()
+      lucide.createIcons();
 
-            gsap.to(
+      gsap.to(
+        card,
 
-                card,
+        {
+          y: -30,
 
-                {
+          opacity: 0,
 
-                    y: -30,
+          duration: 0.45,
 
-                    opacity: 0,
+          delay: 0.5,
 
-                    duration: 0.45,
+          ease: "power2.inOut",
 
-                    delay: 0.5,
+          onComplete: () => {
+            card.remove();
 
-                    ease: "power2.inOut",
+            checkEmptyWishlist();
+          },
+        },
+      );
 
-                    onComplete: () => {
+      showToast(
+        "success",
 
-                        card.remove()
+        "Moved to cart",
+      );
+    } else {
+      showToast(
+        "info",
 
-                        checkEmptyWishlist()
-
-                    }
-
-                }
-
-            )
-
-            showToast(
-
-                "success",
-
-                "Moved to cart"
-
-            )
-
-        }
-
-        else{
-
-            showToast(
-
-                "info",
-
-                data.message
-
-            )
-
-        }
-
+        data.message,
+      );
     }
-
-    catch(error){
-
-        console.log(error)
-
-    }
-
+  } catch (error) {
+    console.log(error);
+  }
 }
-
-
 
 /* =========================================
    EMPTY CHECK
 ========================================= */
 
-function checkEmptyWishlist(){
+function checkEmptyWishlist() {
+  const grid = document.getElementById("wishlistGrid");
 
-    const grid =
-    document.getElementById(
-        "wishlistGrid"
-    )
-
-    if(
-
-        grid &&
-        grid.children.length === 0
-
-    ){
-
-        setTimeout(() => {
-
-            location.reload()
-
-        }, 400)
-
-    }
-
+  if (grid && grid.children.length === 0) {
+    setTimeout(() => {
+      location.reload();
+    }, 400);
+  }
 }
 
 /* =========================================
@@ -512,56 +316,31 @@ function checkEmptyWishlist(){
 ========================================= */
 
 window.addEventListener(
+  "DOMContentLoaded",
 
-    "DOMContentLoaded",
+  () => {
+    const variantId = localStorage.getItem("wishlistRestore");
 
-    () => {
+    if (!variantId) {
+      return;
+    }
 
-        const variantId =
+    const wishlistButtons = document.querySelectorAll(
+      `.wishlist-toggle[data-variant-id="${variantId}"]`,
+    );
 
-        localStorage.getItem(
+    wishlistButtons.forEach((button) => {
+      button.classList.add("active");
+    });
 
-            "wishlistRestore"
+    const cartButtons = document.querySelectorAll(
+      `.add-to-cart-btn[data-variant-id="${variantId}"]`,
+    );
 
-        )
+    cartButtons.forEach((button) => {
+      button.classList.remove("added");
 
-        if(!variantId){
-
-            return
-
-        }
-
-        const wishlistButtons =
-
-        document.querySelectorAll(
-
-            `.wishlist-toggle[data-variant-id="${variantId}"]`
-
-        )
-
-        wishlistButtons.forEach(button => {
-
-            button.classList.add(
-                "active"
-            )
-
-        })
-
-        const cartButtons =
-
-        document.querySelectorAll(
-
-            `.add-to-cart-btn[data-variant-id="${variantId}"]`
-
-        )
-
-        cartButtons.forEach(button => {
-
-            button.classList.remove(
-                "added"
-            )
-
-            button.innerHTML = `
+      button.innerHTML = `
 
                 <i
                     data-lucide="shopping-cart"
@@ -570,16 +349,11 @@ window.addEventListener(
 
                 Add to Cart
 
-            `
+            `;
+    });
 
-        })
+    lucide.createIcons();
 
-        lucide.createIcons()
-
-        localStorage.removeItem(
-            "wishlistRestore"
-        )
-
-    }
-
-)
+    localStorage.removeItem("wishlistRestore");
+  },
+);

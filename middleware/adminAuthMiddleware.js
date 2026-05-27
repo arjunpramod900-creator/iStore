@@ -1,40 +1,25 @@
 const adminAuthMiddleware = (req, res, next) => {
+  if (!req.session.adminId) {
+    /* Handle AJAX requests */
 
-if (!req.session.adminId) {
+    if (
+      req.xhr ||
+      (req.headers.accept && req.headers.accept.includes("json")) ||
+      !req.accepts("html")
+    ) {
+      return res.status(401).json({
+        success: false,
 
-/* Handle AJAX requests */
+        message: "Admin session expired",
+      });
+    }
 
-if (
+    /* Normal page request */
 
-req.xhr ||
+    return res.redirect("/admin/login");
+  }
 
-(req.headers.accept &&
-req.headers.accept.includes("json")) ||
+  next();
+};
 
-!req.accepts("html")
-
-) {
-
-return res.status(401).json({
-
-success: false,
-
-message: "Admin session expired"
-
-})
-
-}
-
-
-
-/* Normal page request */
-
-return res.redirect("/admin/login")
-
-}
-
-next()
-
-}
-
-export default adminAuthMiddleware
+export default adminAuthMiddleware;

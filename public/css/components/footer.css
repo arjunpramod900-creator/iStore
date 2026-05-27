@@ -3,584 +3,417 @@
 ========================= */
 
 .footer {
+  width: 100%;
 
-    width: 100%;
+  background: linear-gradient(180deg, #4c0080 0%, #3b0066 100%);
 
-    background:
-    linear-gradient(
-        180deg,
-        #4C0080 0%,
-        #3B0066 100%
-    );
+  padding: 72px 32px;
 
-    padding: 72px 32px;
+  margin-top: 120px;
 
-    margin-top: 120px;
+  overflow: hidden;
 
-    overflow: hidden;
-
-    position: relative;
-
+  position: relative;
 }
-
-
 
 /* subtle glow */
 
-.footer::before{
+.footer::before {
+  content: "";
 
-    content: "";
+  position: absolute;
 
-    position: absolute;
+  top: -120px;
 
-    top: -120px;
+  right: -120px;
 
-    right: -120px;
+  width: 320px;
 
-    width: 320px;
+  height: 320px;
 
-    height: 320px;
+  background: radial-gradient(
+    circle,
+    rgba(168, 85, 247, 0.18) 0%,
+    transparent 70%
+  );
 
-    background:
-    radial-gradient(
-        circle,
-        rgba(168,85,247,0.18) 0%,
-        transparent 70%
-    );
-
-    pointer-events: none;
-
+  pointer-events: none;
 }
-
-
 
 /* =========================
    CONTAINER
 ========================= */
 
 .footer-container {
+  max-width: 1280px;
 
-    max-width: 1280px;
+  margin: 0 auto;
 
-    margin: 0 auto;
+  position: relative;
 
-    position: relative;
-
-    z-index: 2;
-
+  z-index: 2;
 }
-
-
 
 /* =========================
    MAIN
 ========================= */
 
 .footer-main {
+  display: flex;
 
-    display: flex;
+  justify-content: space-between;
 
-    justify-content: space-between;
+  align-items: flex-start;
 
-    align-items: flex-start;
+  gap: 64px;
 
-    gap: 64px;
-
-    margin-bottom: 64px;
-
+  margin-bottom: 64px;
 }
-
-
 
 /* =========================
    COLUMN 1
 ========================= */
 
 .footer-col-1 {
-
-    max-width: 320px;
-
+  max-width: 320px;
 }
-
-
 
 .footer-logo {
+  font-size: 30px;
 
-    font-size: 30px;
+  font-weight: 800;
 
-    font-weight: 800;
+  letter-spacing: -1.4px;
 
-    letter-spacing: -1.4px;
+  color: #ffffff;
 
-    color: #FFFFFF;
-
-    margin-bottom: 22px;
-
+  margin-bottom: 22px;
 }
-
-
 
 .footer-desc {
+  font-size: 15px;
 
-    font-size: 15px;
+  line-height: 1.9;
 
-    line-height: 1.9;
-
-    color:
-    rgba(255,255,255,0.72);
-
+  color: rgba(255, 255, 255, 0.72);
 }
-
-
 
 /* =========================
    FOOTER COLUMNS
 ========================= */
 
 .footer-col {
-
-    min-width: 180px;
-
+  min-width: 180px;
 }
-
-
 
 .footer-heading {
+  font-size: 15px;
 
-    font-size: 15px;
+  font-weight: 700;
 
-    font-weight: 700;
+  letter-spacing: 0.4px;
 
-    letter-spacing: 0.4px;
+  color: #ffffff;
 
-    color: #FFFFFF;
-
-    margin-bottom: 24px;
-
+  margin-bottom: 24px;
 }
-
-
 
 .footer-list {
+  list-style: none;
 
-    list-style: none;
+  padding: 0;
 
-    padding: 0;
-
-    margin: 0;
-
+  margin: 0;
 }
-
-
 
 .footer-list li {
-
-    margin-bottom: 16px;
-
+  margin-bottom: 16px;
 }
-
-
 
 .footer-list a {
+  font-size: 15px;
 
-    font-size: 15px;
+  font-weight: 500;
 
-    font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
 
-    color:
-    rgba(255,255,255,0.70);
+  text-decoration: none;
 
-    text-decoration: none;
-
-    transition: 0.3s ease;
-
+  transition: 0.3s ease;
 }
-
-
 
 .footer-list a:hover {
+  color: #ffffff;
 
-    color: #FFFFFF;
-
-    padding-left: 4px;
-
+  padding-left: 4px;
 }
-
-
 
 /* =========================
    FOOTER BOTTOM
 ========================= */
 
 .footer-bottom {
+  padding-top: 28px;
 
-    padding-top: 28px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 
-    border-top:
-    1px solid rgba(255,255,255,0.08);
+  display: flex;
 
-    display: flex;
+  justify-content: space-between;
 
-    justify-content: space-between;
+  align-items: center;
 
-    align-items: center;
-
-    gap: 24px;
-
+  gap: 24px;
 }
-
-
 
 /* =========================
    SOCIALS
 ========================= */
 
 .footer-socials {
+  display: flex;
 
-    display: flex;
+  align-items: center;
 
-    align-items: center;
-
-    gap: 14px;
-
+  gap: 14px;
 }
-
-
 
 .social-icon {
+  width: 46px;
 
-    width: 46px;
+  height: 46px;
 
-    height: 46px;
+  border-radius: 50%;
 
-    border-radius: 50%;
+  display: flex;
 
-    display: flex;
+  align-items: center;
 
-    align-items: center;
+  justify-content: center;
 
-    justify-content: center;
+  color: #ffffff;
 
-    color: #FFFFFF;
+  text-decoration: none;
 
-    text-decoration: none;
-
-    transition:
+  transition:
     transform 0.35s ease,
     box-shadow 0.35s ease;
-
 }
-
-
 
 .social-icon:hover {
-
-    transform:
-    translateY(-4px)
-    scale(1.05);
-
+  transform: translateY(-4px) scale(1.05);
 }
-
-
 
 /* ICON SIZE */
 
 .social-icon svg {
+  width: 20px;
 
-    width: 20px;
-
-    height: 20px;
-
+  height: 20px;
 }
-
-
 
 /* SOCIAL COLORS */
 
 .social-icon.facebook {
+  background: #1877f2;
 
-    background: #1877F2;
-
-    box-shadow:
-    0 10px 20px rgba(24,119,242,0.28);
-
+  box-shadow: 0 10px 20px rgba(24, 119, 242, 0.28);
 }
-
-
 
 .social-icon.instagram {
+  background: linear-gradient(
+    45deg,
+    #f09433 0%,
+    #e6683c 25%,
+    #dc2743 50%,
+    #cc2366 75%,
+    #bc1888 100%
+  );
 
-    background:
-    linear-gradient(
-        45deg,
-        #f09433 0%,
-        #e6683c 25%,
-        #dc2743 50%,
-        #cc2366 75%,
-        #bc1888 100%
-    );
-
-    box-shadow:
-    0 10px 20px rgba(220,39,67,0.24);
-
+  box-shadow: 0 10px 20px rgba(220, 39, 67, 0.24);
 }
-
-
 
 .social-icon.twitter {
+  background: #000000;
 
-    background: #000000;
-
-    box-shadow:
-    0 10px 20px rgba(0,0,0,0.24);
-
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.24);
 }
-
-
 
 .social-icon.youtube {
+  background: #ff0000;
 
-    background: #FF0000;
-
-    box-shadow:
-    0 10px 20px rgba(255,0,0,0.22);
-
+  box-shadow: 0 10px 20px rgba(255, 0, 0, 0.22);
 }
-
-
 
 /* =========================
    COPYRIGHT
 ========================= */
 
 .footer-copyright {
+  font-size: 13px;
 
-    font-size: 13px;
+  font-weight: 500;
 
-    font-weight: 500;
-
-    color:
-    rgba(255,255,255,0.55);
-
+  color: rgba(255, 255, 255, 0.55);
 }
-
-
 
 /* =========================
    LARGE TABLETS
 ========================= */
 
-@media (max-width: 1024px){
+@media (max-width: 1024px) {
+  .footer {
+    padding: 64px 28px 110px;
+  }
 
-    .footer{
+  .footer-main {
+    flex-wrap: wrap;
 
-        padding:
-        64px 28px 110px;
-
-    }
-
-    .footer-main{
-
-        flex-wrap: wrap;
-
-        gap: 48px;
-
-    }
-
+    gap: 48px;
+  }
 }
-
-
 
 /* =========================
    TABLETS / IPADS
 ========================= */
-@media (max-width: 768px){
+@media (max-width: 768px) {
+  .footer {
+    padding: 56px 22px 140px;
 
-    .footer{
+    margin-top: 90px;
 
-        padding:
-        56px 22px 140px;
+    text-align: center;
+  }
 
-        margin-top: 90px;
+  .footer-main {
+    flex-direction: column;
 
-        text-align: center;
+    align-items: center;
 
-    }
+    justify-content: center;
 
-    .footer-main{
+    gap: 56px;
 
-        flex-direction: column;
+    margin-bottom: 54px;
+  }
 
-        align-items: center;
+  .footer-col-1 {
+    max-width: 100%;
 
-        justify-content: center;
+    display: flex;
 
-        gap: 56px;
+    flex-direction: column;
 
-        margin-bottom: 54px;
+    align-items: center;
+  }
 
-    }
+  .footer-col {
+    width: 100%;
 
-    .footer-col-1{
+    display: flex;
 
-        max-width: 100%;
+    flex-direction: column;
 
-        display: flex;
+    align-items: center;
+  }
 
-        flex-direction: column;
+  .footer-desc {
+    max-width: 340px;
 
-        align-items: center;
+    margin: 0 auto;
+  }
 
-    }
+  .footer-heading {
+    margin-bottom: 18px;
 
-    .footer-col{
+    text-align: center;
+  }
 
-        width: 100%;
+  .footer-list {
+    display: flex;
 
-        display: flex;
+    flex-direction: column;
 
-        flex-direction: column;
+    align-items: center;
+  }
 
-        align-items: center;
+  .footer-bottom {
+    flex-direction: column;
 
-    }
+    align-items: center;
 
-    .footer-desc{
+    justify-content: center;
 
-        max-width: 340px;
+    gap: 28px;
 
-        margin: 0 auto;
+    text-align: center;
+  }
 
-    }
+  .footer-socials {
+    justify-content: center;
 
-    .footer-heading{
-
-        margin-bottom: 18px;
-
-        text-align: center;
-
-    }
-
-    .footer-list{
-
-        display: flex;
-
-        flex-direction: column;
-
-        align-items: center;
-
-    }
-
-    .footer-bottom{
-
-        flex-direction: column;
-
-        align-items: center;
-
-        justify-content: center;
-
-        gap: 28px;
-
-        text-align: center;
-
-    }
-
-    .footer-socials{
-
-        justify-content: center;
-
-        flex-wrap: wrap;
-
-    }
-
+    flex-wrap: wrap;
+  }
 }
-
-
 
 /* =========================
    IPHONES
 ========================= */
 
-@media (max-width: 480px){
+@media (max-width: 480px) {
+  .footer {
+    padding: 48px 18px 140px;
+  }
 
-    .footer{
+  .footer-logo {
+    font-size: 26px;
+  }
 
-        padding:
-        48px 18px 140px;
+  .footer-desc {
+    font-size: 14px;
 
-    }
+    line-height: 1.8;
+  }
 
-    .footer-logo{
+  .footer-heading {
+    font-size: 14px;
+  }
 
-        font-size: 26px;
+  .footer-list a {
+    font-size: 14px;
+  }
 
-    }
+  .social-icon {
+    width: 42px;
 
-    .footer-desc{
+    height: 42px;
+  }
 
-        font-size: 14px;
+  .social-icon svg {
+    width: 18px;
 
-        line-height: 1.8;
+    height: 18px;
+  }
 
-    }
+  .footer-copyright {
+    font-size: 12px;
 
-    .footer-heading{
+    line-height: 1.6;
+  }
 
-        font-size: 14px;
+  .footer-list {
+    align-items: center;
+  }
 
-    }
+  .footer-col {
+    align-items: center;
+  }
 
-    .footer-list a{
+  .footer-col-1 {
+    align-items: center;
+  }
 
-        font-size: 14px;
-
-    }
-
-    .social-icon{
-
-        width: 42px;
-
-        height: 42px;
-
-    }
-
-    .social-icon svg{
-
-        width: 18px;
-
-        height: 18px;
-
-    }
-
-    .footer-copyright{
-
-        font-size: 12px;
-
-        line-height: 1.6;
-
-    }
-
-    .footer-list{
-
-        align-items: center;
-
-    }
-
-    .footer-col{
-
-        align-items: center;
-
-    }
-
-    .footer-col-1{
-
-        align-items: center;
-
-    }
-
-    .footer-desc{
-
-        text-align: center;
-
-    }
+  .footer-desc {
+    text-align: center;
+  }
 }

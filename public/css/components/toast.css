@@ -4,36 +4,30 @@
 
 ========================================= */
 
-.istore-toast{
+.istore-toast {
+  width: 360px !important;
 
-    width: 360px !important;
+  border-radius: 24px !important;
 
-    border-radius: 24px !important;
+  padding: 16px 18px !important;
 
-    padding: 16px 18px !important;
+  margin-top: 82px !important;
 
-    margin-top: 82px !important;
+  top: 0 !important;
 
-    top: 0 !important;
+  z-index: 9999 !important;
 
-    z-index: 9999 !important;
+  background: rgba(255, 255, 255, 0.72) !important;
 
-    background:
-    rgba(255,255,255,0.72) !important;
+  backdrop-filter: blur(22px) saturate(180%) !important;
 
-    backdrop-filter:
-    blur(22px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(180%) !important;
 
-    -webkit-backdrop-filter:
-    blur(22px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.55) !important;
 
-    border:
-    1px solid rgba(255,255,255,0.55) !important;
-
-    box-shadow:
-    0 20px 40px rgba(17,17,17,0.08),
-    0 4px 12px rgba(96,55,99,0.06);
-
+  box-shadow:
+    0 20px 40px rgba(17, 17, 17, 0.08),
+    0 4px 12px rgba(96, 55, 99, 0.06);
 }
 
 /* =========================================
@@ -42,18 +36,16 @@
 
 ========================================= */
 
-.istore-toast-title{
+.istore-toast-title {
+  font-family: "Inter", sans-serif !important;
 
-    font-family: "Inter", sans-serif !important;
+  font-size: 14px !important;
 
-    font-size: 14px !important;
+  font-weight: 700 !important;
 
-    font-weight: 700 !important;
+  letter-spacing: -0.2px;
 
-    letter-spacing: -0.2px;
-
-    color: #1D1D1F !important;
-
+  color: #1d1d1f !important;
 }
 
 /* =========================================
@@ -62,14 +54,12 @@
 
 ========================================= */
 
-.istore-toast .swal2-icon{
+.istore-toast .swal2-icon {
+  margin-right: 6px !important;
 
-    margin-right: 6px !important;
+  transform: scale(0.78);
 
-    transform: scale(0.78);
-
-    background: transparent !important;
-
+  background: transparent !important;
 }
 
 /* =========================================
@@ -78,27 +68,19 @@
 
 ========================================= */
 
-.istore-toast .swal2-success{
+.istore-toast .swal2-success {
+  border-color: #7c3aed !important;
 
-    border-color: #7C3AED !important;
-
-    color: #7C3AED !important;
-
+  color: #7c3aed !important;
 }
 
-.istore-toast .swal2-success-ring{
-
-    border-color:
-    rgba(124,58,237,0.18) !important;
-
+.istore-toast .swal2-success-ring {
+  border-color: rgba(124, 58, 237, 0.18) !important;
 }
 
 .istore-toast .swal2-success-line-tip,
-.istore-toast .swal2-success-line-long{
-
-    background-color:
-    #7C3AED !important;
-
+.istore-toast .swal2-success-line-long {
+  background-color: #7c3aed !important;
 }
 
 /* =========================================
@@ -107,12 +89,10 @@
 
 ========================================= */
 
-.istore-toast .swal2-error{
+.istore-toast .swal2-error {
+  border-color: #ef4444 !important;
 
-    border-color: #EF4444 !important;
-
-    color: #EF4444 !important;
-
+  color: #ef4444 !important;
 }
 
 /* =========================================
@@ -121,12 +101,10 @@
 
 ========================================= */
 
-.istore-toast .swal2-info{
+.istore-toast .swal2-info {
+  border-color: #8b5cf6 !important;
 
-    border-color: #8B5CF6 !important;
-
-    color: #8B5CF6 !important;
-
+  color: #8b5cf6 !important;
 }
 
 /* =========================================
@@ -135,36 +113,28 @@
 
 ========================================= */
 
-.istore-toast .swal2-warning{
+.istore-toast .swal2-warning {
+  border-color: #f59e0b !important;
 
-    border-color: #F59E0B !important;
-
-    color: #F59E0B !important;
-
+  color: #f59e0b !important;
 }
-
-
 
 /* =========================================
    FIX SWEETALERT BLUR LAYER
 ========================================= */
 
-.swal2-container{
+.swal2-container {
+  background: transparent !important;
 
-    background: transparent !important;
+  backdrop-filter: none !important;
 
-    backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 
-    -webkit-backdrop-filter: none !important;
-
-    pointer-events: none !important;
-
+  pointer-events: none !important;
 }
 
-.swal2-popup{
-
-    pointer-events: auto !important;
-
+.swal2-popup {
+  pointer-events: auto !important;
 }
 
 /* =========================================
@@ -173,16 +143,12 @@
 
 ========================================= */
 
-@media (max-width: 768px){
+@media (max-width: 768px) {
+  .istore-toast {
+    width: calc(100vw - 28px) !important;
 
-    .istore-toast{
+    margin-top: 74px !important;
 
-        width: calc(100vw - 28px) !important;
-
-        margin-top: 74px !important;
-
-        border-radius: 20px !important;
-
-    }
-
+    border-radius: 20px !important;
+  }
 }

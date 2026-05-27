@@ -1,7 +1,6 @@
-import { z } from "zod"
+import { z } from "zod";
 
 export const addressSchema = z.object({
-
   fullName: z
     .string()
     .trim()
@@ -34,18 +33,11 @@ export const addressSchema = z.object({
     .max(50)
     .regex(/^[A-Za-z ]+$/, "Invalid state"),
 
-  pincode: z
-    .string()
-    .regex(/^[0-9]{6}$/, "Invalid PIN code"),
+  pincode: z.string().regex(/^[0-9]{6}$/, "Invalid PIN code"),
 
-  country: z
-    .string()
-    .min(2, "Country required"),
+  country: z.string().min(2, "Country required"),
 
   type: z.enum(["Home", "Work", "Other"]),
 
-  isDefault: z
-    .optional()
-    .transform(val => val === "true" || val === true)
-
-})
+  isDefault: z.optional().transform((val) => val === "true" || val === true),
+});

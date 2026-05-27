@@ -1,159 +1,89 @@
-import { z } from "zod"
+import { z } from "zod";
 
 export const productSchema = z.object({
+  name: z
 
-name: z
+    .string()
 
-.string()
+    .trim()
 
-.trim()
+    .min(
+      3,
 
-.min(
+      "Product name must be at least 3 characters",
+    )
 
-3,
+    .max(
+      100,
 
-"Product name must be at least 3 characters"
+      "Product name cannot exceed 100 characters",
+    ),
 
-)
+  description: z
 
-.max(
+    .string()
 
-100,
+    .trim()
 
-"Product name cannot exceed 100 characters"
+    .min(
+      10,
 
-),
+      "Description must be at least 10 characters",
+    )
 
+    .max(
+      3000,
 
+      "Description is too long",
+    ),
 
-description: z
+  categoryId: z
 
-.string()
+    .string()
 
-.trim()
+    .trim()
 
-.min(
+    .min(
+      1,
 
-10,
+      "Category is required",
+    ),
 
-"Description must be at least 10 characters"
+  thumbnail: z
 
-)
+    .string()
 
-.max(
+    .optional(),
 
-3000,
+  isFeatured: z
 
-"Description is too long"
+    .union([z.boolean(), z.string()])
 
-),
+    .optional()
 
+    .transform((val) => val === true || val === "true"),
 
+  isBestSeller: z
 
-categoryId: z
+    .union([z.boolean(), z.string()])
 
-.string()
+    .optional()
 
-.trim()
+    .transform((val) => val === true || val === "true"),
 
-.min(
+  isDeal: z
 
-1,
+    .union([z.boolean(), z.string()])
 
-"Category is required"
+    .optional()
 
-),
+    .transform((val) => val === true || val === "true"),
 
+  isActive: z
 
+    .union([z.boolean(), z.string()])
 
-thumbnail: z
+    .optional()
 
-.string()
-
-.optional(),
-
-
-
-isFeatured: z
-
-.union([
-
-z.boolean(),
-z.string()
-
-])
-
-.optional()
-
-.transform(val =>
-
-val === true ||
-
-val === "true"
-
-),
-
-
-
-isBestSeller: z
-
-.union([
-
-z.boolean(),
-z.string()
-
-])
-
-.optional()
-
-.transform(val =>
-
-val === true ||
-
-val === "true"
-
-),
-
-
-
-isDeal: z
-
-.union([
-
-z.boolean(),
-z.string()
-
-])
-
-.optional()
-
-.transform(val =>
-
-val === true ||
-
-val === "true"
-
-),
-
-
-
-isActive: z
-
-.union([
-
-z.boolean(),
-z.string()
-
-])
-
-.optional()
-
-.transform(val =>
-
-val === true ||
-
-val === "true"
-
-)
-
-})
+    .transform((val) => val === true || val === "true"),
+});

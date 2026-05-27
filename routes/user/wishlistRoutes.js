@@ -1,95 +1,60 @@
-import express from "express"
+import express from "express";
 
-const router = express.Router()
+const router = express.Router();
 
-import {
-
-    isLoggedIn
-
-}
-
-from "../../middleware/authMiddleware.js"
+import { isLoggedIn } from "../../middleware/authMiddleware.js";
 
 import {
-
-    addToWishlist,
-
-    removeWishlistItem,
-
-    loadWishlist,
-
-    moveWishlistToCart
-
-}
-
-from "../../controllers/user/wishlistController.js"
-
-
+  addToWishlist,
+  removeWishlistItem,
+  loadWishlist,
+  moveWishlistToCart,
+} from "../../controllers/user/wishlistController.js";
 
 /* =========================================
    PROTECTED WISHLIST ROUTES
 ========================================= */
 
-router.use(
-
-    isLoggedIn
-
-)
-
-
+router.use(isLoggedIn);
 
 /* =========================================
    LOAD WISHLIST PAGE
 ========================================= */
 
 router.get(
+  "/",
 
-    "/",
-
-    loadWishlist
-
-)
-
-
+  loadWishlist,
+);
 
 /* =========================================
    ADD TO WISHLIST
 ========================================= */
 
 router.post(
+  "/add",
 
-    "/add",
-
-    addToWishlist
-
-)
-
-
+  addToWishlist,
+);
 
 /* =========================================
    REMOVE WISHLIST ITEM
 ========================================= */
 
 router.delete(
+  "/remove/:variantId",
 
-    "/remove/:variantId",
-
-    removeWishlistItem
-
-)
+  removeWishlistItem,
+);
 
 /* =========================================
    MOVE WISHLIST ITEM TO CART
 ========================================= */
 
 router.post(
+  "/move-to-cart/:variantId",
 
-    "/move-to-cart/:variantId",
+  moveWishlistToCart,
+);
 
-    moveWishlistToCart
-
-)
-
-
-
-export default router
+export default router;

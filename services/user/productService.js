@@ -1,726 +1,433 @@
-import Product
-from "../../models/Product.js"
+import Product from "../../models/Product.js";
 
-import Variant
-from "../../models/Variant.js"
+import Variant from "../../models/Variant.js";
 
-import Category
-from "../../models/Category.js"
+import Category from "../../models/Category.js";
 
-import Wishlist
-from "../../models/Wishlist.js"
+import Wishlist from "../../models/Wishlist.js";
 
-import Cart 
-from "../../models/Cart.js"
+import Cart from "../../models/Cart.js";
 
-import Review
-from "../../models/Review.js"
-
-
+import Review from "../../models/Review.js";
 
 /* =========================================
    LOAD ALL PRODUCTS
 ========================================= */
 
-export const loadAllProductsService =
-async (
+export const loadAllProductsService = async (
+  query,
 
-    query,
-
-    userId
-
+  userId,
 ) => {
+  /* PAGINATION */
 
-    /* PAGINATION */
+  const currentPage = Number(query.page) || 1;
 
-    const currentPage =
-    Number(query.page) || 1
+  const limit = 10;
 
-    const limit = 10
+  const skip = (currentPage - 1) * limit;
 
-    const skip =
-    (currentPage - 1) * limit
+  /* QUERY PARAMS */
 
+  const search = query.search || "";
 
+  const category = query.category || "";
 
-    /* QUERY PARAMS */
+  const sort = query.sort || "latest";
 
-    const search =
-    query.search || ""
+  const price = query.price || "";
 
-    const category =
-    query.category || ""
+  /* PRODUCT FILTER */
 
-    const sort =
-    query.sort || "latest"
+  let filter = {
+    isDeleted: false,
 
-    const price = 
-    query.price || ""
+    isActive: true,
+  };
 
+  /* SEARCH */
 
+  if (search) {
+    filter.name = {
+      $regex: search,
 
-    /* PRODUCT FILTER */
+      $options: "i",
+    };
+  }
 
-    let filter = {
+  /* CATEGORY */
 
-        isDeleted: false,
+  if (category) {
+    filter.categoryId = category;
+  }
 
-        isActive: true
+  /* FETCH PRODUCTS */
 
-    }
-
-
-
-    /* SEARCH */
-
-    if(search){
-
-        filter.name = {
-
-            $regex: search,
-
-            $options: "i"
-
-        }
-
-    }
-
-
-
-    /* CATEGORY */
-
-    if(category){
-
-        filter.categoryId = category
-
-    }
-
-
-
-    /* FETCH PRODUCTS */
-
-    let products =
-    await Product.find(filter)
+  let products = await Product.find(filter)
 
     .populate("categoryId")
 
     .sort({
-
-        createdAt: -1
-
+      createdAt: -1,
     })
 
-    .lean()
+    .lean();
 
-
-
-   /* =========================================
+  /* =========================================
    FLATTEN PRODUCT VARIANTS
 ========================================= */
 
-let flattenedProducts = []
+  let flattenedProducts = [];
 
-for(const product of products){
+  for (const product of products) {
+    const variants = await Variant.find({
+      productId: product._id,
 
-    const variants =
+      isDeleted: false,
 
-    await Variant.find({
+      isActive: true,
 
-        productId: product._id,
-
-        isDeleted: false,
-
-        isActive: true,
-
-        stock: { $gt: 0 }
-
+      stock: { $gt: 0 },
     })
 
-    .sort({
+      .sort({
+        createdAt: 1,
+      })
 
-        createdAt: 1
+      .lean();
 
-    })
-
-    .lean()
-
-    if(!variants.length){
-
-        continue
-
+    if (!variants.length) {
+      continue;
     }
 
-    variants.forEach(variant => {
+    variants.forEach((variant) => {
+      flattenedProducts.push({
+        ...product,
 
-        flattenedProducts.push({
+        variant,
+      });
+    });
+  }
 
-            ...product,
+  products = flattenedProducts;
 
-            variant
+  /* PRICE FILTER */
 
-        })
+  if (price) {
+    products = products.filter((product) => {
+      const variantPrice = product.variant.price;
 
-    })
+      if (price === "0-50000") {
+        return variantPrice < 50000;
+      }
 
-}
+      if (price === "50000-100000") {
+        return variantPrice >= 50000 && variantPrice <= 100000;
+      }
 
-products = flattenedProducts
+      if (price === "100000-150000") {
+        return variantPrice >= 100000 && variantPrice <= 150000;
+      }
 
-/* PRICE FILTER */
+      if (price === "150000+") {
+        return variantPrice > 150000;
+      }
 
-if(price){
+      return true;
+    });
+  }
 
-    products = products.filter(product => {
+  /* SORTING */
 
-        const variantPrice =
-        product.variant.price
+  if (sort === "priceLow") {
+    products.sort((a, b) => a.variant.price - b.variant.price);
+  }
 
-        if(price === "0-50000"){
+  if (sort === "priceHigh") {
+    products.sort((a, b) => b.variant.price - a.variant.price);
+  }
 
-            return variantPrice < 50000
+  if (sort === "a-z") {
+    products.sort((a, b) => a.name.localeCompare(b.name));
+  }
 
-        }
+  if (sort === "z-a") {
+    products.sort((a, b) => b.name.localeCompare(a.name));
+  }
 
-        if(price === "50000-100000"){
+  /* TOTAL PRODUCTS */
 
-            return (
-                variantPrice >= 50000 &&
-                variantPrice <= 100000
-            )
+  const totalProducts = products.length;
 
-        }
+  const totalPages = Math.ceil(totalProducts / limit);
 
-        if(price === "100000-150000"){
+  /* FINAL PAGINATION */
 
-            return (
-                variantPrice >= 100000 &&
-                variantPrice <= 150000
-            )
+  products = products.slice(
+    skip,
 
-        }
+    skip + limit,
+  );
 
-        if(price === "150000+"){
+  /* CATEGORIES */
 
-            return variantPrice > 150000
+  const categories = await Category.find({
+    isDeleted: false,
 
-        }
+    isActive: true,
+  });
 
-        return true
+  /* WISHLIST ITEMS */
 
-    })
+  let wishlistVariantIds = [];
 
-}
+  if (userId) {
+    const wishlist = await Wishlist.findOne({
+      userId,
+    });
 
-    /* SORTING */
-
-    if(sort === "priceLow"){
-
-        products.sort(
-
-            (a,b) =>
-
-            a.variant.price -
-            b.variant.price
-
-        )
-
+    if (wishlist) {
+      wishlistVariantIds = wishlist.items.map((item) =>
+        item.variantId.toString(),
+      );
     }
+  }
 
+  let cartVariantIds = [];
 
+  if (userId) {
+    const cart = await Cart.findOne({
+      userId,
+    });
 
-    if(sort === "priceHigh"){
-
-        products.sort(
-
-            (a,b) =>
-
-            b.variant.price -
-            a.variant.price
-
-        )
-
+    if (cart) {
+      cartVariantIds = cart.items.map((item) => item.variantId.toString());
     }
+  }
+  /* RETURN */
 
+  return {
+    products,
 
+    categories,
 
-    if(sort === "a-z"){
+    currentPage,
 
-        products.sort(
+    totalPages,
 
-            (a,b) =>
+    totalProducts,
 
-            a.name.localeCompare(
-                b.name
-            )
+    limit,
 
-        )
+    search,
 
-    }
+    category,
 
+    sort,
 
+    price,
 
-    if(sort === "z-a"){
+    wishlistVariantIds,
 
-        products.sort(
-
-            (a,b) =>
-
-            b.name.localeCompare(
-                a.name
-            )
-
-        )
-
-    }
-
-
-
-    /* TOTAL PRODUCTS */
-
-    const totalProducts =
-    products.length
-
-    const totalPages =
-    Math.ceil(
-        totalProducts / limit
-    )
-
-
-
-    /* FINAL PAGINATION */
-
-    products =
-    products.slice(
-
-        skip,
-
-        skip + limit
-
-    )
-
-
-
-    /* CATEGORIES */
-
-    const categories =
-    await Category.find({
-
-        isDeleted: false,
-
-        isActive: true
-
-    })
-
-    /* WISHLIST ITEMS */
-
-    let wishlistVariantIds = []
-
-    if(userId){
-
-        const wishlist =
-        await Wishlist.findOne({
-
-            userId
-
-        })
-
-        if(wishlist){
-
-            wishlistVariantIds =
-
-            wishlist.items.map(
-
-                item =>
-
-                item.variantId.toString()
-
-            )
-
-        }
-
-    }
-
-
-
-    let cartVariantIds = []
-
-if(userId){
-
-    const cart =
-    await Cart.findOne({
-
-        userId
-
-    })
-
-    if(cart){
-
-        cartVariantIds =
-
-        cart.items.map(
-
-            item =>
-
-            item.variantId.toString()
-
-        )
-
-    }
-
-}
-    /* RETURN */
-
-    return {
-
-        products,
-
-        categories,
-
-        currentPage,
-
-        totalPages,
-
-        totalProducts,
-
-        limit,
-
-        search,
-
-        category,
-
-        sort,
-
-        price,
-
-        wishlistVariantIds,
-
-        cartVariantIds
-
-    }
-
-}
+    cartVariantIds,
+  };
+};
 
 /* =========================================
    LOAD PRODUCT DETAILS
 ========================================= */
 
-export const loadProductDetailsService =
+export const loadProductDetailsService = async (
+  productId,
 
-async (
+  userId,
 
-    productId,
-
-    userId,
-
-    variantId
-
+  variantId,
 ) => {
+  /* PRODUCT */
 
-    /* PRODUCT */
+  const product = await Product.findOne({
+    _id: productId,
 
-    const product =
+    isDeleted: false,
 
-    await Product.findOne({
-
-        _id: productId,
-
-        isDeleted: false,
-
-        isActive: true
-
-    })
+    isActive: true,
+  })
 
     .populate("categoryId")
 
-    .lean()
+    .lean();
 
+  /* PRODUCT NOT FOUND */
 
+  if (!product) {
+    return {
+      product: null,
+    };
+  }
 
-    /* PRODUCT NOT FOUND */
-
-    if(!product){
-
-        return {
-
-            product: null
-
-        }
-
-    }
-
-
-
-/* =========================================
+  /* =========================================
    ALL ACTIVE VARIANTS
 ========================================= */
 
-const variants =
-
-await Variant.find({
-
+  const variants = await Variant.find({
     productId: product._id,
 
     isDeleted: false,
 
-    isActive: true
+    isActive: true,
+  })
 
-})
+    .sort({
+      isDefault: -1,
 
-.sort({
+      createdAt: 1,
+    })
 
-    isDefault: -1,
+    .lean();
 
-    createdAt: 1
+  /* NO VARIANTS */
 
-})
-
-.lean()
-
-/* NO VARIANTS */
-
-if(!variants.length){
-
+  if (!variants.length) {
     return {
+      product: null,
+    };
+  }
 
-        product: null
+  /* DEFAULT VARIANT */
 
-    }
+  const defaultVariant =
+    variants.find((variant) => variant._id.toString() === variantId) ||
+    variants.find((variant) => variant.isDefault) ||
+    variants[0];
 
-}
+  /* ATTACH */
 
-/* DEFAULT VARIANT */
+  product.variant = defaultVariant;
 
-const defaultVariant =
+  product.variants = variants;
 
-variants.find(
-
-    variant =>
-
-    variant._id.toString()
-    ===
-    variantId
-
-)
-
-||
-
-variants.find(
-
-    variant => variant.isDefault
-
-)
-
-||
-
-variants[0]
-
-/* ATTACH */
-
-product.variant = defaultVariant
-
-product.variants = variants
-
-
-/* =========================================
+  /* =========================================
    REVIEWS
 ========================================= */
 
-const reviews =
-
-await Review.find({
-
+  const reviews = await Review.find({
     productId: product._id,
 
-    isDeleted: false
+    isDeleted: false,
+  })
 
-})
+    .populate(
+      "userId",
 
-.populate(
+      "name",
+    )
 
-    "userId",
-
-    "name"
-
-)
-
-.sort({
-
-    createdAt: -1
-
-})
-
-.lean()
-
-/* AVERAGE RATING */
-
-const totalReviews =
-reviews.length
-
-const averageRating =
-
-totalReviews
-
-? (
-
-    reviews.reduce(
-
-        (acc, item) =>
-
-        acc + item.rating,
-
-        0
-
-    ) / totalReviews
-
-).toFixed(1)
-
-: 0
-
-/* ATTACH */
-
-product.reviews =
-reviews
-
-product.rating =
-averageRating
-
-product.reviewCount =
-totalReviews
-
-
-    /* RELATED PRODUCTS */
-
-    let relatedProducts =
-
-    await Product.find({
-
-        _id: {
-
-            $ne: product._id
-
-        },
-
-        categoryId: product.categoryId._id,
-
-        isDeleted: false,
-
-        isActive: true
-
+    .sort({
+      createdAt: -1,
     })
+
+    .lean();
+
+  /* AVERAGE RATING */
+
+  const totalReviews = reviews.length;
+
+  const averageRating = totalReviews
+    ? (
+        reviews.reduce(
+          (acc, item) => acc + item.rating,
+
+          0,
+        ) / totalReviews
+      ).toFixed(1)
+    : 0;
+
+  /* ATTACH */
+
+  product.reviews = reviews;
+
+  product.rating = averageRating;
+
+  product.reviewCount = totalReviews;
+
+  /* RELATED PRODUCTS */
+
+  let relatedProducts = await Product.find({
+    _id: {
+      $ne: product._id,
+    },
+
+    categoryId: product.categoryId._id,
+
+    isDeleted: false,
+
+    isActive: true,
+  })
 
     .populate("categoryId")
 
     .limit(4)
 
-    .lean()
+    .lean();
 
+  /* ATTACH VARIANTS */
 
+  for (const related of relatedProducts) {
+    const relatedVariant = await Variant.findOne({
+      productId: related._id,
 
-    /* ATTACH VARIANTS */
+      isDeleted: false,
 
-    for(const related of relatedProducts){
+      isActive: true,
 
-        const relatedVariant =
-
-        await Variant.findOne({
-
-            productId: related._id,
-
-            isDeleted: false,
-
-            isActive: true,
-
-            stock: { $gt: 0 }
-
-        })
-
-        .lean()
-
-
-
-        related.variant = relatedVariant
-
-    }
-
-
-
-    /* REMOVE EMPTY VARIANTS */
-
-    relatedProducts =
-
-    relatedProducts.filter(
-
-        item => item.variant
-
-    )
-
-    /* WISHLIST ITEMS */
-
-let wishlistVariantIds = []
-
-if(userId){
-
-    const wishlist =
-    await Wishlist.findOne({
-
-        userId
-
+      stock: { $gt: 0 },
     })
 
-    if(wishlist){
+      .lean();
 
-        wishlistVariantIds =
+    related.variant = relatedVariant;
+  }
 
-        wishlist.items.map(
+  /* REMOVE EMPTY VARIANTS */
 
-            item =>
+  relatedProducts = relatedProducts.filter((item) => item.variant);
 
-            item.variantId.toString()
+  /* WISHLIST ITEMS */
 
-        )
+  let wishlistVariantIds = [];
 
+  if (userId) {
+    const wishlist = await Wishlist.findOne({
+      userId,
+    });
+
+    if (wishlist) {
+      wishlistVariantIds = wishlist.items.map((item) =>
+        item.variantId.toString(),
+      );
     }
+  }
 
-}
+  let cartVariantIds = [];
 
-let cartVariantIds = []
+  if (userId) {
+    const cart = await Cart.findOne({
+      userId,
+    });
 
-if(userId){
-
-    const cart =
-    await Cart.findOne({
-
-        userId
-
-    })
-
-    if(cart){
-
-        cartVariantIds =
-
-        cart.items.map(
-
-            item =>
-
-            item.variantId.toString()
-
-        )
-
+    if (cart) {
+      cartVariantIds = cart.items.map((item) => item.variantId.toString());
     }
+  }
 
-}
+  return {
+    product,
 
+    relatedProducts,
 
-    return {
+    wishlistVariantIds,
 
-        product,
-
-        relatedProducts,
-
-        wishlistVariantIds,
-
-        cartVariantIds
-
-    }
-
-}
+    cartVariantIds,
+  };
+};

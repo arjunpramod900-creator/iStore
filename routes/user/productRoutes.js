@@ -1,70 +1,46 @@
-import express from "express"
+import express from "express";
 
-const router = express.Router()
-
-import {
-
-    loadAllProducts,
-
-    loadProductDetails
-
-} from "../../controllers/user/productController.js"
+const router = express.Router();
 
 import {
+  loadAllProducts,
+  loadProductDetails,
+} from "../../controllers/user/productController.js";
 
-    addReview
+import { addReview } from "../../controllers/user/reviewController.js";
 
-} from "../../controllers/user/reviewController.js"
-
-import {
-
-    isLoggedIn
-
-} from "../../middleware/authMiddleware.js"
-
-
+import { isLoggedIn } from "../../middleware/authMiddleware.js";
 
 /* ================================
    ALL PRODUCTS
 ================================ */
 
 router.get(
+  "/products",
 
-    "/products",
-
-    loadAllProducts
-
-)
-
-
+  loadAllProducts,
+);
 
 /* ================================
    PRODUCT DETAILS
 ================================ */
 
 router.get(
+  "/products/:id",
 
-    "/products/:id",
-
-    loadProductDetails
-
-)
-
+  loadProductDetails,
+);
 
 /* ================================
    PRODUCT REVIEWS
 ================================ */
 
 router.post(
+  "/review/add",
 
-    "/review/add",
+  isLoggedIn,
 
-    isLoggedIn,
+  addReview,
+);
 
-    addReview
-
-)
-
-
-
-export default router
+export default router;

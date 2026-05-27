@@ -1,1498 +1,845 @@
-import User from "../../models/User.js"
-import OTP from "../../models/OTP.js"
+import User from "../../models/User.js";
+import OTP from "../../models/OTP.js";
 
-import generateOTP
-from "../../utils/generateOTP.js"
+import generateOTP from "../../utils/generateOTP.js";
 
-import sendEmail
-from "../../services/emailService.js"
+import sendEmail from "../../services/emailService.js";
 
-import bcrypt from "bcrypt"
+import bcrypt from "bcrypt";
 
-import {
-signupSchema
-} from "../../validators/authValidator.js"
-
-
+import { signupSchema } from "../../validators/authValidator.js";
 
 /* ================================
    LOAD PAGES
 ================================ */
 
 const loadSignup = (req, res) => {
-
-res.render("user/signup")
-
-}
+  res.render("user/signup");
+};
 
 const loadLogin = (req, res) => {
-
-res.render("user/login")
-
-}
+  res.render("user/login");
+};
 
 const loadForgotPassword = (req, res) => {
-
-res.render("user/forgot-password")
-
-}
-
-
+  res.render("user/forgot-password");
+};
 
 /*  Secure Reset Page */
 
 const loadResetPassword = (req, res) => {
+  if (!req.session.resetVerified) {
+    return res.redirect("/login");
+  }
 
-if (!req.session.resetVerified) {
-
-return res.redirect("/login")
-
-}
-
-res.render("user/reset-password")
-
-}
+  res.render("user/reset-password");
+};
 
 /*LOAD HOME PAGE*/
 
 const loadHome = (req, res) => {
-
-  res.render("user/home")
-
-}
+  res.render("user/home");
+};
 
 /*LOAD PROFILE PAGE*/
 
-
 const loadProfile = async (req, res) => {
-
   try {
+    const userId = req.session.userId;
 
-    const userId =
-      req.session.userId
-
-    const user =
-      await User.findById(userId)
+    const user = await User.findById(userId);
 
     if (!user) {
-
-      return res.redirect("/login")
-
+      return res.redirect("/login");
     }
 
     res.render("user/profile", {
+      user,
+    });
+  } catch (error) {
+    console.log("Profile Load Error:", error);
 
-      user
-
-    })
-
+    res.redirect("/");
   }
-
-  catch (error) {
-
-    console.log(
-      "Profile Load Error:",
-      error
-    )
-
-    res.redirect("/")
-
-  }
-
-}
+};
 
 /*LOAD EDIT PROFILE*/
 
-const loadEditProfile = async (
-
-  req,
-  res
-
-) => {
-
+const loadEditProfile = async (req, res) => {
   try {
+    const user = await User.findById(req.session.userId);
 
-    const user =
-      await User.findById(
-        req.session.userId
-      )
+    res.render("user/edit-profile", { user });
+  } catch (error) {
+    console.log("Edit Profile Load Error:", error);
 
-    res.render(
-      "user/edit-profile",
-      { user }
-    )
-
+    res.redirect("/profile");
   }
-
-  catch (error) {
-
-    console.log(
-      "Edit Profile Load Error:",
-      error
-    )
-
-    res.redirect("/profile")
-
-  }
-
-}
-
-
+};
 
 /*UPDATE PROFILE*/
 
-const updateProfile = async (
-
-  req,
-  res
-
-) => {
-
+const updateProfile = async (req, res) => {
   try {
-
-    const {
-
-      fullName,
-      phoneNumber,
-      dateOfBirth
-
-    } = req.body
-
-
+    const { fullName, phoneNumber, dateOfBirth } = req.body;
 
     await User.findByIdAndUpdate(
-
       req.session.userId,
 
       {
-
         fullName,
 
         phoneNumber,
 
-        dateOfBirth
+        dateOfBirth,
+      },
+    );
 
-      }
+    res.redirect("/profile");
+  } catch (error) {
+    console.log("Update Profile Error:", error);
 
-    )
-
-
-
-    res.redirect("/profile")
-
+    res.redirect("/profile");
   }
-
-  catch (error) {
-
-    console.log(
-      "Update Profile Error:",
-      error
-    )
-
-    res.redirect("/profile")
-
-  }
-
-}
-
-
-
-
+};
 
 /* ================================
    SEND SIGNUP OTP
 ================================ */
 
 const sendSignupOTP = async (req, res) => {
+  try {
+    if (req.body.phoneNumber === "") {
+      req.body.phoneNumber = undefined;
+    }
 
-try {
+    const result = signupSchema.safeParse(req.body);
 
+    if (!result.success) {
+      return res.status(400).json({
+        success: false,
+        message: result.error.errors[0].message,
+      });
+    }
 
+    const { fullName, phoneNumber, email, password } = result.data;
 
-if (req.body.phoneNumber === "") {
+    const existingUser = await User.findOne({ email });
 
-req.body.phoneNumber = undefined
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "User already exists",
+      });
+    }
 
-}
+    /* Remove old OTPs */
 
-const result =
-signupSchema.safeParse(req.body)
+    await OTP.deleteMany({
+      email,
+      type: "signup",
+    });
 
-if (!result.success) {
+    const otp = generateOTP();
 
-return res.status(400).json({
+    const expiresAt = new Date(Date.now() + 300000);
 
-success: false,
-message:
-result.error.errors[0].message
+    await OTP.create({
+      email,
+      code: otp,
+      type: "signup",
+      expiresAt,
+    });
 
-})
+    req.session.signupData = {
+      fullName,
+      phoneNumber,
+      email,
+      password,
+    };
 
-}
+    await sendEmail(
+      email,
+      "Signup OTP Verification",
+      `Your signup OTP is ${otp}`,
+    );
 
-const {
-fullName,
-phoneNumber,
-email,
-password
-} = result.data
+    return res.status(200).json({
+      success: true,
+      message: "OTP Sent Successfully",
+    });
+  } catch (error) {
+    console.log("Signup OTP Error:", error);
 
-
-
-const existingUser =
-await User.findOne({ email })
-
-if (existingUser) {
-
-return res.status(400).json({
-
-success: false,
-message: "User already exists"
-
-})
-
-}
-
-
-
-/* Remove old OTPs */
-
-await OTP.deleteMany({
-
-email,
-type: "signup"
-
-})
-
-
-
-const otp =
-generateOTP()
-
-const expiresAt =
-new Date(Date.now() + 300000)
-
-
-
-await OTP.create({
-
-email,
-code: otp,
-type: "signup",
-expiresAt
-
-})
-
-
-
-req.session.signupData = {
-
-fullName,
-phoneNumber,
-email,
-password
-
-}
-
-
-
-await sendEmail(
-
-email,
-"Signup OTP Verification",
-`Your signup OTP is ${otp}`
-
-)
-
-
-
-return res.status(200).json({
-
-success: true,
-message: "OTP Sent Successfully"
-
-})
-
-}
-
-catch (error) {
-
-console.log(
-"Signup OTP Error:",
-error
-)
-
-return res.status(500).json({
-
-success: false,
-message: "Failed to send OTP"
-
-})
-
-}
-
-}
-
-
+    return res.status(500).json({
+      success: false,
+      message: "Failed to send OTP",
+    });
+  }
+};
 
 /* ================================
    VERIFY SIGNUP OTP
 ================================ */
 
 const verifySignupOTP = async (req, res) => {
+  try {
+    const { otp } = req.body;
 
-try {
+    const storedOTP = await OTP.findOne({
+      code: otp,
+      type: "signup",
+    }).sort({
+      createdAt: -1,
+    });
 
-const { otp } = req.body
+    if (!storedOTP) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid OTP",
+      });
+    }
 
+    if (storedOTP.expiresAt < new Date()) {
+      return res.status(400).json({
+        success: false,
+        message: "OTP Expired",
+      });
+    }
 
+    const signupData = req.session.signupData;
 
-const storedOTP =
-await OTP.findOne({
+    if (!signupData) {
+      return res.status(400).json({
+        success: false,
+        message: "Session expired",
+      });
+    }
 
-code: otp,
-type: "signup"
+    const hashedPassword = await bcrypt.hash(signupData.password, 10);
 
-})
-.sort({
-createdAt: -1
-})
+    await User.create({
+      fullName: signupData.fullName,
 
+      phoneNumber: signupData.phoneNumber,
 
+      email: signupData.email,
 
-if (!storedOTP) {
+      password: hashedPassword,
+    });
 
-return res.status(400).json({
+    await OTP.deleteMany({
+      email: signupData.email,
+    });
 
-success: false,
-message: "Invalid OTP"
+    delete req.session.signupData;
 
-})
+    return res.status(200).json({
+      success: true,
+      message: "Signup Successful",
+    });
+  } catch (error) {
+    console.log("OTP Verification Error:", error);
 
-}
-
-
-
-if (storedOTP.expiresAt < new Date()) {
-
-return res.status(400).json({
-
-success: false,
-message: "OTP Expired"
-
-})
-
-}
-
-
-
-const signupData =
-req.session.signupData
-
-if (!signupData) {
-
-return res.status(400).json({
-
-success: false,
-message: "Session expired"
-
-})
-
-}
-
-
-
-const hashedPassword =
-await bcrypt.hash(
-signupData.password,
-10
-)
-
-
-
-await User.create({
-
-fullName:
-signupData.fullName,
-
-phoneNumber:
-signupData.phoneNumber,
-
-email:
-signupData.email,
-
-password:
-hashedPassword
-
-})
-
-
-
-await OTP.deleteMany({
-
-email:
-signupData.email
-
-})
-
-
-
-delete req.session.signupData
-
-
-
-return res.status(200).json({
-
-success: true,
-message: "Signup Successful"
-
-})
-
-}
-
-catch (error) {
-
-console.log(
-"OTP Verification Error:",
-error
-)
-
-return res.status(500).json({
-
-success: false,
-message: "OTP Verification Failed"
-
-})
-
-}
-
-}
-
-
+    return res.status(500).json({
+      success: false,
+      message: "OTP Verification Failed",
+    });
+  }
+};
 
 /* ================================
    LOGIN USER
 ================================ */
 
 const loginUser = async (req, res) => {
+  try {
+    const { email, password } = req.body;
 
-try {
+    const user = await User.findOne({ email });
 
-const {
-email,
-password
-} = req.body
+    /* USER NOT FOUND */
 
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "User not found",
+      });
+    }
 
+    /* BLOCK CHECK */
 
-const user =
-await User.findOne({ email })
+    if (user.isBlocked) {
+      req.session.blockMessage = "Your account has been blocked by admin";
 
+      return res.status(403).json({
+        success: false,
+        message: "Account Blocked",
+      });
+    }
 
+    /* PASSWORD CHECK */
 
-/* USER NOT FOUND */
+    const isMatch = await bcrypt.compare(password, user.password);
 
-if (!user) {
+    if (!isMatch) {
+      return res.status(400).json({
+        success: false,
+        message: "Incorrect Password",
+      });
+    }
 
-return res.status(400).json({
+    /* CREATE SESSION */
 
-success: false,
-message: "User not found"
+    req.session.userId = user._id;
 
-})
+    return res.status(200).json({
+      success: true,
+      message: "Login Successful",
+    });
+  } catch (error) {
+    console.log("Login Error:", error);
 
-}
-
-
-
-/* BLOCK CHECK */
-
-if (user.isBlocked) {
-
-req.session.blockMessage =
-"Your account has been blocked by admin"
-
-return res.status(403).json({
-
-success: false,
-message: "Account Blocked"
-
-})
-
-}
-
-
-
-/* PASSWORD CHECK */
-
-const isMatch =
-await bcrypt.compare(
-password,
-user.password
-)
-
-
-
-if (!isMatch) {
-
-return res.status(400).json({
-
-success: false,
-message: "Incorrect Password"
-
-})
-
-}
-
-
-
-/* CREATE SESSION */
-
-req.session.userId =
-user._id
-
-
-
-return res.status(200).json({
-
-success: true,
-message: "Login Successful"
-
-})
-
-}
-
-catch (error) {
-
-console.log(
-"Login Error:",
-error
-)
-
-return res.status(500).json({
-
-success: false,
-message: "Login Failed"
-
-})
-
-}
-
-}
-
+    return res.status(500).json({
+      success: false,
+      message: "Login Failed",
+    });
+  }
+};
 
 /* ================================
    FORGOT PASSWORD - SEND OTP
 ================================ */
 
 const sendForgotOTP = async (req, res) => {
+  try {
+    let email = req.body?.email;
 
-try {
+    if (!email) {
+      email = req.session.resetEmail;
+    }
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email missing",
+      });
+    }
 
-let email = req.body?.email
+    const user = await User.findOne({ email });
 
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "Email not registered",
+      });
+    }
 
+    /* Remove old OTPs */
 
-if (!email) {
+    await OTP.deleteMany({
+      email,
+      type: "forgotPassword",
+    });
 
-email =
-req.session.resetEmail
+    const otp = generateOTP();
 
-}
-if (!email) {
+    const expiresAt = new Date(Date.now() + 300000);
 
-return res.status(400).json({
+    await OTP.create({
+      email,
+      code: otp,
+      type: "forgotPassword",
+      expiresAt,
+    });
 
-success: false,
-message: "Email missing"
+    req.session.resetEmail = email;
 
-})
+    await sendEmail(
+      email,
+      "Password Reset OTP",
+      `Your password reset OTP is ${otp}`,
+    );
 
-}
+    return res.status(200).json({
+      success: true,
+      message: "Reset OTP Sent",
+    });
+  } catch (error) {
+    console.log("Forgot OTP Error:", error);
 
-
-const user =
-await User.findOne({ email })
-
-
-
-if (!user) {
-
-return res.status(400).json({
-
-success: false,
-message: "Email not registered"
-
-})
-
-}
-
-
-
-/* Remove old OTPs */
-
-await OTP.deleteMany({
-
-email,
-type: "forgotPassword"
-
-})
-
-
-
-const otp =
-generateOTP()
-
-const expiresAt =
-new Date(
-Date.now() + 300000
-)
-
-
-
-await OTP.create({
-
-email,
-code: otp,
-type: "forgotPassword",
-expiresAt
-
-})
-
-
-
-req.session.resetEmail =
-email
-
-
-
-await sendEmail(
-
-email,
-"Password Reset OTP",
-`Your password reset OTP is ${otp}`
-
-)
-
-
-
-return res.status(200).json({
-
-success: true,
-message: "Reset OTP Sent"
-
-})
-
-}
-
-catch (error) {
-
-console.log(
-"Forgot OTP Error:",
-error
-)
-
-return res.status(500).json({
-
-success: false,
-message: "Failed to send OTP"
-
-})
-
-}
-
-}
+    return res.status(500).json({
+      success: false,
+      message: "Failed to send OTP",
+    });
+  }
+};
 
 /* ================================
    SEND EMAIL CHANGE OTP
 ================================ */
 
 const sendEmailChangeOTP = async (req, res) => {
+  try {
+    const userId = req.session.userId;
 
-try {
+    let newEmail;
+    let confirmEmail;
 
-const userId =
-req.session.userId
+    /* FIRST TIME REQUEST */
 
-let newEmail
-let confirmEmail
+    if (req.body && req.body.newEmail) {
+      newEmail = req.body.newEmail;
 
-/* FIRST TIME REQUEST */
+      confirmEmail = req.body.confirmEmail;
 
-if(req.body && req.body.newEmail){
+      /* SAVE IN SESSION */
 
-    newEmail =
-    req.body.newEmail
+      req.session.newEmail = newEmail;
+    } else {
 
-    confirmEmail =
-    req.body.confirmEmail
+    /* RESEND OTP REQUEST */
+      newEmail = req.session.newEmail;
 
-    /* SAVE IN SESSION */
+      confirmEmail = req.session.newEmail;
+    }
 
-    req.session.newEmail =
-    newEmail
+    /* Check email match */
 
-}
+    if (newEmail !== confirmEmail) {
+      return res.status(400).json({
+        success: false,
+        message: "Emails do not match",
+      });
+    }
 
-/* RESEND OTP REQUEST */
+    /* Check email already exists */
 
-else{
+    const existingUser = await User.findOne({ email: newEmail });
 
-    newEmail =
-    req.session.newEmail
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "Email already in use",
+      });
+    }
 
-    confirmEmail =
-    req.session.newEmail
+    /* Remove old OTP */
 
-}
+    await OTP.deleteMany({
+      email: newEmail,
+      type: "emailChange",
+    });
 
+    /* Generate OTP */
 
+    const otp = generateOTP();
 
-/* Check email match */
+    const expiresAt = new Date(Date.now() + 300000);
 
-if (newEmail !== confirmEmail) {
+    /* Save OTP */
 
-return res.status(400).json({
+    await OTP.create({
+      email: newEmail,
+      code: otp,
+      type: "emailChange",
+      expiresAt,
+    });
 
-success: false,
-message: "Emails do not match"
+    /* Save email in session */
 
-})
+    req.session.newEmail = newEmail;
 
-}
+    /* Send Email */
 
+    /* Send Email */
 
+    await sendEmail(
+      newEmail,
+      "Email Change OTP",
+      `Your email change OTP is ${otp}`,
+    );
 
-/* Check email already exists */
+    /* Redirect to OTP page */
 
-const existingUser =
-await User.findOne({ email: newEmail })
+    res.redirect("/verify-email-otp?flow=email");
+  } catch (error) {
+    console.log("Email Change OTP Error:", error);
 
-if (existingUser) {
-
-return res.status(400).json({
-
-success: false,
-message: "Email already in use"
-
-})
-
-}
-
-
-
-/* Remove old OTP */
-
-await OTP.deleteMany({
-
-email: newEmail,
-type: "emailChange"
-
-})
-
-
-
-/* Generate OTP */
-
-const otp =
-generateOTP()
-
-const expiresAt =
-new Date(Date.now() + 300000)
-
-
-
-/* Save OTP */
-
-await OTP.create({
-
-email: newEmail,
-code: otp,
-type: "emailChange",
-expiresAt
-
-})
-
-
-
-/* Save email in session */
-
-req.session.newEmail =
-newEmail
-
-
-
-/* Send Email */
-
-/* Send Email */
-
-await sendEmail(
-
-newEmail,
-"Email Change OTP",
-`Your email change OTP is ${otp}`
-
-)
-
-
-
-/* Redirect to OTP page */
-
-res.redirect("/verify-email-otp?flow=email")
-
-}
-
-catch (error) {
-
-console.log(
-"Email Change OTP Error:",
-error
-)
-
-return res.status(500).json({
-
-success: false,
-message: "Failed to send OTP"
-
-})
-
-}
-
-}
-
-
+    return res.status(500).json({
+      success: false,
+      message: "Failed to send OTP",
+    });
+  }
+};
 
 /* ================================
    VERIFY RESET OTP
 ================================ */
 
 const verifyResetOTP = async (req, res) => {
+  try {
+    const { otp } = req.body;
 
-try {
+    const storedOTP = await OTP.findOne({
+      code: otp,
+      type: "forgotPassword",
+    }).sort({
+      createdAt: -1,
+    });
 
-const { otp } = req.body
+    if (!storedOTP) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid OTP",
+      });
+    }
 
+    if (storedOTP.expiresAt < new Date()) {
+      return res.status(400).json({
+        success: false,
+        message: "OTP Expired",
+      });
+    }
 
+    /* Save session */
 
-const storedOTP =
-await OTP.findOne({
+    req.session.resetVerified = true;
+    req.session.resetEmail = storedOTP.email;
 
-code: otp,
-type: "forgotPassword"
+    return res.status(200).json({
+      success: true,
+      message: "OTP Verified",
+    });
+  } catch (error) {
+    console.log("Reset OTP Error:", error);
 
-})
-.sort({
-createdAt: -1
-})
-
-
-
-if (!storedOTP) {
-
-return res.status(400).json({
-
-success: false,
-message: "Invalid OTP"
-
-})
-
-}
-
-
-
-if (storedOTP.expiresAt < new Date()) {
-
-return res.status(400).json({
-
-success: false,
-message: "OTP Expired"
-
-})
-
-}
-
-
-
-/* Save session */
-
-req.session.resetVerified = true
-req.session.resetEmail =
-storedOTP.email
-
-
-
-return res.status(200).json({
-
-success: true,
-message: "OTP Verified"
-
-})
-
-}
-
-catch (error) {
-
-console.log(
-"Reset OTP Error:",
-error
-)
-
-return res.status(500).json({
-
-success: false,
-message: "Verification Failed"
-
-})
-
-}
-
-}
+    return res.status(500).json({
+      success: false,
+      message: "Verification Failed",
+    });
+  }
+};
 
 /* ================================
    VERIFY EMAIL CHANGE OTP
 ================================ */
 
 const verifyEmailChangeOTP = async (req, res) => {
+  try {
+    const { otp } = req.body;
 
-try {
+    /* Find latest OTP */
 
-const { otp } = req.body
+    const storedOTP = await OTP.findOne({
+      code: otp,
+      type: "emailChange",
+    }).sort({
+      createdAt: -1,
+    });
 
+    /* Invalid OTP */
 
+    if (!storedOTP) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid OTP",
+      });
+    }
 
-/* Find latest OTP */
+    /* Expired OTP */
 
-const storedOTP =
-await OTP.findOne({
+    if (storedOTP.expiresAt < new Date()) {
+      return res.status(400).json({
+        success: false,
+        message: "OTP Expired",
+      });
+    }
 
-code: otp,
-type: "emailChange"
+    /* Update Email */
 
-}).sort({
+    await User.findByIdAndUpdate(
+      req.session.userId,
 
-createdAt: -1
+      {
+        email: req.session.newEmail,
+      },
+    );
 
-})
+    /* Cleanup */
 
+    await OTP.deleteMany({
+      email: req.session.newEmail,
 
+      type: "emailChange",
+    });
 
-/* Invalid OTP */
+    delete req.session.newEmail;
 
-if (!storedOTP) {
+    /* Redirect */
 
-return res.status(400).json({
+    res.redirect("/profile");
+  } catch (error) {
+    console.log(
+      "Verify Email OTP Error:",
 
-success: false,
-message: "Invalid OTP"
+      error,
+    );
 
-})
-
-}
-
-
-
-/* Expired OTP */
-
-if (storedOTP.expiresAt < new Date()) {
-
-return res.status(400).json({
-
-success: false,
-message: "OTP Expired"
-
-})
-
-}
-
-
-
-/* Update Email */
-
-await User.findByIdAndUpdate(
-
-req.session.userId,
-
-{
-
-email:
-req.session.newEmail
-
-}
-
-)
-
-
-
-/* Cleanup */
-
-await OTP.deleteMany({
-
-email:
-req.session.newEmail,
-
-type: "emailChange"
-
-})
-
-
-
-delete req.session.newEmail
-
-
-
-/* Redirect */
-
-res.redirect("/profile")
-
-}
-
-catch (error) {
-
-console.log(
-
-"Verify Email OTP Error:",
-
-error
-
-)
-
-res.redirect("/change-email")
-
-}
-
-}
+    res.redirect("/change-email");
+  }
+};
 
 /* ================================
    RESET PASSWORD
 ================================ */
 
 const resetPassword = async (req, res) => {
+  try {
+    const { newPassword, confirmPassword } = req.body;
 
-try {
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Passwords do not match",
+      });
+    }
 
-const {
-newPassword,
-confirmPassword
-} = req.body
+    if (!req.session.resetVerified) {
+      return res.status(400).json({
+        success: false,
+        message: "OTP not verified",
+      });
+    }
 
+    const email = req.session.resetEmail;
 
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-if (newPassword !== confirmPassword) {
+    await User.updateOne(
+      { email },
 
-return res.status(400).json({
+      { password: hashedPassword },
+    );
 
-success: false,
-message: "Passwords do not match"
+    await OTP.deleteMany({
+      email,
+      type: "forgotPassword",
+    });
 
-})
+    delete req.session.resetEmail;
+    delete req.session.resetVerified;
 
-}
+    return res.status(200).json({
+      success: true,
+      message: "Password Reset Successful",
+    });
+  } catch (error) {
+    console.log("Reset Password Error:", error);
 
-
-
-if (!req.session.resetVerified) {
-
-return res.status(400).json({
-
-success: false,
-message: "OTP not verified"
-
-})
-
-}
-
-
-
-const email =
-req.session.resetEmail
-
-
-
-const hashedPassword =
-await bcrypt.hash(
-newPassword,
-10
-)
-
-
-
-await User.updateOne(
-
-{ email },
-
-{ password: hashedPassword }
-
-)
-
-
-
-await OTP.deleteMany({
-
-email,
-type: "forgotPassword"
-
-})
-
-
-
-delete req.session.resetEmail
-delete req.session.resetVerified
-
-
-
-return res.status(200).json({
-
-success: true,
-message: "Password Reset Successful"
-
-})
-
-}
-
-catch (error) {
-
-console.log(
-"Reset Password Error:",
-error
-)
-
-return res.status(500).json({
-
-success: false,
-message: "Password Reset Failed"
-
-})
-
-}
-
-}
+    return res.status(500).json({
+      success: false,
+      message: "Password Reset Failed",
+    });
+  }
+};
 
 /* ================================
    SEND CHANGE PASSWORD OTP
 ================================ */
 const sendChangePasswordOTP = async (req, res) => {
+  try {
+    const userId = req.session.userId;
 
-try {
+    const { oldPassword, newPassword, confirmPassword } = req.body;
 
-const userId =
-req.session.userId
-
-const {
-oldPassword,
-newPassword,
-confirmPassword
-} = req.body
-
-
-
-/* 
+    /* 
    PASSWORD MATCH CHECK
  */
 
-if (newPassword !== confirmPassword) {
-
-return res.send(
-"Passwords do not match"
-)
-
-}
-/* 
+    if (newPassword !== confirmPassword) {
+      return res.send("Passwords do not match");
+    }
+    /* 
    PASSWORD MIN LENGTH
  */
 
-if (newPassword.length < 6) {
+    if (newPassword.length < 6) {
+      return res.send("Password must be at least 6 characters long");
+    }
 
-return res.send(
-"Password must be at least 6 characters long"
-)
-
-}
-
-
-
-/* 
+    /* 
    GET USER
  */
 
-const user =
-await User.findById(userId)
+    const user = await User.findById(userId);
 
-if (!user) {
+    if (!user) {
+      return res.redirect("/login");
+    }
 
-return res.redirect("/login")
-
-}
-
-
-
-/* 
+    /* 
    GOOGLE USER CHECK
 */
 
-if (!user.googleId) {
+    if (!user.googleId) {
+      /* Normal users → verify old password */
 
-/* Normal users → verify old password */
+      const isMatch = await bcrypt.compare(oldPassword, user.password);
 
-const isMatch =
-await bcrypt.compare(
-oldPassword,
-user.password
-)
+      if (!isMatch) {
+        return res.send("Current password incorrect");
+      }
+    }
 
-if (!isMatch) {
-
-return res.send(
-"Current password incorrect"
-)
-
-}
-
-}
-
-
-
-/* 
+    /* 
    GENERATE OTP
  */
 
-const otp =
-generateOTP()
+    const otp = generateOTP();
 
-const expiresAt =
-new Date(Date.now() + 300000)
+    const expiresAt = new Date(Date.now() + 300000);
 
+    /* Remove old OTP */
 
+    await OTP.deleteMany({
+      email: user.email,
+      type: "changePassword",
+    });
 
-/* Remove old OTP */
+    /* Save new OTP */
 
-await OTP.deleteMany({
+    await OTP.create({
+      email: user.email,
+      code: otp,
+      type: "changePassword",
+      expiresAt,
+    });
 
-email: user.email,
-type: "changePassword"
+    /* Store new password */
 
-})
+    req.session.newPassword = newPassword;
 
+    /* Send Email */
 
+    await sendEmail(
+      user.email,
+      "Change Password OTP",
+      `Your password change OTP is ${otp}`,
+    );
 
-/* Save new OTP */
+    /* Redirect */
 
-await OTP.create({
+    res.redirect("/verify-email-otp?flow=password");
+  } catch (error) {
+    console.log("Change Password OTP Error:", error);
 
-email: user.email,
-code: otp,
-type: "changePassword",
-expiresAt
-
-})
-
-
-
-/* Store new password */
-
-req.session.newPassword =
-newPassword
-
-
-
-/* Send Email */
-
-await sendEmail(
-
-user.email,
-"Change Password OTP",
-`Your password change OTP is ${otp}`
-
-)
-
-
-
-/* Redirect */
-
-res.redirect(
-"/verify-email-otp?flow=password"
-)
-
-}
-
-catch (error) {
-
-console.log(
-"Change Password OTP Error:",
-error
-)
-
-res.redirect(
-"/change-password"
-
-)
-
-}
-
-}
-
+    res.redirect("/change-password");
+  }
+};
 
 /* ================================
    VERIFY CHANGE PASSWORD OTP
 ================================ */
 
 const verifyChangePasswordOTP = async (req, res) => {
+  try {
+    const { otp } = req.body;
 
-try {
+    /* Find OTP */
 
-const { otp } =
-req.body
+    const storedOTP = await OTP.findOne({
+      code: otp,
+      type: "changePassword",
+    }).sort({
+      createdAt: -1,
+    });
 
+    if (!storedOTP) {
+      return res.send("Invalid OTP");
+    }
 
+    if (storedOTP.expiresAt < new Date()) {
+      return res.send("OTP Expired");
+    }
 
-/* Find OTP */
+    /* Hash New Password */
 
-const storedOTP =
-await OTP.findOne({
+    const hashedPassword = await bcrypt.hash(req.session.newPassword, 10);
 
-code: otp,
-type: "changePassword"
+    /* Update Password */
 
-}).sort({
+    await User.findByIdAndUpdate(
+      req.session.userId,
 
-createdAt: -1
+      {
+        password: hashedPassword,
+      },
+    );
 
-})
+    /* Cleanup */
 
+    await OTP.deleteMany({
+      email: storedOTP.email,
 
+      type: "changePassword",
+    });
 
-if (!storedOTP) {
+    delete req.session.newPassword;
 
-return res.send("Invalid OTP")
+    res.redirect("/profile");
+  } catch (error) {
+    console.log("Verify Change Password Error:", error);
 
-}
-
-
-
-if (storedOTP.expiresAt < new Date()) {
-
-return res.send("OTP Expired")
-
-}
-
-
-
-/* Hash New Password */
-
-const hashedPassword =
-await bcrypt.hash(
-
-req.session.newPassword,
-10
-
-)
-
-
-
-/* Update Password */
-
-await User.findByIdAndUpdate(
-
-req.session.userId,
-
-{
-
-password:
-hashedPassword
-
-}
-
-)
-
-
-
-/* Cleanup */
-
-await OTP.deleteMany({
-
-email:
-storedOTP.email,
-
-type: "changePassword"
-
-})
-
-
-
-delete req.session.newPassword
-
-
-
-res.redirect("/profile")
-
-}
-
-catch (error) {
-
-console.log(
-"Verify Change Password Error:",
-error
-)
-
-res.redirect("/change-password")
-
-}
-
-}
+    res.redirect("/change-password");
+  }
+};
 
 /* ================================
    LOGOUT USER
 ================================ */
 
 const logoutUser = (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      console.log("Logout Error:", err);
 
-req.session.destroy((err) => {
+      return res.redirect("/");
+    }
 
-if (err) {
+    res.clearCookie("connect.sid");
 
-console.log("Logout Error:", err)
-
-return res.redirect("/")
-
-}
-
-res.clearCookie("connect.sid")
-
-res.redirect(303,"/")
-
-})
-
-}
+    res.redirect(303, "/");
+  });
+};
 
 /* ================================
    EXPORT
 ================================ */
 
 export default {
+  loadSignup,
+  loadLogin,
+  loadForgotPassword,
+  loadResetPassword,
 
-loadSignup,
-loadLogin,
-loadForgotPassword,
-loadResetPassword,
+  sendSignupOTP,
+  verifySignupOTP,
 
-sendSignupOTP,
-verifySignupOTP,
+  loginUser,
 
-loginUser,
+  sendForgotOTP,
+  verifyResetOTP,
+  resetPassword,
 
-sendForgotOTP,
-verifyResetOTP,
-resetPassword,
+  logoutUser,
 
-logoutUser,
+  loadHome,
 
-loadHome,
-
-loadProfile,
-loadEditProfile,
-updateProfile,
-sendEmailChangeOTP,
-verifyEmailChangeOTP,
-sendChangePasswordOTP,
-verifyChangePasswordOTP
-
-}
+  loadProfile,
+  loadEditProfile,
+  updateProfile,
+  sendEmailChangeOTP,
+  verifyEmailChangeOTP,
+  sendChangePasswordOTP,
+  verifyChangePasswordOTP,
+};

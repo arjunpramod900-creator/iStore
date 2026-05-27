@@ -1,106 +1,59 @@
-import {
-
-    loadCheckoutService
-
-} from "../../services/user/checkoutService.js"
-
-
+import { loadCheckoutService } from "../../services/user/checkoutService.js";
 
 /* =========================================
    LOAD CHECKOUT PAGE
 ========================================= */
 
-export const loadCheckoutPage =
-async (
+export const loadCheckoutPage = async (
+  req,
 
-    req,
-
-    res
-
+  res,
 ) => {
+  try {
+    const userId = req.session.userId;
 
-    try{
+    const response = await loadCheckoutService(userId);
 
-        const userId =
-        req.session.userId
+    /* EMPTY CART */
 
-
-
-        const response =
-
-        await loadCheckoutService(
-
-            userId
-
-        )
-
-
-
-        /* EMPTY CART */
-
-        if(!response.success){
-
-            return res.redirect(
-
-                "/cart"
-
-            )
-
-        }
-
-
-
-        res.render(
-
-            "user/checkout",
-
-            {
-
-                page: "checkout",
-
-                cartItems:
-                response.cartItems,
-
-                addresses:
-                response.addresses,
-
-                subtotal:
-                response.subtotal,
-
-                totalItems:
-                response.totalItems,
-
-                taxAmount:
-                response.taxAmount,
-
-                deliveryCharge:
-                response.deliveryCharge,
-
-                finalAmount:
-                response.finalAmount
-
-            }
-
-        )
-
+    if (!response.success) {
+      return res.redirect("/cart");
     }
 
-    catch(error){
+    res.render(
+    "user/checkout",
 
-        console.log(
+    {
+        page: "checkout",
 
-            "Load Checkout Error:",
+        cart: {
 
-            error
+        items: response.cartItems,
 
-        )
+        subtotal: response.subtotal,
 
-        return res.redirect(
+        },
 
-            "/cart"
+        addresses: response.addresses,
 
-        )
+        subtotal: response.subtotal,
 
-    }
+        totalItems: response.totalItems,
 
-}
+        taxAmount: response.taxAmount,
+
+        deliveryCharge: response.deliveryCharge,
+
+        finalAmount: response.finalAmount,
+    },
+    );
+  } catch (error) {
+    console.log(
+      "Load Checkout Error:",
+
+      error,
+    );
+
+    return res.redirect("/cart");
+  }
+};
