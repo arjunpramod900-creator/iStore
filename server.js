@@ -18,6 +18,8 @@ import wishlistRoutes from "./routes/user/wishlistRoutes.js";
 
 import checkoutRoutes from "./routes/user/checkoutRoutes.js";
 
+import orderRoutes from "./routes/user/orderRoutes.js";
+
 import noCache from "./middleware/noCache.js";
 
 import adminNoCache from "./middleware/adminNoCache.js";
@@ -136,15 +138,12 @@ app.get(
 );
 
 //* USER AUTH ROUTES */
-
 app.use("/", authRoutes);
 
 /* USER PROFILE ROUTES (PROTECTED) */
-
 app.use("/", profileRoutes);
 
 /* USER PRODUCT ROUTES */
-
 app.use("/", productRoutes);
 
 /* USER CART ROUTES */
@@ -154,8 +153,10 @@ app.use("/cart", cartRoutes);
 app.use("/wishlist", wishlistRoutes);
 
 /* USER CHECKOUT ROUTES */
-
 app.use("/", checkoutRoutes);
+
+/* USER ORDER ROUTES */
+app.use("/", orderRoutes);
 
 /* ================================
 

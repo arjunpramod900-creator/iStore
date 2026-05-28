@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        My Orders — iStore
+    </title>
+
+    <!-- CSS -->
+
+    <link
+        rel="stylesheet"
+        href="/css/components/header.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="/css/components/footer.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="/css/orders.css"
+    >
+
+    <!-- Fonts -->
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet"
+    >
+
+    <!-- Icons -->
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- GSAP -->
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+</head>
+
+<body>
+
+    <%- include(
+        "../partials/user/header",
+        { page: "orders" }
+    ) %>
+
+    <main class="or-page">
+
+        <div class="or-container">
+
+            <!-- BREADCRUMB -->
+
+            <nav
+                class="or-breadcrumbs"
+                aria-label="Breadcrumb"
+            >
+
+                <a
+                    href="/"
+                    class="or-bc-crumb"
+                >
+                    Home
+                </a>
+
+                <span class="or-bc-sep">
+                    <i
+                        data-lucide="chevron-right"
+                        size="12"
+                    ></i>
+                </span>
+
+                <span class="or-bc-crumb active">
+                    Orders
+                </span>
+
+            </nav>
+
+            <!-- PAGE HEADER -->
+
+            <header class="or-header">
+
+                <h1 class="or-title">
+                    My Orders
+                </h1>
+
+                <p class="or-subtitle">
+                    View and manage your recent and past orders.
+                </p>
+
+            </header>
+
+            <!-- FILTER BAR -->
+
+            <div class="or-filter-bar">
+
+                <!-- SEARCH -->
+
+                <div class="or-filter-group">
+
+                    <label class="or-filter-label">
+                        Search by Order ID
+                    </label>
+
+                    <div class="or-search-wrap">
+
+                        <span class="or-search-icon">
+                            <i
+                                data-lucide="search"
+                                size="18"
+                            ></i>
+                        </span>
+
+                        <input
+                            type="text"
+                            id="searchOrderId"
+                            class="or-search-input"
+                            placeholder="e.g. ORD123456"
+                            autocomplete="off"
+                        >
+
+                    </div>
+
+                </div>
+
+                <!-- STATUS -->
+
+                <div class="or-filter-select-wrap">
+
+                    <label class="or-filter-label">
+                        Order Status
+                    </label>
+
+                    <select
+                        id="statusFilter"
+                        class="or-select"
+                    >
+
+                        <option value="">
+                            All Statuses
+                        </option>
+
+                        <option value="pending">
+                            Pending
+                        </option>
+
+                        <option value="processing">
+                            Processing
+                        </option>
+
+                        <option value="shipped">
+                            Shipped
+                        </option>
+
+                        <option value="out-for-delivery">
+                            Out for Delivery
+                        </option>
+
+                        <option value="delivered">
+                            Delivered
+                        </option>
+
+                        <option value="cancelled">
+                            Cancelled
+                        </option>
+
+                        <option value="returned">
+                            Returned
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <!-- FILTER BUTTON -->
+
+                <button
+                    class="or-filter-btn"
+                    id="applyFilterBtn"
+                    type="button"
+                >
+
+                    Filter
+
+                </button>
+
+            </div>
+
+            <!-- EMPTY STATE -->
+
+            <% if (!orders || orders.length === 0) { %>
+
+                <div class="or-empty">
+
+                    <div class="or-empty-icon">
+
+                        <i
+                            data-lucide="package-open"
+                            size="64"
+                        ></i>
+
+                    </div>
+
+                    <h2 class="or-empty-title">
+                        No orders found
+                    </h2>
+
+                    <p class="or-empty-sub">
+                        You haven’t placed any orders yet.
+                    </p>
+
+                    <a
+                        href="/products"
+                        class="or-empty-cta"
+                    >
+
+                        <i
+                            data-lucide="shopping-bag"
+                            size="18"
+                        ></i>
+
+                        Browse Products
+
+                    </a>
+
+                </div>
+
+            <% } else { %>
+
+                <!-- ORDER LIST -->
+
+                <div
+                    class="or-order-list"
+                    id="orOrderList"
+                >
+
+                    <% orders.forEach((order) => {
+
+                        const status =
+                        (
+                            order.orderStatus ||
+                            "Pending"
+                        )
+                        .toLowerCase()
+                        .replace(/\s+/g, "-");
+
+                        const orderId =
+                            order.orderId;
+
+                        const orderDate =
+                            new Date(order.createdAt)
+                            .toLocaleDateString(
+                                "en-IN",
+                                {
+                                    day: "numeric",
+                                    month: "short",
+                                    year: "numeric",
+                                }
+                            );
+
+                        const total =
+                            "₹" +
+                            Number(
+                                order.finalAmount || 0
+                            ).toLocaleString("en-IN");
+
+                        const items =
+                            order.items || [];
+
+                        const itemNames =
+                            items
+                            .map(
+                                item =>
+                                    item.productName ||
+                                    "Product"
+                            )
+                            .join(", ");
+
+                    %>
+
+                    <!-- ORDER CARD -->
+
+                    <article
+                        class="
+                            or-card
+                            or-card--<%= status %>
+                        "
+
+                        data-order-id="
+                            <%= orderId.toLowerCase() %>
+                        "
+
+                        data-status="
+                            <%= status %>
+                        "
+                    >
+
+                        <div class="or-card-inner">
+
+                            <!-- LEFT -->
+
+                            <div class="or-card-left">
+
+                                <!-- META -->
+
+                                <div class="or-card-meta">
+
+                                    <span
+                                        class="
+                                            or-badge
+                                            or-badge--<%= status %>
+                                        "
+                                    >
+
+                                        <%= order.orderStatus %>
+
+                                    </span>
+
+                                    <span class="or-order-id">
+
+                                        Order #<%= orderId %>
+
+                                    </span>
+
+                                    <span class="or-order-date">
+
+                                        • <%= orderDate %>
+
+                                    </span>
+
+                                </div>
+
+                                <!-- ITEMS -->
+
+                                <div class="or-card-items">
+
+                                    <div class="or-thumbs">
+
+                                        <% items
+                                        .slice(0, 2)
+                                        .forEach(item => { %>
+
+                                            <div class="or-thumb">
+
+                                                <img
+                                                    src="
+                                                    <%= item.productImage || '/images/product-placeholder.png' %>
+                                                    "
+
+                                                    alt="
+                                                    <%= item.productName %>
+                                                    "
+
+                                                    loading="lazy"
+                                                >
+
+                                            </div>
+
+                                        <% }) %>
+
+                                    </div>
+
+                                    <span class="or-item-names">
+
+                                        <%= itemNames %>
+
+                                    </span>
+
+                                </div>
+
+                                <!-- TOTAL -->
+
+                                <div class="or-card-total">
+
+                                    <span class="or-total-label">
+                                        Total Amount:
+                                    </span>
+
+                                    <span class="or-total-amount">
+
+                                        <%= total %>
+
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+                            <!-- ACTIONS -->
+
+                            <div class="or-card-actions">
+
+                                <!-- TRACK -->
+
+                                <% if (
+                                    [
+                                        "pending",
+                                        "processing",
+                                        "shipped",
+                                        "out-for-delivery"
+                                    ].includes(status)
+                                ) { %>
+
+                                    <a
+                                        href="/orders/<%= orderId %>"
+                                        class="or-btn or-btn--primary"
+                                    >
+
+                                        Track Order
+
+                                    </a>
+
+                                <% } %>
+
+                                <!-- DETAILS -->
+
+                                <a
+                                    href="/orders/<%= orderId %>"
+                                    class="or-btn or-btn--subtle"
+                                >
+
+                                    View Details
+
+                                </a>
+
+                                <!-- CANCEL -->
+
+                                <% if (
+                                    [
+                                        "pending",
+                                        "processing",
+                                        "shipped",
+                                        "out-for-delivery"
+                                    ].includes(status)
+                                ) { %>
+
+                                    <button
+                                        class="or-btn or-btn--danger cancel-order-btn"
+
+                                        data-id="<%= orderId %>"
+                                    >
+
+                                        Cancel Order
+
+                                    </button>
+
+                                <% } %>
+
+                                <!-- RETURN -->
+
+                                <% if (
+                                    status === "delivered"
+                                ) { %>
+
+                                    <a
+                                        href="/orders/<%= orderId %>/return"
+                                        class="or-btn or-btn--outline"
+                                    >
+
+                                        Return Order
+
+                                    </a>
+
+                                <% } %>
+
+                            </div>
+
+                        </div>
+
+                    </article>
+
+                    <% }) %>
+
+                </div>
+
+            <% } %>
+
+        </div>
+
+    </main>
+
+    <%- include(
+        "../partials/user/footer"
+    ) %>
+
+    <!-- SWEETALERT -->
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+
+        lucide.createIcons()
+
+       gsap.fromTo(
+
+            ".or-card",
+
+            {
+                y: 24,
+                opacity: 0,
+            },
+
+            {
+                y: 0,
+                opacity: 1,
+                duration: 0.5,
+                stagger: 0.08,
+                ease: "power2.out",
+                clearProps: "all",
+            }
+
+        )
+
+        const searchInput =
+            document.getElementById(
+                "searchOrderId"
+            )
+
+        const statusFilter =
+            document.getElementById(
+                "statusFilter"
+            )
+
+        const filterBtn =
+            document.getElementById(
+                "applyFilterBtn"
+            )
+
+        function applyFilters() {
+
+            const search =
+                searchInput.value
+                .trim()
+                .toLowerCase()
+
+            const status =
+                statusFilter.value
+                .trim()
+                .toLowerCase()
+
+            const cards =
+                document.querySelectorAll(
+                    ".or-card"
+                )
+
+            cards.forEach(card => {
+
+                const orderId =
+                    (
+                        card.dataset.orderId || ""
+                    )
+                    .trim()
+                    .toLowerCase()
+
+                const orderStatus =
+                    (
+                        card.dataset.status || ""
+                    )
+                    .trim()
+                    .toLowerCase()
+
+                const matchSearch =
+                    !search ||
+                    orderId.includes(search)
+
+                const matchStatus =
+                    !status ||
+                    orderStatus === status
+
+                card.style.display =
+                    (
+                        matchSearch &&
+                        matchStatus
+                    )
+                    ? "block"
+                    : "none"
+
+            })
+
+        }
+
+        filterBtn.addEventListener(
+            "click",
+            applyFilters
+        )
+
+    </script>
+
+</body>
+</html>

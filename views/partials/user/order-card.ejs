@@ -1,0 +1,153 @@
+<div class="order-card">
+
+    <!-- TOP -->
+
+    <div class="order-card-top">
+
+        <div>
+
+            <p class="order-id">
+                Order #<%= order.orderId %>
+            </p>
+
+            <p class="order-date">
+                <%= new Date(order.createdAt)
+                .toLocaleDateString(
+                    "en-IN",
+                    {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                    }
+                ) %>
+            </p>
+
+        </div>
+
+        <div
+            class="
+            order-status
+            status-<%= order.orderStatus
+            .toLowerCase()
+            .replace(/\s+/g, '-') %>
+            "
+        >
+
+            <%= order.orderStatus %>
+
+        </div>
+
+    </div>
+
+    <!-- ITEMS -->
+
+    <div class="order-items-preview">
+
+        <% order.items
+        .slice(0, 2)
+        .forEach(item => { %>
+
+            <div class="order-preview-item">
+
+                <img
+                    src="<%= item.productImage %>"
+                    alt="<%= item.productName %>"
+                >
+
+                <div>
+
+                    <p class="preview-name">
+                        <%= item.productName %>
+                    </p>
+
+                    <p class="preview-variant">
+                        <%= item.variantName %>
+                    </p>
+
+                </div>
+
+            </div>
+
+        <% }) %>
+
+    </div>
+
+    <!-- TOTAL -->
+
+    <div class="order-total-row">
+
+        <span>
+            Total Amount
+        </span>
+
+        <strong>
+            ₹<%= order.finalAmount
+            .toLocaleString("en-IN") %>
+        </strong>
+
+    </div>
+
+    <!-- ACTIONS -->
+
+    <div class="order-actions">
+
+        <a
+            href="/orders/<%= order.orderId %>"
+            class="view-order-btn"
+        >
+
+            View Details
+
+        </a>
+
+        <% if(
+            [
+                "Pending",
+                "Processing",
+                "Shipped",
+                "Out for Delivery",
+            ].includes(
+                order.orderStatus
+            )
+        ){ %>
+
+            <button
+
+                class="cancel-order-btn"
+
+                data-order-id="<%= order.orderId %>"
+
+                onclick="handleCancelOrder(this)"
+
+            >
+
+                Cancel Order
+
+            </button>
+
+        <% } %>
+
+        <% if(
+            order.orderStatus ===
+            "Delivered"
+        ){ %>
+
+            <button
+
+                class="return-order-btn"
+
+                data-order-id="<%= order.orderId %>"
+
+                onclick="handleReturnOrder(this)"
+
+            >
+
+                Return Order
+
+            </button>
+
+        <% } %>
+
+    </div>
+
+</div>

@@ -27,6 +27,7 @@
     "nodemailer": "^8.0.5",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
+    "pdfkit": "^0.18.0",
     "slugify": "^1.6.9",
     "sweetalert2": "^11.26.24",
     "zod": "^3.25.76"

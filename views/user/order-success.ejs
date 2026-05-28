@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Confirmed — iStore</title>
+    <meta name="description" content="Your iStore order has been placed successfully. Track your order and continue shopping.">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/css/components/header.css">
+    <link rel="stylesheet" href="/css/components/footer.css">
+    <link rel="stylesheet" href="/css/order-success.css">
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- GSAP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+</head>
+
+<body>
+
+    <%- include('../partials/user/header', { page: 'order-success' }) %>
+
+    <%
+        /* ── Destructure order data (with safe fallbacks) ── */
+        const orderNumber = typeof order !== 'undefined'? order.orderId: '#IST123456';
+        const orderDate      = typeof order !== 'undefined' ? new Date(order.createdAt).toLocaleDateString('en-IN', { year:'numeric', month:'long', day:'numeric' }) : 'May 24, 2024';
+        const deliveryEta =
+typeof order !== 'undefined' &&
+order.estimatedDelivery
+? new Date(order.estimatedDelivery)
+.toLocaleDateString('en-IN', {
+    year:'numeric',
+    month:'long',
+    day:'numeric'
+})
+: '3–5 Business Days';
+        const paymentMethod =
+typeof order !== 'undefined'
+? order.paymentMethod
+: 'COD';
+        const shippingAddr =
+typeof order !== 'undefined' &&
+order.shippingAddress
+? `${order.shippingAddress.fullName},
+${order.shippingAddress.addressLine1},
+${order.shippingAddress.city},
+${order.shippingAddress.state},
+${order.shippingAddress.pincode}`
+: 'Address unavailable';
+
+        const orderItems =
+typeof order !== 'undefined'
+? order.items
+: [];
+
+        const subtotal =
+typeof order !== 'undefined'
+? order.subtotal
+: 0;
+
+const discount =
+typeof order !== 'undefined'
+? order.discountAmount
+: 0;
+
+const tax =
+typeof order !== 'undefined'
+? order.taxAmount
+: 0;
+
+const shipping =
+typeof order !== 'undefined'
+? order.deliveryCharge
+: 0;
+
+const grandTotal =
+typeof order !== 'undefined'
+? order.finalAmount
+: 0;
+    %>
+
+    <main class="os-page" id="osPage">
+
+        <div class="os-container">
+
+            <!-- ── BREADCRUMBS ── -->
+            <nav class="os-breadcrumbs" aria-label="Breadcrumb">
+                <a href="/" class="os-bc-crumb">Home</a>
+                <span class="os-bc-sep">
+                    <i data-lucide="chevron-right" size="12"></i>
+                </span>
+                <a href="/checkout" class="os-bc-crumb">Checkout</a>
+                <span class="os-bc-sep">
+                    <i data-lucide="chevron-right" size="12"></i>
+                </span>
+                <span class="os-bc-crumb active">Order Success</span>
+            </nav>
+
+            <!-- ══════════════════════════════════
+                 MAIN SUCCESS CARD
+            ══════════════════════════════════ -->
+            <div class="os-main-card" id="osMainCard">
+
+                <!-- ── HERO ── -->
+                <div class="os-hero" id="osHero">
+
+                    <!-- Check icon circle -->
+                    <div class="os-icon-wrap">
+                        <div class="os-icon-circle" id="osIconCircle">
+                            <i data-lucide="check" size="28"></i>
+                        </div>
+                    </div>
+
+                    <h1 class="os-heading">Order Placed Successfully!</h1>
+
+                    <p class="os-subtext">
+                        Thank you for shopping with iStore. Your order has been successfully placed.
+                    </p>
+
+                </div>
+
+                <!-- ── ORDER DETAILS GRID ── -->
+                <div class="os-details-grid" id="osDetailsGrid">
+
+                    <!-- Order Number -->
+                    <div class="os-detail-item">
+                        <span class="os-detail-label">Order Number</span>
+                        <span class="os-detail-value"><%= orderNumber %></span>
+                    </div>
+
+                    <!-- Order Date -->
+                    <div class="os-detail-item">
+                        <span class="os-detail-label">Order Date</span>
+                        <span class="os-detail-value"><%= orderDate %></span>
+                    </div>
+
+                    <!-- Estimated Delivery -->
+                    <div class="os-detail-item">
+                        <span class="os-detail-label">Estimated Delivery</span>
+                        <span class="os-detail-value"><%= deliveryEta %></span>
+                    </div>
+
+                    <!-- Payment Method -->
+                    <div class="os-detail-item">
+                        <span class="os-detail-label">Payment Method</span>
+                        <span class="os-detail-value">
+                            <i data-lucide="credit-card" size="16"></i>
+                            <%= paymentMethod %>
+                        </span>
+                    </div>
+
+                    <!-- Shipping Address — full width -->
+                    <div class="os-detail-item os-detail-item--full">
+                        <span class="os-detail-label">Shipping Address</span>
+                        <span class="os-detail-value"><%= shippingAddr %></span>
+                    </div>
+
+                </div>
+
+                <!-- ── ORDER SUMMARY ── -->
+                <div class="os-summary-card" id="osSummaryCard">
+
+                    <p class="os-summary-label">Order Summary</p>
+
+                    <!-- Items list -->
+                    <div class="os-items-list">
+
+                        <% if (orderItems.length > 0) { %>
+
+                            <% orderItems.forEach(item => { %>
+                                <div class="os-item-row">
+                                    <div class="os-item-info">
+                                        <span class="os-item-name">
+                                            <%= item.productName %> &times; <%= item.quantity %>
+                                        </span>
+                                        <span class="os-item-variant">
+                                            <%= item.variantName %>
+                                        </span>
+                                    </div>
+                                    <span class="os-item-price">
+                                        ₹<%= (item.price * item.quantity).toLocaleString('en-IN') %>
+                                    </span>
+                                </div>
+                            <% }) %>
+
+                        <% } else { %>
+
+                            <!-- Demo fallback items -->
+                            <div class="os-item-row">
+                                <div class="os-item-info">
+                                    <span class="os-item-name">iPhone 17 Pro &times; 1</span>
+                                    <span class="os-item-variant">Titanium Black, 256GB</span>
+                                </div>
+                                <span class="os-item-price">₹1,29,900</span>
+                            </div>
+
+                            <div class="os-item-row">
+                                <div class="os-item-info">
+                                    <span class="os-item-name">AirPods Pro &times; 1</span>
+                                    <span class="os-item-variant">USB-C</span>
+                                </div>
+                                <span class="os-item-price included">Included</span>
+                            </div>
+
+                        <% } %>
+
+                    </div>
+
+                    <!-- Breakdown -->
+                    <div class="os-breakdown">
+
+                        <div class="os-breakdown-row">
+                            <span>Subtotal</span>
+                            <span>₹<%= subtotal.toLocaleString('en-IN') %></span>
+                        </div>
+
+                        <div class="os-breakdown-row">
+
+    <span>Shipping</span>
+
+    <span class="<%= shipping === 0 ? 'os-free' : '' %>">
+
+        <%= shipping === 0
+            ? 'Free'
+            : `₹${shipping.toLocaleString('en-IN')}` %>
+
+    </span>
+
+</div>
+
+                        <div class="os-breakdown-row">
+                            <span>Tax</span>
+                            <span>₹<%= tax.toLocaleString('en-IN') %></span>
+                        </div>
+
+                        <div class="os-breakdown-row">
+                            <span>Discount</span>
+                            <span class="os-discount">−₹<%= discount.toLocaleString('en-IN') %></span>
+                        </div>
+
+                    </div>
+
+                    <!-- Total -->
+                    <div class="os-total-row">
+                        <span class="os-total-label">Total Paid</span>
+                        <span class="os-total-value">₹<%= grandTotal.toLocaleString('en-IN') %></span>
+                    </div>
+
+                </div>
+
+                <!-- ── ACTION BUTTONS (4 buttons) ── -->
+                <div class="os-actions" id="osActions">
+
+                    <!-- 1. Track Order (primary) -->
+                    <a href="/orders/<%= orderNumber %>/track" class="os-btn-primary" id="btnTrackOrder">
+                        <i data-lucide="package-search" size="18"></i>
+                        Track Order
+                    </a>
+
+                    <!-- 2. View Orders (outline) -->
+                    <a href="/orders" class="os-btn-outline" id="btnViewOrders">
+                        <i data-lucide="list-ordered" size="18"></i>
+                        View Orders
+                    </a>
+
+                    <!-- 3. Continue Shopping (outline) -->
+                    <a href="/products" class="os-btn-outline" id="btnContinueShopping">
+                        Continue Shopping
+                    </a>
+
+                    <!-- 4. Download Invoice (accent-2 outline) -->
+                    <a href="/orders/<%= orderNumber %>/invoice" class="os-btn-outline-2" id="btnDownloadInvoice">
+                        <i data-lucide="file-down" size="18"></i>
+                        Download Invoice
+                    </a>
+
+                </div>
+
+                <!-- ── DELIVERY BANNER ── -->
+                <div class="os-delivery-banner" id="osDeliveryBanner">
+                    <i data-lucide="bell-ring" size="16"></i>
+                    <span>You will receive order updates via email and SMS.</span>
+                </div>
+
+            </div>
+            <!-- /os-main-card -->
+
+
+            <!-- ══════════════════════════════════
+                 YOU MAY ALSO LIKE
+            ══════════════════════════════════ -->
+            <section class="os-reco-section" id="osRecoSection" aria-label="Recommended products">
+
+                <div class="os-reco-header">
+                    <h2 class="os-reco-title">You May Also Like</h2>
+                    <div class="os-reco-nav">
+                        <button class="os-reco-nav-btn" id="recoPrev" aria-label="Previous">
+                            <i data-lucide="chevron-left" size="14"></i>
+                        </button>
+                        <button class="os-reco-nav-btn" id="recoNext" aria-label="Next">
+                            <i data-lucide="chevron-right" size="14"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="os-reco-grid" id="osRecoGrid">
+
+                    <!-- Card 1 -->
+                    <a href="/product/iphone-17" class="os-product-card" id="recoCard1">
+                        <div class="os-product-thumb">
+                            <img src="https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/iphone-16-finish-select-202409-6-9inch-desert?wid=5120&hei=2880&fmt=p-jpg&qlt=80&.v=1725352016524" alt="iPhone 17" loading="lazy">
+                        </div>
+                        <p class="os-product-name">iPhone 17</p>
+                        <p class="os-product-tag">New Standard</p>
+                        <p class="os-product-price">₹79,900</p>
+                    </a>
+
+                    <!-- Card 2 -->
+                    <a href="/product/apple-watch-ultra" class="os-product-card" id="recoCard2">
+                        <div class="os-product-thumb">
+                            <img src="https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/watch-ultra2-northernlights-202409?wid=1200&hei=630&fmt=jpeg&qlt=95&.v=1723673952760" alt="Apple Watch Ultra" loading="lazy">
+                        </div>
+                        <p class="os-product-name">Apple Watch Ultra</p>
+                        <p class="os-product-tag">Adventure Awaits</p>
+                        <p class="os-product-price">₹89,900</p>
+                    </a>
+
+                    <!-- Card 3 -->
+                    <a href="/product/airpods-max" class="os-product-card" id="recoCard3">
+                        <div class="os-product-thumb">
+                            <img src="https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/airpods-max-select-midnight-202409?wid=1200&hei=630&fmt=jpeg&qlt=95&.v=1725476893947" alt="AirPods Max" loading="lazy">
+                        </div>
+                        <p class="os-product-name">AirPods Max</p>
+                        <p class="os-product-tag">Pure Magic</p>
+                        <p class="os-product-price">₹59,900</p>
+                    </a>
+
+                    <!-- Card 4 -->
+                    <a href="/product/macbook-air-m5" class="os-product-card" id="recoCard4">
+                        <div class="os-product-thumb">
+                            <img src="https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/macbook-air-midnight-select-20220606?wid=1200&hei=630&fmt=jpeg&qlt=95&.v=1653084303665" alt="MacBook Air M5" loading="lazy">
+                        </div>
+                        <p class="os-product-name">MacBook Air M5</p>
+                        <p class="os-product-tag">Light. Speed.</p>
+                        <p class="os-product-price">₹1,14,900</p>
+                    </a>
+
+                </div>
+
+            </section>
+
+        </div>
+
+    </main>
+
+    <%- include('../partials/user/footer') %>
+
+    <script>
+        /* ── Init icons ── */
+        lucide.createIcons();
+
+        /* ── Entrance animations ── */
+        gsap.from('#osHero', { y: -20, opacity: 0, duration: 0.6, ease: 'power2.out', delay: 0.1 });
+        gsap.from('#osDetailsGrid', { y: 24, opacity: 0, duration: 0.55, ease: 'power2.out', delay: 0.25 });
+        gsap.from('#osSummaryCard', { y: 24, opacity: 0, duration: 0.55, ease: 'power2.out', delay: 0.38 });
+        gsap.from('#osActions', { y: 20, opacity: 0, duration: 0.5, ease: 'power2.out', delay: 0.50 });
+        gsap.from('#osDeliveryBanner', { y: 16, opacity: 0, duration: 0.45, ease: 'power2.out', delay: 0.60 });
+        gsap.from('#osRecoSection', { y: 30, opacity: 0, duration: 0.6, ease: 'power2.out', delay: 0.70 });
+        gsap.from('.os-product-card', { y: 20, opacity: 0, duration: 0.45, stagger: 0.1, ease: 'power2.out', delay: 0.80 });
+
+        /* ── Reco carousel nav (scroll grid) ── */
+        const grid = document.getElementById('osRecoGrid');
+        document.getElementById('recoPrev').addEventListener('click', () => {
+            grid.scrollBy({ left: -220, behavior: 'smooth' });
+        });
+        document.getElementById('recoNext').addEventListener('click', () => {
+            grid.scrollBy({ left: 220, behavior: 'smooth' });
+        });
+    </script>
+
+</body>
+</html>

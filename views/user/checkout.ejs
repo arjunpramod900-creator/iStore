@@ -661,22 +661,68 @@ document
             addressId
         )
 
-        /* TEMP SUCCESS */
+        fetch("/checkout/place-order", {
+
+    method: "POST",
+
+    headers: {
+        "Content-Type":
+        "application/json"
+    },
+
+    body: JSON.stringify({
+
+        addressId
+
+    })
+
+})
+
+.then(res => res.json())
+
+.then(data => {
+
+    if (!data.success) {
 
         Swal.fire({
 
-            icon: "success",
+            icon: "error",
 
-            title:
-            "Address Selected",
+            title: "Order Failed",
 
-            text:
-            "Ready for order placement.",
+            text: data.message,
 
             confirmButtonColor:
             "#4C0080"
 
         })
+
+        return
+
+    }
+
+    window.location.href =
+    data.redirectUrl
+
+})
+
+.catch(error => {
+
+    Swal.fire({
+
+        icon: "error",
+
+        title: "Something Went Wrong",
+
+        text:
+        "Please try again later.",
+
+        confirmButtonColor:
+        "#4C0080"
+
+    })
+
+})
 
     }
 

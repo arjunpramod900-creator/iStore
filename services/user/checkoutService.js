@@ -2,6 +2,13 @@ import Cart from "../../models/Cart.js";
 
 import Address from "../../models/Address.js";
 
+import Order from "../../models/Order.js";
+
+
+/* =========================================
+   LOAD CHECKOUT SERVICE
+========================================= */
+
 export const loadCheckoutService = async (userId) => {
   /* LOAD CART */
 
@@ -102,5 +109,210 @@ await Address.find({
     deliveryCharge,
 
     finalAmount,
+  };
+};
+
+
+/* =========================================
+   PLACE ORDER COD SERVICE
+========================================= */
+
+export const placeOrderCODService =
+async (
+  userId,
+  addressId,
+) => {
+  /* LOAD CART */
+
+  const cart = await Cart.findOne({
+    userId,
+  })
+    .populate("items.productId")
+    .populate("items.variantId");
+
+  if (
+    !cart ||
+    cart.items.length === 0
+  ) {
+    return {
+      success: false,
+      message: "Cart is empty",
+    };
+  }
+
+  /* ADDRESS */
+
+  const address =
+    await Address.findOne({
+      _id: addressId,
+      userId,
+    });
+
+  if (!address) {
+    return {
+      success: false,
+      message: "Address not found",
+    };
+  }
+
+  /* VALID ITEMS */
+
+  const validItems =
+  cart.items.filter(item => {
+
+    return (
+
+      item.productId &&
+
+      item.variantId &&
+
+      item.productId.isActive &&
+
+      !item.productId.isDeleted &&
+
+      item.variantId.isActive &&
+
+      !item.variantId.isDeleted &&
+
+      item.variantId.stock >= item.quantity
+
+    )
+
+});
+
+  if (validItems.length === 0) {
+    return {
+      success: false,
+      message:
+        "No valid items in cart",
+    };
+  }
+
+  /* TOTALS */
+
+  let subtotal = 0;
+
+  validItems.forEach(item => {
+    subtotal +=
+      item.price * item.quantity;
+  });
+
+  const deliveryCharge =
+    subtotal >= 5000 ? 0 : 99;
+
+  const taxAmount =
+    Math.floor(subtotal * 0.02);
+
+  const finalAmount =
+    subtotal +
+    deliveryCharge +
+    taxAmount;
+
+  /* ORDER ITEMS */
+
+  const orderItems =
+    validItems.map(item => ({
+      productId:
+        item.productId._id,
+
+      variantId:
+        item.variantId._id,
+
+      productName:
+        item.productId.name,
+
+      productImage:
+        item.variantId.images?.[0] ||
+        item.productId.thumbnail,
+
+      variantName:
+        [
+          item.variantId.color,
+          item.variantId.storage,
+        ]
+          .filter(Boolean)
+          .join(" • "),
+
+      quantity:
+        item.quantity,
+
+      price:
+        item.price,
+    }));
+
+  /* GENERATE ORDER ID */
+
+  const orderId =
+    "IST" +
+    Date.now();
+
+  /* CREATE ORDER */
+
+  const order =
+    await Order.create({
+      userId,
+
+      orderId,
+
+      items: orderItems,
+
+      shippingAddress: {
+        fullName:
+          address.fullName,
+
+        phoneNumber:
+          address.phoneNumber,
+
+        addressLine1:
+          address.addressLine1,
+
+        city:
+          address.city,
+
+        state:
+          address.state,
+
+        country:
+          address.country,
+
+        pincode:
+          address.pincode,
+      },
+
+      paymentMethod: "COD",
+
+      subtotal,
+
+      taxAmount,
+
+      deliveryCharge,
+
+      finalAmount,
+
+      estimatedDelivery:
+        new Date(
+          Date.now() +
+          5 * 24 * 60 * 60 * 1000,
+        ),
+    });
+
+  /* UPDATE STOCK */
+
+  for (const item of validItems) {
+    item.variantId.stock -=
+      item.quantity;
+
+    await item.variantId.save();
+  }
+
+  /* CLEAR CART */
+
+  cart.items = [];
+
+  await cart.save();
+
+  return {
+    success: true,
+    order,
   };
 };
