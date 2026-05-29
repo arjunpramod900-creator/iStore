@@ -1,0 +1,697 @@
+<!-- Inventory Management -->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+name="viewport"
+content="width=device-width, initial-scale=1.0"
+>
+
+<title>
+Inventory Management - Admin | iStore
+</title>
+
+<link rel="stylesheet" href="/css/components/admin-sidebar.css">
+
+<link
+rel="stylesheet"
+href="/css/admin-dashboard.css"
+>
+
+<link
+rel="stylesheet"
+href="/css/admin-products.css"
+>
+
+<link
+rel="stylesheet"
+href="/css/admin-inventory.css"
+>
+
+<link
+href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+rel="stylesheet"
+>
+
+<link
+rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+/>
+
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+</head>
+
+<body>
+
+ <!-- Sidebar Navbar -->
+   <%- include('../partials/admin/sidebar') %>
+
+<main class="dashboard-main">
+
+<!-- PAGE HEADER -->
+
+<header class="page-header">
+
+<div class="header-left">
+
+<nav class="breadcrumb">
+
+<a href="/admin/dashboard">
+DASHBOARD
+</a>
+
+<i data-lucide="chevron-right"></i>
+
+<span class="current">
+INVENTORY
+</span>
+
+</nav>
+
+<h1 class="page-title">
+Inventory Management
+</h1>
+
+<p class="page-subtitle">
+Manage inventory and stock levels.
+</p>
+
+</div>
+
+</header>
+
+<!-- STATS -->
+
+<section class="stats-grid">
+    <div class="stat-card">
+
+<span class="stat-label">
+TOTAL UNITS
+</span>
+
+<span class="stat-value">
+
+<%= stats.totalUnits.toLocaleString() %>
+
+</span>
+
+</div>
+
+<div class="stat-card">
+
+<span class="stat-label">
+INVENTORY VALUE
+</span>
+
+<span class="stat-value">
+
+₹<%= stats.inventoryValue.toLocaleString() %>
+
+</span>
+
+</div>
+
+<div class="stat-card">
+
+<span class="stat-label">
+LOW STOCK
+</span>
+
+<span class="stat-value">
+
+<%= stats.lowStockCount %>
+
+</span>
+
+</div>
+
+<div class="stat-card">
+
+<span class="stat-label">
+OUT OF STOCK
+</span>
+
+<span class="stat-value">
+
+<%= stats.outOfStockCount %>
+
+</span>
+
+</div>
+</section>
+
+<!-- STOCK ALERT -->
+
+
+
+<section class="table-card">
+
+<div class="table-header-row">
+
+<h2 class="table-title">
+
+Inventory Alerts
+
+</h2>
+
+</div>
+
+<div style="padding:24px;">
+
+<% if(lowStockVariants && lowStockVariants.length > 0){ %>
+
+    <% lowStockVariants.forEach(item => { %>
+
+        <div class="inventory-alert-item">
+
+    <div class="inventory-alert-left">
+
+        <i
+            data-lucide="alert-triangle"
+            class="inventory-alert-icon"
+        ></i>
+
+        <div>
+
+            <div class="inventory-alert-title">
+
+                <%= item.productId.name %>
+
+            </div>
+
+            <div class="inventory-alert-subtitle">
+
+                SKU:
+                <%= item.SKU %>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <span class="inventory-alert-badge">
+
+        <%= item.stock %> left
+
+    </span>
+
+</div>
+
+    <% }) %>
+
+<% } else { %>
+
+    <div class="empty-table">
+
+        No stock alerts
+
+    </div>
+
+<% } %>
+
+</div>
+
+</section>
+
+<!-- ACTION BAR -->
+
+<form
+method="GET"
+action="/admin/inventory"
+>
+
+<section class="action-bar">
+
+<div class="filters-left">
+
+<!-- SEARCH -->
+
+<div class="search-wrapper">
+
+<i
+data-lucide="search"
+size="16"
+class="search-icon-inline"
+>
+</i>
+
+<input
+type="text"
+name="search"
+class="search-input-field"
+placeholder="Search SKU..."
+value="<%= search %>"
+>
+
+</div>
+
+
+
+<!-- STATUS -->
+
+<select
+name="stockStatus"
+class="filter-select"
+>
+
+<option
+value=""
+<%= !stockStatus ? "selected" : "" %>
+>
+All Stock
+</option>
+
+<option
+value="healthy"
+<%= stockStatus === "healthy" ? "selected" : "" %>
+>
+Healthy
+</option>
+
+<option
+value="low"
+<%= stockStatus === "low" ? "selected" : "" %>
+>
+Low Stock
+</option>
+
+<option
+value="critical"
+<%= stockStatus === "critical" ? "selected" : "" %>
+>
+Critical
+</option>
+
+<option
+value="out"
+<%= stockStatus === "out" ? "selected" : "" %>
+>
+Out Of Stock
+</option>
+
+</select>
+
+
+<select
+name="sort"
+class="filter-select"
+>
+
+<option
+value="newest"
+<%= sort === "newest" ? "selected" : "" %>
+>
+Newest
+</option>
+
+<option
+value="oldest"
+<%= sort === "oldest" ? "selected" : "" %>
+>
+Oldest
+</option>
+
+<option
+value="stockHigh"
+<%= sort === "stockHigh" ? "selected" : "" %>
+>
+Stock High → Low
+</option>
+
+<option
+value="stockLow"
+<%= sort === "stockLow" ? "selected" : "" %>
+>
+Stock Low → High
+</option>
+
+</select>
+
+<button
+type="submit"
+class="btn-add"
+>
+
+<i data-lucide="filter">
+</i>
+
+Apply
+
+</button>
+
+</div>
+
+
+</section>
+
+</form>
+
+<!-- TABLE -->
+
+<div class="table-card">
+
+<div class="table-header-row">
+
+<h2 class="table-title">
+Inventory
+</h2>
+
+<a
+href="#"
+class="btn-export"
+>
+
+Export CSV
+
+</a>
+
+</div>
+
+<div class="table-wrapper">
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>
+PRODUCT
+</th>
+
+<th>
+SKU
+</th>
+
+<th>
+VARIANT
+</th>
+
+<th>
+PRICE
+</th>
+
+<th>
+STOCK
+</th>
+
+<th>
+VALUE
+</th>
+
+<th>
+STATUS
+</th>
+
+<th>
+ACTIONS
+</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+<% if(variants.length > 0){ %>
+
+    <% variants.forEach(variant => { %>
+
+<tr>
+
+<!-- PRODUCT -->
+
+<td>
+
+<div class="product-info-cell">
+
+<img
+src="<%= variant.images?.[0] || variant.productId.thumbnail %>"
+class="product-thumb"
+>
+
+<div>
+
+<div class="product-name">
+
+<%= variant.productId.name %>
+
+</div>
+
+</div>
+
+</div>
+
+</td>
+
+<!-- SKU -->
+
+<td>
+
+<%= variant.SKU %>
+
+</td>
+
+<!-- VARIANTS -->
+
+<td>
+
+<%= [
+variant.color,
+variant.storage,
+variant.RAM
+]
+.filter(Boolean)
+.join(" • ") %>
+
+</td>
+
+<!-- PRICE -->
+
+<td>
+
+₹<%= variant.price.toLocaleString() %>
+
+</td>
+
+<!-- STOCK -->
+
+<td>
+
+<%= variant.stock %>
+
+</td>
+
+<!-- INVENTORY VALUE -->
+<td>
+
+₹<%= variant.inventoryValue.toLocaleString() %>
+
+</td>
+
+<!-- STATUS -->
+<td>
+<% if(variant.stock === 0){ %>
+
+<span class="status-badge danger">
+
+Out Of Stock
+
+</span>
+
+<% } %>
+
+<% if(
+variant.stock > 0 &&
+variant.stock <= 5
+){ %>
+
+<span class="status-badge danger">
+
+Critical
+
+</span>
+
+<% } %>
+
+<% if(
+variant.stock > 5 &&
+variant.stock <= 10
+){ %>
+
+<span class="status-badge warning">
+
+Low Stock
+
+</span>
+
+<% } %>
+
+<% if(
+variant.stock > 10
+){ %>
+
+<span class="status-badge success">
+
+Healthy
+
+</span>
+
+<% } %>
+
+
+
+</td>
+
+
+<td>
+
+<button
+class="btn-icon-action adjust-stock-btn"
+data-id="<%= variant._id %>"
+data-stock="<%= variant.stock %>"
+>
+
+<i data-lucide="package-plus"></i>
+
+</button>
+
+</td>
+</tr>
+
+<% }) %>
+    
+
+<% } else { %>
+
+<tr>
+
+<td colspan="8" class="empty-table">
+
+No inventory found
+
+</td>
+
+</tr>
+
+<% } %>
+
+</tbody>
+
+
+</table>
+
+</div>
+
+<!-- PAGINATION -->
+
+<div class="pagination-container">
+
+<span class="pagination-info">
+
+Showing
+
+<%= ((currentPage - 1) * limit) + 1 %>
+
+to
+
+<%= Math.min(currentPage * limit, totalVariants) %>
+
+of
+
+<%= totalVariants %>
+
+entries
+
+</span>
+
+<div class="pagination-controls">
+
+<!-- PREVIOUS -->
+
+<% if(currentPage > 1) { %>
+
+<a
+href="?page=<%= currentPage - 1 %>&search=<%= search %>&stockStatus=<%= stockStatus %>&sort=<%= sort %>"
+class="page-nav"
+>
+
+<i data-lucide="chevron-left">
+</i>
+
+</a>
+
+<% } %>
+
+<!-- PAGE NUMBERS -->
+
+<% for(let i = 1; i <= totalPages; i++) { %>
+
+<a
+href="?page=<%= i %>&search=<%= search %>&stockStatus=<%= stockStatus %>&sort=<%= sort %>"
+class="page-num
+<%= currentPage === i
+? 'active'
+: '' %>"
+>
+
+<%= i %>
+
+</a>
+
+<% } %>
+
+<!-- NEXT -->
+
+<% if(currentPage < totalPages) { %>
+
+<a
+href="?page=<%= currentPage + 1 %>&search=<%= search %>&stockStatus=<%= stockStatus %>&sort=<%= sort %>"
+class="page-nav"
+>
+
+<i data-lucide="chevron-right">
+</i>
+
+</a>
+
+<% } %>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- FOOTER -->
+
+<footer class="page-footer">
+
+<span class="footer-text">
+© 2026 iStore Admin
+</span>
+
+</footer>
+
+</main>
+
+
+<script>
+
+lucide.createIcons()
+
+
+</script>
+
+</body>
+
+</html>

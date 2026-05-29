@@ -45,6 +45,10 @@ import {
   updateOrderStatus,
 } from "../../controllers/admin/adminOrderController.js";
 
+import {
+  loadInventory,
+} from "../../controllers/admin/adminInventoryController.js";
+
 const router = express.Router();
 
 /* ============================
@@ -397,6 +401,18 @@ router.patch(
   "/orders/:id/status",
   adminAuthMiddleware,
   updateOrderStatus
+);
+
+/* ============================
+   INVENTORY MANAGEMENT
+============================ */
+
+router.get(
+  "/inventory",
+
+  adminAuthMiddleware,
+
+  loadInventory
 );
 
 export default router;
