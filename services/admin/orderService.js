@@ -273,6 +273,46 @@ if (order.orderStatus === status) {
     `Order already marked as ${status}`
   );
 }
+/* STATUS TRANSITIONS */
+const transitions = {
+
+  Pending: [
+    "Processing",
+    "Cancelled"
+  ],
+
+  Processing: [
+    "Shipped",
+    "Cancelled"
+  ],
+
+  Shipped: [
+    "Out for Delivery"
+  ],
+
+  "Out for Delivery": [
+    "Delivered"
+  ],
+
+  Delivered: [],
+
+  Cancelled: [],
+
+  Returned: []
+
+};
+
+const currentStatus =
+order.orderStatus;
+
+if (
+!transitions[currentStatus]
+.includes(status)
+){
+  throw new Error(
+    `Cannot move from ${currentStatus} to ${status}`
+  );
+}
 
   const previousStatus =
     order.orderStatus;
@@ -313,6 +353,18 @@ if (order.orderStatus === status) {
 
   order.orderStatus =
     status;
+    for (const item of order.items) {
+
+  if (
+    item.itemStatus !== "Cancelled" &&
+    item.itemStatus !== "Returned"
+  ) {
+
+    item.itemStatus = status;
+
+  }
+
+}
 
   if (
     status === "Delivered"

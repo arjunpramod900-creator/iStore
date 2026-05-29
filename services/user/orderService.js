@@ -211,20 +211,20 @@ async (
   }
 
   if (
-    [
-      "Delivered",
-      "Cancelled",
-      "Returned",
+    ![
+    "Pending",
+    "Processing",
     ].includes(
-      order.orderStatus,
+    order.orderStatus
     )
-  ) {
+    )
+    {
     return {
-      success: false,
-      message:
-        "Order cannot be cancelled",
+        success:false,
+        message:
+        "Order can no longer be cancelled",
     };
-  }
+    } 
 
   /* UPDATE STOCK */
 
@@ -279,6 +279,7 @@ async (
       userId,
       orderId,
     });
+    
 
   if (!order) {
     return {
@@ -292,6 +293,7 @@ async (
 
   const item =
     order.items.id(itemId);
+   
 
   if (!item) {
     return {
@@ -317,15 +319,20 @@ async (
   }
 
   if (
-    order.orderStatus ===
-    "Delivered"
-  ) {
-    return {
-      success: false,
-      message:
-        "Delivered items cannot be cancelled",
-    };
-  }
+![
+  "Pending",
+  "Processing",
+].includes(
+  order.orderStatus
+)
+)
+{
+  return {
+    success:false,
+    message:
+    "Item can no longer be cancelled",
+  };
+} 
 
   /* RESTORE STOCK */
 

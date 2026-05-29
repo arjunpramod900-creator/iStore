@@ -137,15 +137,8 @@
             0
 
             )
-            const updatedTotal =
-
-            Math.max(
-
-            total - refundAmount,
-
-            0
-
-            )
+           const updatedTotal =
+            order.finalAmount;
 
         const paymentMethod =
             order.paymentMethod || "COD";
@@ -229,12 +222,13 @@
 
                     <section class="od-timeline-card">
 
-                        <%
+                       <%
 
                         const steps = [
                             "Pending",
                             "Processing",
                             "Shipped",
+                            "Out for Delivery",
                             "Delivered"
                         ]
 

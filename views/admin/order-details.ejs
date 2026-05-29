@@ -467,8 +467,19 @@
                     <div class="aod-card" id="aodUpdateCard">
                         <div class="aod-update-card">
                             <h2 class="aod-update-title">Update Order Status</h2>
-
-                            <select id="orderStatusSelect" class="aod-status-select">
+                            <%
+                            const isLocked =
+                            [
+                            "Delivered",
+                            "Cancelled",
+                            "Returned"
+                            ]
+                            .includes(order.orderStatus);
+                            %>
+                            <select
+                            id="orderStatusSelect"
+                            class="aod-status-select"
+                            <%= isLocked ? "disabled" : "" %>>
 
                             <option value="Pending"
                             <%= orderStatus === "Pending" ? "selected" : "" %>>
@@ -507,7 +518,11 @@
 
                             </select>
 
-                            <button class="aod-update-btn" id="btnUpdateStatus" onclick="updateStatus()">
+                            <button
+                            class="aod-update-btn"
+                            id="btnUpdateStatus"
+                            onclick="updateStatus()"
+                            <%= isLocked ? "disabled" : "" %>>
                                 Update Status
                             </button>
                         </div>
@@ -565,6 +580,13 @@
         /* ── Update order status ── */
         function updateStatus() {
             const sel    = document.getElementById('orderStatusSelect');
+             /* LOCKED ORDER CHECK */
+
+            if (sel.disabled) {
+
+                return;
+
+            }
             const status = sel?.value;
             if (!status) return;
 
