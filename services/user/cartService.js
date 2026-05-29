@@ -36,22 +36,89 @@ export const loadCartService = async (userId) => {
       totalItems: 0,
     };
   }
+  /* CART STOCK SYNC */
+
+    let cartUpdated = false;
+
+    const stockMessages = [];
 
   /* REMOVE INVALID ITEMS */
 
-  cart.items = cart.items.filter((item) => {
-    return (
-      item.productId &&
-      item.variantId &&
-      item.productId.isActive &&
-      !item.productId.isDeleted &&
-      item.variantId.isActive &&
-      !item.variantId.isDeleted &&
-      item.variantId.stock > 0
+  /*  CLEAN + AUTO SYNC CART*/
+
+cart.items = cart.items.filter((item) => {
+
+  /* PRODUCT INVALID */
+
+  if (
+    !item.productId ||
+    !item.productId.isActive ||
+    item.productId.isDeleted
+  ) {
+
+    cartUpdated = true;
+
+    stockMessages.push(
+      "A product was removed from cart"
     );
-  });
+
+    return false;
+  }
+
+  /* VARIANT INVALID */
+
+  if (
+    !item.variantId ||
+    !item.variantId.isActive ||
+    item.variantId.isDeleted
+  ) {
+
+    cartUpdated = true;
+
+    stockMessages.push(
+      `${item.productId.name} variant removed`
+    );
+
+    return false;
+  }
+
+  /* OUT OF STOCK */
+
+  if (item.variantId.stock <= 0) {
+
+    cartUpdated = true;
+
+    stockMessages.push(
+      `${item.productId.name} is out of stock`
+    );
+
+    return false;
+  }
+
+  /* AUTO REDUCE QUANTITY */
+
+  if (
+    item.quantity >
+    item.variantId.stock
+  ) {
+
+    item.quantity =
+      item.variantId.stock;
+
+    cartUpdated = true;
+
+    stockMessages.push(
+      `${item.productId.name} quantity adjusted to available stock`
+    );
+  }
+
+  return true;
+
+});
 
   /* UPDATE CLEANED CART */
+
+if (cartUpdated) {
 
   await Cart.updateOne(
     { _id: cart._id },
@@ -62,6 +129,8 @@ export const loadCartService = async (userId) => {
       },
     },
   );
+
+}
 
   /* CALCULATE TOTALS */
 
@@ -79,7 +148,10 @@ export const loadCartService = async (userId) => {
 
   cart.totalItems = totalItems;
 
-  return cart;
+  cart.stockMessages =
+  stockMessages;
+
+return cart;
 };
 
 /* =========================================

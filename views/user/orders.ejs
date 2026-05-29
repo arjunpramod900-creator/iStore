@@ -25,6 +25,16 @@
         href="/css/components/footer.css"
     >
 
+   <link
+        rel="stylesheet"
+        href="/css/components/toast.css"
+        />
+
+    <link
+        rel="stylesheet"
+        href="/css/components/alert.css"
+    />
+
     <link
         rel="stylesheet"
         href="/css/orders.css"
@@ -101,31 +111,38 @@
 
             <!-- FILTER BAR -->
 
-            <div class="or-filter-bar">
+            <form
+                class="or-filter-bar"
+                method="GET"
+                action="/orders"
+            >
 
                 <!-- SEARCH -->
 
                 <div class="or-filter-group">
 
                     <label class="or-filter-label">
-                        Search by Order ID
+                        Search Orders
                     </label>
 
                     <div class="or-search-wrap">
 
                         <span class="or-search-icon">
+
                             <i
                                 data-lucide="search"
                                 size="18"
                             ></i>
+
                         </span>
 
                         <input
                             type="text"
-                            id="searchOrderId"
+                            name="search"
                             class="or-search-input"
-                            placeholder="e.g. ORD123456"
-                            autocomplete="off"
+                            placeholder="Search order ID or product"
+
+                            value="<%= filters?.search || '' %>"
                         >
 
                     </div>
@@ -137,11 +154,11 @@
                 <div class="or-filter-select-wrap">
 
                     <label class="or-filter-label">
-                        Order Status
+                        Status
                     </label>
 
                     <select
-                        id="statusFilter"
+                        name="status"
                         class="or-select"
                     >
 
@@ -149,51 +166,120 @@
                             All Statuses
                         </option>
 
-                        <option value="pending">
+                        <option
+                            value="Pending"
+                            <%= filters?.status === "Pending"
+                            ? "selected"
+                            : "" %>
+                        >
                             Pending
                         </option>
 
-                        <option value="processing">
+                        <option
+                            value="Processing"
+                            <%= filters?.status === "Processing"
+                            ? "selected"
+                            : "" %>
+                        >
                             Processing
                         </option>
 
-                        <option value="shipped">
+                        <option
+                            value="Shipped"
+                            <%= filters?.status === "Shipped"
+                            ? "selected"
+                            : "" %>
+                        >
                             Shipped
                         </option>
 
-                        <option value="out-for-delivery">
-                            Out for Delivery
-                        </option>
-
-                        <option value="delivered">
+                        <option
+                            value="Delivered"
+                            <%= filters?.status === "Delivered"
+                            ? "selected"
+                            : "" %>
+                        >
                             Delivered
                         </option>
 
-                        <option value="cancelled">
+                        <option
+                            value="Cancelled"
+                            <%= filters?.status === "Cancelled"
+                            ? "selected"
+                            : "" %>
+                        >
                             Cancelled
-                        </option>
-
-                        <option value="returned">
-                            Returned
                         </option>
 
                     </select>
 
                 </div>
 
-                <!-- FILTER BUTTON -->
+                <!-- SORT -->
+
+                <div class="or-filter-select-wrap">
+
+                    <label class="or-filter-label">
+                        Sort By
+                    </label>
+
+                    <select
+                        name="sort"
+                        class="or-select"
+                    >
+
+                        <option
+                            value="newest"
+                            <%= filters?.sort === "newest"
+                            ? "selected"
+                            : "" %>
+                        >
+                            Newest First
+                        </option>
+
+                        <option
+                            value="oldest"
+                            <%= filters?.sort === "oldest"
+                            ? "selected"
+                            : "" %>
+                        >
+                            Oldest First
+                        </option>
+
+                        <option
+                            value="amount_high"
+                            <%= filters?.sort === "amount_high"
+                            ? "selected"
+                            : "" %>
+                        >
+                            Amount High-Low
+                        </option>
+
+                        <option
+                            value="amount_low"
+                            <%= filters?.sort === "amount_low"
+                            ? "selected"
+                            : "" %>
+                        >
+                            Amount Low-High
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <!-- BUTTON -->
 
                 <button
                     class="or-filter-btn"
-                    id="applyFilterBtn"
-                    type="button"
+                    type="submit"
                 >
 
-                    Filter
+                    Apply
 
                 </button>
 
-            </div>
+            </form>
 
             <!-- EMPTY STATE -->
 
@@ -480,7 +566,101 @@
 
                     <% }) %>
 
-                </div>
+                                </div>
+
+                <!-- PAGINATION -->
+
+                <% if(
+                    pagination &&
+                    pagination.totalPages > 1
+                ){ %>
+
+                    <div class="or-pagination">
+
+                        <!-- PREV -->
+
+                        <% if(
+                            pagination.hasPrevPage
+                        ){ %>
+
+                            <a
+                                href="
+                                    /orders?page=<%= pagination.currentPage - 1 %>
+                                    <%= filters.search ? `&search=${filters.search}` : '' %>
+                                    <%= filters.status ? `&status=${filters.status}` : '' %>
+                                    <%= filters.sort ? `&sort=${filters.sort}` : '' %>
+                                    "
+                                class="or-page-btn"
+                            >
+
+                                ←
+
+                            </a>
+
+                        <% } %>
+
+                        <!-- PAGE NUMBERS -->
+
+                        <% for(
+                            let i = 1;
+                            i <= pagination.totalPages;
+                            i++
+                        ){ %>
+
+                            <a
+                                href="
+
+                                    /orders?page=<%= i %>
+
+                                    <%= filters.search ? `&search=${filters.search}` : '' %>
+
+                                    <%= filters.status ? `&status=${filters.status}` : '' %>
+
+                                    <%= filters.sort ? `&sort=${filters.sort}` : '' %>
+
+                                    "
+
+                                class="
+                                    or-page-btn
+
+                                    <%= i === pagination.currentPage
+                                    ? 'active'
+                                    : ''
+                                    %>
+                                "
+                            >
+
+                                <%= i %>
+
+                            </a>
+
+                        <% } %>
+
+                        <!-- NEXT -->
+
+                        <% if(
+                            pagination.hasNextPage
+                        ){ %>
+
+                            <a
+                                href="
+                                    /orders?page=<%= pagination.currentPage + 1 %>
+                                    <%= filters.search ? `&search=${filters.search}` : '' %>
+                                    <%= filters.status ? `&status=${filters.status}` : '' %>
+                                    <%= filters.sort ? `&sort=${filters.sort}` : '' %>
+                                    "
+                                class="or-page-btn"
+                            >
+
+                                →
+
+                            </a>
+
+                        <% } %>
+
+                    </div>
+
+                <% } %>
 
             <% } %>
 
@@ -495,6 +675,8 @@
     <!-- SWEETALERT -->
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="/js/toast.js"></script>
+    <script src="/js/alertConfig.js"></script>
 
     <script>
 
@@ -520,78 +702,117 @@
 
         )
 
-        const searchInput =
-            document.getElementById(
-                "searchOrderId"
-            )
 
-        const statusFilter =
-            document.getElementById(
-                "statusFilter"
-            )
+        const cancelButtons =
+            document.querySelectorAll(
+                ".cancel-order-btn"
+            );
 
-        const filterBtn =
-            document.getElementById(
-                "applyFilterBtn"
-            )
+            cancelButtons.forEach(button => {
 
-        function applyFilters() {
+                button.addEventListener(
+                    "click",
+                    async () => {
 
-            const search =
-                searchInput.value
-                .trim()
-                .toLowerCase()
+                        const orderId =
+                        button.dataset.id;
 
-            const status =
-                statusFilter.value
-                .trim()
-                .toLowerCase()
+                       const result =
+                        await showConfirmAlert({
 
-            const cards =
-                document.querySelectorAll(
-                    ".or-card"
-                )
+                            title:
+                            "Cancel this order?",
 
-            cards.forEach(card => {
+                            text:
+                            "This action cannot be undone.",
 
-                const orderId =
-                    (
-                        card.dataset.orderId || ""
-                    )
-                    .trim()
-                    .toLowerCase()
+                            confirmText:
+                            "Yes, Cancel",
 
-                const orderStatus =
-                    (
-                        card.dataset.status || ""
-                    )
-                    .trim()
-                    .toLowerCase()
+                            cancelText:
+                            "Keep Order",
 
-                const matchSearch =
-                    !search ||
-                    orderId.includes(search)
+                            icon: "warning",
 
-                const matchStatus =
-                    !status ||
-                    orderStatus === status
+                        });
 
-                card.style.display =
-                    (
-                        matchSearch &&
-                        matchStatus
-                    )
-                    ? "block"
-                    : "none"
+                        if (!result.isConfirmed) {
+                            return;
+                        }
 
-            })
+                        try {
 
-        }
+                            button.disabled = true;
 
-        filterBtn.addEventListener(
-            "click",
-            applyFilters
-        )
+                            button.innerText =
+                                "Cancelling...";
+
+                            const response =
+                            await fetch(
+                                `/orders/${orderId}/cancel`,
+                                {
+
+                                    method: "POST",
+
+                                    headers: {
+                                        "Content-Type":
+                                            "application/json",
+                                    },
+
+                                    body: JSON.stringify({
+                                        reason:
+                                            "Cancelled by user",
+                                    }),
+
+                                }
+                            );
+
+                            const data =
+                            await response.json();
+
+                            if (data.success) {
+
+                                showToast(
+                                    "success",
+                                    data.message
+                                );
+
+                                setTimeout(() => {
+                                    window.location.reload();
+                                }, 1200);
+
+                            } else {
+
+                                showToast(
+                                    "error",
+                                    data.message
+                                );
+
+                                button.disabled = false;
+
+                                button.innerText =
+                                    "Cancel Order";
+                            }
+
+                        } catch (error) {
+
+                            console.log(error);
+
+                            showToast(
+                                "error",
+                                "Something went wrong"
+                            );
+
+                            button.disabled = false;
+
+                            button.innerText =
+                                "Cancel Order";
+                        }
+
+                    }
+                );
+
+            });
 
     </script>
 

@@ -39,6 +39,12 @@ import {
   permanentDeleteVariant,
 } from "../../controllers/admin/adminProductController.js";
 
+import {
+  loadOrders,
+  viewOrderDetails,
+  updateOrderStatus,
+} from "../../controllers/admin/adminOrderController.js";
+
 const router = express.Router();
 
 /* ============================
@@ -368,6 +374,29 @@ router.get(
   adminAuthMiddleware,
 
   loadProductDetails,
+);
+
+
+/* ============================
+   ORDER MANAGEMENT
+============================ */
+
+router.get(
+  "/orders",
+  adminAuthMiddleware,
+  loadOrders
+);
+
+router.get(
+  "/orders/:id",
+  adminAuthMiddleware,
+  viewOrderDetails
+);
+
+router.patch(
+  "/orders/:id/status",
+  adminAuthMiddleware,
+  updateOrderStatus
 );
 
 export default router;

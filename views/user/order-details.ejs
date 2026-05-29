@@ -31,6 +31,16 @@
 
     <link
         rel="stylesheet"
+        href="/css/components/toast.css"
+    />
+
+    <link
+        rel="stylesheet"
+        href="/css/components/alert.css"
+    />
+
+    <link
+        rel="stylesheet"
         href="/css/order-details.css"
     >
 
@@ -40,6 +50,8 @@
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
         rel="stylesheet"
     >
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
 
     <!-- Icons -->
 
@@ -947,558 +959,405 @@
         "../partials/user/footer"
     ) %>
 
-    <script>
+    
+<script src="/js/toast.js"></script>
 
-        lucide.createIcons()
+<script src="/js/alertConfig.js"></script>
 
-        /* ANIMATION */
+   <script>
 
-        gsap.from(
-
-            "#odHeaderCard",
-
-            {
-                y: -16,
-                opacity: 0,
-                duration: 0.5,
-                ease: "power2.out",
-                delay: 0.05,
-            }
-
-        )
-
-        gsap.from(
-
-            "#odItemsCard",
-
-            {
-                y: 24,
-                opacity: 0,
-                duration: 0.5,
-                ease: "power2.out",
-                delay: 0.15,
-            }
-
-        )
-
-        gsap.from(
-
-            "#odAddressCard",
-
-            {
-                y: 24,
-                opacity: 0,
-                duration: 0.5,
-                ease: "power2.out",
-                delay: 0.25,
-            }
-
-        )
-
-        gsap.from(
-
-            "#odRight > *",
-
-            {
-                y: 20,
-                opacity: 0,
-                duration: 0.45,
-                stagger: 0.10,
-                ease: "power2.out",
-                delay: 0.20,
-            }
-
-        )
-
-        /* CANCEL ORDER */
-
-       document
-.getElementById(
-    "btnCancelOrder"
-)
-?.addEventListener(
-
-    "click",
-
-    async function () {
-
-        const id =
-        this.dataset.id
-
-        /* =========================
-           ASK OPTIONAL REASON
-        ========================= */
-
-        const { value: reason } =
-        await Swal.fire({
-
-            title:
-            "Cancel this order?",
-
-            html: `
-
-                <textarea
-
-                    id="cancelReason"
-
-                    class="swal2-textarea"
-
-                    placeholder="
-                    Optional cancellation reason
-                    "
-
-                ></textarea>
-
-            `,
-
-            icon:
-            "warning",
-
-            showCancelButton:
-            true,
-
-            confirmButtonColor:
-            "#BA1A1A",
-
-            cancelButtonColor:
-            "#603763",
-
-            confirmButtonText:
-            "Confirm Cancellation",
-
-            focusConfirm: false,
-
-            preConfirm: () => {
-
-                return document
-                .getElementById(
-                    "cancelReason"
-                )
-                .value
-                .trim()
-
-            }
-
-        })
-
-        /* USER CLOSED MODAL */
-
-        if(reason === undefined)
-        return
-
-        try {
-
-            const response =
-            await fetch(
-
-                `/orders/${id}/cancel`,
-
-                {
-
-                    method: "POST",
-
-                    headers: {
-
-                        "Content-Type":
-                        "application/json",
-
-                    },
-
-                    body: JSON.stringify({
-
-                        reason:
-                        reason || null,
-
-                    }),
-
-                }
-
-            )
-
-            const data =
-            await response.json()
-
-            if(data.success){
-
-                await Swal.fire({
-
-                    icon:
-                    "success",
-
-                    title:
-                    "Order Cancelled",
-
-                    text:
-                    data.message,
-
-                    confirmButtonColor:
-                    "#603763",
-
-                })
-
-                window.location.reload()
-
-            }
-
-            else{
-
-                Swal.fire({
-
-                    icon:
-                    "error",
-
-                    title:
-                    "Cancellation Failed",
-
-                    text:
-                    data.message,
-
-                    confirmButtonColor:
-                    "#603763",
-
-                })
-
-            }
-
-        }
-
-        catch(error){
-
-            Swal.fire({
-
-                icon:
-                "error",
-
-                title:
-                "Error",
-
-                text:
-                "Something went wrong",
-
-                confirmButtonColor:
-                "#603763",
-
-            })
-
-        }
-
-    }
-
-)
-
-
-        /* =========================================
-        CANCEL INDIVIDUAL ITEM
-        ========================================= */
-
-        document
-        .querySelectorAll(
-            ".od-item-cancel-btn"
-        )
-
-        .forEach(btn => {
-
-            btn.addEventListener(
-
-                "click",
-
-                async function () {
-
-                    const orderId =
-                        this.dataset.orderId
-
-                    const itemId =
-                        this.dataset.itemId
-
-                    const result =
-                        await Swal.fire({
-
-                            title:
-                                "Cancel this item?",
-
-                            text:
-                                "This product will be cancelled from your order.",
-
-                            icon:
-                                "warning",
-
-                            showCancelButton:
-                                true,
-
-                            confirmButtonColor:
-                                "#BA1A1A",
-
-                            cancelButtonColor:
-                                "#4C0080",
-
-                            confirmButtonText:
-                                "Yes, Cancel Item",
-
-                        })
-
-                    if(!result.isConfirmed)
-                        return
-
-                    try {
-
-                        const response =
-                            await fetch(
-
-                                `/orders/${orderId}/item/${itemId}/cancel`,
-
-                                {
-                                    method:"POST",
-
-                                    headers:{
-                                        "Content-Type":
-                                        "application/json"
-                                    },
-
-                                    body:JSON.stringify({
-                                        reason:
-                                        "Cancelled by user"
-                                    })
-                                }
-
-                            )
-
-                        const data =
-                            await response.json()
-
-                        if(data.success){
-
-                            await Swal.fire({
-
-                                icon:"success",
-
-                                title:"Item Cancelled",
-
-                                text:data.message,
-
-                                confirmButtonColor:
-                                "#4C0080",
-
-                            })
-
-                            window.location.reload()
-
-                        } else {
-
-                            Swal.fire({
-
-                                icon:"error",
-
-                                title:"Failed",
-
-                                text:data.message,
-
-                                confirmButtonColor:
-                                "#4C0080",
-
-                            })
-
-                        }
-
-                    } catch(error){
-
-                        Swal.fire({
-
-                            icon:"error",
-
-                            title:"Error",
-
-                            text:
-                                "Something went wrong",
-
-                            confirmButtonColor:
-                            "#4C0080",
-
-                        })
-
-                    }
-
-                }
-
-            )
-
-        })
-
+lucide.createIcons()
 
 /* =========================================
-        RETURN ORDER    
-        ========================================= */
+   GSAP ANIMATIONS
+========================================= */
 
+gsap.from(
 
-        document
-.getElementById("btnReturnOrder")
-?.addEventListener(
-  "click",
-  async () => {
+"#odHeaderCard",
 
-    const { value: formValues } =
-    await Swal.fire({
+{
+y: -16,
+opacity: 0,
+duration: 0.5,
+ease: "power2.out",
+delay: 0.05,
+}
 
-      title: "Return Order",
-
-      html: `
-        <select id="returnReason"
-        class="swal2-select">
-
-          <option value="">
-          Select reason
-          </option>
-
-          <option>
-          Wrong product delivered
-          </option>
-
-          <option>
-          Damaged product
-          </option>
-
-          <option>
-          Product not as expected
-          </option>
-
-          <option>
-          Quality issue
-          </option>
-
-          <option>
-          Other
-          </option>
-
-        </select>
-
-        <textarea
-        id="returnNote"
-        class="swal2-textarea"
-        placeholder="Additional notes"
-        ></textarea>
-      `,
-
-      focusConfirm: false,
-
-      showCancelButton: true,
-
-      confirmButtonText:
-      "Submit Return",
-
-      confirmButtonColor:
-      "#603763",
-
-      preConfirm: () => {
-
-        const reason =
-        document.getElementById(
-          "returnReason"
-        ).value
-
-        const note =
-        document.getElementById(
-          "returnNote"
-        ).value
-
-        if(!reason){
-
-          Swal.showValidationMessage(
-            "Return reason required"
-          )
-
-          return false
-        }
-
-        return {
-          reason:
-          `${reason} ${note}`
-        }
-
-      }
-
-    })
-
-    if(!formValues) return
-
-    try{
-
-      const response =
-      await fetch(
-
-        `/orders/<%= orderId %>/return`,
-
-        {
-          method:"POST",
-
-          headers:{
-            "Content-Type":
-            "application/json"
-          },
-
-          body:JSON.stringify({
-            reason:
-            formValues.reason
-          })
-
-        }
-
-      )
-
-      const data =
-      await response.json()
-
-      if(data.success){
-
-        await Swal.fire({
-
-          icon:"success",
-
-          title:"Return Requested",
-
-          text:data.message,
-
-          confirmButtonColor:
-          "#603763"
-
-        })
-
-        location.reload()
-
-      }
-
-      else{
-
-        Swal.fire({
-
-          icon:"error",
-
-          title:"Failed",
-
-          text:data.message
-
-        })
-
-      }
-
-    }
-
-    catch(error){
-
-      Swal.fire({
-
-        icon:"error",
-
-        title:"Error",
-
-        text:"Something went wrong"
-
-      })
-
-    }
-
-  }
 )
 
-    </script>
+gsap.from(
+
+"#odItemsCard",
+
+{
+y: 24,
+opacity: 0,
+duration: 0.5,
+ease: "power2.out",
+delay: 0.15,
+}
+
+)
+
+gsap.from(
+
+"#odAddressCard",
+
+{
+y: 24,
+opacity: 0,
+duration: 0.5,
+ease: "power2.out",
+delay: 0.25,
+}
+
+)
+
+gsap.from(
+
+"#odRight > *",
+
+{
+y: 20,
+opacity: 0,
+duration: 0.45,
+stagger: 0.10,
+ease: "power2.out",
+delay: 0.20,
+}
+
+)
+
+/* =========================================
+   CANCEL FULL ORDER
+========================================= */
+
+document
+.getElementById(
+"btnCancelOrder"
+)
+?.addEventListener(
+
+"click",
+
+async function () {
+
+const id =
+this.dataset.id
+
+const { value: reason } =
+await showCancelReasonAlert({
+
+title:
+"Cancel this order?",
+
+confirmText:
+"Confirm Cancellation",
+
+placeholder:
+"Optional cancellation reason",
+
+})
+
+if(reason === undefined)
+return
+
+try {
+
+showLoadingAlert()
+
+const response =
+await fetch(
+
+`/orders/${id}/cancel`,
+
+{
+
+method: "POST",
+
+headers: {
+
+"Content-Type":
+"application/json",
+
+},
+
+body: JSON.stringify({
+
+reason:
+reason || null,
+
+}),
+
+}
+
+)
+
+const data =
+await response.json()
+
+Swal.close()
+
+if(data.success){
+
+showToast(
+"success",
+data.message
+)
+
+setTimeout(() => {
+
+location.reload()
+
+}, 900)
+
+}
+
+else{
+
+showToast(
+"error",
+data.message
+)
+
+}
+
+}
+
+catch(error){
+
+Swal.close()
+
+showToast(
+"error",
+"Something went wrong"
+)
+
+}
+
+}
+
+)
+
+/* =========================================
+   CANCEL INDIVIDUAL ITEM
+========================================= */
+
+document
+.querySelectorAll(
+".od-item-cancel-btn"
+)
+
+.forEach(btn => {
+
+btn.addEventListener(
+
+"click",
+
+async function () {
+
+const orderId =
+this.dataset.orderId
+
+const itemId =
+this.dataset.itemId
+
+const result =
+await showConfirmAlert({
+
+title:
+"Cancel this item?",
+
+text:
+"This product will be cancelled from your order.",
+
+confirmText:
+"Yes, Cancel Item",
+
+cancelText:
+"Keep Item",
+
+icon:
+"warning",
+
+})
+
+if(!result.isConfirmed)
+return
+
+try {
+
+showLoadingAlert()
+
+const response =
+await fetch(
+
+`/orders/${orderId}/item/${itemId}/cancel`,
+
+{
+
+method:"POST",
+
+headers:{
+"Content-Type":
+"application/json"
+},
+
+body:JSON.stringify({
+
+reason:
+"Cancelled by user"
+
+})
+
+}
+
+)
+
+const data =
+await response.json()
+
+Swal.close()
+
+if(data.success){
+
+showToast(
+"success",
+data.message
+)
+
+setTimeout(() => {
+
+location.reload()
+
+}, 900)
+
+}
+
+else{
+
+showToast(
+"error",
+data.message
+)
+
+}
+
+}
+
+catch(error){
+
+showToast(
+"error",
+"Something went wrong"
+)
+
+}
+
+}
+
+)
+
+})
+
+/* =========================================
+   RETURN ORDER
+========================================= */
+
+document
+.getElementById(
+"btnReturnOrder"
+)
+?.addEventListener(
+
+"click",
+
+async () => {
+
+const { value: formValues } =
+await showReturnReasonAlert()
+
+if(!formValues)
+return
+
+try {
+
+showLoadingAlert()
+
+const response =
+await fetch(
+
+`/orders/<%= orderId %>/return`,
+
+{
+
+method:"POST",
+
+headers:{
+"Content-Type":
+"application/json"
+},
+
+body:JSON.stringify({
+
+reason:
+formValues.reason
+
+})
+
+}
+
+)
+
+const data =
+await response.json()
+
+Swal.close()
+
+if(data.success){
+
+showToast(
+"success",
+data.message
+)
+
+setTimeout(() => {
+
+location.reload()
+
+}, 900)
+
+}
+
+else{
+
+showToast(
+"error",
+data.message
+)
+
+}
+
+}
+
+catch(error){
+
+Swal.close()
+
+showToast(
+"error",
+"Something went wrong"
+)
+
+}
+
+}
+
+)
+
+</script>
+
 
 </body>
 </html>

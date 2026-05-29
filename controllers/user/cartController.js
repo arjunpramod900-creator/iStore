@@ -26,6 +26,8 @@ export const loadCart = async (
         cart,
 
         page: "cart",
+
+        stockMessages: cart.stockMessages || [],
       },
     );
   } catch (error) {

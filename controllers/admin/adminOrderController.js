@@ -1,0 +1,107 @@
+import {
+  loadOrdersService,
+  getOrderDetailsService,
+  updateOrderStatusService,
+} from "../../services/admin/orderService.js";
+
+/* ============================
+   ORDER LIST
+============================ */
+
+export const loadOrders = async (req, res) => {
+  try {
+
+    const data =
+      await loadOrdersService(
+        req.query
+      );
+
+    res.render(
+      "admin/order-management",
+      {
+        page: "orders",
+        ...data,
+      }
+    );
+
+  } catch (error) {
+
+    console.log(
+      "Load Orders Error:",
+      error
+    );
+
+    res.redirect(
+      "/admin/dashboard"
+    );
+
+  }
+};
+
+/* ============================
+   ORDER DETAILS
+============================ */
+
+export const viewOrderDetails =
+async (req, res) => {
+
+  try {
+
+    const order =
+      await getOrderDetailsService(
+        req.params.id
+      );
+
+    res.render(
+      "admin/order-details",
+      {
+        page: "orders",
+        order,
+      }
+    );
+
+  } catch (error) {
+
+    console.log(error);
+
+    res.redirect(
+      "/admin/orders"
+    );
+
+  }
+
+};
+
+/* ============================
+   UPDATE STATUS
+============================ */
+
+export const updateOrderStatus =
+async (req, res) => {
+
+  try {
+
+    await updateOrderStatusService(
+
+      req.params.id,
+
+      req.body.status
+
+    );
+
+    res.json({
+      success: true,
+      message:
+        "Order updated successfully",
+    });
+
+  } catch (error) {
+
+    res.json({
+      success: false,
+      message: error.message,
+    });
+
+  }
+
+};

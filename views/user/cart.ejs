@@ -641,6 +641,23 @@
         )
 
     </script>
+    <script>
+
+    const stockMessages =
+    <%- JSON.stringify(
+        stockMessages || []
+    ) %>;
+
+    stockMessages.forEach(message => {
+
+        showToast({
+            type: "warning",
+            message,
+        });
+
+    });
+
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="/js/toast.js"></script>
     <script src="/js/cart.js"></script>

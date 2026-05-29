@@ -18,25 +18,63 @@ export const loadOrdersPage = async (
   req,
   res,
 ) => {
+
   try {
+
     const userId =
       req.session.userId;
 
+    const {
+      search = "",
+      status = "",
+      sort = "newest",
+      page = 1,
+    } = req.query;
+
     const response =
-      await loadOrdersService(
+      await loadOrdersService({
+
         userId,
-      );
+
+        search,
+
+        status,
+
+        sort,
+
+        page,
+
+      });
 
     res.render(
       "user/orders",
       {
+
         page: "orders",
 
         orders:
           response.orders,
-      },
+
+        pagination:
+          response.pagination,
+
+        filters: {
+
+          search,
+
+          status,
+
+          sort,
+
+        },
+
+      }
     );
-  } catch (error) {
+
+  }
+
+  catch (error) {
+
     console.log(
       "Load Orders Error:",
       error,
@@ -44,6 +82,7 @@ export const loadOrdersPage = async (
 
     return res.redirect("/");
   }
+
 };
 
 /* =========================================

@@ -6,26 +6,155 @@ import Variant from "../../models/Variant.js";
    LOAD ORDERS
 ========================================= */
 
-export const loadOrdersService =
-async (userId) => {
+export const loadOrdersService = async ({
+  userId,
+  search = "",
+  status = "",
+  sort = "newest",
+  page = 1,
+  limit = 5,
+}) => {
+
+  const query = {
+    userId,
+  };
+
+  /* 
+     SEARCH
+   */
+
+  if (search.trim()) {
+
+    query.$or = [
+
+      {
+        orderId: {
+          $regex: search.trim(),
+          $options: "i",
+        },
+      },
+
+      {
+        "items.productName": {
+          $regex: search.trim(),
+          $options: "i",
+        },
+      },
+
+    ];
+  }
+
+  /* 
+     STATUS FILTER
+   */
+
+  if (status.trim()) {
+
+    query.orderStatus = {
+      $regex: `^${status}$`,
+      $options: "i",
+    };
+  }
+
+  /* 
+     SORTING
+   */
+
+  let sortOption = {
+    createdAt: -1,
+  };
+
+  switch (sort) {
+
+    case "oldest":
+
+      sortOption = {
+        createdAt: 1,
+      };
+
+      break;
+
+    case "amount_high":
+
+      sortOption = {
+        finalAmount: -1,
+      };
+
+      break;
+
+    case "amount_low":
+
+      sortOption = {
+        finalAmount: 1,
+      };
+
+      break;
+
+    default:
+
+      sortOption = {
+        createdAt: -1,
+      };
+  }
+
+  /* 
+     PAGINATION
+   */
+
+  const currentPage =
+  Math.max(
+    Number(page) || 1,
+    1
+  );
+
+  const skip =
+    (currentPage - 1) * limit;
+
+  const totalOrders =
+    await Order.countDocuments(query);
+
+  const totalPages =
+  Math.max(
+    Math.ceil(totalOrders / limit),
+    1
+  );
 
   const orders =
-    await Order.find({
-      userId,
-    })
+    await Order.find(query)
 
-      .sort({
-        createdAt: -1,
-      })
+      .sort(sortOption)
+
+      .skip(skip)
+
+      .limit(limit)
 
       .lean();
 
   return {
-    success: true,
-    orders,
-  };
-};
 
+    success: true,
+
+    orders,
+
+    pagination: {
+
+      currentPage,
+
+      totalPages,
+
+      totalOrders,
+
+      hasNextPage:
+        currentPage < totalPages,
+
+      hasPrevPage:
+        currentPage > 1,
+
+    },
+
+  };
+
+};
 /* =========================================
    LOAD ORDER DETAILS
 ========================================= */

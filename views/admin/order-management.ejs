@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Management — iStore Admin</title>
+    <meta name="description" content="Admin order management dashboard — view, filter, and manage customer orders across all channels.">
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="/css/admin-order-management.css">
+    <link rel="stylesheet" href="/css/components/admin-sidebar.css">
+    <link rel="stylesheet" href="/css/admin-dashboard.css">
+
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- GSAP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+</head>
+
+<body>
+
+   
+    <!-- ══════════════════════════════════
+         SIDE BAR
+    ══════════════════════════════════ -->
+   <%- include('../partials/admin/sidebar') %>
+
+    <!-- ══════════════════════════════════
+         MAIN CONTENT
+    ══════════════════════════════════ -->
+    <main class="dashboard-main">
+
+            <!-- ── PAGE HEADER ── -->
+            <div class="adm-page-header" id="admPageHeader">
+                <div class="adm-header-left">
+
+                    <!-- Breadcrumb -->
+                    <nav class="adm-breadcrumb" aria-label="Breadcrumb">
+                        <a href="/admin/dashboard" class="adm-bc-crumb">Dashboard</a>
+                        <span class="adm-bc-sep"><i data-lucide="chevron-right" size="10"></i></span>
+                        <span class="adm-bc-crumb active">Orders</span>
+                    </nav>
+
+                    <h1 class="adm-page-title">Order Management</h1>
+                    <p class="adm-page-sub">View and manage customer orders across all channels.</p>
+                </div>
+            </div>
+
+            <%
+                    const tableRows = orders || [];
+
+                    const totalCount = totalOrders || 0;
+
+                    
+
+                    function statusClass(status) {
+                        return status.toLowerCase().replace(/\s+/g, "-");
+                    }
+
+                    function payClass(status) {
+
+                        const s = status.toLowerCase();
+
+                        if (s === "paid") return "paid";
+
+                        if (s === "failed") return "failed";
+
+                        return "pending";
+                    }
+                    %>
+
+            <!-- ── STATS GRID ── -->
+            <div class="adm-stats-grid" id="admStatsGrid">
+
+                <!-- Total Orders -->
+                <div class="adm-stat-card" id="statTotal">
+                    <div class="adm-stat-top">
+                        <div class="adm-stat-icon-wrap">
+                            <i data-lucide="shopping-bag" size="18"></i>
+                        </div>
+                        <span class="adm-stat-badge">+12%</span>
+                    </div>
+                    <span class="adm-stat-label">Total Orders</span>
+                    <span class="adm-stat-value"><%= Number(stats.total).toLocaleString('en-IN') %></span>
+                </div>
+
+                <!-- Pending -->
+                <div class="adm-stat-card" id="statPending">
+                    <div class="adm-stat-top">
+                        <div class="adm-stat-icon-wrap">
+                            <i data-lucide="clock" size="18"></i>
+                        </div>
+                    </div>
+                    <span class="adm-stat-label">Pending</span>
+                    <span class="adm-stat-value"><%= Number(stats.pending).toLocaleString('en-IN') %></span>
+                </div>
+
+                <!-- Processing -->
+                <div class="adm-stat-card" id="statProcessing">
+                    <div class="adm-stat-top">
+                        <div class="adm-stat-icon-wrap">
+                            <i data-lucide="refresh-cw" size="18"></i>
+                        </div>
+                    </div>
+                    <span class="adm-stat-label">Processing</span>
+                    <span class="adm-stat-value"><%= Number(stats.processing).toLocaleString('en-IN') %></span>
+                </div>
+
+                <!-- Shipped -->
+                <div class="adm-stat-card" id="statShipped">
+                    <div class="adm-stat-top">
+                        <div class="adm-stat-icon-wrap">
+                            <i data-lucide="truck" size="18"></i>
+                        </div>
+                    </div>
+                    <span class="adm-stat-label">Shipped</span>
+                    <span class="adm-stat-value"><%= Number(stats.shipped).toLocaleString('en-IN') %></span>
+                </div>
+
+                <!-- Delivered -->
+                <div class="adm-stat-card" id="statDelivered">
+                    <div class="adm-stat-top">
+                        <div class="adm-stat-icon-wrap">
+                            <i data-lucide="check-circle" size="18"></i>
+                        </div>
+                    </div>
+                    <span class="adm-stat-label">Delivered</span>
+                    <span class="adm-stat-value"><%= Number(stats.delivered).toLocaleString('en-IN') %></span>
+                </div>
+
+            </div>
+
+            <!-- ── FILTERS ── -->
+            <form
+                method="GET"
+                action="/admin/orders"
+                >
+
+                <div
+                class="adm-filters"
+                id="admFilters">
+                <div class="adm-filters-grid">
+
+                    <!-- Search orders -->
+                    <div class="adm-filter-group">
+                        <label class="adm-filter-label" for="searchOrders">Search Orders</label>
+                        <div class="adm-filter-search-wrap">
+                            <span class="adm-filter-search-icon"><i data-lucide="search" size="16"></i></span>
+                           <input
+                            type="text"
+                            name="search"
+                            class="adm-filter-search"
+                            placeholder="Order ID, Customer, Product..."
+                            value="<%= search %>"
+                            >
+                        </div>
+                    </div>
+
+                    <!-- Order status -->
+                    <div class="adm-filter-group">
+                        <label class="adm-filter-label" for="filterStatus">Order Status</label>
+                        <select name="status" class="adm-filter-select">
+                            <option
+                            value=""
+                            <%= status === ""
+                            ? "selected"
+                            : "" %>>
+                            All Statuses
+                            </option>
+
+                            <option
+                            value="Pending"
+                            <%= status === "Pending"
+                            ? "selected"
+                            : "" %>>
+                            Pending
+                            </option>
+
+                            <option
+                            value="Processing"
+                            <%= status === "Processing"
+                            ? "selected"
+                            : "" %>>
+                            Processing
+                            </option>
+
+                            <option
+                            value="Shipped"
+                            <%= status === "Shipped"
+                            ? "selected"
+                            : "" %>>
+                            Shipped
+                            </option>
+
+                            <option
+                            value="Delivered"
+                            <%= status === "Delivered"
+                            ? "selected"
+                            : "" %>>
+                            Delivered
+                            </option>
+
+                            <option
+                            value="Cancelled"
+                            <%= status === "Cancelled"
+                            ? "selected"
+                            : "" %>>
+                            Cancelled
+                            </option>
+                        </select>
+                    </div>
+                        <!-- Sort by -->
+                    <div class="adm-filter-group">
+
+                        <label
+                        class="adm-filter-label"
+                        for="filterSort">
+
+                            Sort By
+
+                        </label>
+
+                        <select
+                        name="sort"
+                        class="adm-filter-select">
+
+                            <option
+                            value="newest"
+                            <%= sort === "newest"
+                            ? "selected"
+                            : "" %>>
+                            Newest First
+                            </option>
+
+                            <option
+                            value="oldest"
+                            <%= sort === "oldest"
+                            ? "selected"
+                            : "" %>>
+                            Oldest First
+                            </option>
+
+                            <option
+                            value="amountHigh"
+                            <%= sort === "amountHigh"
+                            ? "selected"
+                            : "" %>>
+                            Amount High → Low
+                            </option>
+
+                            <option
+                            value="amountLow"
+                            <%= sort === "amountLow"
+                            ? "selected"
+                            : "" %>>
+                            Amount Low → High
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="adm-filter-group">
+
+                        <button
+                        type="submit"
+                        class="adm-clear-btn">
+
+                        Apply Filters
+
+                        </button>
+
+                    </div>
+
+
+                 </div>
+                </div>
+            </form>
+            <!-- ── ORDERS TABLE ── -->
+            <div class="adm-table-card" id="admTableCard">
+
+                <!-- Table card header -->
+                <div class="adm-table-header">
+                    <h2 class="adm-table-title">All Orders</h2>
+                    <div class="adm-table-actions">
+
+                        <a
+                        href="/admin/orders"
+                        class="adm-clear-btn">
+
+                            Clear Filters
+
+                        </a>
+
+                        <button
+                        class="adm-icon-btn"
+                        id="btnRefresh">
+
+                            <i
+                            data-lucide="refresh-cw"
+                            size="16">
+                            </i>
+
+                        </button>
+
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div class="adm-table-wrap">
+                    <table class="adm-table" id="ordersTable">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Customer</th>
+                                <th>Products</th>
+                                <th class="right">Total</th>
+                                <th class="center">Payment</th>
+                                <th class="center">Status</th>
+                                <th>Date</th>
+                                <th class="right">Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="ordersTableBody">
+
+                    <% orders.forEach((row, idx) => { %>
+
+                    <tr
+                    data-order-id="<%= row.orderId %>"
+                    data-status="<%= row.orderStatus.toLowerCase() %>"
+                    data-payment="<%= row.paymentStatus.toLowerCase() %>"
+                    id="orderRow<%= idx %>"
+                    >
+
+                        <!-- ORDER ID -->
+
+                        <td>
+
+                            <a
+                            href="/admin/orders/<%= row._id %>"
+                            class="adm-order-id-link">
+
+                                <%= row.orderId %>
+
+                            </a>
+
+                        </td>
+
+                        <!-- CUSTOMER -->
+
+                        <td>
+
+                            <div class="adm-customer-cell">
+
+                                <div class="adm-cust-avatar">
+
+                                    <%= row.userId?.fullName
+                                        ?.split(" ")
+                                        .map(word => word[0])
+                                        .join("")
+                                        .slice(0,2)
+                                        .toUpperCase() || "U" %>
+
+                                </div>
+
+                                <span class="adm-cust-name">
+
+                                    <%= row.userId?.fullName || "Unknown User" %>
+
+                                </span>
+
+                            </div>
+
+                        </td>
+
+                        <!-- PRODUCTS -->
+
+                        <td>
+
+                            <span class="adm-product-main">
+
+                                <%= row.items?.[0]?.productName || "Product" %>
+
+                            </span>
+
+                            <% if(row.items.length > 1) { %>
+
+                                <span class="adm-product-more">
+
+                                    +<%= row.items.length - 1 %> more items
+
+                                </span>
+
+                            <% } %>
+
+                        </td>
+
+                        <!-- TOTAL -->
+
+                        <td class="right">
+
+                            <span class="adm-total">
+
+                                ₹<%= row.finalAmount.toLocaleString("en-IN") %>
+
+                            </span>
+
+                        </td>
+
+                        <!-- PAYMENT -->
+
+                        <td class="center">
+
+                            <span class="adm-pay-badge adm-pay-badge--<%= payClass(row.paymentStatus) %>">
+
+                                <%= row.paymentStatus %>
+
+                            </span>
+
+                        </td>
+
+                        <!-- STATUS -->
+
+                        <td class="center">
+
+                            <span class="adm-status-badge adm-status-badge--<%= statusClass(row.orderStatus) %>">
+
+                                <%= row.orderStatus %>
+
+                            </span>
+
+                        </td>
+
+                        <!-- DATE -->
+
+                        <td>
+
+                            <span class="adm-date">
+
+                                <%= new Date(row.createdAt)
+                                    .toLocaleDateString(
+                                        "en-IN",
+                                        {
+                                            day: "2-digit",
+                                            month: "short",
+                                            year: "numeric"
+                                        }
+                                    ) %>
+
+                            </span>
+
+                        </td>
+
+                        <!-- ACTION -->
+
+                        <td>
+
+                            <a
+                            href="/admin/orders/<%= row._id %>"
+                            class="adm-view-link">
+
+                                View Details
+
+                            </a>
+
+                        </td>
+
+                    </tr>
+
+                    <% }) %>
+
+                    <% if(orders.length === 0) { %>
+
+                    <tr>
+
+                    <td colspan="8" style="text-align:center;padding:40px;">
+
+                    No Orders Found
+
+                    </td>
+
+                    </tr>
+
+                    <% } %>
+
+                    </tbody>
+                    </table>
+                </div>
+
+                <!-- Table footer: count + pagination -->
+                <div class="adm-table-footer">
+                    <span class="adm-results-count" id="resultsCount">
+                        Showing 1 to <%= tableRows.length %> of <%= Number(totalCount).toLocaleString('en-IN') %> orders
+                    </span>
+
+                    <nav class="adm-pagination" aria-label="Table pagination" id="admPagination">
+                        <!-- Prev -->
+                        <a
+                            href="<%= currentPage > 1 ? '/admin/orders?page=' + (currentPage - 1) + '&search=' + search + '&status=' + status + '&sort=' + sort : '#' %>"
+                            class="adm-page-btn adm-page-btn--arrow <%= currentPage <= 1 ? 'adm-page-btn--disabled' : '' %>"
+                            id="admPaginPrev"
+                            aria-label="Previous"
+                        >
+                            <i data-lucide="chevron-left" size="14"></i>
+                        </a>
+
+                        <!-- Pages -->
+                        <% for (let p = 1; p <= totalPages; p++) { %>
+                            <a
+                                href="/admin/orders?page=<%= p %>&search=<%= search %>&status=<%= status %>&sort=<%= sort %>"
+                                class="adm-page-btn <%= p === currentPage ? 'active' : '' %>"
+                                id="admPage<%= p %>"
+                                aria-label="Page <%= p %>"
+                                aria-current="<%= p === currentPage ? 'page' : 'false' %>"
+                            ><%= p %></a>
+                        <% } %>
+
+                        <!-- Next -->
+                        <a
+                            href="<%= currentPage < totalPages ? '/admin/orders?page=' + (currentPage + 1) + '&search=' + search + '&status=' + status + '&sort=' + sort : '#'%>"
+                            class="adm-page-btn adm-page-btn--arrow <%= currentPage >= totalPages ? 'adm-page-btn--disabled' : '' %>"
+                            id="admPaginNext"
+                            aria-label="Next"
+                        >
+                            <i data-lucide="chevron-right" size="14"></i>
+                        </a>
+                    </nav>
+                </div>
+
+            </div>
+            <!-- /admTableCard -->
+
+
+            <!-- ── ADMIN FOOTER ── -->
+            <footer class="adm-footer">
+                <div class="adm-footer-left">
+                    <a href="/admin/dashboard" class="adm-footer-logo">iStore Admin</a>
+                    <span>©&nbsp;<%= new Date().getFullYear() %> iStore Admin. All rights reserved.</span>
+                </div>
+                <div class="adm-footer-right">
+                    <a href="#" class="adm-footer-link">Privacy Policy</a>
+                    <a href="#" class="adm-footer-link">Terms of Service</a>
+                    <a href="#" class="adm-footer-link">Support</a>
+                </div>
+            </footer>
+    </main>
+
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        /* ── Init icons ── */
+        lucide.createIcons();
+
+        /* ── Entrance animations ── */
+        gsap.from('.adm-navbar',       { y: -20,  opacity: 0, duration: 0.45, ease: 'power2.out' });
+        gsap.from('.adm-page-header',  { y: -12,  opacity: 0, duration: 0.45, ease: 'power2.out', delay: 0.10 });
+        gsap.from('.adm-stat-card',    { y: 20,   opacity: 0, duration: 0.45, stagger: 0.07, ease: 'power2.out', delay: 0.18 });
+        gsap.from('.adm-filters',      { y: 16,   opacity: 0, duration: 0.40, ease: 'power2.out', delay: 0.45 });
+        gsap.from('.adm-table-card',   { y: 20,   opacity: 0, duration: 0.50, ease: 'power2.out', delay: 0.55 });
+        gsap.from('tbody tr',          { x: -10,  opacity: 0, duration: 0.35, stagger: 0.06, ease: 'power2.out', delay: 0.65 });
+
+       
+
+        /* ── Refresh button ── */
+        document.getElementById("btnRefresh")
+            ?.addEventListener("click", () => {
+
+                window.location.reload();
+
+            });
+
+    </script>
+
+</body>
+</html>

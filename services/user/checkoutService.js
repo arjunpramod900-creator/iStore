@@ -157,42 +157,78 @@ async (
 
   /* VALID ITEMS */
 
-  const validItems =
-  cart.items.filter(item => {
+/* 
+   STRICT STOCK REVALIDATION
+ */
 
-    return (
+for (const item of cart.items) {
 
-      item.productId &&
+  /* PRODUCT CHECK */
 
-      item.variantId &&
+  if (
+    !item.productId ||
+    !item.productId.isActive ||
+    item.productId.isDeleted
+  ) {
 
-      item.productId.isActive &&
-
-      !item.productId.isDeleted &&
-
-      item.variantId.isActive &&
-
-      !item.variantId.isDeleted &&
-
-      item.variantId.stock >= item.quantity
-
-    )
-
-});
-
-  if (validItems.length === 0) {
     return {
       success: false,
+
       message:
-        "No valid items in cart",
+        `${item.productId?.name || "Product"} is unavailable`,
     };
   }
+
+  /* VARIANT CHECK */
+
+  if (
+    !item.variantId ||
+    !item.variantId.isActive ||
+    item.variantId.isDeleted
+  ) {
+
+    return {
+      success: false,
+
+      message:
+        `${item.productId.name} variant unavailable`,
+    };
+  }
+
+  /* STOCK CHECK */
+
+  if (item.variantId.stock <= 0) {
+
+    return {
+      success: false,
+
+      message:
+        `${item.productId.name} is out of stock`,
+    };
+  }
+
+  /* QUANTITY CHECK */
+
+  if (
+    item.quantity >
+    item.variantId.stock
+  ) {
+
+    return {
+      success: false,
+
+      message:
+        `Only ${item.variantId.stock} stock available for ${item.productId.name}`,
+    };
+  }
+
+}
 
   /* TOTALS */
 
   let subtotal = 0;
 
-  validItems.forEach(item => {
+  cart.items.forEach(item => {
     subtotal +=
       item.price * item.quantity;
   });
@@ -211,7 +247,7 @@ async (
   /* ORDER ITEMS */
 
   const orderItems =
-    validItems.map(item => ({
+    cart.items.map(item => ({
       productId:
         item.productId._id,
 
@@ -298,7 +334,7 @@ async (
 
   /* UPDATE STOCK */
 
-  for (const item of validItems) {
+  for (const item of cart.items) {
     item.variantId.stock -=
       item.quantity;
 
