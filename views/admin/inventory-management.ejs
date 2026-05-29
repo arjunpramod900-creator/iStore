@@ -689,6 +689,135 @@ class="page-nav"
 
 lucide.createIcons()
 
+document.addEventListener(
+
+"click",
+
+async (e) => {
+
+const btn =
+e.target.closest(
+".adjust-stock-btn"
+)
+
+if(!btn) return
+
+const variantId =
+btn.dataset.id
+
+const currentStock =
+btn.dataset.stock
+
+const result =
+await Swal.fire({
+
+title:
+"Adjust Stock",
+
+input:
+"number",
+
+inputValue:
+currentStock,
+
+inputLabel:
+"Enter new stock quantity",
+
+showCancelButton:
+true,
+
+confirmButtonText:
+"Update",
+
+confirmButtonColor:
+"#603763",
+
+inputAttributes: {
+
+min: 0
+
+}
+
+})
+
+if(!result.isConfirmed)
+return
+
+try {
+
+const response =
+await fetch(
+
+`/admin/inventory/update-stock/${variantId}`,
+
+{
+
+method:
+"PATCH",
+
+headers: {
+
+"Content-Type":
+"application/json"
+
+},
+
+body:
+JSON.stringify({
+
+stock:
+result.value
+
+})
+
+}
+
+)
+
+const data =
+await response.json()
+
+if(data.success){
+
+await Swal.fire({
+
+icon:
+"success",
+
+title:
+"Stock Updated",
+
+timer:
+1200,
+
+showConfirmButton:
+false
+
+})
+
+window.location.reload()
+
+}
+
+}
+
+catch(error){
+
+Swal.fire({
+
+icon:
+"error",
+
+title:
+"Update Failed"
+
+})
+
+}
+
+}
+
+)
 
 </script>
 

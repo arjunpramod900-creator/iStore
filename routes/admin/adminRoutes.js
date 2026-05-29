@@ -47,6 +47,7 @@ import {
 
 import {
   loadInventory,
+  updateVariantStock,
 } from "../../controllers/admin/adminInventoryController.js";
 
 const router = express.Router();
@@ -413,6 +414,12 @@ router.get(
   adminAuthMiddleware,
 
   loadInventory
+);
+
+router.patch(
+  "/inventory/update-stock/:variantId",
+  adminAuthMiddleware,
+  updateVariantStock
 );
 
 export default router;
