@@ -56,31 +56,36 @@ async (req, res) => {
     const { stock } =
       req.body;
 
-    if (
-      stock === undefined ||
-      Number(stock) < 0
-    ) {
-
-      return res.status(400).json({
-
-        success: false,
-
-        message:
-          "Invalid stock value",
-
-      });
-
+   if (
+    stock === undefined ||
+    isNaN(stock)
+    )
+    {
+    return res.status(400).json({
+    success:false,
+    message:"Invalid stock"
+    });
     }
 
-    await Variant.findByIdAndUpdate(
+    const stockValue =
+    Number(stock);
 
-      variantId,
+    if (
+    stockValue < 0
+    )
+    {
+    return res.status(400).json({
+    success:false,
+    message:"Stock cannot be negative"
+    });
+    }
 
-      {
-        stock: Number(stock),
-      }
-
-    );
+  await Variant.findByIdAndUpdate(
+  variantId,
+  {
+    stock: stockValue,
+  }
+);
 
     return res.json({
 

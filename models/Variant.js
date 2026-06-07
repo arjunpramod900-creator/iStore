@@ -50,6 +50,9 @@ const variantSchema = new mongoose.Schema(
       required: true,
 
       default: 0,
+
+      min: 0,
+
     },
 
     price: {

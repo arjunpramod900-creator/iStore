@@ -210,6 +210,26 @@ const orderSchema = new mongoose.Schema(
       default: null,
     },
 
+    returnStatus: {
+
+      type: String,
+
+      enum: [
+
+        "None",
+
+        "Requested",
+
+        "Approved",
+
+        "Rejected"
+
+      ],
+
+      default: "None",
+
+    },
+
     deliveredDate: {
       type: Date,
 

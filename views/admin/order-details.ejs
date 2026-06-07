@@ -657,13 +657,43 @@
                 cancelButtonText:  'Cancel',
             }).then(result => {
                 if (result.isConfirmed) {
+                   fetch(
+                    "/admin/orders/<%= order._id %>/return",
+                    {
+                    method: "PATCH",
+
+                    headers: {
+                    "Content-Type":
+                    "application/json"
+                    },
+
+                    body: JSON.stringify({
+                    action
+                    })
+                    }
+                    )
+                    .then(res => res.json())
+                    .then(data => {
+
+                    if(data.success){
+
                     Swal.fire({
-                        icon: 'success',
-                        title: isApprove ? 'Return Approved' : 'Return Rejected',
-                        text:  isApprove
-                            ? 'Refund will be processed in 5–7 business days.'
-                            : 'The customer has been notified.',
-                        confirmButtonColor: '#7A4E7C',
+                    icon:"success",
+                    title:data.message
+                    })
+                    .then(()=>{
+                    location.reload();
+                    });
+
+                    }else{
+
+                    Swal.fire({
+                    icon:"error",
+                    title:data.message
+                    });
+
+                    }
+
                     });
                 }
             });

@@ -737,11 +737,29 @@ inputAttributes: {
 min: 0
 
 }
-
 })
 
 if(!result.isConfirmed)
 return
+
+if (
+Number(result.value) < 0
+) {
+
+await Swal.fire({
+
+icon: "error",
+
+title: "Invalid Stock",
+
+text: "Stock cannot be negative"
+
+})
+
+return
+
+}
+
 
 try {
 

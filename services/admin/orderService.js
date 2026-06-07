@@ -321,7 +321,7 @@ if (
 
  if (
 
-  ["Cancelled", "Returned"].includes(status)
+  ["Cancelled"].includes(status)
 
   &&
 
@@ -376,5 +376,172 @@ if (
   }
 
   await order.save();
+
+};
+
+/* ============================
+   RETURN REQUEST
+============================ */
+export const handleReturnRequestService =
+async (
+  orderId,
+  action
+) => {
+
+  const order =
+  await Order.findById(orderId);
+
+  if (!order) {
+
+    throw new Error(
+      "Order not found"
+    );
+
+  }
+
+  if (
+    order.returnStatus !==
+    "Requested"
+  ) {
+
+    throw new Error(
+      "No pending return request"
+    );
+
+  }
+
+  /* ==========================
+     APPROVE RETURN
+  ========================== */
+
+  if (
+    action === "approve"
+  ) {
+
+    order.returnStatus =
+      "Approved";
+
+    order.orderStatus =
+      "Returned";
+
+  if (
+    order.paymentMethod !== "COD"
+  ) {
+    order.paymentStatus =
+      "Refunded";
+  }
+    /* RESTORE STOCK */
+
+for (const item of order.items) {
+
+  if (
+    item.itemStatus === "Cancelled"
+  ) {
+    continue;
+  }
+
+  const variant =
+    await Variant.findById(
+      item.variantId
+    );
+
+  if (variant) {
+
+    variant.stock += item.quantity;
+
+    await variant.save();
+  }
+
+  item.itemStatus =
+    "Returned";
+}
+
+const activeItems =
+order.items.filter(
+  item =>
+    ![
+      "Cancelled",
+      "Returned"
+    ].includes(
+      item.itemStatus
+    )
+);
+
+const newSubtotal =
+activeItems.reduce(
+  (total, item) =>
+    total +
+    (
+      item.price *
+      item.quantity
+    ),
+  0
+);
+
+const taxAmount =
+Math.floor(
+  newSubtotal * 0.02
+);
+
+const deliveryCharge =
+newSubtotal >= 5000
+? 0
+: 99;
+
+const finalAmount =
+newSubtotal +
+taxAmount +
+deliveryCharge -
+(order.discountAmount || 0);
+
+order.subtotal =
+newSubtotal;
+
+order.taxAmount =
+taxAmount;
+
+order.deliveryCharge =
+deliveryCharge;
+
+order.finalAmount =
+finalAmount;
+
+    await order.save();
+
+    return {
+      success: true,
+      message:
+      "Return approved successfully",
+    };
+
+  }
+
+  /* ==========================
+     REJECT RETURN
+  ========================== */
+
+  if (
+    action === "reject"
+  ) {
+
+    order.returnStatus =
+      "Rejected";
+
+    order.returnReason =
+      null;
+
+    await order.save();
+
+    return {
+      success: true,
+      message:
+      "Return request rejected",
+    };
+
+  }
+
+  throw new Error(
+    "Invalid action"
+  );
 
 };

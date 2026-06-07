@@ -37,13 +37,23 @@ export const loadAddresses = async (req, res) => {
 export const addAddress = async (req, res) => {
   try {
     const userId = req.session.userId;
+    
 
     /* ZOD VALIDATION */
 
     const result = addressSchema.safeParse(req.body);
 
     if (!result.success) {
-      return res.status(400).send(result.error.errors[0].message);
+
+      return res.status(400).json({
+
+        success: false,
+
+        message:
+          result.error.errors[0].message
+
+      });
+
     }
 
     const data = result.data;
@@ -71,11 +81,28 @@ export const addAddress = async (req, res) => {
 
     await newAddress.save();
 
-    res.redirect("/addresses");
+    return res.json({
+
+      success: true,
+
+      message:
+      "Address added successfully",
+
+      redirectTo:
+      req.body.redirectTo ||
+      "/addresses"
+
+    });
   } catch (error) {
     console.log("Add Address Error:", error);
 
-    res.redirect("/addresses");
+    res.redirect(
+
+req.body.redirectTo ||
+
+"/addresses"
+
+);
   }
 };
 
@@ -111,7 +138,16 @@ export const updateAddress = async (req, res) => {
     const result = addressSchema.safeParse(req.body);
 
     if (!result.success) {
-      return res.status(400).send(result.error.errors[0].message);
+
+      return res.status(400).json({
+
+        success: false,
+
+        message:
+          result.error.errors[0].message
+
+      });
+
     }
 
     const data = result.data;
@@ -140,10 +176,29 @@ export const updateAddress = async (req, res) => {
       },
     );
 
-    res.redirect("/addresses");
+    return res.status(200).json({
+
+        success: true,
+
+        message: "Address updated successfully.",
+
+        redirectTo:
+
+        req.body.redirectTo ||
+
+        "/addresses"
+
+    });
   } catch (error) {
     console.log("Update Address Error:", error);
 
-    res.redirect("/addresses");
+   return res.status(500).json({
+
+    success: false,
+
+    message:
+    "Something went wrong while updating the address."
+
+});
   }
 };

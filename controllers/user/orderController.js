@@ -278,279 +278,353 @@ async (
 DOWNLOAD INVOICE PDF
 ========================================= */
 
-export const downloadInvoice =
-async (
-req,
-res,
-) => {
+export const downloadInvoice = async (req, res) => {
+  try {
+    const userId = req.session.userId;
+    const { orderId } = req.params;
 
-try {
-    const userId =
-  req.session.userId;
+    const order = await Order.findOne({ userId, orderId }).lean();
 
-const { orderId } =
-  req.params;
+    if (!order) {
+      return res.redirect("/orders");
+    }
 
-const order =
-  await Order.findOne({
-    userId,
-    orderId,
-  }).lean();
+    /* =========================================
+       PRE-CALCULATE TOTAL PAGE HEIGHT
+    ========================================= */
 
-if (!order) {
+    const MARGIN = 50;
+    const headerH = 130;
+    const infoCardsH = 110;       // Customer + Order cards
+    const shippingH = 150;        // Shipping address card
+    const itemsHeaderH = 70;      // "Order Items" title + table header
+    const itemRowH = 40;
+    const itemsH = order.items.length * itemRowH + 20; // rows + bottom padding
+    const summaryCardsH = 175;    // Payment summary + payment info cards (145 height + padding)
+    const footerH = 80;
 
-  return res.redirect(
-    "/orders",
-  );
-}
+    const totalHeight =
+      MARGIN +
+      headerH +
+      infoCardsH +
+      shippingH +
+      itemsHeaderH +
+      itemsH +
+      summaryCardsH +
+      footerH +
+      MARGIN;
 
-/* PDF INIT */
+    /* PDF INIT — dynamic height */
+    const doc = new PDFDocument({
+      margin: 0,
+      size: [612, totalHeight],   // <-- key fix: page height matches content
+      autoFirstPage: true,
+      bufferPages: true,
+    });
 
-const doc =
-  new PDFDocument({
-    margin: 50,
-  });
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=Invoice-${order.orderId}.pdf`
+    );
 
-/* RESPONSE HEADERS */
+    doc.pipe(res);
+    doc.addPage = () => {};       // prevent PDFKit from auto-adding pages
 
-res.setHeader(
-  "Content-Type",
-  "application/pdf",
-);
-
-res.setHeader(
-  "Content-Disposition",
-  `attachment; filename=Invoice-${order.orderId}.pdf`,
-);
-
-doc.pipe(res);
-
-/* 
-   HEADER
- */
-
-doc
-  .fontSize(28)
-  .fillColor("#4C0080")
-  .text(
-    "iStore Invoice",
-    {
-      align: "center",
-    },
-  );
-
-doc.moveDown(1);
-
-/* 
-   ORDER INFO
- */
-
-doc
-  .fontSize(14)
-  .fillColor("#000");
-
-doc.text(
-  `Order ID: ${order.orderId}`,
-);
-
-doc.text(
-  `Order Date: ${new Date(
-    order.createdAt
-  ).toLocaleDateString("en-IN")}`,
-);
-
-doc.text(
-  `Order Status: ${order.orderStatus}`,
-);
-
-doc.moveDown(1);
-
-/* 
-   SHIPPING ADDRESS
- */
-
-doc
-  .fontSize(18)
-  .fillColor("#4C0080")
-  .text("Shipping Address");
-
-doc.moveDown(0.5);
-
-doc
-  .fontSize(13)
-  .fillColor("#000");
-
-doc.text(
-  order.shippingAddress
-    ?.fullName || "",
-);
-
-doc.text(
-  order.shippingAddress
-    ?.addressLine1 || "",
-);
-
-doc.text(
-  `${order.shippingAddress?.city || ""}, ${order.shippingAddress?.state || ""}`,
-);
-
-doc.text(
-  `${order.shippingAddress?.country || ""} - ${order.shippingAddress?.pincode || ""}`,
-);
-
-doc.text(
-  `Phone: ${order.shippingAddress?.phoneNumber || ""}`,
-);
-
-doc.moveDown(1.5);
-
-/* 
-   ITEMS TABLE
- */
-
-doc
-  .fontSize(18)
-  .fillColor("#4C0080")
-  .text("Order Items");
-
-doc.moveDown(0.7);
-
-order.items.forEach(
-  (
-    item,
-    index,
-  ) => {
-
-    const itemTotal =
-      item.price *
-      item.quantity;
+    /* =========================================
+       HEADER
+    ========================================= */
 
     doc
+      .fontSize(34)
+      .fillColor("#603763")
+      .font("Helvetica-Bold")
+      .text("iStore", 50, 50);
+
+    doc
+      .fontSize(12)
+      .fillColor("#666")
+      .font("Helvetica")
+      .text("Premium Apple Technology", 50, 90);
+
+    doc
+      .fontSize(24)
+      .fillColor("#1A1C1D")
+      .font("Helvetica-Bold")
+      .text("INVOICE", 400, 50);
+
+    doc
+      .fontSize(12)
+      .fillColor("#603763")
+      .font("Helvetica-Bold")
+      .text(`Invoice #${order.orderId}`, 400, 82);
+
+    /* =========================================
+       CUSTOMER + ORDER INFO CARDS
+    ========================================= */
+
+    const startY = 140;
+
+    /* CUSTOMER CARD */
+    doc.rect(50, startY, 240, 105).fillAndStroke("#FBF8FC", "#E6D7EC");
+    doc
+      .fillColor("#603763")
       .fontSize(13)
-      .fillColor("#000");
-
+      .font("Helvetica-Bold")
+      .text("Customer", 65, startY + 15);
+    doc
+      .fillColor("#1A1C1D")
+      .fontSize(11)
+      .font("Helvetica")
+      .text(order.shippingAddress?.fullName || "", 65, startY + 40);
+    doc.text(order.shippingAddress?.phoneNumber || "", 65, startY + 58);
     doc.text(
-      `${index + 1}. ${item.productName}`,
+      `${order.shippingAddress?.city || ""}, ${order.shippingAddress?.state || ""}`,
+      65,
+      startY + 75
     );
 
+    /* ORDER CARD */
+    doc.rect(320, startY, 240, 105).fillAndStroke("#FBF8FC", "#E6D7EC");
+    doc
+      .fillColor("#603763")
+      .fontSize(13)
+      .font("Helvetica-Bold")
+      .text("Order Details", 335, startY + 15);
+    doc
+      .fillColor("#1A1C1D")
+      .fontSize(11)
+      .font("Helvetica")
+      .text(`Order: ${order.orderId}`, 335, startY + 40);
     doc.text(
-      `Variant: ${item.variantName}`,
+      `Date: ${new Date(order.createdAt).toLocaleDateString("en-IN")}`,
+      335,
+      startY + 58
     );
 
+    /* STATUS BADGE */
+    let badgeBg = "#E8F8EE";
+    let badgeText = "#1F8A4D";
+    if (order.orderStatus === "Cancelled") {
+      badgeBg = "#FFE8E8";
+      badgeText = "#D32F2F";
+    }
+    if (order.orderStatus === "Pending") {
+      badgeBg = "#FFF6E5";
+      badgeText = "#E69A00";
+    }
+
+    doc
+      .roundedRect(335, startY + 68, 90, 22, 10)
+      .fillAndStroke(badgeBg, badgeBg);
+    doc
+      .fillColor(badgeText)
+      .fontSize(10)
+      .font("Helvetica-Bold")
+      .text(order.orderStatus, 355, startY + 75);
+
+    /* =========================================
+       SHIPPING ADDRESS CARD
+    ========================================= */
+
+    const shippingY = 270;
+
+    doc
+      .roundedRect(50, shippingY, 510, 130, 12)
+      .fillAndStroke("#FBF8FC", "#E6D7EC");
+
+    doc
+      .fillColor("#603763")
+      .fontSize(14)
+      .font("Helvetica-Bold")
+      .text("Shipping Address", 65, shippingY + 15);
+
+    doc
+      .fillColor("#1A1C1D")
+      .fontSize(11)
+      .font("Helvetica")
+      .text(order.shippingAddress?.fullName || "", 65, shippingY + 40);
+
+    doc
+      .moveTo(300, shippingY + 30)
+      .lineTo(300, shippingY + 110)
+      .strokeColor("#E6D7EC")
+      .stroke();
+
+    doc.text(order.shippingAddress?.addressLine1 || "", 65, shippingY + 58);
     doc.text(
-      `Quantity: ${item.quantity}`,
+      `${order.shippingAddress?.city || ""}, ${order.shippingAddress?.state || ""}`,
+      65,
+      shippingY + 76
+    );
+    doc.text(
+      `${order.shippingAddress?.country || ""} - ${order.shippingAddress?.pincode || ""}`,
+      65,
+      shippingY + 94
+    );
+    doc.text(
+      `Phone: ${order.shippingAddress?.phoneNumber || ""}`,
+      320,
+      shippingY + 40
     );
 
+    /* =========================================
+       ORDER ITEMS TABLE
+    ========================================= */
+
+    doc
+      .fontSize(18)
+      .fillColor("#603763")
+      .font("Helvetica-Bold")
+      .text("Order Items", 240, 430);
+
+    const tableTop = 470;
+
+    /* TABLE HEADER */
+    doc.rect(50, tableTop, 510, 28).fill("#3e037d");
+
+    doc
+      .fillColor("#FFFFFF")
+      .fontSize(11)
+      .font("Helvetica-Bold");
+
+    doc.text("Product", 60, tableTop + 8);
+    doc.text("Qty", 300, tableTop + 8);
+    doc.text("Price", 360, tableTop + 8);
+    doc.text("Total", 450, tableTop + 8);
+
+    /* TABLE BORDER — drawn after we know row count */
+    doc
+      .rect(50, tableTop, 510, order.items.length * 40 + 20)
+      .strokeColor("#E6D7EC")
+      .stroke();
+
+    let y = tableTop + 35;
+
+    order.items.forEach((item, index) => {
+      const total = item.price * item.quantity;
+
+      if (index % 2 === 0) {
+        doc.rect(50, y - 4, 510, 24).fill("#FBF8FC");
+      }
+
+      doc.fillColor("#1A1C1D").font("Helvetica").fontSize(10);
+
+      doc.text(item.productName, 60, y, { width: 150, ellipsis: true });
+      doc.text(item.variantName || "", 60, y + 12, {
+        width: 150,
+        ellipsis: true,
+      });
+      doc.text(item.quantity.toString(), 300, y);
+      doc.text(`₹${item.price.toLocaleString("en-IN")}`, 360, y);
+      doc.text(`₹${total.toLocaleString("en-IN")}`, 450, y);
+
+      y += 40;
+    });
+
+    /* =========================================
+       PAYMENT SUMMARY + PAYMENT INFO CARDS
+       Both anchored to itemsTableEndY — dynamic
+    ========================================= */
+
+    const summaryY = y + 30;   // <-- flows naturally below last item row
+
+    /* PAYMENT SUMMARY CARD */
+    doc
+      .roundedRect(320, summaryY, 240, 145, 12)
+      .fillAndStroke("#FBF8FC", "#E6D7EC");
+
+    doc
+      .fillColor("#603763")
+      .fontSize(13)
+      .font("Helvetica-Bold")
+      .text("Payment Summary", 335, summaryY + 15);
+
+    doc.fillColor("#1A1C1D").fontSize(11).font("Helvetica");
+
+    doc.text("Subtotal", 335, summaryY + 40);
+    doc.text(`₹${order.subtotal.toLocaleString("en-IN")}`, 490, summaryY + 40);
+
+    doc.text("Tax", 335, summaryY + 60);
+    doc.text(`₹${order.taxAmount.toLocaleString("en-IN")}`, 490, summaryY + 60);
+
+    doc.text("Shipping", 335, summaryY + 80);
     doc.text(
-      `Price: ₹${item.price}`,
+      `₹${order.deliveryCharge.toLocaleString("en-IN")}`,
+      490,
+      summaryY + 80
     );
 
+    doc.text("Discount", 335, summaryY + 100);
     doc.text(
-      `Total: ₹${itemTotal}`,
+      `₹${order.discountAmount.toLocaleString("en-IN")}`,
+      490,
+      summaryY + 100
     );
 
+    doc.font("Helvetica-Bold").fillColor("#603763");
+    doc.text("Total", 335, summaryY + 125);
     doc.text(
-      `Status: ${item.itemStatus}`,
+      `₹${order.finalAmount.toLocaleString("en-IN")}`,
+      470,
+      summaryY + 125
     );
 
-    doc.moveDown(1);
-  },
-);
+    /* PAYMENT INFO CARD */
+    doc
+      .roundedRect(50, summaryY, 240, 145, 12)
+      .fillAndStroke("#FBF8FC", "#E6D7EC");
 
-/* 
-   PAYMENT SUMMARY
- */
+    doc
+      .fillColor("#603763")
+      .fontSize(13)
+      .font("Helvetica-Bold")
+      .text("Payment Information", 65, summaryY + 15);
 
-doc.moveDown(1);
+    doc.fillColor("#1A1C1D").fontSize(11).font("Helvetica");
 
-doc
-  .fontSize(18)
-  .fillColor("#4C0080")
-  .text("Payment Summary");
+    doc.text("Method", 65, summaryY + 50);
+    doc.text(order.paymentMethod, 180, summaryY + 50);
 
-doc.moveDown(0.7);
+    doc.text("Status", 65, summaryY + 75);
+    doc.text(order.paymentStatus, 180, summaryY + 75);
 
-doc
-  .fontSize(13)
-  .fillColor("#000");
+    doc.text("Order ID", 65, summaryY + 100);
+    doc.text(order.orderId, 145, summaryY + 100, { width: 120 });
 
-doc.text(
-  `Subtotal: ₹${order.subtotal}`,
-);
+    /* =========================================
+       FOOTER
+    ========================================= */
 
-doc.text(
-  `Tax: ₹${order.taxAmount}`,
-);
+    const footerY = summaryY + 170;
 
-doc.text(
-  `Delivery Charge: ₹${order.deliveryCharge}`,
-);
+    doc
+      .moveTo(50, footerY)
+      .lineTo(560, footerY)
+      .strokeColor("#E6D7EC")
+      .stroke();
 
-doc.text(
-  `Discount: ₹${order.discountAmount}`,
-);
+    doc
+      .fontSize(11)
+      .fillColor("#7A7A7A")
+      .font("Helvetica")
+      .text("Thank you for shopping with iStore.", 0, footerY + 15, {
+        align: "center",
+      });
 
-doc.moveDown(0.5);
+    doc
+      .fontSize(9)
+      .fillColor("#A0A0A0")
+      .text(
+        "Order generated electronically by iStore",
+        0,
+        footerY + 32,
+        { align: "center" }
+      );
 
-doc
-  .fontSize(16)
-  .fillColor("#4C0080")
-  .text(
-    `Final Amount: ₹${order.finalAmount}`,
-  );
-
-doc.moveDown(1);
-
-/* 
-   PAYMENT INFO
- */
-
-doc
-  .fontSize(18)
-  .fillColor("#4C0080")
-  .text("Payment Information");
-
-doc.moveDown(0.5);
-
-doc
-  .fontSize(13)
-  .fillColor("#000");
-
-doc.text(
-  `Payment Method: ${order.paymentMethod}`,
-);
-
-doc.text(
-  `Payment Status: ${order.paymentStatus}`,
-);
-
-doc.moveDown(2);
-
-/* 
-   FOOTER
- */
-
-doc
-  .fontSize(12)
-  .fillColor("gray")
-  .text(
-    "Thank you for shopping with iStore.",
-    {
-      align: "center",
-    },
-  );
-
-doc.end();
-
-
-} catch (error) {
-    console.log(
-  "Invoice Download Error:",
-  error,
-);
-
-return res.redirect(
-  "/orders",
-);
-}
+    doc.end();
+  } catch (error) {
+    console.log("Invoice Download Error:", error);
+    return res.redirect("/orders");
+  }
 };

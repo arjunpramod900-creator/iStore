@@ -1,43 +1,126 @@
 import { z } from "zod";
 
 export const addressSchema = z.object({
+
   fullName: z
-    .string()
+    .string({
+      required_error: "Please enter your full name"
+    })
     .trim()
-    .min(3, "Name must be at least 3 characters")
-    .max(50, "Name too long")
-    .regex(/^[A-Za-z ]+$/, "Only letters allowed"),
+    .min(
+      3,
+      "Full name must contain at least 3 characters"
+    )
+    .max(
+      50,
+      "Full name cannot exceed 50 characters"
+    )
+    .regex(
+      /^[A-Za-z ]+$/,
+      "Full name can only contain letters and spaces"
+    ),
 
   phoneNumber: z
-    .string()
+    .string({
+      required_error:
+      "Please enter your mobile number"
+    })
     .trim()
-    .regex(/^[0-9]{10}$/, "Phone must be 10 digits"),
+    .regex(
+      /^[0-9]{10}$/,
+      "Please enter a valid 10-digit mobile number"
+    ),
 
   addressLine1: z
-    .string()
+    .string({
+      required_error:
+      "Please enter your street address"
+    })
     .trim()
-    .min(5, "Address too short")
-    .max(100, "Address too long"),
+    .min(
+      5,
+      "Street address is too short"
+    )
+    .max(
+      100,
+      "Street address cannot exceed 100 characters"
+    ),
 
   city: z
-    .string()
+    .string({
+      required_error:
+      "Please enter your city"
+    })
     .trim()
-    .min(2)
-    .max(50)
-    .regex(/^[A-Za-z ]+$/, "Invalid city"),
+    .min(
+      2,
+      "City name is too short"
+    )
+    .max(
+      50,
+      "City name is too long"
+    )
+    .regex(
+      /^[A-Za-z ]+$/,
+      "Please enter a valid city name"
+    ),
 
   state: z
-    .string()
+    .string({
+      required_error:
+      "Please enter your state"
+    })
     .trim()
-    .min(2)
-    .max(50)
-    .regex(/^[A-Za-z ]+$/, "Invalid state"),
+    .min(
+      2,
+      "State name is too short"
+    )
+    .max(
+      50,
+      "State name is too long"
+    )
+    .regex(
+      /^[A-Za-z ]+$/,
+      "Please enter a valid state name"
+    ),
 
-  pincode: z.string().regex(/^[0-9]{6}$/, "Invalid PIN code"),
+  pincode: z
+    .string({
+      required_error:
+      "Please enter your PIN code"
+    })
+    .trim()
+    .regex(
+      /^[0-9]{6}$/,
+      "Please enter a valid 6-digit PIN code"
+    ),
 
-  country: z.string().min(2, "Country required"),
+  country: z
+    .string({
+      required_error:
+      "Please select a country"
+    })
+    .min(
+      2,
+      "Please select a country"
+    ),
 
-  type: z.enum(["Home", "Work", "Other"]),
+  type: z.enum(
+    ["Home", "Work", "Other"],
+    {
+      errorMap: () => ({
+        message:
+        "Please select an address type"
+      })
+    }
+  ),
 
-  isDefault: z.optional().transform((val) => val === "true" || val === true),
+  isDefault: z
+    .optional()
+    .transform(
+      (val) =>
+        val === "true" ||
+        val === true
+    ),
+
 });

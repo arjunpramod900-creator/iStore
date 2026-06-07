@@ -43,6 +43,7 @@ import {
   loadOrders,
   viewOrderDetails,
   updateOrderStatus,
+  handleReturnRequest,
 } from "../../controllers/admin/adminOrderController.js";
 
 import {
@@ -402,6 +403,12 @@ router.patch(
   "/orders/:id/status",
   adminAuthMiddleware,
   updateOrderStatus
+);
+
+router.patch(
+  "/orders/:id/return",
+  adminAuthMiddleware,
+  handleReturnRequest
 );
 
 /* ============================

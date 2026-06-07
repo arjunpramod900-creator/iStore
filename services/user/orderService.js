@@ -235,6 +235,16 @@ async (
         item.variantId,
       );
 
+
+  if (
+
+    item.itemStatus === "Cancelled"
+
+  ) {
+
+    continue;
+
+  }
     if (variant) {
 
       variant.stock +=
@@ -357,12 +367,16 @@ async (
     /* =========================================
    RECALCULATE ORDER TOTALS
 ========================================= */
-    const activeItems =
-  order.items.filter(
-    item =>
-      item.itemStatus !==
-      "Cancelled"
-  );
+  const activeItems =
+order.items.filter(
+ item =>
+ ![
+   "Cancelled",
+   "Returned"
+ ].includes(
+   item.itemStatus
+ )
+);
 
 const newSubtotal =
   activeItems.reduce(
@@ -379,7 +393,7 @@ const newSubtotal =
 
 const taxAmount =
   Math.round(
-    newSubtotal * 0.18
+    newSubtotal * 0.02
   );
 
 /* DELIVERY */
@@ -474,6 +488,27 @@ async (
         "Only delivered orders can be returned",
     };
   }
+  if (
+    order.returnStatus ===
+    "Requested"
+  ) {
+    return {
+      success: false,
+      message:
+        "Return request already submitted",
+    };
+  }
+
+  if (
+    order.returnStatus ===
+    "Approved"
+  ) {
+    return {
+      success: false,
+      message:
+        "Order already returned",
+    };
+  }
 
   if (!reason) {
     return {
@@ -483,17 +518,17 @@ async (
     };
   }
 
-  order.orderStatus =
-    "Returned";
+  order.returnStatus =
+  "Requested";
 
   order.returnReason =
-    reason;
+  reason;
 
   await order.save();
 
   return {
     success: true,
     message:
-      "Return request submitted",
+  "Return request sent successfully"
   };
 };

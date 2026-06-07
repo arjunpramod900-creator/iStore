@@ -1035,3 +1035,8 @@ input:checked + .slider:before {
     display: none;
 
 }
+
+
+.modal-overlay.active {
+  display: flex;
+}

@@ -229,13 +229,24 @@ export const createProductService = async (data) => {
   if (body.comparePrice && Number(body.comparePrice) <= Number(body.price)) {
     throw new Error("Compare price must be greater than price");
   }
+  const stockValue =
+  Number(body.stock);
+
+  if (
+  isNaN(stockValue) ||
+  stockValue < 0
+  ) {
+  throw new Error(
+  "Stock cannot be negative"
+  );
+  }
   const variantDataForValidation = {
-    productId: "placeholder", // real _id not available yet, just for schema check
+    productId: "placeholder",
     SKU: body.SKU,
     storage: normalizeVariantValue(body.storage),
     color: normalizeVariantValue(body.color),
     RAM: normalizeVariantValue(body.RAM),
-    stock: Number(body.stock),
+    stock: stockValue,
 
     price: Number(body.price),
 
@@ -309,7 +320,7 @@ export const createProductService = async (data) => {
     storage: normalizeVariantValue(body.storage),
     color: normalizeVariantValue(body.color),
     RAM: normalizeVariantValue(body.RAM),
-    stock: body.stock,
+    stock: stockValue,
     price: body.price,
     comparePrice: body.comparePrice,
     discountPercentage:
@@ -376,6 +387,18 @@ export const updateProductService = async (
 
   /* UPDATE VARIANT */
 
+  const stockValue =
+  Number(body.stock);
+
+  if (
+  isNaN(stockValue) ||
+  stockValue < 0
+  ) {
+  throw new Error(
+  "Stock cannot be negative"
+  );
+  }
+
   if (body.comparePrice && Number(body.comparePrice) <= Number(body.price)) {
     throw new Error("Compare price must be greater than price");
   }
@@ -394,7 +417,7 @@ export const updateProductService = async (
 
       RAM: normalizeVariantValue(body.RAM),
 
-      stock: body.stock,
+      stock: stockValue,
 
       price: body.price,
 
@@ -647,6 +670,17 @@ export const addVariantService = async (data) => {
   if (body.comparePrice && Number(body.comparePrice) <= Number(body.price)) {
     throw new Error("Compare price must be greater than price");
   }
+  const stockValue =
+  Number(body.stock);
+
+  if (
+  isNaN(stockValue) ||
+  stockValue < 0
+  ) {
+  throw new Error(
+  "Stock cannot be negative"
+  );
+  }
 
   const variantData = {
     productId,
@@ -659,7 +693,7 @@ export const addVariantService = async (data) => {
 
     RAM: normalizeVariantValue(body.RAM),
 
-    stock: Number(body.stock),
+    stock: stockValue,
 
     price: Number(body.price),
 
@@ -772,6 +806,17 @@ export const updateVariantService = async (
   }
 
   /* UPDATE */
+  const stockValue =
+  Number(body.stock);
+
+  if (
+  isNaN(stockValue) ||
+  stockValue < 0
+  ) {
+  throw new Error(
+  "Stock cannot be negative"
+  );
+  }
   if (body.comparePrice && Number(body.comparePrice) <= Number(body.price)) {
     throw new Error("Compare price must be greater than price");
   }
@@ -788,7 +833,7 @@ export const updateVariantService = async (
 
       RAM: normalizeVariantValue(body.RAM),
 
-      stock: body.stock,
+      stock: stockValue,
 
       price: body.price,
 

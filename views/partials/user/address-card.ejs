@@ -67,13 +67,33 @@
 
         <div class="action-links">
 
-            <a
-                href="#"
-                class="action-link edit-trigger"
-                data-id="<%= address._id %>"
-            >
-                Edit Address
-            </a>
+           <a
+            href="#"
+
+            class="action-link edit-trigger"
+
+            data-id="<%= address._id %>"
+
+            data-name="<%= address.fullName %>"
+
+            data-phone="<%= address.phoneNumber %>"
+
+            data-address="<%= address.addressLine1 %>"
+
+            data-city="<%= address.city %>"
+
+            data-state="<%= address.state %>"
+
+            data-pincode="<%= address.pincode %>"
+
+            data-country="<%= address.country %>"
+
+            data-type="<%= address.type %>"
+
+            data-default="<%= address.isDefault %>"
+        >
+            Edit Address
+        </a>
 
             <a
                 href="#"

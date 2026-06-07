@@ -954,10 +954,21 @@ body {
 
 }
 
-/* HIDE ACTION BUTTONS */
+/* HIDE DELETE BUTTON */
 
-.checkout-address-wrapper
-.card-actions{
+.checkout-address-wrapper .card-actions {
+
+    display: flex;
+
+}
+
+.checkout-address-wrapper .deliver-here-btn {
+
+    display: none;
+
+}
+
+.checkout-address-wrapper .delete-trigger {
 
     display: none;
 

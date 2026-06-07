@@ -133,17 +133,14 @@
 
 </div>
 
-<a
+<button
+type="button"
+id="checkoutAddAddressBtn"
+class="co-add-address-btn">
 
-    href="/addresses"
++ Add New Address
 
-    class="co-add-address-btn"
-
->
-
-    + Add New Address
-
-</a>
+</button>
                     </div>
 
                     <!-- ── SECTION 2: DELIVERY OPTIONS ── -->
@@ -515,6 +512,242 @@
         </div>
 
     </main>
+     <!-- Add Address Modal -->
+        <div class="modal-overlay" id="address-modal">
+            <div class="modal-card">
+                <div class="modal-header">
+                    <h2>Add New Address</h2>
+                    <p>Enter your delivery details for a seamless shipping experience.</p>
+                </div>
+             <form
+                id="new-address-form"
+                class="address-form-v2"
+                method="POST"
+                action="/add-address"
+                >
+
+                <input
+                type="hidden"
+                name="redirectTo"
+                value="/checkout"
+                >
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Full Name</label>
+                            <input type="text" id="form-name" name="fullName" placeholder="e.g. fullName" required style="width: 100%; padding: 14px 16px; background: #EEEEF0; border: none; border-radius: 12px;">
+                        </div>
+                        <div class="form-group">
+                            <label>Phone Number</label>
+                            <input type="tel" id="form-phone" name="phoneNumber" placeholder="(+91)00 00 00 00" required style="width: 100%; padding: 14px 16px; background: #EEEEF0; border: none; border-radius: 12px;">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Street Address</label>
+                        <input type="text" id="form-address" name="addressLine1" placeholder="In Hariharnagar In" required style="width: 100%; padding: 14px 16px; background: #EEEEF0; border: none; border-radius: 12px;">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Apartment / Building (Optional)</label>
+                        <input type="text" id="form-building" placeholder="Suite, floor, gate code" style="width: 100%; padding: 14px 16px; background: #EEEEF0; border: none; border-radius: 12px;">
+                    </div>
+
+                    <div class="form-row-3">
+                        <div class="form-group">
+                            <label>City</label>
+                            <input type="text" id="form-city" name="city" placeholder="Kannur" required style="width: 100%; padding: 14px 16px; background: #EEEEF0; border: none; border-radius: 12px;">
+                        </div>
+                        <div class="form-group">
+                            <label>State</label>
+                            <input type="text" id="form-state" name="state" placeholder="Kerala" required style="width: 100%; padding: 14px 16px; background: #EEEEF0; border: none; border-radius: 12px;">
+                        </div>
+                        <div class="form-group">
+                            <label>Pin Code</label>
+                            <input type="text" id="form-pin" name="pincode" placeholder="670571" required style="width: 100%; padding: 14px 16px; background: #EEEEF0; border: none; border-radius: 12px;">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Country</label>
+                        <div class="custom-select-wrapper">
+                            <select id="form-country" name="country">
+                                <option value="United States">United States</option>
+                                <option value="India">India</option>
+                                <option value="United Kingdom">United Kingdom</option>
+                                <option value="Canada">Canada</option>
+                            </select>
+                            <div class="select-arrow"><i data-lucide="chevron-down"></i></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Address Type</label>
+                        <div class="type-selector-premium">
+                            <div class="type-option-premium">
+                                <input type="radio" name="type" id="type-home" value="Home" checked>
+                                <label for="type-home">
+                                    <i data-lucide="home"></i>
+                                    <span>Home</span>
+                                </label>
+                            </div>
+                            <div class="type-option-premium">
+                                <input type="radio" name="type" id="type-work" value="Work">
+                                <label for="type-work">
+                                    <i data-lucide="briefcase"></i>
+                                    <span>Work</span>
+                                </label>
+                            </div>
+                            <div class="type-option-premium">
+                                <input type="radio" name="type" id="type-other" value="Other">
+                                <label for="type-other">
+                                    <i data-lucide="more-horizontal"></i>
+                                    <span>Other</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="default-toggle-wrapper">
+                        <label class="switch">
+                            <input type="checkbox" id="form-default" name="isDefault" value="true">
+                            <span class="slider"></span>
+                        </label>
+                        <span class="toggle-label">Set as Default Address</span>
+                    </div>
+
+                    <div class="modal-actions-premium">
+                        <button type="button" class="cancel-btn-premium" id="close-modal">Cancel</button>
+                        <button type="submit" class="save-address-btn-premium">Save Address</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Edit Address Modal -->
+        <div class="modal-overlay" id="edit-address-modal">
+            <div class="edit-modal-card">
+                <div class="edit-modal-left">
+                    <div class="modal-header" style="margin-bottom: 32px;">
+                        <h2>Edit Address</h2>
+                        <p>Update your delivery details.</p>
+                    </div>
+                    <form
+                    class="address-form-v2"
+                    id="edit-address-form"
+                    method="POST"
+                    >
+
+                    <input
+                    type="hidden"
+                    name="redirectTo"
+                    value="/checkout"
+                    >
+                        <div class="form-group">
+                            <label>Full Name</label>
+                            <input type="text" id="edit-form-name" name="fullName" required style="width: 100%; padding: 14px 16px; background: #EEEEF0; border: none; border-radius: 12px;">
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Phone Number</label>
+                                <input type="tel" id="edit-form-phone" name="phoneNumber" required style="width: 100%; padding: 14px 16px; background: #EEEEF0; border: none; border-radius: 12px;">
+                            </div>
+                            <div class="form-group">
+                                <label>Address Type</label>
+                                <div class="type-selector-pill">
+                                    <div class="type-option-pill">
+                                        <input type="radio" name="type" id="edit-type-home" value="Home">
+                                        <label for="edit-type-home">Home</label>
+                                    </div>
+                                    <div class="type-option-pill">
+                                        <input type="radio" name="type" id="edit-type-work" value="Work">
+                                        <label for="edit-type-work">Work</label>
+                                    </div>
+                                    <div class="type-option-pill">
+                                        <input type="radio" name="type" id="edit-type-other" value="Other">
+                                        <label for="edit-type-other">Other</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Street Address</label>
+                            <input type="text" id="edit-form-address" name="addressLine1" required style="width: 100%; padding: 14px 16px; background: #EEEEF0; border: none; border-radius: 12px;">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Apartment / Area</label>
+                            <input type="text" id="edit-form-building" name="building" style="width: 100%; padding: 14px 16px; background: #EEEEF0; border: none; border-radius: 12px;">
+                        </div>
+
+                        <div class="form-row-3">
+                            <div class="form-group">
+                                <label>City</label>
+                                <input type="text" id="edit-form-city" name="city" required style="width: 100%; padding: 14px 16px; background: #EEEEF0; border: none; border-radius: 12px;">
+                            </div>
+                            <div class="form-group">
+                                <label>State</label>
+                                <input type="text" id="edit-form-state" name="state" required style="width: 100%; padding: 14px 16px; background: #EEEEF0; border: none; border-radius: 12px;">
+                            </div>
+                           <div class="form-group">
+                                <label>Country</label>
+
+                                <select
+                                id="edit-form-country"
+                                name="country"
+                                required
+                                style="
+                                width: 100%;
+                                padding: 14px 16px;
+                                background: #EEEEF0;
+                                border: none;
+                                border-radius: 12px;
+                                ">
+
+                                <option value="India">India</option>
+                                <option value="United States">United States</option>
+                                <option value="United Kingdom">United Kingdom</option>
+                                <option value="Canada">Canada</option>
+                                <option value="Australia">Australia</option>
+                                <option value="Germany">Germany</option>
+                                <option value="France">France</option>
+                                <option value="Singapore">Singapore</option>
+                                <option value="UAE">UAE</option>
+
+                                </select>
+
+                                </div>
+                            <div class="form-group">
+                                <label>Postal Code</label>
+                                <input type="text" id="edit-form-pin" name="pincode" required style="width: 100%; padding: 14px 16px; background: #EEEEF0; border: none; border-radius: 12px;">
+                            </div>
+                        </div>
+
+                        <label class="custom-checkbox-container">
+                            <input type="checkbox" id="edit-form-default" name="isDefault" value="true">
+                            <span class="checkmark"></i></span>
+                            <span class="toggle-label" style="font-size: 14px;">Set as Default Address</span>
+                        </label>
+
+                        <div class="edit-modal-actions">
+                            <button type="submit" class="update-address-btn">Update Address</button>
+                            <button type="button" class="edit-cancel-btn" id="close-edit-modal">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="edit-modal-right">
+                    <div class="edit-info-card">
+                        <i data-lucide="truck"></i>
+                        <h3>Delivery Precision</h3>
+                        <p>Accurate addresses ensure your iStore orders reach you on time. Make sure your postal code matches your city to avoid shipping delays.</p>
+                    </div>
+                    <div class="edit-image-container">
+                        <img src="/images/premium_apartment.png" alt="Premium Apartment">
+                    </div>
+                </div>
+            </div>
+        </div>
 
     <%- include('../partials/user/footer') %>
 
@@ -787,6 +1020,371 @@ document
     )
 
 })
+
+/* =========================================
+   ADD ADDRESS MODAL
+========================================= */
+
+const addAddressModal =
+document.getElementById(
+"address-modal"
+);
+
+document
+.getElementById(
+"checkoutAddAddressBtn"
+)
+?.addEventListener(
+
+"click",
+
+() => {
+
+addAddressModal.classList.add(
+"active"
+);
+
+}
+
+);
+
+document
+.getElementById(
+"close-modal"
+)
+?.addEventListener(
+
+"click",
+
+() => {
+
+addAddressModal.classList.remove(
+"active"
+);
+
+}
+
+);
+
+/* =========================================
+   EDIT ADDRESS MODAL
+========================================= */
+
+const editModal =
+document.getElementById(
+"edit-address-modal"
+);
+
+const editForm =
+document.getElementById(
+"edit-address-form"
+);
+
+document
+.querySelectorAll(
+".edit-trigger"
+)
+
+.forEach(btn => {
+
+btn.addEventListener(
+
+"click",
+
+(event) => {
+
+event.preventDefault();
+
+/* ADDRESS ID */
+
+const addressId =
+btn.dataset.id;
+
+/* FORM ACTION */
+
+editForm.action =
+`/edit-address/${addressId}`;
+
+/* FILL FORM */
+
+document.getElementById(
+"edit-form-name"
+).value =
+btn.dataset.name;
+
+document.getElementById(
+"edit-form-phone"
+).value =
+btn.dataset.phone;
+
+document.getElementById(
+"edit-form-address"
+).value =
+btn.dataset.address;
+
+document.getElementById(
+"edit-form-city"
+).value =
+btn.dataset.city;
+
+document.getElementById(
+"edit-form-state"
+).value =
+btn.dataset.state;
+
+document.getElementById(
+"edit-form-pin"
+).value =
+btn.dataset.pincode;
+
+document.getElementById(
+"edit-form-country"
+).value =
+btn.dataset.country;
+
+/* TYPE */
+
+document.querySelector(
+
+`#edit-type-${btn.dataset.type.toLowerCase()}`
+
+).checked = true;
+
+/* DEFAULT */
+
+document.getElementById(
+"edit-form-default"
+).checked =
+
+btn.dataset.default === "true";
+
+/* OPEN */
+
+editModal.classList.add(
+"active"
+);
+
+}
+
+);
+
+});
+
+/* =========================================
+   CLOSE EDIT MODAL
+========================================= */
+
+document
+.getElementById(
+"close-edit-modal"
+)
+
+?.addEventListener(
+
+"click",
+
+() => {
+
+editModal.classList.remove(
+"active"
+);
+
+}
+
+);
+
+/* =========================================
+   ADD ADDRESS AJAX
+========================================= */
+
+const addAddressForm =
+document.getElementById(
+"new-address-form"
+);
+
+addAddressForm?.addEventListener(
+
+"submit",
+
+async (e) => {
+
+e.preventDefault();
+
+try {
+
+const formData = Object.fromEntries(
+  new FormData(addAddressForm)
+);
+
+const response = await fetch(
+  "/add-address",
+  {
+    method: "POST",
+
+    headers: {
+      "Content-Type": "application/json"
+    },
+
+    body: JSON.stringify(formData)
+  }
+);
+
+const data =
+await response.json();
+
+if(!data.success){
+
+return Swal.fire({
+
+    toast: true,
+
+    position: "top",
+
+    icon: "warning",
+
+    title: data.message,
+
+    showConfirmButton: false,
+
+    timer: 3000,
+
+    timerProgressBar: true,
+
+    background: "#FFFFFF",
+
+    color: "#1A1C1D"
+
+});
+
+}
+
+await Swal.fire({
+
+icon:"success",
+
+title:"Address Added",
+
+text:data.message,
+
+confirmButtonColor:"#603763"
+
+});
+
+window.location.reload();
+
+}
+
+catch(error){
+
+Swal.fire({
+
+icon:"error",
+
+title:"Something went wrong",
+
+text:"Please try again."
+
+});
+
+}
+
+}
+
+);
+
+/* =========================================
+   EDIT ADDRESS AJAX
+========================================= */
+
+editForm?.addEventListener(
+
+"submit",
+
+async (e) => {
+
+e.preventDefault();
+
+try {
+
+const formData = Object.fromEntries(
+  new FormData(editForm)
+);
+
+const response = await fetch(
+  editForm.action,
+  {
+    method: "POST",
+
+    headers: {
+      "Content-Type": "application/json"
+    },
+
+    body: JSON.stringify(formData)
+  }
+);
+
+const data =
+await response.json();
+
+if(!data.success){
+
+return Swal.fire({
+
+    toast: true,
+
+    position: "top",
+
+    icon: "warning",
+
+    title: data.message,
+
+    showConfirmButton: false,
+
+    timer: 3000,
+
+    timerProgressBar: true,
+
+    background: "#FFFFFF",
+
+    color: "#1A1C1D"
+
+});
+
+}
+
+await Swal.fire({
+
+icon:"success",
+
+title:"Address Updated",
+
+text:data.message,
+
+confirmButtonColor:"#603763"
+
+});
+
+window.location.reload();
+
+}
+
+catch(error){
+
+Swal.fire({
+
+icon:"error",
+
+title:"Something went wrong",
+
+text:"Please try again."
+
+});
+
+}
+
+}
+
+);
     </script>
 
 </body>
