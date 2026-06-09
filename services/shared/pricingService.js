@@ -1,11 +1,10 @@
-
 import {
     validateCoupon
 }
 from "../user/couponService.js";
 
 import {
-  calculateItemOffer
+    calculateItemOffer
 }
 from "./offerService.js";
 
@@ -14,37 +13,33 @@ async ({
     cartItems,
     couponCode = null,
     userId = null,
+    deliveryType = "standard",
 }) => {
 
     let subtotal = 0;
 
     let offerDiscount = 0;
 
-    for (
-    const item of cartItems
-    ) {
+    for (const item of cartItems) {
 
-    const offer =
-    await calculateItemOffer(
+        const offer =
+        await calculateItemOffer(
 
-        item.productId,
+            item.productId,
 
-        item.variantId,
+            item.variantId,
 
-        item.quantity
+            item.quantity
 
-    );
+        );
 
-    subtotal +=
-    item.price *
-    item.quantity;
+        subtotal +=
+        item.price *
+        item.quantity;
 
-    offerDiscount +=
-    offer.offerDiscount;
-
+        offerDiscount +=
+        offer.offerDiscount;
     }
-
-   
 
     let couponDiscount = 0;
 
@@ -57,10 +52,14 @@ async ({
 
         const couponResult =
         await validateCoupon(
+
             couponCode,
+
             subtotal -
             offerDiscount,
+
             userId
+
         );
 
         if (
@@ -75,36 +74,49 @@ async ({
         }
     }
 
-   const deliveryCharge =
-    (
+    /* =====================================
+       DELIVERY CHARGE
+    ===================================== */
+
+    const discountedSubtotal =
         subtotal -
         offerDiscount -
-        couponDiscount
-    ) >= 5000
-    ? 0
-    : 99;
+        couponDiscount;
+
+    let deliveryCharge;
+
+    if (
+        deliveryType === "express"
+    ) {
+
+        deliveryCharge = 500;
+
+    } else {
+
+        deliveryCharge =
+            discountedSubtotal >= 5000
+            ? 0
+            : 99;
+
+    }
+
+    /* =====================================
+       TAX
+    ===================================== */
 
     const taxAmount =
     Math.floor(
-        (
-            subtotal
-            -
-            offerDiscount
-            -
-            couponDiscount
-        ) * 0.02
+        discountedSubtotal * 0.02
     );
 
+    /* =====================================
+       FINAL TOTAL
+    ===================================== */
+
     const finalAmount =
-    subtotal
-    -
-    offerDiscount
-    -
-    couponDiscount
-    +
-    deliveryCharge
-    +
-    taxAmount;
+        discountedSubtotal +
+        deliveryCharge +
+        taxAmount;
 
     return {
 

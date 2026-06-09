@@ -1173,27 +1173,28 @@ document
             addressId
         )
 
+        const deliveryType =
+        document.querySelector(
+        'input[name="delivery"]:checked'
+        )?.value || "standard";
+
         fetch("/checkout/place-order", {
 
-    method: "POST",
+            method: "POST",
 
-    headers: {
-        "Content-Type":
-        "application/json"
-    },
+            headers: {
+                "Content-Type":
+                "application/json"
+            },
 
-    const deliveryType =
-    document.querySelector(
-    'input[name="delivery"]:checked'
-    )?.value || "standard";
 
-    body: JSON.stringify({
+            body: JSON.stringify({
 
-        addressId,
+                addressId,
 
-        deliveryType
+                deliveryType
 
-    })
+            })
 
 })
 

@@ -256,29 +256,15 @@ await calculateCheckoutTotals({
 
   couponCode,
 
+  deliveryType,
+
 });
 
-let deliveryCharge =
+const deliveryCharge =
 totals.deliveryCharge;
 
-if (
-  deliveryType === "express"
-) {
-
-  deliveryCharge = 500;
-
-}
-
 const finalAmount =
-totals.subtotal
--
-totals.offerDiscount
--
-totals.couponDiscount
-+
-deliveryCharge
-+
-totals.taxAmount;
+totals.finalAmount;
 
   /* ORDER ITEMS */
 
