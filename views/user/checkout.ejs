@@ -27,20 +27,9 @@
 
     <%- include('../partials/user/header', { page: 'checkout' }) %>
 
-   <%
-
-    const couponDiscount =
-
-    typeof appliedCoupon !== "undefined"
-
-    ? appliedCoupon.discount
-
-    : 0;
-
-    const grandTotal =
-
-    finalAmount - couponDiscount;
-
+<%
+const grandTotal = finalAmount;
+const currentCouponDiscount = couponDiscount || 0;
 %>
 
     <main class="checkout-page" id="checkoutPage">
@@ -424,11 +413,17 @@ class="co-add-address-btn">
     </span>
 </div>
 
-                            <div class="co-breakdown-row co-discount" id="coDiscountRow">
-                                <span>Discount (<span id="coCouponCode">FESTIVE5K</span>)</span>
+                           <div
+                            class="co-breakdown-row co-discount"
+                            id="coDiscountRow"
+                            style="<%= currentCouponDiscount > 0 ? '' : 'display:none;' %>"
+                            >
+                                <span>Discount (<span id="coCouponCode">
+<%= appliedCoupon?.code || "-" %>
+</span>)</span>
                                 <span class="co-discount-val" id="coDiscount">
 
-    −₹<%= couponDiscount.toLocaleString('en-IN') %>
+    −₹<%= currentCouponDiscount.toLocaleString('en-IN') %>
 
 </span>
                             </div>
@@ -495,13 +490,31 @@ class="co-add-address-btn">
 
                         <!-- Manual coupon entry -->
                         <div class="co-coupon-manual">
+
                             <input
                                 type="text"
                                 id="couponInput"
                                 class="co-coupon-input"
                                 placeholder="Enter promo code"
+                                value="<%= appliedCoupon?.code || '' %>"
                             >
-                            <button class="co-coupon-manual-btn" id="applyCouponBtn">Apply</button>
+
+                            <button
+                                class="co-coupon-manual-btn"
+                                id="applyCouponBtn"
+                            >
+                                Apply
+                            </button>
+
+                            <button
+                                type="button"
+                                id="removeCouponBtn"
+                                class="co-coupon-manual-btn"
+                                style="<%= currentCouponDiscount > 0 ? 'display:inline-flex;' : 'display:none;' %>"
+                            >
+                                Remove
+                            </button>
+
                         </div>
 
                     </div>
@@ -783,24 +796,86 @@ class="co-add-address-btn">
         });
 
         /* ── Delivery option selection ── */
-        const deliveryCards = document.querySelectorAll('.co-delivery-card');
-        deliveryCards.forEach(card => {
-            card.addEventListener('click', () => {
-                deliveryCards.forEach(c => c.classList.remove('selected'));
-                card.classList.add('selected');
+                    const deliveryCards =
+                document.querySelectorAll('.co-delivery-card');
 
-                /* Update shipping in summary */
-                const isExpress = card.querySelector('input[value="express"]');
-                const shippingEl = document.getElementById('coShipping');
-                if (isExpress && shippingEl) {
-                    shippingEl.textContent = '₹500';
-                    shippingEl.classList.remove('co-free');
-                } else if (shippingEl) {
-                    shippingEl.textContent = 'Free';
-                    shippingEl.classList.add('co-free');
-                }
-            });
-        });
+                deliveryCards.forEach(card => {
+
+                    card.addEventListener('click', () => {
+
+                        deliveryCards.forEach(c =>
+                            c.classList.remove('selected')
+                        );
+
+                        card.classList.add('selected');
+
+                        const shippingEl =
+                        document.getElementById('coShipping');
+
+                        const taxEl =
+                        document.getElementById('coTax');
+
+                        const totalEl =
+                        document.getElementById('coGrandTotal');
+
+                        const tax =
+                        Number(
+                            taxEl.textContent
+                            .replace(/[₹,]/g,'')
+                        );
+
+                        let shipping = 0;
+
+                        if (
+                            card.querySelector(
+                                'input[value="express"]'
+                            )
+                        ) {
+
+                            shipping = 500;
+
+                            shippingEl.textContent =
+                            '₹500';
+
+                            shippingEl.classList.remove(
+                                'co-free'
+                            );
+
+                        } else {
+
+                            shipping = 0;
+
+                            shippingEl.textContent =
+                            'Free';
+
+                            shippingEl.classList.add(
+                                'co-free'
+                            );
+                        }
+
+                        const subtotal =
+                        <%= subtotal %>;
+
+                        const discount =
+                            Number(
+                            document
+                            .getElementById("coDiscount")
+                            .textContent
+                            .replace(/[−₹,]/g,"")
+                            ) || 0;
+
+                        const newTotal =
+                        subtotal +
+                        tax +
+                        shipping -
+                        discount;
+
+                        totalEl.textContent =
+                        `₹${newTotal.toLocaleString('en-IN')}`;
+
+                    });
+
+                });
 
         /* ── Card number formatting ── */
         const cardInput = document.getElementById('cardNumber');
@@ -835,18 +910,206 @@ class="co-add-address-btn">
             if (code) applyCouponCode(code);
         });
 
-        function applyCouponCode(code) {
-            /* Optimistic UI — replace with real API call in original project */
+        document.getElementById("removeCouponBtn")?.addEventListener("click", async () => {
+
+        try {
+
+            const response =
+            await fetch(
+                "/checkout/remove-coupon",
+                {
+                    method: "POST"
+                }
+            );
+
+            const data =
+            await response.json();
+
+            if (!data.success) {
+
+                return Swal.fire({
+
+                    icon: "error",
+
+                    title: "Coupon Error",
+
+                    text: data.message
+                });
+
+            }
+
+            document.getElementById(
+                    "couponInput"
+                ).value = "";
+
+                document.getElementById(
+                    "coCouponCode"
+                ).textContent = "-";
+
+                document.getElementById(
+                    "coDiscount"
+                ).textContent = "−₹0";
+
+                document.getElementById(
+                    "coDiscountRow"
+                ).style.display = "none";
+
+                /* RESTORE TAX */
+
+                document.getElementById(
+                    "coTax"
+                ).textContent =
+                `₹${data.taxAmount.toLocaleString("en-IN")}`;
+
+                /* RESTORE SHIPPING */
+
+                const shippingEl =
+                document.getElementById(
+                    "coShipping"
+                );
+
+                shippingEl.textContent =
+                data.deliveryCharge === 0
+                ? "Free"
+                : `₹${data.deliveryCharge.toLocaleString("en-IN")}`;
+
+                shippingEl.classList.toggle(
+                    "co-free",
+                    data.deliveryCharge === 0
+                );
+
+                /* RESTORE GRAND TOTAL */
+
+                document.getElementById(
+                    "coGrandTotal"
+                ).textContent =
+                `₹${data.finalAmount.toLocaleString("en-IN")}`;
+
+                /* HIDE REMOVE BUTTON */
+
+                document.getElementById(
+                    "removeCouponBtn"
+                ).style.display =
+                "none";
+
+        }
+
+        catch (error) {
+
             Swal.fire({
-                toast: true,
-                position: 'top-end',
-                icon: 'success',
-                title: `Coupon "${code}" applied!`,
-                showConfirmButton: false,
-                timer: 2000,
-                timerProgressBar: true,
+
+                icon: "error",
+
+                title: "Something went wrong"
+            });
+
+        }
+
+    }
+);
+
+       async function applyCouponCode(code) {
+
+    try {
+
+        const response =
+        await fetch(
+            "/checkout/apply-coupon",
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type":
+                    "application/json"
+                },
+
+                body: JSON.stringify({
+                    couponCode: code
+                })
+            }
+        );
+
+        const data =
+        await response.json();
+
+        if (!data.success) {
+
+            return Swal.fire({
+
+                icon: "error",
+
+                title: "Coupon Error",
+
+                text: data.message,
+
+                confirmButtonColor:
+                "#603763"
             });
         }
+
+        document.getElementById(
+            "coCouponCode"
+        ).textContent =
+        data.couponCode;
+
+        document.getElementById(
+            "coDiscountRow"
+        ).style.display = "flex";
+
+        document.getElementById(
+            "coDiscount"
+        ).textContent =
+        `−₹${data.couponDiscount.toLocaleString("en-IN")}`;
+
+        document.getElementById(
+            "coTax"
+        ).textContent =
+        `₹${data.taxAmount.toLocaleString("en-IN")}`;
+
+        document.getElementById(
+            "coGrandTotal"
+        ).textContent =
+        `₹${data.finalAmount.toLocaleString("en-IN")}`;
+
+        document.getElementById(
+            "removeCouponBtn"
+        ).style.display =
+        "inline-flex";
+
+        Swal.fire({
+
+            toast: true,
+
+            position: "top-end",
+
+            icon: "success",
+
+            title:
+            "Coupon Applied",
+
+            showConfirmButton: false,
+
+            timer: 2000,
+        });
+
+    }
+
+    catch (error) {
+
+        Swal.fire({
+
+            icon: "error",
+
+            title:
+            "Something went wrong",
+
+            text:
+            "Please try again later.",
+        });
+
+    }
+
+}
 /* =========================================
    PLACE ORDER
 ========================================= */
@@ -860,6 +1123,16 @@ document
 
     () => {
 
+        const placeOrderBtn =
+        document.getElementById(
+            "placeOrderBtn"
+        );
+
+        placeOrderBtn.disabled = true;
+
+        placeOrderBtn.textContent =
+        "Processing...";
+
         /* ADDRESS ID */
 
         const addressId =
@@ -871,6 +1144,12 @@ document
         /* NO ADDRESS */
 
         if (!addressId) {
+
+            placeOrderBtn.disabled =
+            false;
+
+            placeOrderBtn.textContent =
+            "Place Order";
 
             Swal.fire({
 
@@ -903,9 +1182,16 @@ document
         "application/json"
     },
 
+    const deliveryType =
+    document.querySelector(
+    'input[name="delivery"]:checked'
+    )?.value || "standard";
+
     body: JSON.stringify({
 
-        addressId
+        addressId,
+
+        deliveryType
 
     })
 
@@ -917,7 +1203,13 @@ document
 
     if (!data.success) {
 
-        Swal.fire({
+    placeOrderBtn.disabled =
+    false;
+
+    placeOrderBtn.textContent =
+    "Place Order";
+
+    Swal.fire({
 
             icon: "error",
 
@@ -940,6 +1232,12 @@ document
 })
 
 .catch(error => {
+
+    placeOrderBtn.disabled =
+    false;
+
+    placeOrderBtn.textContent =
+    "Place Order";
 
     Swal.fire({
 

@@ -4,12 +4,24 @@ import Address from "../../models/Address.js";
 
 import Order from "../../models/Order.js";
 
+import {
+  calculateCheckoutTotals
+}
+from "../shared/pricingService.js";
+
 
 /* =========================================
    LOAD CHECKOUT SERVICE
 ========================================= */
 
-export const loadCheckoutService = async (userId) => {
+export const loadCheckoutService =
+async (
+
+  userId,
+
+  couponCode = null,
+
+) => {
   /* LOAD CART */
 
   const cart = await Cart.findOne({
@@ -52,27 +64,24 @@ export const loadCheckoutService = async (userId) => {
 
   /* CALCULATE TOTALS */
 
-  let subtotal = 0;
+ let totalItems = 0;
 
-  let totalItems = 0;
+validItems.forEach(item => {
 
-  validItems.forEach((item) => {
-    subtotal += item.price * item.quantity;
+  totalItems += item.quantity;
 
-    totalItems += item.quantity;
-  });
+});
 
-  /* SHIPPING */
+const totals =
+await calculateCheckoutTotals({
 
-  const deliveryCharge = subtotal >= 5000 ? 0 : 99;
+  cartItems: validItems,
 
-  /* TAX */
+  userId,
 
-  const taxAmount = Math.floor(subtotal * 0.02);
+  couponCode,
 
-  /* FINAL */
-
-  const finalAmount = subtotal + taxAmount + deliveryCharge;
+});
 
   /* LOAD ADDRESSES */
 
@@ -100,15 +109,25 @@ await Address.find({
 
     addresses,
 
-    subtotal,
+    subtotal:
+      totals.subtotal,
+
+    offerDiscount:
+      totals.offerDiscount,
+
+    couponDiscount:
+      totals.couponDiscount,
 
     totalItems,
 
-    taxAmount,
+    taxAmount:
+      totals.taxAmount,
 
-    deliveryCharge,
+    deliveryCharge:
+  totals.deliveryCharge,
 
-    finalAmount,
+finalAmount:
+  totals.finalAmount,
   };
 };
 
@@ -121,6 +140,8 @@ export const placeOrderCODService =
 async (
   userId,
   addressId,
+  deliveryType = "standard",
+  couponCode = null,
 ) => {
   /* LOAD CART */
 
@@ -226,23 +247,38 @@ for (const item of cart.items) {
 
   /* TOTALS */
 
-  let subtotal = 0;
+const totals =
+await calculateCheckoutTotals({
 
-  cart.items.forEach(item => {
-    subtotal +=
-      item.price * item.quantity;
-  });
+  cartItems: cart.items,
 
-  const deliveryCharge =
-    subtotal >= 5000 ? 0 : 99;
+  userId,
 
-  const taxAmount =
-    Math.floor(subtotal * 0.02);
+  couponCode,
 
-  const finalAmount =
-    subtotal +
-    deliveryCharge +
-    taxAmount;
+});
+
+let deliveryCharge =
+totals.deliveryCharge;
+
+if (
+  deliveryType === "express"
+) {
+
+  deliveryCharge = 500;
+
+}
+
+const finalAmount =
+totals.subtotal
+-
+totals.offerDiscount
+-
+totals.couponDiscount
++
+deliveryCharge
++
+totals.taxAmount;
 
   /* ORDER ITEMS */
 
@@ -317,13 +353,21 @@ for (const item of cart.items) {
 
       paymentMethod: "COD",
 
-      subtotal,
+      subtotal:
+        totals.subtotal,
 
-      taxAmount,
+      discountAmount:
+        totals.offerDiscount +
+        totals.couponDiscount,
 
-      deliveryCharge,
+      taxAmount:
+        totals.taxAmount,
 
-      finalAmount,
+     deliveryCharge:
+  deliveryCharge,
+
+finalAmount:
+  finalAmount,
 
       estimatedDelivery:
         new Date(

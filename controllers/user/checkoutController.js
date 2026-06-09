@@ -3,6 +3,16 @@ import {
   placeOrderCODService,
 } from "../../services/user/checkoutService.js";
 
+import {
+  validateCoupon,
+} from "../../services/user/couponService.js";
+
+import {
+  calculateCheckoutTotals,
+} from "../../services/shared/pricingService.js";
+
+import Cart from "../../models/Cart.js";
+
 import Order from "../../models/Order.js";
 
 /* =========================================
@@ -17,7 +27,15 @@ export const loadCheckoutPage = async (
   try {
     const userId = req.session.userId;
 
-    const response = await loadCheckoutService(userId);
+    const response = await loadCheckoutService(
+
+      userId,
+
+      req.session.appliedCoupon?.code ||
+
+      null,
+
+    );
 
     /* EMPTY CART */
 
@@ -42,6 +60,12 @@ export const loadCheckoutPage = async (
         addresses: response.addresses,
 
         subtotal: response.subtotal,
+
+        offerDiscount: response.offerDiscount,
+
+        couponDiscount: response.couponDiscount,
+
+        appliedCoupon: req.session.appliedCoupon || null,
 
         totalItems: response.totalItems,
 
@@ -74,27 +98,33 @@ export const placeOrderCOD = async (
   try {
     const userId = req.session.userId;
 
-    const { addressId } = req.body;
+    const {addressId,deliveryType,} = req.body;
 
-    const response =
-      await placeOrderCODService(
-        userId,
-        addressId,
-      );
+   const response =
+    await placeOrderCODService(
+      userId,
+      addressId,
+      deliveryType,
+      req.session.appliedCoupon?.code || null,
+    );
 
     if (!response.success) {
-      return res.status(400).json({
-        success: false,
-        message: response.message,
-      });
-    }
+  return res.status(400).json({
+    success: false,
+    message: response.message,
+  });
+}
 
-    return res.status(200).json({
-      success: true,
+/* CLEAR APPLIED COUPON AFTER SUCCESSFUL ORDER */
 
-      redirectUrl:
-        `/order-success/${response.order.orderId}`,
-    });
+delete req.session.appliedCoupon;
+
+return res.status(200).json({
+  success: true,
+
+  redirectUrl:
+    `/order-success/${response.order.orderId}`,
+});
   } catch (error) {
     console.log(
       "Place Order COD Error:",
@@ -108,7 +138,214 @@ export const placeOrderCOD = async (
   }
 };
 
+/* =========================================
+   APPLY COUPON
+========================================= */
 
+export const applyCoupon =
+async (
+  req,
+  res,
+) => {
+
+  try {
+
+    const userId =
+    req.session.userId;
+
+    const {
+      couponCode,
+    } = req.body;
+
+    const cart =
+    await Cart.findOne({
+      userId,
+    })
+    .populate("items.productId")
+    .populate("items.variantId")
+    .lean();
+
+    if (
+      !cart ||
+      cart.items.length === 0
+    ) {
+
+      return res.json({
+
+        success: false,
+
+        message:
+        "Cart is empty",
+
+      });
+
+    }
+
+    const totals =
+    await calculateCheckoutTotals({
+
+      cartItems:
+      cart.items,
+
+      couponCode,
+
+      userId,
+
+    });
+
+    if (
+      !totals.coupon
+    ) {
+
+      return res.json({
+
+        success: false,
+
+        message:
+        "Invalid coupon",
+
+      });
+
+    }
+
+    req.session.appliedCoupon = {
+
+      code:
+      totals.coupon.code,
+
+      discount:
+      totals.couponDiscount,
+
+    };
+
+    return res.json({
+
+      success: true,
+
+      couponCode:
+      totals.coupon.code,
+
+      couponDiscount:
+      totals.couponDiscount,
+
+      finalAmount:
+      totals.finalAmount,
+
+      taxAmount:
+      totals.taxAmount,
+
+      deliveryCharge:
+      totals.deliveryCharge,
+
+    });
+
+  }
+
+  catch (error) {
+
+    console.log(
+      "Apply Coupon Error:",
+      error,
+    );
+
+    return res.json({
+
+      success: false,
+
+      message:
+      "Failed to apply coupon",
+
+    });
+
+  }
+
+};
+
+/* =========================================
+   REMOVE COUPON
+========================================= */
+
+export const removeCoupon =
+async (
+  req,
+  res,
+) => {
+
+  try {
+
+    const userId =
+    req.session.userId;
+
+    delete req.session.appliedCoupon;
+
+    const cart =
+    await Cart.findOne({
+      userId,
+    })
+    .populate("items.productId")
+    .populate("items.variantId")
+    .lean();
+
+    if (!cart || cart.items.length === 0) {
+
+  return res.json({
+
+    success: false,
+
+    message: "Cart is empty",
+
+  });
+
+}
+
+const totals =
+await calculateCheckoutTotals({
+
+      cartItems:
+      cart.items,
+
+      userId,
+
+      couponCode: null,
+
+    });
+
+    return res.json({
+
+      success: true,
+
+      taxAmount:
+      totals.taxAmount,
+
+      deliveryCharge:
+      totals.deliveryCharge,
+
+      finalAmount:
+      totals.finalAmount,
+
+    });
+
+  }
+
+  catch (error) {
+
+    console.log(
+      "Remove Coupon Error:",
+      error,
+    );
+
+    return res.json({
+
+      success: false,
+
+      message:
+      "Failed to remove coupon",
+
+    });
+
+  }
+
+};
 /* =========================================
    LOAD ORDER SUCCESS PAGE
 ========================================= */

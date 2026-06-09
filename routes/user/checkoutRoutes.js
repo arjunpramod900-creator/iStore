@@ -8,6 +8,8 @@ import {
   loadCheckoutPage,
   placeOrderCOD,
   loadOrderSuccessPage,
+  applyCoupon,
+  removeCoupon,
 } from "../../controllers/user/checkoutController.js";
 
 const router = express.Router();
@@ -24,6 +26,39 @@ router.get(
   userBlockCheckMiddleware,
 
   loadCheckoutPage,
+);
+
+
+/* =========================================
+   APPLY COUPON
+========================================= */
+
+router.post(
+
+  "/checkout/apply-coupon",
+
+  isLoggedIn,
+
+  userBlockCheckMiddleware,
+
+  applyCoupon,
+
+);
+
+/* =========================================
+   REMOVE COUPON
+========================================= */
+
+router.post(
+
+  "/checkout/remove-coupon",
+
+  isLoggedIn,
+
+  userBlockCheckMiddleware,
+
+  removeCoupon,
+
 );
 
 /* =========================================

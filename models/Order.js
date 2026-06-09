@@ -241,6 +241,36 @@ const orderSchema = new mongoose.Schema(
 
       default: null,
     },
+
+    walletAmountUsed: {
+      type: Number,
+
+      default: 0,
+    },
+
+    refundAmount: {
+      type: Number,
+
+      default: 0,
+    },
+
+    razorpayOrderId: {
+      type: String,
+
+      default: null,
+    },
+
+    razorpayPaymentId: {
+      type: String,
+
+      default: null,
+    },
+
+    razorpaySignature: {
+      type: String,
+
+      default: null,
+    },
   },
 
   {
