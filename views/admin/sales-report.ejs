@@ -1,0 +1,556 @@
+<!-- sales-report.ejs -->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Sales Analytics - Admin | iStore</title>
+
+<!-- Same CSS stack as category-management.ejs -->
+<link rel="stylesheet" href="/css/components/admin-sidebar.css">
+<link rel="stylesheet" href="/css/admin-sales-report.css">
+
+<link
+  href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+  rel="stylesheet"
+>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</head>
+
+<body>
+
+<%- include('../partials/admin/sidebar') %>
+
+<%
+  /* ── Safe data layer ── */
+  const safeReport = report || {};
+
+  const chartLabels = safeReport.chartLabels || ['01 Oct','07 Oct','14 Oct','21 Oct','28 Oct','31 Oct'];
+  const chartData   = safeReport.chartData   || [12000, 15000, 35000, 40000, 38000, 48000];
+
+  const categoriesData = safeReport.categories || [
+    { name:'Smartphones', revenue:1420000, percentage:85, colorClass:'fill-purple-gradient' },
+    { name:'Laptops',     revenue: 815400, percentage:55, colorClass:'fill-purple-solid' },
+    { name:'Accessories', revenue: 200000, percentage:20, colorClass:'fill-pink-solid' }
+  ];
+
+  const regionsData = safeReport.regions || [
+    { name:'Kerala',     percentage:42, dotClass:'dot-1' },
+    { name:'Tamil Nadu', percentage:33, dotClass:'dot-2' },
+    { name:'Karnataka',  percentage:25, dotClass:'dot-3' }
+  ];
+
+  const paymentsData = safeReport.payments || { upi:58, cards:32, others:10 };
+
+  const topProducts = safeReport.topProducts || [
+    { name:'iPhone 15 Pro',     icon:'smartphone', units:142, revenue:11345600 },
+    { name:'MacBook Pro M3',    icon:'laptop',     units:24,  revenue:456000 },
+    { name:'AirPods Max',       icon:'headphones', units:38,  revenue:516000 },
+    { name:'Apple Watch Ultra', icon:'watch',      units:55,  revenue:385000 }
+  ];
+
+  const recentOrders = safeReport.recentOrders || [
+    { id:'#IST-9402', customer:'Arjun Mehta',  amount:119800, status:'DELIVERED',  date:'24 Oct, 2026' },
+    { id:'#IST-9401', customer:'Priya Sharma', amount:89900,  status:'PROCESSING', date:'24 Oct, 2026' },
+    { id:'#IST-9398', customer:'Rahul Nair',   amount:54900,  status:'PENDING',    date:'23 Oct, 2026' },
+    { id:'#IST-9396', customer:'Sneha Kapoor', amount:142000, status:'DELIVERED',  date:'23 Oct, 2026' }
+  ];
+
+  const customerBase = safeReport.customerBase || {
+    returningPercentage: 72,
+    returningCount: 12450,
+    newCount: 4820
+  };
+
+  const totalRevenue = safeReport.totalOrderAmount || 0;
+  const totalCount   = safeReport.totalSalesCount  || 1248;
+  const aov          = totalCount > 0 ? Math.round(totalRevenue / totalCount) : 0;
+
+  function badgeClass(s) {
+    const map = {
+      DELIVERED:'badge-delivered',
+      PROCESSING:'badge-processing',
+      PENDING:'badge-pending',
+      CANCELLED:'badge-cancelled'
+    };
+    return map[s] || 'badge-pending';
+  }
+%>
+
+<main class="admin-main dashboard-main">
+
+  <!-- ── PAGE HEADER (same structure as category-management.ejs) ── -->
+
+  <header class="page-header">
+
+    <div class="header-left">
+      <nav class="breadcrumb">
+        <a href="/admin/dashboard">DASHBOARD</a>
+        <i data-lucide="chevron-right" size="12"></i>
+        <span class="current">REPORTS</span>
+      </nav>
+      <h1 class="page-title">Sales Analytics</h1>
+      <p class="page-subtitle">Deep dive into your revenue performance and customer growth.</p>
+    </div>
+
+    <button class="btn-add" type="button" onclick="window.print()">
+      <i data-lucide="download" size="18"></i>
+      <span>Download Report</span>
+    </button>
+
+  </header>
+
+  <!-- ── STATS GRID (same structure as category-management.ejs) ── -->
+
+  <section class="stats-grid">
+
+    <div class="stat-card">
+      <div class="stat-header">
+        <span class="stat-label">TOTAL SALES REVENUE</span>
+        <span class="metric-badge negative">
+          <i data-lucide="trending-down" size="11"></i> 12.4%
+        </span>
+      </div>
+      <span class="stat-value">₹<%= totalRevenue.toLocaleString('en-IN') %></span>
+      <div class="stat-sub">Gross revenue across all categories</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-header">
+        <span class="stat-label">AVG ORDER VALUE (AOV)</span>
+        <span class="metric-badge positive">
+          <i data-lucide="trending-up" size="11"></i> 5.2%
+        </span>
+      </div>
+      <span class="stat-value">₹<%= aov.toLocaleString('en-IN') %></span>
+      <div class="stat-sub">Average cart value per transaction</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-header">
+        <span class="stat-label">RETURN RATE</span>
+        <span class="metric-badge neutral">
+          <i data-lucide="trending-down" size="11"></i> 0.8%
+        </span>
+      </div>
+      <span class="stat-value">2.4%</span>
+      <div class="stat-sub">Percentage of orders returned</div>
+    </div>
+
+  </section>
+
+  <!-- ── FILTER BAR (mirrors category-management filter-bar) ── -->
+
+  <div class="filter-bar">
+
+    <div class="filter-chip-group">
+      <a href="/admin/sales-report?filter=daily"
+         class="filter-chip <%= (filter||'') === 'daily'  ? 'active' : '' %>">Today</a>
+      <a href="/admin/sales-report?filter=weekly"
+         class="filter-chip <%= (filter||'weekly') === 'weekly' ? 'active' : '' %>">Last 7 Days</a>
+      <a href="/admin/sales-report?filter=yearly"
+         class="filter-chip <%= (filter||'') === 'yearly' ? 'active' : '' %>">This Year</a>
+      <a href="#" id="customFilterBtn"
+         class="filter-chip <%= (filter||'') === 'custom' ? 'active' : '' %>">Custom</a>
+    </div>
+
+  </div>
+
+  <!-- ── REVENUE TRENDS CHART ── -->
+
+  <div class="chart-card">
+
+    <div class="chart-card-header">
+      <h2 class="chart-card-title">Revenue Trends</h2>
+      <div class="chart-legend">
+        <div class="legend-item">
+          <div class="legend-dot current"></div>
+          <span>Current Period</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot previous"></div>
+          <span>Previous Period</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-canvas-wrapper">
+      <canvas id="revenueChart"></canvas>
+    </div>
+
+  </div>
+
+  <!-- ── PERFORMANCE GRID (3 cards, auto-fit responsive) ── -->
+
+  <div class="perf-grid">
+
+    <!-- Sales by Category -->
+    <div class="perf-card">
+      <h3 class="perf-card-title">Sales by Category</h3>
+      <div class="progress-list">
+        <% categoriesData.forEach(cat => { %>
+          <div class="progress-item">
+            <div class="progress-info">
+              <span><%= cat.name %></span>
+              <span>₹<%= cat.revenue.toLocaleString('en-IN') %></span>
+            </div>
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill <%= cat.colorClass %>" style="width: <%= cat.percentage %>%;"></div>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+
+    <!-- Regional Distribution -->
+    <div class="perf-card">
+      <h3 class="perf-card-title">Regional Distribution</h3>
+      <div class="region-list">
+        <% regionsData.forEach(region => { %>
+          <div class="region-item">
+            <div class="region-left">
+              <div class="region-dot <%= region.dotClass %>"></div>
+              <span class="region-name"><%= region.name %></span>
+            </div>
+            <span class="region-value"><%= region.percentage %>%</span>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+
+    <!-- Payment Methods -->
+    <div class="perf-card">
+      <h3 class="perf-card-title">Payment Methods</h3>
+      <div class="payment-grid">
+        <div class="pay-card">
+          <i data-lucide="smartphone" class="pay-icon"></i>
+          <span class="pay-label">UPI</span>
+          <span class="pay-value"><%= paymentsData.upi %>%</span>
+        </div>
+        <div class="pay-card">
+          <i data-lucide="credit-card" class="pay-icon"></i>
+          <span class="pay-label">Cards</span>
+          <span class="pay-value"><%= paymentsData.cards %>%</span>
+        </div>
+        <div class="pay-card wide">
+          <span class="pay-label">Others (COD / Net)</span>
+          <span class="pay-value"><%= paymentsData.others %>%</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── BOTTOM GRID: Sales by Product + Customer Base ── -->
+
+  <div class="bottom-grid">
+
+    <!-- Sales by Product -->
+    <div class="table-card">
+      <div class="table-header">
+        <h2>Sales by Product</h2>
+        <a href="/admin/products" class="table-link">View All Products →</a>
+      </div>
+      <div class="table-responsive">
+        <table class="stbl">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th class="td-center">Units Sold</th>
+              <th class="td-right">Revenue</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% topProducts.forEach(product => { %>
+              <tr>
+                <td>
+                  <div class="prod-cell">
+                    <div class="prod-icon">
+                      <i data-lucide="<%= product.icon %>" size="18"></i>
+                    </div>
+                    <span class="prod-name"><%= product.name %></span>
+                  </div>
+                </td>
+                <td class="td-center"><%= product.units %></td>
+                <td class="td-right">₹<%= product.revenue.toLocaleString('en-IN') %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Customer Base -->
+    <div class="customer-card">
+
+      <h3 class="perf-card-title">Customer Base</h3>
+
+      <div class="donut-wrap">
+        <canvas id="customerChart" width="160" height="160" style="max-width:160px;max-height:160px;"></canvas>
+        <div class="donut-center">
+          <div class="donut-value"><%= customerBase.returningPercentage %>%</div>
+          <div class="donut-label">Returning</div>
+        </div>
+      </div>
+
+      <div class="cust-legend">
+        <div class="cust-legend-item">
+          <div class="cust-legend-left">
+            <div class="region-dot dot-1"></div>
+            <span class="region-name">Returning</span>
+          </div>
+          <span class="region-value"><%= customerBase.returningCount.toLocaleString() %></span>
+        </div>
+        <div class="cust-legend-item">
+          <div class="cust-legend-left">
+            <div class="region-dot" style="background:#FFD6FC;"></div>
+            <span class="region-name">New</span>
+          </div>
+          <span class="region-value"><%= customerBase.newCount.toLocaleString() %></span>
+        </div>
+      </div>
+
+      <div class="loyalty-box">
+        <div class="loyalty-title">
+          <i data-lucide="award" size="14"></i>
+          Loyalty Program
+        </div>
+        <div class="loyalty-text">
+          High-value customers spending over ₹50k increased by 14% this month.
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ── RECENT SALES TABLE ── -->
+
+  <div class="table-card">
+
+    <div class="table-header">
+      <h2>Recent Sales</h2>
+      <div class="table-header-right">
+        <div class="search-wrapper">
+          <i data-lucide="search" size="15" class="search-icon"></i>
+          <input type="text" class="search-input" placeholder="Search orders..." id="orderSearch">
+        </div>
+        <button class="btn-export" type="button">
+          <i data-lucide="download" size="15"></i>
+          Export
+        </button>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="stbl">
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Customer</th>
+            <th class="td-right">Amount</th>
+            <th>Status</th>
+            <th class="hide-mobile">Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% recentOrders.forEach(order => { %>
+            <tr>
+              <td style="font-weight:700;color:#603763;"><%= order.id %></td>
+              <td>
+                <div class="prod-cell">
+                  <div class="prod-icon round">
+                    <i data-lucide="user" size="15"></i>
+                  </div>
+                  <span class="prod-name"><%= order.customer %></span>
+                </div>
+              </td>
+              <td class="td-right" style="font-weight:700;">₹<%= order.amount.toLocaleString('en-IN') %></td>
+              <td><span class="badge <%= badgeClass(order.status) %>"><%= order.status %></span></td>
+              <td class="hide-mobile" style="color:var(--text-muted);font-size:12px;"><%= order.date %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination (exact structure as category-management.ejs) -->
+    <div class="pagination-footer">
+      <span class="pagination-info">
+        Showing <%= recentOrders.length %> of <%= totalCount.toLocaleString() %> orders
+      </span>
+      <div class="pagination-controls">
+        <button class="page-btn" type="button">
+          <i data-lucide="chevron-left" size="14"></i>
+        </button>
+        <a href="#" class="page-btn active">1</a>
+        <button class="page-btn" type="button">
+          <i data-lucide="chevron-right" size="14"></i>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── FOOTER (same as category-management.ejs) ── -->
+
+  <footer class="page-footer">
+    <span class="footer-text">© 2026 iStore Admin</span>
+  </footer>
+
+</main>
+
+<!-- ── Custom Date Range Modal ── -->
+<dialog id="customDateModal" style="padding:28px;border:none;border-radius:16px;margin:auto;box-shadow:0 8px 48px rgba(46,15,47,0.16);min-width:320px;max-width:400px;width:90%;">
+  <form method="GET" action="/admin/sales-report" style="display:flex;flex-direction:column;gap:16px;">
+    <input type="hidden" name="filter" value="custom">
+    <h3 style="margin:0;color:#2C1421;font-size:18px;font-weight:700;letter-spacing:-0.3px;">Custom Date Range</h3>
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:#4d444c;">Start Date</label>
+      <input type="date" name="startDate" required style="padding:10px 14px;border:1px solid rgba(208,195,204,0.3);border-radius:10px;font-family:inherit;font-size:14px;color:#2c1421;outline:none;">
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:#4d444c;">End Date</label>
+      <input type="date" name="endDate" required style="padding:10px 14px;border:1px solid rgba(208,195,204,0.3);border-radius:10px;font-family:inherit;font-size:14px;color:#2c1421;outline:none;">
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:4px;">
+      <button type="button"
+        onclick="document.getElementById('customDateModal').close()"
+        style="padding:10px 20px;border:none;background:#f4f4f5;border-radius:10px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;">
+        Cancel
+      </button>
+      <button type="submit"
+        style="padding:10px 20px;border:none;background:linear-gradient(135deg,#603763,#7a4e7c);color:#fff;border-radius:10px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;">
+        Apply
+      </button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+
+  lucide.createIcons();
+
+  /* Custom date modal */
+  document.getElementById('customFilterBtn').addEventListener('click', e => {
+    e.preventDefault();
+    document.getElementById('customDateModal').showModal();
+  });
+
+  /* Server data → JS */
+  const serverLabels = <%- JSON.stringify(chartLabels) %>;
+  const serverData   = <%- JSON.stringify(chartData) %>;
+  const donutData    = <%- JSON.stringify([customerBase.returningPercentage, 100 - customerBase.returningPercentage]) %>;
+
+  document.addEventListener('DOMContentLoaded', function () {
+
+    /* ── Revenue Line Chart ── */
+    const ctxRevenue = document.getElementById('revenueChart').getContext('2d');
+
+    const grad = ctxRevenue.createLinearGradient(0, 0, 0, 260);
+    grad.addColorStop(0, 'rgba(96,55,99,0.18)');
+    grad.addColorStop(1, 'rgba(96,55,99,0)');
+
+    new Chart(ctxRevenue, {
+      type: 'line',
+      data: {
+        labels: serverLabels,
+        datasets: [{
+          label: 'Current Period',
+          data: serverData,
+          borderColor: '#603763',
+          borderWidth: 2.5,
+          backgroundColor: grad,
+          fill: true,
+          tension: 0.4,
+          pointBackgroundColor: '#FFFFFF',
+          pointBorderColor: '#603763',
+          pointBorderWidth: 2,
+          pointRadius: 4,
+          pointHoverRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        layout: { padding: { top: 16, bottom: 8, left: 4, right: 4 } },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            mode: 'index',
+            intersect: false,
+            backgroundColor: '#2C1421',
+            titleColor: '#FFFFFF',
+            bodyColor: '#FFFFFF',
+            padding: 12,
+            cornerRadius: 10,
+            callbacks: {
+              label: ctx => {
+                const v = ctx.parsed.y;
+                return ' ' + (ctx.dataset.label||'') + ': ₹' +
+                  new Intl.NumberFormat('en-IN').format(v);
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { display: false, drawBorder: false },
+            ticks: {
+              color: '#4D444C',
+              font: { family:'Inter', size:11, weight:'600' },
+              padding: 8
+            }
+          },
+          y: {
+            display: false,
+            beginAtZero: false,
+            suggestedMax: Math.max(...serverData) * 1.25
+          }
+        },
+        interaction: { mode: 'nearest', axis: 'x', intersect: false }
+      }
+    });
+
+    /* ── Customer Donut Chart ── */
+    const ctxCustomer = document.getElementById('customerChart').getContext('2d');
+    new Chart(ctxCustomer, {
+      type: 'doughnut',
+      data: {
+        labels: ['Returning', 'New'],
+        datasets: [{
+          data: donutData,
+          backgroundColor: ['#603763', '#FFD6FC'],
+          borderWidth: 0,
+          hoverOffset: 4
+        }]
+      },
+      options: {
+        responsive: false,
+        maintainAspectRatio: false,
+        cutout: '74%',
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: ctx => ' ' + ctx.label + ': ' + ctx.parsed + '%'
+            }
+          }
+        }
+      }
+    });
+
+  });
+
+</script>
+
+</body>
+</html>

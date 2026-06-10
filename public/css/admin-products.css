@@ -445,12 +445,12 @@ tbody td {
 }
 
 /* =========================
-   RESPONSIVE
+   RESPONSIVE — mirrors admin-categories.css pattern
 ========================= */
 
 @media (max-width: 1024px) {
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .dashboard-main {
+    padding: 80px 24px 48px;
   }
 
   .action-bar {
@@ -468,6 +468,12 @@ tbody td {
 }
 
 @media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
   .page-title {
     font-size: 32px;
   }
@@ -477,16 +483,28 @@ tbody td {
   }
 
   .table-header-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
     padding: 16px;
   }
 
   .pagination-container {
     flex-direction: column;
     gap: 16px;
+    text-align: center;
   }
 }
 
 @media (max-width: 480px) {
+  .page-title {
+    font-size: 28px;
+  }
+
+  .stat-card {
+    padding: 16px;
+  }
+
   thead th:nth-child(2),
   thead th:nth-child(3),
   thead th:nth-child(5) {

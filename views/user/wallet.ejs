@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Wallet - iStore</title>
+    <link rel="stylesheet" href="/css/components/header.css">
+    <link rel="stylesheet" href="/css/components/footer.css">
+    <link rel="stylesheet" href="/css/wallet.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <%- include("../partials/user/header", { page: 'wallet' }) %>
+
+    <!-- Main Container -->
+    <main class="wallet-container">
+        
+        <!-- Breadcrumb -->
+        <nav class="breadcrumb-nav">
+            <a href="/profile">Profile</a>
+            <svg width="4" height="6" viewBox="0 0 4 6" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M1 1L3 3L1 5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>MY WALLET</span>
+        </nav>
+
+        <!-- Page Header -->
+        <header class="page-header">
+            <h1>My Wallet</h1>
+            <p>Manage your balance, refunds, and transactions with curated ease.</p>
+        </header>
+
+        <!-- Dashboard Grid -->
+        <div class="dashboard-grid">
+            
+            <!-- Main Content (Left) -->
+            <div class="main-content">
+                
+                <!-- Wallet Balance Card -->
+                <div class="wallet-card-bg">
+                    <!-- Decorative Blob -->
+                    <div class="abstract-blob"></div>
+
+                    <!-- Left Content -->
+                    <div class="wallet-balance-info">
+                        <span class="wallet-label">Available Balance</span>
+                        <div class="wallet-amount">
+                            <span class="wallet-currency">₹</span>
+                            <span class="wallet-value"><%= (wallet && wallet.balance) ? wallet.balance.toLocaleString('en-IN') : "0" %></span>
+                        </div>
+                        <div class="glass-pill">
+                            <i data-lucide="shield-check" style="width: 12px; height: 12px;"></i>
+                            <span>Secure & Protected</span>
+                        </div>
+                    </div>
+
+                    <!-- Right Icon Element -->
+                    <div class="glass-icon-container">
+                        <div class="glass-icon">
+                            <i data-lucide="wallet" style="width: 32px; height: 32px;"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transaction History Section -->
+                <section class="dashboard-section">
+                    <!-- Section Header -->
+                    <div class="section-header">
+                        <h2>Transaction History</h2>
+                        <div class="filter-btn">
+                            <span class="filter-label">Filter:</span>
+                            <span class="filter-value">All Transactions <i data-lucide="chevron-down" style="width: 16px; height: 16px; color: #6B7280;"></i></span>
+                        </div>
+                    </div>
+
+                    <!-- Transactions List -->
+                    <div class="tx-list">
+                        <% if (transactions && transactions.length > 0) { %>
+                            <% transactions.forEach((tx) => { %>
+                                <div class="tx-item">
+                                    <div class="tx-info">
+                                        <!-- Icon Circle -->
+                                        <% if (tx.type === 'Credit') { %>
+                                            <div class="tx-icon credit">
+                                                <i data-lucide="arrow-down-left" style="width: 20px; height: 20px;"></i>
+                                            </div>
+                                        <% } else if (tx.type === 'Debit') { %>
+                                            <div class="tx-icon debit">
+                                                <i data-lucide="shopping-cart" style="width: 20px; height: 20px;"></i>
+                                            </div>
+                                        <% } else { %>
+                                            <div class="tx-icon neutral">
+                                                <i data-lucide="refresh-cw" style="width: 20px; height: 20px;"></i>
+                                            </div>
+                                        <% } %>
+                                        
+                                        <!-- Details -->
+                                        <div class="tx-details">
+                                           <span class="tx-title">
+
+                                                <%= tx.description || tx.transactionType %>
+
+                                            </span>
+                                            <span class="tx-date">
+                                                <%= new Date(tx.createdAt).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'}) %> • <%= new Date(tx.createdAt).toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'}) %>
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Amount -->
+                                    <div class="tx-amount-col">
+                                        <span class="tx-amount <%= tx.type === 'Credit' ? 'credit' : 'debit' %>">
+                                            <%= tx.type === 'Credit' ? '+' : '-' %>₹<%= tx.amount.toLocaleString('en-IN', {minimumFractionDigits: 2}) %>
+                                        </span>
+                                        <div class="tx-status <%= tx.type === 'Credit' ? 'credit' : 'debit' %>">
+                                            <span>COMPLETED</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            <% }) %>
+                        <% } else { %>
+                            <div class="no-tx">No transactions found.</div>
+                        <% } %>
+                    </div>
+
+                    <% if (pagination.totalPages > 1) { %>
+
+                        <div class="wallet-pagination">
+
+                            <% if (pagination.currentPage > 1) { %>
+
+                                <a href="/wallet?page=<%= pagination.currentPage - 1 %>">
+                                    Previous
+                                </a>
+
+                            <% } %>
+
+                            <span>
+                                Page <%= pagination.currentPage %>
+                                of
+                                <%= pagination.totalPages %>
+                            </span>
+
+                            <% if (pagination.currentPage < pagination.totalPages) { %>
+
+                                <a href="/wallet?page=<%= pagination.currentPage + 1 %>">
+                                    Next
+                                </a>
+
+                            <% } %>
+
+                        </div>
+
+                    <% } %>
+
+                    <!-- View All Button -->
+                    <% if (transactions && transactions.length > 0) { %>
+                        <button class="view-all-btn">
+                            View Full Archive
+                        </button>
+                    <% } %>
+                </section>
+            </div>
+
+            <!-- Sidebar/Utility (Right) -->
+            <div class="sidebar-content">
+                
+                <!-- Add Money Section -->
+                <section class="dashboard-section gap-24">
+                    <div class="section-header-title">
+                        <div class="section-icon">
+                            <i data-lucide="plus" style="width: 16px; height: 16px;"></i>
+                        </div>
+                        <h3>Add Money</h3>
+                    </div>
+
+                    <div class="add-money-form">
+                        <div class="input-group">
+                            <label class="input-label">ENTER AMOUNT</label>
+                            <div class="amount-input-wrapper">
+                                <span class="currency-symbol">₹</span>
+                                <input type="number" id="topupAmount" placeholder="0.00" />
+                            </div>
+                        </div>
+
+                        <!-- Amount Presets -->
+                        <div class="amount-presets">
+                            <button onclick="setAmount(500)" class="preset-btn">₹500</button>
+                            <button onclick="setAmount(1000)" class="preset-btn">₹1000</button>
+                            <button onclick="setAmount(2000)" class="preset-btn">₹2000</button>
+                            <button onclick="setAmount(5000)" class="preset-btn">₹5000</button>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button class="btn-gradient">
+                            Top-up Wallet
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Wallet Payment Toggle -->
+                <section class="settings-section-card">
+                    <div class="settings-info">
+                        <h4>Enable Wallet Payment</h4>
+                        <p>Use balance during checkout for faster, one-tap payments.</p>
+                    </div>
+                    <!-- Toggle Switch -->
+                    <div id="walletToggle" class="toggle-switch active" onclick="this.classList.toggle('active')">
+                        <div class="toggle-thumb"></div>
+                    </div>
+                </section>
+
+                <!-- Recent Refunds Visualization -->
+                <section class="dashboard-section gap-24">
+                    <h3>Recent Refunds</h3>
+                    
+                    <div class="refunds-list">
+                        <!-- Item 1 -->
+                        <div class="refund-item">
+                            <div class="refund-info">
+                                <span class="refund-order">Order #IST445566</span>
+                                <span class="refund-date">24 Oct, 2024</span>
+                            </div>
+                            <div class="refund-amount-col">
+                                <span class="refund-amount">₹899.00</span>
+                                <span class="refund-status">CREDITED</span>
+                            </div>
+                        </div>
+
+                        <!-- Item 2 -->
+                        <div class="refund-item">
+                            <div class="refund-info">
+                                <span class="refund-order">Order #IST998877</span>
+                                <span class="refund-date">18 Oct, 2024</span>
+                            </div>
+                            <div class="refund-amount-col">
+                                <span class="refund-amount">₹2,490.00</span>
+                                <span class="refund-status">CREDITED</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Digital Art -->
+                    <div class="digital-payment-bg"></div>
+                </section>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <%- include("../partials/user/footer") %>
+
+    <script>
+        lucide.createIcons();
+
+        // Animation logic
+        gsap.from(".wallet-card-bg", { y: 20, opacity: 0, duration: 0.8, ease: "power3.out" });
+        gsap.from(".abstract-blob", { scale: 0.8, opacity: 0, duration: 1.5, ease: "power3.out", delay: 0.2 });
+        gsap.from(".dashboard-section", { y: 20, opacity: 0, duration: 0.8, stagger: 0.1, ease: "power3.out", delay: 0.2 });
+
+        function setAmount(amount) {
+            document.getElementById('topupAmount').value = amount;
+        }
+    </script>
+</body>
+</html>

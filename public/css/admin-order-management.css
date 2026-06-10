@@ -696,61 +696,75 @@ table.adm-table {
 .adm-footer-link:hover { color: var(--adm-accent); }
 
 /* ============================================================
-   RESPONSIVE
+   RESPONSIVE — mirrors admin-categories.css pattern
 ============================================================ */
-@media (max-width:1024px){
-
-    .adm-stats-grid{
-        grid-template-columns:
-        repeat(2,1fr);
+@media (max-width: 1024px) {
+    .dashboard-main {
+        padding: 80px 24px 48px;
+        gap: 24px;
     }
 
-    .adm-filters-grid{
-        flex-wrap:wrap;
+    .adm-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
 
-    .adm-filter-group{
-        min-width:260px;
-    }
-}
-
-@media (max-width:768px){
-
-    .adm-page-title{
-        font-size:32px;
-        line-height:40px;
+    .adm-filters-grid {
+        flex-wrap: wrap;
     }
 
-    .adm-stats-grid{
-        grid-template-columns:1fr;
-    }
-
-    .adm-table-header{
-        padding:16px;
-    }
-
-    .adm-table-footer{
-        flex-direction:column;
-        gap:16px;
-        align-items:flex-start;
-    }
-
-    .adm-main{
-        padding:80px 16px 60px;
+    .adm-filter-group {
+        min-width: 260px;
     }
 }
 
-@media (max-width:480px){
-
-    .adm-filters{
-        padding:16px;
+@media (max-width: 768px) {
+    .adm-page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
     }
 
-    .adm-filter-group{
-        min-width:100%;
+    .adm-page-title {
+        font-size: 32px;
+        line-height: 40px;
     }
 
-    .adm-date-range{
-        flex-direction:column;
+    .adm-stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .adm-table-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 16px;
+    }
+
+    .adm-table-footer {
+        flex-direction: column;
+        gap: 16px;
+        align-items: flex-start;
+    }
+
+    .dashboard-main {
+        padding: 80px 16px 48px;
+    }
+}
+
+@media (max-width: 480px) {
+    .adm-page-title {
+        font-size: 28px;
+    }
+
+    .adm-filters {
+        padding: 16px;
+    }
+
+    .adm-filter-group {
+        min-width: 100%;
+    }
+
+    .adm-date-range {
+        flex-direction: column;
     }
 }

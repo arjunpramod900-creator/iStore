@@ -224,3 +224,62 @@ font-size:28px;
 font-weight:700;
 color:#2C1421;
 }
+
+/* =========================
+   RESPONSIVE — mirrors admin-categories.css pattern
+========================= */
+
+@media (max-width: 1024px) {
+  .dashboard-main {
+    padding: 80px 24px 48px;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .filters-left {
+    flex-wrap: wrap;
+  }
+
+  .search-input-field {
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .action-bar {
+    padding: 16px;
+  }
+
+  .table-header-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .table-title {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .stat-card {
+    padding: 16px;
+  }
+
+  .stat-value {
+    font-size: 36px;
+  }
+}

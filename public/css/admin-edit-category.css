@@ -590,10 +590,10 @@ body {
   box-shadow: 0px 24px 52px rgba(96, 55, 99, 0.32);
 }
 
-/* Responsive */
+/* Responsive — mirrors admin-categories.css pattern */
 @media (max-width: 1280px) {
   .main-content {
-    padding: 80px 32px;
+    padding: 80px 32px 48px;
   }
   .metadata-strip {
     gap: 24px;
@@ -601,9 +601,14 @@ body {
 }
 
 @media (max-width: 1024px) {
+  .main-content {
+    padding: 80px 24px 48px;
+  }
+
   .content-grid {
     grid-template-columns: 1fr;
   }
+
   .metadata-strip {
     height: auto;
     padding: 24px;
@@ -614,28 +619,32 @@ body {
 }
 
 @media (max-width: 768px) {
-  .nav-links {
-    display: none;
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
   }
-  .mobile-nav-toggle {
-    display: block;
-  }
-  .search-bar {
-    display: none;
-  }
+
   .page-title {
-    font-size: 36px;
+    font-size: 32px;
+  }
+
+  .main-content {
+    padding: 80px 16px 32px;
   }
 }
 
 @media (max-width: 480px) {
-  .main-content {
-    padding: 64px 16px;
+  .page-title {
+    font-size: 28px;
   }
+
   .end-actions {
     flex-direction: column-reverse;
   }
-  .btn-update {
+
+  .btn-update,
+  .btn-link {
     width: 100%;
+    text-align: center;
   }
 }

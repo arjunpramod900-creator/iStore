@@ -751,20 +751,32 @@ body {
 .aod-footer-link:hover { color: var(--aod-accent); }
 
 /* ============================================================
-   RESPONSIVE
+   RESPONSIVE — mirrors admin-categories.css pattern
 ============================================================ */
 @media (max-width: 1100px) {
     .aod-summary-cards { grid-template-columns: repeat(2, 1fr); }
-    .aod-nav-links     { gap: 14px; }
 }
-@media (max-width: 860px) {
-    .aod-main { padding: 80px 16px 60px; }
+
+@media (max-width: 1024px) {
+    .aod-main { padding: 80px 24px 48px; }
+}
+
+@media (max-width: 768px) {
+    .aod-header-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .aod-page-title { font-size: 28px; line-height: 36px; }
+
+    .aod-main { padding: 80px 16px 48px; }
     .aod-body { grid-template-columns: 1fr; }
     .aod-right { order: -1; }
-    .aod-nav-links { display: none; }
 }
-@media (max-width: 560px) {
+
+@media (max-width: 480px) {
     .aod-summary-cards { grid-template-columns: 1fr 1fr; }
-    .aod-header-row    { flex-direction: column; align-items: flex-start; gap: 16px; }
     .aod-return-grid   { grid-template-columns: 1fr; }
+    .aod-page-title    { font-size: 24px; }
 }

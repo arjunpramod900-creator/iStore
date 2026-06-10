@@ -40,11 +40,12 @@ new mongoose.Schema(
       enum: [
         "Refund",
         "CancellationRefund",
+        "AdminCancellationRefund",
         "ReturnRefund",
         "OrderPayment",
         "ReferralBonus",
         "AdminAdjustment",
-        ],
+      ],
       required: true,
     },
 

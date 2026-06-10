@@ -20,6 +20,8 @@ import checkoutRoutes from "./routes/user/checkoutRoutes.js";
 
 import orderRoutes from "./routes/user/orderRoutes.js";
 
+import walletRoutes from "./routes/user/walletRoutes.js";
+
 import noCache from "./middleware/noCache.js";
 
 import adminNoCache from "./middleware/adminNoCache.js";
@@ -33,6 +35,8 @@ import adminRoutes from "./routes/admin/adminRoutes.js";
 import userBlockCheckMiddleware from "./middleware/userBlockCheckMiddleware.js";
 
 import categoryRoutes from "./routes/admin/categoryRoutes.js";
+
+import adminSalesRoutes from "./routes/admin/adminSalesRoutes.js";
 
 const app = express();
 
@@ -158,6 +162,9 @@ app.use("/", checkoutRoutes);
 /* USER ORDER ROUTES */
 app.use("/", orderRoutes);
 
+/* USER WALLET ROUTES */
+app.use("/", walletRoutes);
+
 /* ================================
 
 ADMIN ROUTES
@@ -169,6 +176,8 @@ app.use("/admin", adminNoCache, adminAuthRoutes);
 app.use("/admin", adminNoCache, adminRoutes);
 
 app.use("/admin", categoryRoutes);
+
+app.use("/admin", adminSalesRoutes);
 
 /* ================================
    404 HANDLER

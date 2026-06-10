@@ -321,42 +321,6 @@ totals.finalAmount;
       WALLET PAYMENT
     ========================================= */
 
-    if (
-      paymentMethod === "WALLET"
-    ) {
-
-      const walletResponse =
-      await debitWallet({
-
-        userId,
-
-        amount:
-          finalAmount,
-
-        transactionType:
-          "OrderPayment",
-
-        description:
-          `Payment for order ${orderId}`,
-
-      });
-
-      if (
-        !walletResponse.success
-      ) {
-
-        return {
-
-          success: false,
-
-          message:
-          "Insufficient wallet balance",
-
-        };
-
-      }
-
-    }
 
   /* CREATE ORDER */
 
