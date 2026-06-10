@@ -9,6 +9,18 @@ import {
 }
 from "../shared/pricingService.js";
 
+import {
+  debitWallet,
+} from "../shared/walletService.js";
+
+import {
+  createRazorpayOrder,
+} from "./razorpayService.js";
+
+import {
+  verifyRazorpaySignature,
+} from "./razorpayService.js";
+
 
 /* =========================================
    LOAD CHECKOUT SERVICE
@@ -141,6 +153,7 @@ async (
   userId,
   addressId,
   deliveryType = "standard",
+  paymentMethod = "COD",
   couponCode = null,
 ) => {
   /* LOAD CART */
@@ -304,6 +317,47 @@ totals.finalAmount;
     "IST" +
     Date.now();
 
+    /* =========================================
+      WALLET PAYMENT
+    ========================================= */
+
+    if (
+      paymentMethod === "WALLET"
+    ) {
+
+      const walletResponse =
+      await debitWallet({
+
+        userId,
+
+        amount:
+          finalAmount,
+
+        transactionType:
+          "OrderPayment",
+
+        description:
+          `Payment for order ${orderId}`,
+
+      });
+
+      if (
+        !walletResponse.success
+      ) {
+
+        return {
+
+          success: false,
+
+          message:
+          "Insufficient wallet balance",
+
+        };
+
+      }
+
+    }
+
   /* CREATE ORDER */
 
   const order =
@@ -337,7 +391,11 @@ totals.finalAmount;
           address.pincode,
       },
 
-      paymentMethod: "COD",
+      paymentMethod,
+      paymentStatus:
+      paymentMethod === "COD"
+        ? "Pending"
+        : "Paid",
 
       subtotal:
         totals.subtotal,
@@ -381,4 +439,435 @@ finalAmount:
     success: true,
     order,
   };
+};
+
+/* =========================================
+   PLACE ORDER WALLET
+========================================= */
+
+export const placeOrderWalletService =
+async (
+  userId,
+  addressId,
+  deliveryType = "standard",
+  couponCode = null,
+) => {
+
+  const cart =
+  await Cart.findOne({
+    userId,
+  })
+  .populate("items.productId")
+  .populate("items.variantId");
+
+  if (
+    !cart ||
+    cart.items.length === 0
+  ) {
+    return {
+      success: false,
+      message: "Cart is empty",
+    };
+  }
+
+  const address =
+  await Address.findOne({
+    _id: addressId,
+    userId,
+  });
+
+  if (!address) {
+    return {
+      success: false,
+      message: "Address not found",
+    };
+  }
+
+  for (const item of cart.items) {
+
+    if (
+      !item.variantId ||
+      item.variantId.stock <
+      item.quantity
+    ) {
+
+      return {
+        success: false,
+        message:
+        `${item.productId.name} stock unavailable`,
+      };
+    }
+
+  }
+
+  const totals =
+  await calculateCheckoutTotals({
+
+    cartItems:
+    cart.items,
+
+    userId,
+
+    couponCode,
+
+    deliveryType,
+
+  });
+
+  const walletResponse =
+  await debitWallet({
+
+    userId,
+
+    amount:
+      totals.finalAmount,
+
+    transactionType:
+      "OrderPayment",
+
+    description:
+      "Wallet payment for order",
+
+  });
+
+  if (
+    !walletResponse.success
+  ) {
+
+    return {
+      success: false,
+      message:
+      "Insufficient wallet balance",
+    };
+
+  }
+
+  const orderItems =
+  cart.items.map(item => ({
+
+    productId:
+      item.productId._id,
+
+    variantId:
+      item.variantId._id,
+
+    productName:
+      item.productId.name,
+
+    productImage:
+      item.variantId.images?.[0]
+      ||
+      item.productId.thumbnail,
+
+    variantName:
+      [
+        item.variantId.color,
+        item.variantId.storage,
+      ]
+      .filter(Boolean)
+      .join(" • "),
+
+    quantity:
+      item.quantity,
+
+    price:
+      item.price,
+
+  }));
+
+  const order =
+  await Order.create({
+
+    userId,
+
+    orderId:
+      "IST" + Date.now(),
+
+    items:
+      orderItems,
+
+    shippingAddress: {
+
+      fullName:
+        address.fullName,
+
+      phoneNumber:
+        address.phoneNumber,
+
+      addressLine1:
+        address.addressLine1,
+
+      city:
+        address.city,
+
+      state:
+        address.state,
+
+      country:
+        address.country,
+
+      pincode:
+        address.pincode,
+
+    },
+
+    paymentMethod:
+      "WALLET",
+
+    paymentStatus:
+      "Paid",
+
+    subtotal:
+      totals.subtotal,
+
+    discountAmount:
+      totals.offerDiscount +
+      totals.couponDiscount,
+
+    taxAmount:
+      totals.taxAmount,
+
+    deliveryCharge:
+      totals.deliveryCharge,
+
+    finalAmount:
+      totals.finalAmount,
+
+    estimatedDelivery:
+      new Date(
+        Date.now() +
+        5 * 24 * 60 * 60 * 1000
+      ),
+
+  });
+
+  for (const item of cart.items) {
+
+    item.variantId.stock -=
+    item.quantity;
+
+    await item.variantId.save();
+
+  }
+
+  cart.items = [];
+
+  await cart.save();
+
+  return {
+
+    success: true,
+
+    order,
+
+  };
+
+};
+
+/* =========================================
+  RAZORPAY CHECKOUT
+========================================= */
+export const createRazorpayCheckoutService =
+async (
+  userId,
+  addressId,
+  deliveryType = "standard",
+  couponCode = null,
+) => {
+
+  const cart =
+    await Cart.findOne({
+      userId,
+    })
+    .populate("items.productId")
+    .populate("items.variantId");
+
+  if (
+    !cart ||
+    cart.items.length === 0
+  ) {
+
+    return {
+
+      success: false,
+
+      message:
+        "Cart is empty",
+
+    };
+
+  }
+
+  const address =
+    await Address.findOne({
+
+      _id: addressId,
+
+      userId,
+
+    });
+
+  if (!address) {
+
+    return {
+
+      success: false,
+
+      message:
+        "Address not found",
+
+    };
+
+  }
+
+  const totals =
+    await calculateCheckoutTotals({
+
+      cartItems:
+        cart.items,
+
+      userId,
+
+      couponCode,
+
+      deliveryType,
+
+    });
+
+  const razorpayResponse =
+    await createRazorpayOrder({
+
+      amount:
+        totals.finalAmount,
+
+    });
+
+  if (
+    !razorpayResponse.success
+  ) {
+
+    return {
+
+      success: false,
+
+      message:
+        "Failed to initiate payment",
+
+    };
+
+  }
+
+    return {
+
+      success: true,
+
+      razorpayOrder:
+        razorpayResponse.razorpayOrder,
+
+      amount:
+        totals.finalAmount,
+
+      addressId,
+
+      deliveryType,
+
+      couponCode,
+
+    };
+
+};
+
+/* =========================================
+   VERIFY RAZORPAY PAYMENT
+========================================= */
+
+export const verifyRazorpayPaymentService =
+async ({
+
+  userId,
+
+  addressId,
+
+  deliveryType,
+
+  couponCode,
+
+  razorpayOrderId,
+
+  razorpayPaymentId,
+
+  razorpaySignature,
+
+}) => {
+
+  const isValid =
+  verifyRazorpaySignature({
+
+    razorpayOrderId,
+
+    razorpayPaymentId,
+
+    razorpaySignature,
+
+  });
+
+  if (!isValid) {
+
+    return {
+
+      success: false,
+
+      message:
+      "Payment verification failed",
+
+    };
+
+  }
+
+  const response =
+  await placeOrderCODService(
+
+    userId,
+
+    addressId,
+
+    deliveryType,
+
+    "RAZORPAY",
+
+    couponCode,
+
+  );
+
+  if (!response.success) {
+
+    return response;
+
+  }
+  response.order.paymentMethod =
+  "RAZORPAY";
+
+  response.order.paymentStatus =
+  "Paid";
+
+  response.order.razorpayOrderId =
+  razorpayOrderId;
+
+  response.order.razorpayPaymentId =
+  razorpayPaymentId;
+
+  response.order.razorpaySignature =
+  razorpaySignature;
+
+  await response.order.save();
+
+  return {
+
+    success: true,
+
+    order:
+    response.order,
+
+  };
+
 };

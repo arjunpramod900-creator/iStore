@@ -1,11 +1,10 @@
 import {
   loadCheckoutService,
   placeOrderCODService,
+  placeOrderWalletService,
+  createRazorpayCheckoutService,
+  verifyRazorpayPaymentService,
 } from "../../services/user/checkoutService.js";
-
-import {
-  validateCoupon,
-} from "../../services/user/couponService.js";
 
 import {
   calculateCheckoutTotals,
@@ -44,37 +43,36 @@ export const loadCheckoutPage = async (
     }
 
     res.render(
-    "user/checkout",
+      "user/checkout",
+      {
+          page: "checkout",
 
-    {
-        page: "checkout",
+          cart: {
+            items: response.cartItems,
+            subtotal: response.subtotal,
+          },
 
-        cart: {
+          addresses: response.addresses,
 
-        items: response.cartItems,
+          subtotal: response.subtotal,
 
-        subtotal: response.subtotal,
+          offerDiscount: response.offerDiscount,
 
-        },
+          couponDiscount: response.couponDiscount,
 
-        addresses: response.addresses,
+          appliedCoupon: req.session.appliedCoupon || null,
 
-        subtotal: response.subtotal,
+          totalItems: response.totalItems,
 
-        offerDiscount: response.offerDiscount,
+          taxAmount: response.taxAmount,
 
-        couponDiscount: response.couponDiscount,
+          deliveryCharge: response.deliveryCharge,
 
-        appliedCoupon: req.session.appliedCoupon || null,
+          finalAmount: response.finalAmount,
 
-        totalItems: response.totalItems,
-
-        taxAmount: response.taxAmount,
-
-        deliveryCharge: response.deliveryCharge,
-
-        finalAmount: response.finalAmount,
-    },
+          razorpayKey:
+          process.env.RAZORPAY_KEY_ID,
+      },
     );
   } catch (error) {
     console.log(
@@ -88,54 +86,228 @@ export const loadCheckoutPage = async (
 };
 
 /* =========================================
-   PLACE ORDER COD
+   PLACE ORDER
 ========================================= */
 
-export const placeOrderCOD = async (
+export const placeOrder = async (
   req,
   res,
 ) => {
+
   try {
-    const userId = req.session.userId;
 
-    const {addressId,deliveryType,} = req.body;
+    const userId =
+      req.session.userId;
 
-   const response =
-    await placeOrderCODService(
-      userId,
+    const {
       addressId,
       deliveryType,
-      req.session.appliedCoupon?.code || null,
-    );
+      paymentMethod,
+    } = req.body;
 
-    if (!response.success) {
+    let response;
+
+    if (
+      paymentMethod === "RAZORPAY"
+    ) {
+
+response =
+await createRazorpayCheckoutService(
+  userId,
+  addressId,
+  deliveryType,
+  req.session.appliedCoupon?.code || null,
+);
+
+if (!response.success) {
+
   return res.status(400).json({
+
     success: false,
+
     message: response.message,
+
   });
+
 }
 
-/* CLEAR APPLIED COUPON AFTER SUCCESSFUL ORDER */
+return res.json({
 
-delete req.session.appliedCoupon;
-
-return res.status(200).json({
   success: true,
 
-  redirectUrl:
-    `/order-success/${response.order.orderId}`,
+  paymentMethod: "RAZORPAY",
+
+  razorpayOrder:
+    response.razorpayOrder,
+
+  amount:
+    response.amount,
+
 });
-  } catch (error) {
+
+    }
+
+if (
+  paymentMethod === "WALLET"
+) {
+
+  response =
+  await placeOrderWalletService(
+
+    userId,
+
+    addressId,
+
+    deliveryType,
+
+    req.session.appliedCoupon?.code || null,
+
+  );
+
+}
+
+else {
+
+  response =
+  await placeOrderCODService(
+
+    userId,
+
+    addressId,
+
+    deliveryType,
+
+    "COD",
+
+    req.session.appliedCoupon?.code || null,
+
+  );
+
+}
+
+    if (!response.success) {
+
+      return res.status(400).json({
+
+        success: false,
+
+        message:
+          response.message,
+
+      });
+
+    }
+
+    delete req.session.appliedCoupon;
+
+    return res.status(200).json({
+
+      success: true,
+
+      redirectUrl:
+      `/order-success/${response.order.orderId}`,
+
+    });
+
+  }
+
+  catch (error) {
+
     console.log(
-      "Place Order COD Error:",
+      "Place Order Error:",
       error,
     );
 
     return res.status(500).json({
+
       success: false,
-      message: "Order placement failed",
+
+      message:
+      "Order placement failed",
+
     });
+
   }
+
+};
+
+/* =========================================
+   VERIFY RAZORPAY PAYMENT
+========================================= */
+
+export const verifyRazorpayPayment =
+async (req,res) => {
+
+  try {
+
+    const response =
+    await verifyRazorpayPaymentService({
+
+      userId:
+      req.session.userId,
+
+      addressId:
+      req.body.addressId,
+
+      deliveryType:
+      req.body.deliveryType,
+
+      couponCode:
+      req.session.appliedCoupon?.code
+      || null,
+
+      razorpayOrderId:
+      req.body.razorpay_order_id,
+
+      razorpayPaymentId:
+      req.body.razorpay_payment_id,
+
+      razorpaySignature:
+      req.body.razorpay_signature,
+
+    });
+
+    if (!response.success) {
+
+      return res.json({
+
+        success:false,
+
+        message:
+        response.message,
+
+      });
+
+    }
+
+    delete req.session.appliedCoupon;
+
+    return res.json({
+
+      success:true,
+
+      redirectUrl:
+      `/order-success/${response.order.orderId}`,
+
+    });
+
+  }
+
+  catch(error){
+
+    console.log(error);
+
+    return res.json({
+
+      success:false,
+
+      message:
+      "Payment verification failed",
+
+    });
+
+  }
+
 };
 
 /* =========================================

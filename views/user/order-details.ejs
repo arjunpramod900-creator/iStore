@@ -896,8 +896,9 @@
                         <% } %>
 
                         <% if(
-                            status === "delivered" && order.returnStatus !== "Requested"
-                        ){ %>
+    status === "delivered" &&
+    !["Requested", "Approved"].includes(order.returnStatus)
+){ %>
 
                             <button
                                 class="od-btn-return"

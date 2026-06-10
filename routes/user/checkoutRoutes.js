@@ -6,7 +6,8 @@ import userBlockCheckMiddleware from "../../middleware/userBlockCheckMiddleware.
 
 import {
   loadCheckoutPage,
-  placeOrderCOD,
+  placeOrder,
+  verifyRazorpayPayment,
   loadOrderSuccessPage,
   applyCoupon,
   removeCoupon,
@@ -66,13 +67,30 @@ router.post(
 ========================================= */
 
 router.post(
+  
   "/checkout/place-order",
 
   isLoggedIn,
 
   userBlockCheckMiddleware,
 
-  placeOrderCOD,
+  placeOrder,
+);
+
+/* =========================================
+   VERIFY RAZORPAY PAYMENT
+========================================= */
+
+router.post(
+
+  "/checkout/verify-payment",
+
+  isLoggedIn,
+
+  userBlockCheckMiddleware,
+
+  verifyRazorpayPayment,
+
 );
 
 /* =========================================
@@ -80,6 +98,7 @@ router.post(
 ========================================= */
 
 router.get(
+
   "/order-success/:orderId",
 
   isLoggedIn,

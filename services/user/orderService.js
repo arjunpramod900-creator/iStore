@@ -2,6 +2,10 @@ import Order from "../../models/Order.js";
 
 import Variant from "../../models/Variant.js";
 
+import {
+  creditWallet,
+} from "../shared/walletService.js";
+
 /* =========================================
    LOAD ORDERS
 ========================================= */
@@ -257,18 +261,57 @@ async (
       "Cancelled";
   }
 
-  order.orderStatus =
-    "Cancelled";
+/* =========================================
+   WALLET REFUND
+========================================= */
 
-  order.cancelReason =
-    reason || null;
+if (
+  ["RAZORPAY", "WALLET"]
+  .includes(order.paymentMethod)
+  &&
+  !order.isRefundProcessed
+) {
 
-  await order.save();
+  await creditWallet({
+
+    userId,
+
+    amount:
+      order.finalAmount,
+
+    transactionType:
+      "CancellationRefund",
+
+    description:
+      `Refund for cancelled order ${order.orderId}`,
+
+    orderId:
+      order._id,
+
+  });
+
+  order.refundAmount = order.finalAmount;
+
+  order.isRefundProcessed = true;
+
+}
+
+/* UPDATE ORDER */
+
+order.orderStatus =
+  "Cancelled";
+
+order.cancelReason =
+  reason || null;
+
+await order.save();
 
   return {
     success: true,
     message:
-      "Order cancelled successfully",
+            order.paymentMethod === "COD"
+            ? "Order cancelled successfully"
+            : "Order cancelled and refund added to wallet"
   };
 };
 
@@ -365,6 +408,57 @@ async (
     "Cancelled";
 
     /* =========================================
+   REFUND CALCULATION
+========================================= */
+
+const itemTotal =
+(
+  item.price *
+  item.quantity
+);
+
+/* 
+   PROPORTIONAL REFUND CALCULATION
+ */
+
+if (
+  ["RAZORPAY", "WALLET"]
+  .includes(order.paymentMethod)
+) {
+
+  const refundRatio =
+    itemTotal / order.subtotal;
+
+  const proportionalDiscount =
+    Math.round(
+      (order.discountAmount || 0) *
+      refundRatio
+    );
+
+  const refundAmount =
+    itemTotal -
+    proportionalDiscount;
+
+  await creditWallet({
+
+    userId,
+
+    amount: refundAmount,
+
+    transactionType:
+      "CancellationRefund",
+
+    description:
+      `Refund for cancelled item in order ${order.orderId}`,
+
+    orderId:
+      order._id,
+
+  });
+
+}
+
+    /* =========================================
    RECALCULATE ORDER TOTALS
 ========================================= */
   const activeItems =
@@ -399,7 +493,7 @@ const taxAmount =
 /* DELIVERY */
 
 const deliveryCharge =
-  newSubtotal > 50000
+  newSubtotal > 5000
     ? 0
     : 99;
 
@@ -447,10 +541,13 @@ order.orderStatus =
   await order.save();
 
   return {
-    success: true,
-    message:
-      "Product cancelled successfully",
-  };
+  success: true,
+
+  message:
+    order.paymentMethod === "COD"
+    ? "Product cancelled successfully"
+    : "Product cancelled and refund added to wallet",
+};
 };
 
 /* =========================================

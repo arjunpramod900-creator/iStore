@@ -1,6 +1,9 @@
 import Order from "../../models/Order.js";
 import User from "../../models/User.js";
 import Variant from "../../models/Variant.js";
+import {
+  creditWallet,
+} from "../shared/walletService.js";
 
 
 /* ============================
@@ -321,7 +324,7 @@ if (
 
  if (
 
-  ["Cancelled"].includes(status)
+  status === "Cancelled"
 
   &&
 
@@ -329,27 +332,77 @@ if (
 
 ) {
 
-    for (
-      const item
-      of order.items
-    ) {
+  for (const item of order.items) {
 
-      if (item.variantId) {
+    if (item.variantId) {
 
-            await Variant.findByIdAndUpdate(
-                item.variantId,
-                {
-                $inc: {
-                    stock: item.quantity,
-                },
-                }
-            );
+      await Variant.findByIdAndUpdate(
+
+        item.variantId,
+
+        {
+
+          $inc: {
+
+            stock: item.quantity,
+
+          },
 
         }
+
+      );
 
     }
 
   }
+
+  /* ==========================
+     REFUND PREPAID ORDERS
+  ========================== */
+
+  if (
+
+    ["RAZORPAY", "WALLET"]
+    .includes(order.paymentMethod)
+
+    &&
+
+    !order.isRefundProcessed
+
+  ) {
+
+    await creditWallet({
+
+      userId:
+        order.userId,
+
+      amount:
+        order.finalAmount,
+
+      transactionType:
+        "AdminCancellationRefund",
+
+      description:
+        `Refund for cancelled order ${order.orderId}`,
+
+      orderId:
+        order._id,
+
+    });
+
+    order.refundAmount =
+      order.finalAmount;
+
+    order.isRefundProcessed =
+      true;
+
+    order.paymentStatus =
+      "Refunded";
+
+  }
+
+}
+
 
   order.orderStatus =
     status;
@@ -430,6 +483,43 @@ async (
     order.paymentStatus =
       "Refunded";
   }
+
+  /* ==========================
+   WALLET REFUND
+========================== */
+
+if (
+  order.paymentMethod !== "COD" &&
+  !order.isRefundProcessed
+) {
+
+  await creditWallet({
+
+    userId:
+      order.userId,
+
+    amount:
+      order.finalAmount,
+
+    transactionType:
+      "ReturnRefund",
+
+    description:
+      `Refund for returned order ${order.orderId}`,
+
+    orderId:
+      order._id,
+
+  });
+
+  order.refundAmount =
+    order.finalAmount;
+
+  order.isRefundProcessed =
+    true;
+
+}
+
     /* RESTORE STOCK */
 
 for (const item of order.items) {

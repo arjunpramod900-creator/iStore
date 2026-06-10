@@ -254,6 +254,13 @@ const orderSchema = new mongoose.Schema(
       default: 0,
     },
 
+    isRefundProcessed: {
+      type: Boolean,
+
+      default: false,
+
+    },
+
     razorpayOrderId: {
       type: String,
 

@@ -21,6 +21,8 @@
 
     <!-- GSAP -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </head>
 
 <body>
@@ -776,6 +778,7 @@ class="co-add-address-btn">
         gsap.from('.co-section', { y: 20, opacity: 0, duration: 0.5, stagger: 0.12, delay: 0.2, ease: 'power2.out' });
 
         /* ── Payment method tab switching ── */
+        let selectedPaymentMethod = "COD";
         const tabs   = document.querySelectorAll('.co-pay-tab');
         const panels = {
             card:   document.getElementById('panelCard'),
@@ -789,6 +792,25 @@ class="co-add-address-btn">
                 tabs.forEach(t => t.classList.remove('active'));
                 tab.classList.add('active');
                 const method = tab.dataset.method;
+                switch (method) {
+
+                    case "cod":
+                        selectedPaymentMethod = "COD";
+                        break;
+
+                    case "wallet":
+                        selectedPaymentMethod = "WALLET";
+                        break;
+
+                    case "card":
+                    case "upi":
+                        selectedPaymentMethod = "RAZORPAY";
+                        break;
+
+                    default:
+                        selectedPaymentMethod = "COD";
+
+                }
                 Object.values(panels).forEach(p => p.classList.add('hidden'));
                 panels[method].classList.remove('hidden');
                 lucide.createIcons();
@@ -1178,6 +1200,11 @@ document
         'input[name="delivery"]:checked'
         )?.value || "standard";
 
+        const paymentMethod =
+        document.querySelector(
+        ".co-pay-tab.active"
+        )?.dataset.method;
+
         fetch("/checkout/place-order", {
 
             method: "POST",
@@ -1188,13 +1215,20 @@ document
             },
 
 
-            body: JSON.stringify({
+        body: JSON.stringify({
 
-                addressId,
+            addressId,
 
-                deliveryType
+            deliveryType,
 
-            })
+            paymentMethod:
+            paymentMethod === "wallet"
+            ? "WALLET"
+            : paymentMethod === "cod"
+            ? "COD"
+            : "RAZORPAY",
+
+        })
 
 })
 
@@ -1204,13 +1238,12 @@ document
 
     if (!data.success) {
 
-    placeOrderBtn.disabled =
-    false;
+        placeOrderBtn.disabled = false;
 
-    placeOrderBtn.textContent =
-    "Place Order";
+        placeOrderBtn.textContent =
+        "Place Order";
 
-    Swal.fire({
+        Swal.fire({
 
             icon: "error",
 
@@ -1221,14 +1254,203 @@ document
             confirmButtonColor:
             "#4C0080"
 
-        })
+        });
 
-        return
+        return;
+    }
+
+    /* ==========================
+       RAZORPAY PAYMENT
+    ========================== */
+
+    if (
+        data.paymentMethod ===
+        "RAZORPAY"
+    ) {
+
+        const options = {
+
+            key: "<%= razorpayKey %>",
+
+            amount:
+            data.razorpayOrder.amount,
+
+            currency:
+            "INR",
+
+            name:
+            "iStore",
+
+            description:
+            "Order Payment",
+
+            order_id:
+            data.razorpayOrder.id,
+
+            prefill: {
+
+                name: "Customer",
+
+                email: "",
+
+                contact: ""
+
+            },
+
+            notes: {
+
+                addressId: addressId,
+
+                deliveryType: deliveryType
+
+            },
+
+handler: async function(response) {
+
+    try {
+
+        const verifyResponse =
+        await fetch(
+            "/checkout/verify-payment",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type":
+                    "application/json",
+                },
+                body: JSON.stringify({
+
+                    razorpay_order_id:
+                    response.razorpay_order_id,
+
+                    razorpay_payment_id:
+                    response.razorpay_payment_id,
+
+                    razorpay_signature:
+                    response.razorpay_signature,
+
+                    addressId,
+
+                    deliveryType,
+
+                }),
+            }
+        );
+
+        const result =
+        await verifyResponse.json();
+
+if (!result.success) {
+
+    placeOrderBtn.disabled = false;
+
+    placeOrderBtn.textContent =
+    "Place Order";
+
+    return Swal.fire({
+
+        icon: "error",
+
+        title:
+        "Payment Verification Failed",
+
+        text:
+        result.message,
+
+    });
+
+}
+
+        window.location.href =
+        result.redirectUrl;
 
     }
 
+catch(error) {
+
+    placeOrderBtn.disabled = false;
+
+    placeOrderBtn.textContent =
+    "Place Order";
+
+    Swal.fire({
+
+        icon: "error",
+
+        title:
+        "Verification Failed",
+
+        text:
+        "Please contact support if money was deducted."
+
+    });
+
+}
+
+},
+
+
+
+    modal: {
+
+        ondismiss: function () {
+
+            placeOrderBtn.disabled = false;
+
+            placeOrderBtn.textContent =
+
+            "Place Order";
+
+        }
+
+    },
+
+
+            theme: {
+
+                color:
+                "#603763"
+
+            }
+
+        };
+
+const razorpay =
+new Razorpay(options);
+
+razorpay.on(
+    "payment.failed",
+    function(response){
+
+        Swal.fire({
+
+            icon: "error",
+
+            title: "Payment Failed",
+
+            text:
+            response.error.description,
+
+        });
+
+        placeOrderBtn.disabled =
+        false;
+
+        placeOrderBtn.textContent =
+        "Place Order";
+
+    }
+);
+
+razorpay.open();
+
+        return;
+    }
+
+    /* COD / WALLET */
+
     window.location.href =
-    data.redirectUrl
+    data.redirectUrl;
 
 })
 
