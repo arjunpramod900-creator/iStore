@@ -12,10 +12,8 @@ import {
   verifyAdminOTP,
   renderAdminResetPassword,
   resetAdminPassword,
-  renderAdminDashboard,
 } from "../../controllers/admin/adminAuthController.js";
 
-import adminAuthMiddleware from "../../middleware/adminAuthMiddleware.js";
 
 import adminLoggedOut from "../../middleware/adminLoggedOut.js";
 
@@ -72,11 +70,6 @@ router.get("/reset-password", adminLoggedOut, renderAdminResetPassword);
 ============================ */
 router.post("/reset-password", resetAdminPassword);
 
-/* ============================
-   DASHBOARD
-============================ */
-
-router.get("/dashboard", adminAuthMiddleware, renderAdminDashboard);
 
 /* ============================
    LOGOUT

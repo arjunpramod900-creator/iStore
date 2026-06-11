@@ -198,17 +198,39 @@ async (
     },
 
   ]);
+    const recentOrders =
+    await Order.find(matchStage)
 
-  return report[0] || {
+    .sort({
 
-    totalSalesCount: 0,
+    createdAt: -1,
 
-    totalOrderAmount: 0,
+    })
 
-    totalDiscount: 0,
+    .limit(10)
 
-    totalCouponDeduction: 0,
+    .lean();
 
-  };
+return {
+
+  totalSalesCount:
+
+    report[0]?.totalSalesCount || 0,
+
+  totalOrderAmount:
+
+    report[0]?.totalOrderAmount || 0,
+
+  totalDiscount:
+
+    report[0]?.totalDiscount || 0,
+
+  totalCouponDeduction:
+
+    report[0]?.totalCouponDeduction || 0,
+
+  recentOrders,
+
+};
 
 };

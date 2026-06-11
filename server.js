@@ -38,6 +38,8 @@ import categoryRoutes from "./routes/admin/categoryRoutes.js";
 
 import adminSalesRoutes from "./routes/admin/adminSalesRoutes.js";
 
+import couponRoutes from "./routes/admin/adminCouponRoutes.js";
+
 const app = express();
 
 /* ================================
@@ -178,6 +180,8 @@ app.use("/admin", adminNoCache, adminRoutes);
 app.use("/admin", categoryRoutes);
 
 app.use("/admin", adminSalesRoutes);
+
+app.use("/admin", couponRoutes);
 
 /* ================================
    404 HANDLER

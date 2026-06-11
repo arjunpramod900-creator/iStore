@@ -8,6 +8,10 @@ import {
   loadSalesReport,
 } from "../../controllers/admin/adminSalesController.js";
 
+import {
+  downloadSalesReportPDF,
+} from "../../controllers/admin/salesReportController.js";
+
 /* ============================
    SALES REPORT
 ============================ */
@@ -18,6 +22,20 @@ router.get(
   adminAuthMiddleware,
 
   loadSalesReport,
+);
+
+/* ============================
+   DOWNLOAD SALES REPORT PDF
+============================ */
+
+router.get(
+
+  "/sales-report/pdf",
+
+  adminAuthMiddleware,
+
+  downloadSalesReportPDF,
+
 );
 
 export default router;

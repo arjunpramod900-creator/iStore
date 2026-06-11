@@ -5,6 +5,10 @@ import adminAuthMiddleware from "../../middleware/adminAuthMiddleware.js";
 import upload from "../../middleware/multer.js";
 
 import {
+  renderAdminDashboard,
+} from "../../controllers/admin/adminDashboardController.js";
+
+import {
   loadUsers,
   toggleBlockUser,
   viewUserDetails,
@@ -52,6 +56,18 @@ import {
 } from "../../controllers/admin/adminInventoryController.js";
 
 const router = express.Router();
+
+/* ============================
+   DASHBOARD
+============================ */
+
+router.get(
+  "/dashboard",
+
+  adminAuthMiddleware,
+
+  renderAdminDashboard,
+);
 
 /* ============================
    USER MANAGEMENT

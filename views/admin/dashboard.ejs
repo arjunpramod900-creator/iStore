@@ -8,11 +8,24 @@
     <link rel="stylesheet" href="/css/admin-dashboard.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
      <!-- Sidebar Navbar -->
    <%- include('../partials/admin/sidebar') %>
+   <% const data = dashboardData || {};%>
+    <%
+    const chartLabels =
+    data.revenueChart?.map(
+    item => item._id
+    ) || [];
+
+    const chartRevenue =
+    data.revenueChart?.map(
+    item => item.revenue
+    ) || [];
+    %>
 
     <main class="dashboard-main">
         
@@ -24,8 +37,28 @@
             </div>
             <div class="header-actions">
                 <div class="date-filter">
-                    <span>Last 30 Days</span>
-                    <i data-lucide="chevron-down" size="16"></i>
+
+                    <a
+                        href="/admin/dashboard?filter=daily"
+                        class="<%= filter === 'daily' ? 'active-filter' : '' %>"
+                    >
+                        Daily
+                    </a>
+
+                    <a
+                        href="/admin/dashboard?filter=monthly"
+                        class="<%= filter === 'monthly' ? 'active-filter' : '' %>"
+                    >
+                        Monthly
+                    </a>
+
+                    <a
+                        href="/admin/dashboard?filter=yearly"
+                        class="<%= filter === 'yearly' ? 'active-filter' : '' %>"
+                    >
+                        Yearly
+                    </a>
+
                 </div>
             </div>
         </header>
@@ -45,7 +78,9 @@
                 </div>
                 <div class="kpi-info">
                     <span class="kpi-label">TOTAL REVENUE</span>
-                    <span class="kpi-value">₹18,45,200</span>
+                    <span class="kpi-value">
+                    ₹<%= (data.totalRevenue || 0).toLocaleString("en-IN") %>
+                    </span>
                 </div>
             </div>
 
@@ -62,7 +97,9 @@
                 </div>
                 <div class="kpi-info">
                     <span class="kpi-label">TOTAL ORDERS</span>
-                    <span class="kpi-value">1,248</span>
+                    <span class="kpi-value">
+                    <%= (data.totalOrders || 0).toLocaleString("en-IN") %>
+                    </span>
                 </div>
             </div>
 
@@ -79,7 +116,9 @@
                 </div>
                 <div class="kpi-info">
                     <span class="kpi-label">TOTAL CUSTOMERS</span>
-                    <span class="kpi-value">842</span>
+                    <span class="kpi-value">
+                    <%= (data.totalCustomers || 0).toLocaleString("en-IN") %>
+                    </span>
                 </div>
             </div>
 
@@ -95,7 +134,9 @@
                 </div>
                 <div class="kpi-info">
                     <span class="kpi-label">TOTAL PRODUCTS</span>
-                    <span class="kpi-value">320</span>
+                    <span class="kpi-value">
+                    <%= (data.totalProducts || 0).toLocaleString("en-IN") %>
+                    </span>
                 </div>
             </div>
 
@@ -112,7 +153,7 @@
                 </div>
                 <div class="kpi-info">
                     <span class="kpi-label">TOTAL RETURNS</span>
-                    <span class="kpi-value">24</span>
+                    <span class="kpi-value">0</span>
                 </div>
             </div>
         </section>
@@ -121,7 +162,21 @@
         <section class="chart-section">
             <div class="chart-header">
                 <div class="chart-title">
-                    <h2>Revenue Trends</h2>
+                    <h2>
+
+                    Revenue Trends
+
+                    <small>
+
+                    (
+
+                    <%= filter || "weekly" %>
+
+                    )
+
+                    </small>
+
+                    </h2>
                     <p>Daily sales performance tracking</p>
                 </div>
                 <div class="chart-legend">
@@ -138,27 +193,18 @@
             
             <div class="chart-container">
                 <!-- SVG Chart Mockup -->
-                <svg viewBox="0 0 1000 250" preserveAspectRatio="none">
-                    <defs>
-                        <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stop-color="rgba(122, 78, 124, 0.2)" />
-                            <stop offset="100%" stop-color="rgba(122, 78, 124, 0)" />
-                        </linearGradient>
-                    </defs>
-                    <path d="M0,200 C150,150 250,220 400,100 C500,0 600,80 800,180 C900,230 1000,100 1000,100 L1000,250 L0,250 Z" fill="url(#chartGradient)" />
-                    <path d="M0,200 C150,150 250,220 400,100 C500,0 600,80 800,180 C900,230 1000,100 1000,100" fill="none" stroke="#7A4E7C" stroke-width="4" stroke-linecap="round" />
-                    <circle cx="550" cy="50" r="6" fill="#7A4E7C" stroke="#fff" stroke-width="2" />
-                </svg>
-
-                <div class="chart-labels">
-                    <span>MON</span>
-                    <span>TUE</span>
-                    <span>WED</span>
-                    <span>THU</span>
-                    <span>FRI</span>
-                    <span>SAT</span>
-                    <span>SUN</span>
+                <div
+                style="
+                height:300px;
+                width:100%;
+                "
+                >
+                    <canvas
+                    id="revenueChart"
+                    ></canvas>
                 </div>
+
+
             </div>
         </section>
 
@@ -172,7 +218,12 @@
                 <div class="dashboard-card">
                     <div class="card-header-inner">
                         <h3>Recent Orders</h3>
-                        <a href="#" class="card-link">View All</a>
+                            <a
+                            href="/admin/orders"
+                            class="card-link"
+                            >
+                            View All
+                            </a>
                     </div>
                     <div class="table-wrapper">
                         <table>
@@ -185,53 +236,93 @@
                                     <th>DATE</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                                <tbody>
+
+                                <% if (data.recentOrders?.length > 0) { %>
+
+                                    <% data.recentOrders.forEach(order => { %>
+
+                                        <tr>
+
+                                            <td class="td-order-id">
+
+                                                <%= order.orderId %>
+
+                                            </td>
+
+                                            <td class="td-customer">
+
+                                                <div
+                                                    class="customer-avatar"
+                                                    style="background:#A7F3D0;"
+                                                >
+                                                    <i
+                                                        data-lucide="user"
+                                                        size="20"
+                                                        style="
+                                                            margin:6px;
+                                                            color:#065F46;
+                                                        "
+                                                    ></i>
+                                                </div>
+
+                                                <span class="customer-name">
+
+                                                    <%= order.userId?.fullName || "Customer" %>
+
+                                                </span>
+
+                                            </td>
+
+                                            <td class="td-amount">
+
+                                                ₹<%= order.finalAmount.toLocaleString("en-IN") %>
+
+                                            </td>
+
+                                            <td>
+
+                                                <div
+                                                    class="
+                                                    status-badge
+                                                    <%= order.orderStatus?.toLowerCase() %>
+                                                    "
+                                                >
+
+                                                    <div class="status-dot"></div>
+
+                                                    <%= order.orderStatus %>
+
+                                                </div>
+
+                                            </td>
+
+                                            <td class="td-date">
+
+                                                <%= new Date(order.createdAt)
+                                                .toLocaleDateString("en-IN") %>
+
+                                            </td>
+
+                                        </tr>
+
+                                    <% }) %>
+
+                                <% } else { %>
+
                                 <tr>
-                                    <td class="td-order-id">#IST-9402</td>
-                                    <td class="td-customer">
-                                        <div class="customer-avatar" style="background: #A7F3D0;"><i data-lucide="user" size="20" style="margin: 6px; color: #065F46"></i></div>
-                                        <span class="customer-name">Sarah Miller</span>
-                                    </td>
-                                    <td class="td-amount">₹1,24,900</td>
-                                    <td>
-                                        <div class="status-badge delivered">
-                                            <div class="status-dot"></div>
-                                            DELIVERED
-                                        </div>
-                                    </td>
-                                    <td class="td-date">May 12, 2026</td>
+
+                                <td colspan="5">
+
+                                No orders found
+
+                                </td>
+
                                 </tr>
-                                <tr>
-                                    <td class="td-order-id">#IST-9401</td>
-                                    <td class="td-customer">
-                                        <div class="customer-avatar" style="background: #BAE6FD;"><i data-lucide="user" size="20" style="margin: 6px; color: #0369A1"></i></div>
-                                        <span class="customer-name">David Chen</span>
-                                    </td>
-                                    <td class="td-amount">₹54,900</td>
-                                    <td>
-                                        <div class="status-badge processing">
-                                            <div class="status-dot"></div>
-                                            PROCESSING
-                                        </div>
-                                    </td>
-                                    <td class="td-date">May 12, 2026</td>
-                                </tr>
-                                <tr>
-                                    <td class="td-order-id">#IST-9400</td>
-                                    <td class="td-customer">
-                                        <div class="customer-avatar" style="background: #FEF08A;"><i data-lucide="user" size="20" style="margin: 6px; color: #854D0E"></i></div>
-                                        <span class="customer-name">Anita Roy</span>
-                                    </td>
-                                    <td class="td-amount">₹2,10,000</td>
-                                    <td>
-                                        <div class="status-badge delivered">
-                                            <div class="status-dot"></div>
-                                            DELIVERED
-                                        </div>
-                                    </td>
-                                    <td class="td-date">May 11, 2026</td>
-                                </tr>
-                            </tbody>
+
+                                <% } %>
+
+                                </tbody>
                         </table>
                     </div>
                 </div>
@@ -247,63 +338,87 @@
                                 <tr>
                                     <th>PRODUCT NAME</th>
                                     <th>UNITS SOLD</th>
-                                    <th>REVENUE</th>
+                                    <th>SALES</th>
                                     <th>STOCK</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                                <tbody>
+
+                                <% if (data.topProducts?.length > 0) { %>
+
+                                    <% data.topProducts.forEach(product => { %>
+
+                                        <tr>
+
+                                            <td>
+
+                                                <div class="td-customer">
+
+                                                    <div class="product-icon">
+
+                                                        <i
+                                                        data-lucide="package"
+                                                        color="#603763"
+                                                        ></i>
+
+                                                    </div>
+
+                                                    <span class="td-product-name">
+
+                                                        <%= product.productName %>
+
+                                                    </span>
+
+                                                </div>
+
+                                            </td>
+
+                                            <td class="td-units">
+
+                                                <%= product.unitsSold %>
+
+                                            </td>
+
+                                            <td class="td-amount">
+
+                                                ₹<%= product.revenue.toLocaleString("en-IN") %>
+
+                                            </td>
+
+                                            <td>
+
+                                                <div
+                                                class="stock-bar-container"
+                                                >
+
+                                                    <div
+                                                    class="stock-bar-fill good"
+                                                    style="width:100%;"
+                                                    ></div>
+
+                                                </div>
+
+                                            </td>
+
+                                        </tr>
+
+                                    <% }) %>
+
+                                <% } else { %>
+
                                 <tr>
-                                    <td>
-                                        <div class="td-customer">
-                                            <div class="product-icon">
-                                                <i data-lucide="smartphone" color="#603763"></i>
-                                            </div>
-                                            <span class="td-product-name">iPhone 15 Pro Max</span>
-                                        </div>
+
+                                    <td colspan="4">
+
+                                        No sales data available
+
                                     </td>
-                                    <td class="td-units">422</td>
-                                    <td class="td-amount">₹6,75,000</td>
-                                    <td>
-                                        <div class="stock-bar-container">
-                                            <div class="stock-bar-fill good" style="width: 80%;"></div>
-                                        </div>
-                                    </td>
+
                                 </tr>
-                                <tr>
-                                    <td>
-                                        <div class="td-customer">
-                                            <div class="product-icon">
-                                                <i data-lucide="laptop" color="#603763"></i>
-                                            </div>
-                                            <span class="td-product-name">MacBook Pro M3</span>
-                                        </div>
-                                    </td>
-                                    <td class="td-units">158</td>
-                                    <td class="td-amount">₹3,45,000</td>
-                                    <td>
-                                        <div class="stock-bar-container">
-                                            <div class="stock-bar-fill medium" style="width: 40%;"></div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="td-customer">
-                                            <div class="product-icon">
-                                                <i data-lucide="headphones" color="#603763"></i>
-                                            </div>
-                                            <span class="td-product-name">AirPods Max</span>
-                                        </div>
-                                    </td>
-                                    <td class="td-units">210</td>
-                                    <td class="td-amount">₹1,15,000</td>
-                                    <td>
-                                        <div class="stock-bar-container">
-                                            <div class="stock-bar-fill good" style="width: 65%;"></div>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
+
+                                <% } %>
+
+                                </tbody>
                         </table>
                     </div>
                 </div>
@@ -320,55 +435,79 @@
                             <i data-lucide="alert-triangle" color="#7B1E5A" size="20"></i>
                             Stock Alerts
                         </div>
-                        <span class="urgent-badge">4 Urgent</span>
+                        <span class="urgent-badge">
+
+                        <%= data.stockAlerts?.length || 0 %>
+
+                        Urgent
+
+                        </span>
                     </div>
                     
                     <div class="alert-list">
-                        
-                        <div class="alert-item">
-                            <div class="alert-item-info">
-                                <div class="alert-item-icon">
-                                    <i data-lucide="headphones" size="16" color="#A1A1AA"></i>
+
+                    <% if (data.stockAlerts?.length > 0) { %>
+
+                        <% data.stockAlerts.forEach(item => { %>
+
+                            <div class="alert-item">
+
+                                <div class="alert-item-info">
+
+                                    <div class="alert-item-icon">
+
+                                        <i
+                                        data-lucide="package"
+                                        size="16"
+                                        color="#A1A1AA"
+                                        ></i>
+
+                                    </div>
+
+                                    <div class="alert-item-text">
+
+                                        <span class="alert-item-name">
+
+                                            <%= item.productId?.name || "Product" %>
+
+                                        </span>
+
+                                        <span class="alert-item-stock">
+
+                                            <%= item.stock %> items left
+
+                                        </span>
+
+                                    </div>
+
                                 </div>
-                                <div class="alert-item-text">
-                                    <span class="alert-item-name">AirPods Pro</span>
-                                    <span class="alert-item-stock">5 items left</span>
-                                </div>
+
+                                <button class="alert-item-action">
+
+                                    <i
+                                    data-lucide="shopping-cart"
+                                    size="16"
+                                    ></i>
+
+                                </button>
+
                             </div>
-                            <button class="alert-item-action">
-                                <i data-lucide="shopping-cart" size="16"></i>
-                            </button>
-                        </div>
+
+                        <% }) %>
+
+                    <% } else { %>
 
                         <div class="alert-item">
-                            <div class="alert-item-info">
-                                <div class="alert-item-icon">
-                                    <i data-lucide="laptop" size="16" color="#A1A1AA"></i>
-                                </div>
-                                <div class="alert-item-text">
-                                    <span class="alert-item-name">MacBook Pro</span>
-                                    <span class="alert-item-stock">3 items left</span>
-                                </div>
+
+                            <div class="alert-item-text">
+
+                                No low stock alerts
+
                             </div>
-                            <button class="alert-item-action">
-                                <i data-lucide="shopping-cart" size="16"></i>
-                            </button>
+
                         </div>
 
-                        <div class="alert-item">
-                            <div class="alert-item-info">
-                                <div class="alert-item-icon">
-                                    <i data-lucide="watch" size="16" color="#A1A1AA"></i>
-                                </div>
-                                <div class="alert-item-text">
-                                    <span class="alert-item-name">Apple Watch S9</span>
-                                    <span class="alert-item-stock">2 items left</span>
-                                </div>
-                            </div>
-                            <button class="alert-item-action">
-                                <i data-lucide="shopping-cart" size="16"></i>
-                            </button>
-                        </div>
+                    <% } %>
 
                     </div>
                 </div>
@@ -379,51 +518,68 @@
                         <h3>Top Categories</h3>
                     </div>
                     
-                    <div class="category-list">
-                        
-                        <div class="category-item">
-                            <div class="category-info">
-                                <span class="category-name">Smartphones</span>
-                                <span class="category-stats">₹8.4L • 45%</span>
+                        <div class="category-list">
+
+                        <% if (data.topCategories?.length > 0) { %>
+
+                            <% data.topCategories.forEach(category => { %>
+
+                                <div class="category-item">
+
+                                    <div class="category-info">
+
+                                        <span class="category-name">
+
+                                            <%= category._id %>
+
+                                        </span>
+
+                                        <span class="category-stats">
+
+                                            ₹<%= category.revenue.toLocaleString("en-IN") %>
+
+                                            •
+
+                                            <%= category.percentage %>%
+
+                                        </span>
+
+                                    </div>
+
+                                    <div class="category-bar-container">
+
+                                        <div
+                                            class="category-bar-fill c-purple-1"
+                                            style="
+                                                width:
+                                                <%= category.percentage %>%;
+                                            "
+                                        ></div>
+
+                                    </div>
+
+                                </div>
+
+                            <% }) %>
+
+                        <% } else { %>
+
+                            <div class="category-item">
+
+                                No category data available
+
                             </div>
-                            <div class="category-bar-container">
-                                <div class="category-bar-fill c-purple-1" style="width: 55%;"></div>
-                            </div>
+
+                        <% } %>
+
                         </div>
 
-                        <div class="category-item">
-                            <div class="category-info">
-                                <span class="category-name">Laptops</span>
-                                <span class="category-stats">₹5.2L • 28%</span>
-                            </div>
-                            <div class="category-bar-container">
-                                <div class="category-bar-fill c-purple-2" style="width: 72%;"></div>
-                            </div>
-                        </div>
-
-                        <div class="category-item">
-                            <div class="category-info">
-                                <span class="category-name">Accessories</span>
-                                <span class="category-stats">₹3.8L • 20%</span>
-                            </div>
-                            <div class="category-bar-container">
-                                <div class="category-bar-fill c-purple-3" style="width: 80%;"></div>
-                            </div>
-                        </div>
-
-                        <div class="category-item">
-                            <div class="category-info">
-                                <span class="category-name">Audio</span>
-                                <span class="category-stats dim">₹1.1L • 7%</span>
-                            </div>
-                            <div class="category-bar-container">
-                                <div class="category-bar-fill c-gray" style="width: 93%;"></div>
-                            </div>
-                        </div>
-
-                    </div>
-
-                    <button class="btn-report">DETAILED REPORT</button>
+                        <a
+                        href="/admin/sales-report"
+                        class="btn-report"
+                        >
+                        DETAILED REPORT
+                        </a>
                 </div>
 
             </aside>
@@ -439,6 +595,83 @@
     <script>
         // Initialize Lucide icons
         lucide.createIcons();
+
+const chartLabels =
+<%- JSON.stringify(chartLabels) %>;
+
+const chartRevenue =
+<%- JSON.stringify(chartRevenue) %>;
+
+const ctx =
+document
+.getElementById(
+"revenueChart"
+);
+
+if (
+ctx &&
+chartRevenue.length > 0
+){
+
+new Chart(ctx, {
+
+type: "line",
+
+data: {
+
+labels: chartLabels,
+
+datasets: [
+
+{
+
+label: "Revenue",
+
+data: chartRevenue,
+
+borderColor: "#603763",
+
+backgroundColor:
+"rgba(96,55,99,0.1)",
+
+fill: true,
+
+tension: 0.4,
+
+borderWidth: 3,
+
+},
+
+],
+
+},
+
+options: {
+
+responsive: true,
+
+plugins: {
+
+legend: {
+
+display: false,
+
+},
+
+},
+
+},
+
+});
+
+}
+else {
+
+console.log(
+"No revenue data available"
+);
+
+}
 
         
 

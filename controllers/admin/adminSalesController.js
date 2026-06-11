@@ -28,8 +28,7 @@ async (req, res) => {
       "admin/sales-report",
       {
 
-        page:
-          "sales-report",
+        page: "reports",
 
         report,
 

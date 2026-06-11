@@ -5,6 +5,10 @@ import {
   resetAdminPasswordService,
 } from "../../services/admin/authService.js";
 
+import {
+  getDashboardDataService,
+} from "../../services/admin/dashboardService.js";
+
 /* ============================
    RENDER LOGIN PAGE
 ============================ */
@@ -186,41 +190,5 @@ export const resetAdminPassword = async (req, res) => {
     console.log(error);
 
     res.send("Password reset failed");
-  }
-};
-
-/* ================================
-   RENDER ADMIN DASHBOARD
-================================ */
-
-export const renderAdminDashboard = (req, res) => {
-  try {
-    if (!req.session.adminId) {
-      return res.redirect("/admin/login");
-    }
-
-    /* CACHE FIX */
-
-    res.setHeader(
-      "Cache-Control",
-
-      "no-store, no-cache, must-revalidate, proxy-revalidate, private",
-    );
-
-    res.setHeader("Pragma", "no-cache");
-
-    res.setHeader("Expires", "0");
-
-    res.render(
-      "admin/dashboard",
-
-      {
-        page: "dashboard",
-      },
-    );
-  } catch (error) {
-    console.log(error);
-
-    res.redirect("/admin/login");
   }
 };
