@@ -54,6 +54,8 @@ export const loadCheckoutPage = async (
 
           addresses: response.addresses,
 
+          availableCoupons: response.availableCoupons,
+
           subtotal: response.subtotal,
 
           offerDiscount: response.offerDiscount,

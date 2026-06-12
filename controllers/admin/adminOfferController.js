@@ -1,0 +1,344 @@
+import Product from "../../models/Product.js";
+import Category from "../../models/Category.js";
+
+import {
+    getAllOffersService,
+    createOfferService,
+    updateOfferService,
+    deleteOfferService
+}
+from "../../services/admin/offerService.js";
+
+
+/* =========================================
+   LOAD OFFERS PAGE
+========================================= */
+
+export const loadOffersPage =
+async (
+    req,
+    res
+) => {
+
+    try {
+
+        const offers =
+        await getAllOffersService();
+
+        const products =
+        await Product.find({
+
+            isActive: true,
+
+            isDeleted: false
+
+        })
+        .sort({
+            name: 1
+        });
+
+        const categories =
+        await Category.find({
+
+            isActive: true,
+
+            isDeleted: false
+
+        })
+        .sort({
+            name: 1
+        });
+
+        return res.render(
+            "admin/offers",
+            {
+                offers,
+                products,
+                categories
+            }
+        );
+
+    }
+
+    catch (error) {
+
+        console.log(
+            "Load Offers Error:",
+            error
+        );
+
+        return res.redirect(
+            "/admin/dashboard"
+        );
+
+    }
+
+};
+
+
+/* =========================================
+   ADD OFFER
+========================================= */
+
+export const addOffer =
+async (
+    req,
+    res
+) => {
+
+    try {
+
+        const {
+
+            offerName,
+
+            targetId,
+
+            applyTo,
+
+            discountValue,
+
+            maxDiscount,
+
+            minPurchase,
+
+            startDate,
+
+            endDate,
+
+            isActive
+
+        } = req.body;
+
+        const response =
+        await createOfferService({
+
+            offerName,
+
+            targetId,
+
+            applyTo,
+
+            applyToModel:
+            applyTo === "PRODUCT"
+            ? "Product"
+            : "Category",
+
+            discountValue,
+
+            maxDiscount,
+
+            minPurchase,
+
+            startDate,
+
+            endDate,
+
+            isActive:
+            isActive === "true"
+
+        });
+
+        return res.json({
+
+            success:
+            response.success
+
+        });
+
+    }
+
+    catch (error) {
+
+        console.log(
+            "Add Offer Error:",
+            error
+        );
+
+        return res.json({
+
+            success: false,
+
+            message:
+            "Failed to create offer"
+
+        });
+
+    }
+
+};
+
+
+/* =========================================
+   EDIT OFFER
+========================================= */
+
+export const editOffer =
+async (
+    req,
+    res
+) => {
+
+    try {
+
+        const offerId =
+        req.params.id;
+
+        const {
+
+            offerName,
+
+            targetId,
+
+            applyTo,
+
+            discountValue,
+
+            maxDiscount,
+
+            minPurchase,
+
+            startDate,
+
+            endDate,
+
+            isActive
+
+        } = req.body;
+
+        const response =
+        await updateOfferService(
+
+            offerId,
+
+            {
+
+                offerName,
+
+                targetId,
+
+                applyTo,
+
+                applyToModel:
+                applyTo === "PRODUCT"
+                ? "Product"
+                : "Category",
+
+                discountValue,
+
+                maxDiscount,
+
+                minPurchase,
+
+                startDate,
+
+                endDate,
+
+                isActive:
+                isActive === "true"
+
+            }
+
+        );
+
+        if (!response.success) {
+
+            return res.json({
+
+                success: false,
+
+                message:
+                response.message
+
+            });
+
+        }
+
+        return res.json({
+
+            success: true
+
+        });
+
+    }
+
+    catch (error) {
+
+        console.log(
+            "Edit Offer Error:",
+            error
+        );
+
+        return res.json({
+
+            success: false,
+
+            message:
+            "Failed to update offer"
+
+        });
+
+    }
+
+};
+
+
+/* =========================================
+   DELETE OFFER
+========================================= */
+
+export const deleteOffer =
+async (
+    req,
+    res
+) => {
+
+    try {
+
+        const response =
+        await deleteOfferService(
+
+            req.params.id
+
+        );
+
+        if (!response.success) {
+
+            return res.json({
+
+                success: false,
+
+                message:
+                response.message
+
+            });
+
+        }
+
+        return res.json({
+
+            success: true
+
+        });
+
+    }
+
+    catch (error) {
+
+        console.log(
+            "Delete Offer Error:",
+            error
+        );
+
+        return res.json({
+
+            success: false,
+
+            message:
+            "Failed to delete offer"
+
+        });
+
+    }
+
+};

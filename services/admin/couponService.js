@@ -7,20 +7,19 @@ import Coupon from "../../models/Coupon.js";
 export const getCouponsService =
 async () => {
 
-const coupons =
-await Coupon.find({
+  return await Coupon.find({
 
-  isDeleted: false,
+    isDeleted: false,
 
-})
+  })
 
-    .sort({
-      createdAt: -1,
-    })
+  .sort({
 
-    .lean();
+    createdAt: -1,
 
-  return coupons;
+  })
+
+  .lean();
 
 };
 
@@ -35,8 +34,8 @@ async (couponData) => {
   await Coupon.findOne({
 
     code:
-      couponData.code
-      .toUpperCase(),
+    couponData.code
+    .toUpperCase(),
 
   });
 
@@ -68,18 +67,102 @@ async (couponData) => {
 
   }
 
-  const coupon =
-  await Coupon.create({
+  if (
 
-    ...couponData,
+    couponData.discountType ===
+    "PERCENTAGE"
+
+    &&
+
+    Number(
+      couponData.discountValue
+    ) > 90
+
+  ) {
+
+    throw new Error(
+      "Percentage discount cannot exceed 90%"
+    );
+
+  }
+
+  if (
+
+    Number(
+      couponData.discountValue
+    ) < 0
+
+    ||
+
+    Number(
+      couponData.minPurchase
+    ) < 0
+
+    ||
+
+    Number(
+      couponData.maxDiscount
+    ) < 0
+
+  ) {
+
+    throw new Error(
+      "Invalid coupon values"
+    );
+
+  }
+
+  return await Coupon.create({
+
+    title:
+    couponData.title,
 
     code:
-      couponData.code
-      .toUpperCase(),
+    couponData.code
+    .toUpperCase(),
+
+    description:
+    couponData.description,
+
+    discountType:
+    couponData.discountType,
+
+    discountValue:
+    Number(
+      couponData.discountValue
+    ),
+
+    maxDiscount:
+    Number(
+      couponData.maxDiscount
+    ) || 0,
+
+    minPurchase:
+    Number(
+      couponData.minPurchase
+    ) || 0,
+
+    totalUsageLimit:
+    Number(
+      couponData.totalUsageLimit
+    ) || 0,
+
+    userUsageLimit:
+    Number(
+      couponData.userUsageLimit
+    ) || 1,
+
+    startDate:
+    couponData.startDate,
+
+    endDate:
+    couponData.endDate,
+
+    isActive:
+    couponData.isActive ===
+    "true",
 
   });
-
-  return coupon;
 
 };
 
@@ -130,6 +213,30 @@ async (
 
   }
 
+  const existingCoupon =
+  await Coupon.findOne({
+
+    code:
+    couponData.code
+    .toUpperCase(),
+
+    _id: {
+
+      $ne:
+      couponId,
+
+    },
+
+  });
+
+  if (existingCoupon) {
+
+    throw new Error(
+      "Coupon code already exists"
+    );
+
+  }
+
   if (
 
     new Date(
@@ -150,38 +257,72 @@ async (
 
   }
 
+  if (
+
+    couponData.discountType ===
+    "PERCENTAGE"
+
+    &&
+
+    Number(
+      couponData.discountValue
+    ) > 90
+
+  ) {
+
+    throw new Error(
+      "Percentage discount cannot exceed 90%"
+    );
+
+  }
+
+  coupon.code =
+  couponData.code
+  .toUpperCase();
+
   coupon.title =
-    couponData.title;
+  couponData.title;
 
   coupon.description =
-    couponData.description;
+  couponData.description;
 
   coupon.discountType =
-    couponData.discountType;
+  couponData.discountType;
 
   coupon.discountValue =
-    couponData.discountValue;
+  Number(
+    couponData.discountValue
+  );
 
   coupon.maxDiscount =
-    couponData.maxDiscount;
+  Number(
+    couponData.maxDiscount
+  ) || 0;
 
   coupon.minPurchase =
-    couponData.minPurchase;
+  Number(
+    couponData.minPurchase
+  ) || 0;
 
   coupon.totalUsageLimit =
-    couponData.totalUsageLimit;
+  Number(
+    couponData.totalUsageLimit
+  ) || 0;
 
   coupon.userUsageLimit =
-    couponData.userUsageLimit;
+  Number(
+    couponData.userUsageLimit
+  ) || 1;
 
   coupon.startDate =
-    couponData.startDate;
+  couponData.startDate;
 
   coupon.endDate =
-    couponData.endDate;
+  couponData.endDate;
 
   coupon.isActive =
-    couponData.isActive;
+  couponData.isActive ===
+  "true";
 
   await coupon.save();
 

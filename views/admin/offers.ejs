@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offers Management - Admin | iStore</title>
+    <meta name="description" content="Create and manage promotional discounts and campaigns for iStore.">
+    <link rel="stylesheet" href="/css/components/admin-sidebar.css">
+    <link rel="stylesheet" href="/css/admin-offers.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+
+<%
+  const now = new Date();
+
+  /* ── Derived stats ── */
+  const totalOffers     = offers.length;
+  const activeOffers    = offers.filter(o =>
+    o.isActive && new Date(o.startDate) <= now && new Date(o.endDate) >= now
+  ).length;
+  const expiredOffers   = offers.filter(o => new Date(o.endDate) < now).length;
+  const scheduledOffers = offers.filter(o => new Date(o.startDate) > now).length;
+
+  /* ── Helpers ── */
+  function offerStatus(o) {
+    if (!o.isActive) return 'INACTIVE';
+    if (new Date(o.endDate) < now) return 'EXPIRED';
+    if (new Date(o.startDate) > now) return 'SCHEDULED';
+    return 'ACTIVE';
+  }
+
+  function statusClass(o) {
+    const s = offerStatus(o);
+    return s === 'ACTIVE' ? 's-active' : s === 'EXPIRED' ? 's-expired' : s === 'SCHEDULED' ? 's-scheduled' : 's-inactive';
+  }
+
+  function durationLabel(o) {
+    const end   = new Date(o.endDate);
+    const start = new Date(o.startDate);
+    const s     = offerStatus(o);
+    if (s === 'EXPIRED') return 'ENDED';
+    if (s === 'SCHEDULED') {
+      const months = Math.round((start - now) / (1000 * 60 * 60 * 24 * 30));
+      return months > 0 ? `STARTS IN ${months} MONTH${months > 1 ? 'S' : ''}` : 'STARTS SOON';
+    }
+    const daysLeft = Math.ceil((end - now) / (1000 * 60 * 60 * 24));
+    return daysLeft > 0 ? `${daysLeft} DAYS LEFT` : 'ENDING TODAY';
+  }
+
+  function fmtDateShort(d) {
+    return new Date(d).toLocaleDateString('en-IN', { month: 'short', day: '2-digit' });
+  }
+
+  function toInputDate(d) {
+    return new Date(d).toISOString().split('T')[0];
+  }
+
+  function targetName(o) {
+    if (!o.targetId) return '—';
+    return o.targetId.name || o.targetId.offerName || '—';
+  }
+%>
+
+    <%- include('../partials/admin/sidebar') %>
+
+    <main class="admin-main dashboard-main">
+
+        <!-- ── PAGE HEADER ── -->
+        <header class="page-header">
+            <nav class="breadcrumb">
+                <a href="/admin/dashboard">DASHBOARD</a>
+                <i data-lucide="chevron-right" size="10"></i>
+                <span class="current">OFFERS</span>
+            </nav>
+            <h1 class="page-title">Offers Management</h1>
+            <p class="page-subtitle">Create and manage promotional discounts and campaigns.</p>
+        </header>
+
+        <!-- ── STATS ── -->
+        <section class="stats-grid">
+
+            <div class="stat-card">
+                <div class="stat-top-row">
+                    <div class="stat-info">
+                        <span class="stat-label">Total Offers</span>
+                        <span class="stat-value"><%= totalOffers %></span>
+                    </div>
+                    <div class="stat-icon"><i data-lucide="tag" size="20"></i></div>
+                </div>
+                <div class="stat-sub">
+                    <i data-lucide="trending-up" size="12" style="color:#16a34a;"></i>
+                    <span class="stat-sub-text" style="color:#16a34a;">+12% from last month</span>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-top-row">
+                    <div class="stat-info">
+                        <span class="stat-label">Active</span>
+                        <span class="stat-value"><%= activeOffers %></span>
+                    </div>
+                    <div class="stat-icon"><i data-lucide="check-circle" size="20"></i></div>
+                </div>
+                <div class="stat-sub">
+                    <span class="stat-dot dot-primary"></span>
+                    <span class="stat-sub-text">Currently live on storefront</span>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-top-row">
+                    <div class="stat-info">
+                        <span class="stat-label">Expired</span>
+                        <span class="stat-value"><%= expiredOffers %></span>
+                    </div>
+                    <div class="stat-icon"><i data-lucide="clock" size="20"></i></div>
+                </div>
+                <div class="stat-sub">
+                    <span class="stat-dot dot-muted"></span>
+                    <span class="stat-sub-text">Past promotional events</span>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-top-row">
+                    <div class="stat-info">
+                        <span class="stat-label">Scheduled</span>
+                        <span class="stat-value"><%= scheduledOffers %></span>
+                    </div>
+                    <div class="stat-icon"><i data-lucide="calendar" size="20"></i></div>
+                </div>
+                <div class="stat-sub">
+                    <span class="stat-dot dot-dark"></span>
+                    <span class="stat-sub-text">Upcoming campaigns</span>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- ── ACTION BAR ── -->
+        <div class="action-bar">
+            <div class="action-left">
+                <div class="search-wrapper">
+                    <span class="search-icon"><i data-lucide="search" size="16"></i></span>
+                    <input type="text" class="search-input" id="offerSearch" placeholder="Search offers..." autocomplete="off">
+                </div>
+                <select class="filter-select" id="statusFilter">
+                    <option value="">All Statuses</option>
+                    <option value="ACTIVE">Active</option>
+                    <option value="EXPIRED">Expired</option>
+                    <option value="SCHEDULED">Scheduled</option>
+                    <option value="INACTIVE">Inactive</option>
+                </select>
+            </div>
+            <button class="btn-add" id="btnOpenAdd">
+                <i data-lucide="plus" size="18"></i>
+                Add New Offer
+            </button>
+        </div>
+
+        <!-- ── TABLE ── -->
+        <section class="table-card">
+            <div class="table-responsive">
+                <table class="offers-table" id="offersTable">
+                    <thead>
+                        <tr>
+                            <th>Offer Name</th>
+                            <th>Offer Type</th>
+                            <th>Target</th>
+                            <th>Discount</th>
+                            <th>Duration</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="offersTableBody">
+
+                    <% if (offers.length > 0) { %>
+                        <% offers.forEach((offer, idx) => { %>
+                        <%
+                          const stat    = offerStatus(offer);
+                          const sClass  = statusClass(offer);
+                          const durLbl  = durationLabel(offer);
+                          const tName   = targetName(offer);
+                          const isProduct = offer.applyTo === 'PRODUCT';
+                        %>
+                        <tr
+                          data-name="<%= offer.offerName.toLowerCase() %>"
+                          data-status="<%= stat %>"
+                        >
+                            <!-- Offer Name -->
+                            <td>
+                                <div class="offer-name-cell">
+                                    <span class="offer-name"><%= offer.offerName %></span>
+                                    <span class="offer-id">Campaign ID: #OSS-<%= String(idx + 100) %></span>
+                                </div>
+                            </td>
+
+                            <!-- Type Badge -->
+                            <td>
+                                <span class="type-badge <%= isProduct ? 'type-product' : 'type-category' %>">
+                                    <%= isProduct ? 'Product Offer' : 'Category Offer' %>
+                                </span>
+                            </td>
+
+                            <!-- Target -->
+                            <td>
+                                <div class="target-cell">
+                                    <div class="target-thumb">
+                                        <% if (isProduct && offer.targetId && offer.targetId.images && offer.targetId.images[0]) { %>
+                                        <img src="<%= offer.targetId.images[0] %>" alt="<%= tName %>" loading="lazy">
+                                        <% } else { %>
+                                        <i data-lucide="<%= isProduct ? 'package' : 'layers' %>" size="14"></i>
+                                        <% } %>
+                                    </div>
+                                    <span class="target-name"><%= tName %></span>
+                                </div>
+                            </td>
+
+                            <!-- Discount -->
+                            <td>
+                                <span class="discount-value">
+                                    <%= offer.discountValue %>% OFF
+                                </span>
+                            </td>
+
+                            <!-- Duration -->
+                            <td>
+                                <div class="duration-cell">
+                                    <span class="duration-dates">
+                                        <%= fmtDateShort(offer.startDate) %> - <%= fmtDateShort(offer.endDate) %>
+                                    </span>
+                                    <span class="duration-label"><%= durLbl %></span>
+                                </div>
+                            </td>
+
+                            <!-- Status -->
+                            <td>
+                                <div class="status-cell <%= sClass %>">
+                                    <span class="status-dot"></span>
+                                    <span class="status-text"><%= stat.charAt(0) + stat.slice(1).toLowerCase() %></span>
+                                </div>
+                            </td>
+
+                            <!-- Actions -->
+                            <td>
+                                <div class="action-btns">
+                                    <button class="action-btn" title="Edit offer"
+                                        onclick="openEditModal(<%- JSON.stringify({
+                                          _id:           offer._id,
+                                          offerName:     offer.offerName,
+                                          applyTo:       offer.applyTo,
+                                          targetId:      offer.targetId ? offer.targetId._id : '',
+                                          discountValue: offer.discountValue,
+                                          maxDiscount:   offer.maxDiscount || 0,
+                                          minPurchase:   offer.minPurchase || 0,
+                                          startDate:     toInputDate(offer.startDate),
+                                          endDate:       toInputDate(offer.endDate),
+                                          isActive:      offer.isActive
+                                        }) %>)">
+                                        <i data-lucide="pencil" size="15"></i>
+                                    </button>
+                                    <button class="action-btn delete" title="Delete offer"
+                                        onclick="confirmDelete('<%= offer._id %>', '<%= offer.offerName.replace(/'/g, &quot;\\'&quot;) %>')">
+                                        <i data-lucide="trash-2" size="15"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <% }) %>
+                    <% } else { %>
+                        <tr id="emptyRow">
+                            <td colspan="7">
+                                <div class="empty-state">
+                                    <div class="empty-state-icon"><i data-lucide="tag-off" size="48"></i></div>
+                                    <p class="empty-state-title">No offers yet</p>
+                                    <p class="empty-state-sub">Click "Add New Offer" to create your first promotional campaign.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    <% } %>
+
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ==============================================
+         ADD OFFER MODAL
+    =============================================== -->
+    <div class="modal-overlay" id="addModal" role="dialog" aria-modal="true">
+        <div class="modal-card">
+            <div class="modal-head">
+                <div class="modal-head-left">
+                    <h2 class="modal-title">Add New Offer</h2>
+                    <p class="modal-subtitle">Create a luxury shopping incentive for your inventory.</p>
+                </div>
+                <button class="modal-close" onclick="closeModal('addModal')"><i data-lucide="x" size="18"></i></button>
+            </div>
+
+            <form id="addOfferForm" novalidate>
+                <div class="modal-body">
+
+                    <!-- LEFT -->
+                    <div class="modal-left">
+
+                        <!-- Offer Details -->
+                        <div class="modal-section">
+                            <div class="section-head">
+                                <span class="section-title">
+                                    <i data-lucide="megaphone" size="16"></i>
+                                    Offer Details
+                                </span>
+                            </div>
+
+                            <div class="m-form-group">
+                                <label class="m-label" for="add-offerName">Offer Name *</label>
+                                <input type="text" id="add-offerName" name="offerName" class="m-input"
+                                    placeholder="e.g., Seasonal Flagship Event" required
+                                    oninput="updateBanner('add')">
+                                <p class="m-hint"><i data-lucide="info" size="11"></i> Name will be visible to customers.</p>
+                            </div>
+
+                            <!-- Offer Type Toggle -->
+                            <div class="m-form-group">
+                                <label class="m-label">Offer Type *</label>
+                                <div class="offer-type-toggle">
+                                    <button type="button" class="type-btn active" id="add-type-product"
+                                        onclick="setOfferType('add','PRODUCT')">
+                                        <i data-lucide="package" size="18"></i>
+                                        Product Offer
+                                    </button>
+                                    <button type="button" class="type-btn" id="add-type-category"
+                                        onclick="setOfferType('add','CATEGORY')">
+                                        <i data-lucide="layers" size="18"></i>
+                                        Category Offer
+                                    </button>
+                                </div>
+                                <input type="hidden" id="add-applyTo" name="applyTo" value="PRODUCT">
+                            </div>
+
+                            <!-- Target selection -->
+                            <div class="m-form-group">
+                                <label class="m-label" for="add-targetId" id="add-target-label">Target Selection *</label>
+                                <select id="add-targetId" name="targetId" class="m-select" required>
+                                    <option value="">Select a product...</option>
+                                    <% products.forEach(p => { %>
+                                    <option value="<%= p._id %>" data-type="PRODUCT"><%= p.name %></option>
+                                    <% }) %>
+                                    <% categories.forEach(c => { %>
+                                    <option value="<%= c._id %>" data-type="CATEGORY" style="display:none;"><%= c.name %></option>
+                                    <% }) %>
+                                </select>
+                            </div>
+
+                            <!-- Description (optional) -->
+                            <div class="m-form-group">
+                                <label class="m-label" for="add-description">Offer Description</label>
+                                <textarea id="add-description" name="description" class="m-textarea"
+                                    placeholder="Describe the terms and premium benefits of this offer..."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Discount Config -->
+                        <div class="modal-section">
+                            <div class="section-head">
+                                <span class="section-title">
+                                    <i data-lucide="percent" size="16"></i>
+                                    Discount Configuration
+                                </span>
+                                <div class="disc-type-row">
+                                    <button type="button" class="disc-chip active" id="add-disc-pct" onclick="setDiscType('add','PERCENTAGE')">Percentage</button>
+                                    <button type="button" class="disc-chip" id="add-disc-fixed" onclick="setDiscType('add','FIXED')">Fixed Amount</button>
+                                </div>
+                            </div>
+                            <input type="hidden" id="add-discountType" name="discountType" value="PERCENTAGE">
+
+                            <div class="form-row-2">
+                                <div class="m-form-group">
+                                    <label class="m-label" for="add-discountValue">Min Discount *</label>
+                                    <div class="suffix-wrap">
+                                        <input type="number" id="add-discountValue" name="discountValue"
+                                            class="m-input" placeholder="10" min="1" max="100" required
+                                            oninput="updatePricePreview('add')">
+                                        <span class="input-suffix" id="add-disc-suffix">%</span>
+                                    </div>
+                                </div>
+                                <div class="m-form-group">
+                                    <label class="m-label" for="add-maxDiscount">Max Discount</label>
+                                    <div class="suffix-wrap">
+                                        <input type="number" id="add-maxDiscount" name="maxDiscount"
+                                            class="m-input" placeholder="40" min="0" value="0"
+                                            oninput="updatePricePreview('add')">
+                                        <span class="input-suffix" id="add-max-suffix">%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div><!-- /modal-left -->
+
+                    <!-- RIGHT -->
+                    <div class="modal-right">
+
+                        <!-- Scheduling -->
+                        <div class="modal-section">
+                            <div class="scheduling-head">
+                                <span class="section-title">
+                                    <i data-lucide="clock" size="16"></i>
+                                    Scheduling
+                                </span>
+                                <label class="toggle-switch-wrap">
+                                    <input type="checkbox" id="add-isActive" name="isActive" value="true" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div class="form-row-2">
+                                <div class="m-form-group">
+                                    <label class="m-label" for="add-startDate">Start Date *</label>
+                                    <input type="date" id="add-startDate" name="startDate" class="m-input" required
+                                        oninput="updateBanner('add')">
+                                </div>
+                                <div class="m-form-group">
+                                    <label class="m-label" for="add-endDate">End Date *</label>
+                                    <input type="date" id="add-endDate" name="endDate" class="m-input" required
+                                        oninput="updateBanner('add')">
+                                </div>
+                            </div>
+                            <div class="m-form-group">
+                                <label class="m-label" for="add-minPurchase">Usage Limit Per User</label>
+                                <input type="number" id="add-minPurchase" name="minPurchase" class="m-input"
+                                    placeholder="1" min="0" value="1">
+                            </div>
+                        </div>
+
+                        <!-- Banner Preview -->
+                        <div class="modal-section">
+                            <p class="panel-label">Banner Preview</p>
+                            <div class="banner-preview">
+                                <span class="banner-title" id="add-banner-name">NEW OFFER</span>
+                                <div class="banner-value" id="add-banner-value">Up to —% OFF</div>
+                                <div class="banner-cta">Shop Collection</div>
+                                <div class="banner-days"><i data-lucide="clock" size="10"></i><span id="add-banner-days">— DAYS LEFT</span></div>
+                            </div>
+                            <p class="banner-sub" style="font-size:9px;color:rgba(77,68,76,0.4);letter-spacing:0.8px;text-transform:uppercase;text-align:center;">
+                                Banner dynamically generated based on selection
+                            </p>
+                        </div>
+
+                        <!-- Live Price Preview -->
+                        <div class="modal-section">
+                            <p class="panel-label">Live Price Preview</p>
+                            <div class="price-preview">
+                                <div class="price-row">
+                                    <span class="price-row-label">Original Price</span>
+                                    <span class="price-row-value">₹1,29,900</span>
+                                </div>
+                                <div class="price-row">
+                                    <span class="price-row-label">Applied Discount <span id="add-pct-label">(—%)</span></span>
+                                    <span class="price-row-discount" id="add-discount-amt">—</span>
+                                </div>
+                                <div class="price-divider"></div>
+                                <div class="price-final-row">
+                                    <span class="price-final-label">Final Price</span>
+                                    <span class="price-final-value" id="add-final-price">₹1,29,900</span>
+                                </div>
+                                <div class="price-sim-tag"><i data-lucide="radio" size="10"></i> Live Simulation</div>
+                            </div>
+                        </div>
+
+                    </div><!-- /modal-right -->
+
+                </div><!-- /modal-body -->
+
+                <div class="modal-foot">
+                    <button type="button" class="btn-modal-cancel" onclick="closeModal('addModal')">Discard</button>
+                    <button type="submit" class="btn-modal-save" id="addSaveBtn">
+                        <span class="btn-spinner"></span>
+                        <span class="btn-label">Publish Offer</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==============================================
+         EDIT OFFER MODAL
+    =============================================== -->
+    <div class="modal-overlay" id="editModal" role="dialog" aria-modal="true">
+        <div class="modal-card">
+            <div class="modal-head">
+                <div class="modal-head-left">
+                    <h2 class="modal-title">Edit Offer</h2>
+                    <p class="modal-subtitle">Update the offer details and configuration.</p>
+                </div>
+                <button class="modal-close" onclick="closeModal('editModal')"><i data-lucide="x" size="18"></i></button>
+            </div>
+
+            <form id="editOfferForm" novalidate>
+                <input type="hidden" id="edit-id">
+                <div class="modal-body">
+
+                    <!-- LEFT -->
+                    <div class="modal-left">
+
+                        <div class="modal-section">
+                            <span class="section-title">
+                                <i data-lucide="tag" size="16"></i>
+                                Offer Details
+                            </span>
+
+                            <div class="form-row-2">
+                                <div class="m-form-group">
+                                    <label class="m-label" for="edit-offerName">Offer Name *</label>
+                                    <input type="text" id="edit-offerName" name="offerName" class="m-input" required
+                                        oninput="updateBanner('edit')">
+                                </div>
+                                <div class="m-form-group">
+                                    <label class="m-label">Offer Type *</label>
+                                    <div class="offer-type-toggle">
+                                        <button type="button" class="type-btn" id="edit-type-product"
+                                            onclick="setOfferType('edit','PRODUCT')">
+                                            <i data-lucide="package" size="16"></i>Product Offer
+                                        </button>
+                                        <button type="button" class="type-btn" id="edit-type-category"
+                                            onclick="setOfferType('edit','CATEGORY')">
+                                            <i data-lucide="layers" size="16"></i>Category Offer
+                                        </button>
+                                    </div>
+                                    <input type="hidden" id="edit-applyTo" name="applyTo" value="PRODUCT">
+                                </div>
+                            </div>
+
+                            <div class="m-form-group">
+                                <label class="m-label" for="edit-targetId">Target Selection *</label>
+                                <select id="edit-targetId" name="targetId" class="m-select" required>
+                                    <option value="">Select...</option>
+                                    <% products.forEach(p => { %>
+                                    <option value="<%= p._id %>" data-type="PRODUCT"><%= p.name %></option>
+                                    <% }) %>
+                                    <% categories.forEach(c => { %>
+                                    <option value="<%= c._id %>" data-type="CATEGORY"><%= c.name %></option>
+                                    <% }) %>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Discount Config -->
+                        <div class="modal-section">
+                            <div class="section-head">
+                                <span class="section-title">
+                                    <i data-lucide="percent" size="16"></i>
+                                    Discount Configuration
+                                </span>
+                                <div class="disc-type-row">
+                                    <button type="button" class="disc-chip active" id="edit-disc-pct" onclick="setDiscType('edit','PERCENTAGE')">Percentage</button>
+                                    <button type="button" class="disc-chip" id="edit-disc-fixed" onclick="setDiscType('edit','FIXED')">Fixed Amount</button>
+                                </div>
+                            </div>
+                            <input type="hidden" id="edit-discountType" name="discountType" value="PERCENTAGE">
+                            <div class="form-row-2">
+                                <div class="m-form-group">
+                                    <label class="m-label" for="edit-discountValue">Min Discount (%)</label>
+                                    <div class="suffix-wrap">
+                                        <input type="number" id="edit-discountValue" name="discountValue"
+                                            class="m-input" min="1" max="100" required
+                                            oninput="updatePricePreview('edit')">
+                                        <span class="input-suffix" id="edit-disc-suffix">%</span>
+                                    </div>
+                                </div>
+                                <div class="m-form-group">
+                                    <label class="m-label" for="edit-maxDiscount">Max Discount (%)</label>
+                                    <div class="suffix-wrap">
+                                        <input type="number" id="edit-maxDiscount" name="maxDiscount"
+                                            class="m-input" min="0" oninput="updatePricePreview('edit')">
+                                        <span class="input-suffix" id="edit-max-suffix">%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div><!-- /modal-left -->
+
+                    <!-- RIGHT -->
+                    <div class="modal-right">
+
+                        <!-- Status + Scheduling -->
+                        <div class="modal-section">
+                            <div class="status-indicator" id="edit-status-indicator">
+                                <div class="si-dot" id="edit-si-dot"></div>
+                                <div style="display:flex;flex-direction:column;gap:1px;">
+                                    <span class="si-label">Current Status</span>
+                                    <span class="si-value" id="edit-si-value">—</span>
+                                </div>
+                                <div style="margin-left:auto;">
+                                    <label class="toggle-switch-wrap">
+                                        <input type="checkbox" id="edit-isActive" name="isActive" value="true">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <p class="panel-label" style="margin-top:4px;">Scheduling</p>
+                            <div class="form-row-2">
+                                <div class="m-form-group">
+                                    <label class="m-label" for="edit-startDate">Start Date *</label>
+                                    <input type="date" id="edit-startDate" name="startDate" class="m-input" required
+                                        oninput="updateBanner('edit')">
+                                </div>
+                                <div class="m-form-group">
+                                    <label class="m-label" for="edit-endDate">End Date *</label>
+                                    <input type="date" id="edit-endDate" name="endDate" class="m-input" required
+                                        oninput="updateBanner('edit')">
+                                </div>
+                            </div>
+                            <div class="m-form-group">
+                                <label class="m-label" for="edit-minPurchase">Usage Limit Per User</label>
+                                <input type="number" id="edit-minPurchase" name="minPurchase" class="m-input" min="0" value="1">
+                            </div>
+                        </div>
+
+                        <!-- Banner Preview -->
+                        <div class="modal-section">
+                            <p class="panel-label">Banner Preview</p>
+                            <div class="banner-preview">
+                                <span class="banner-title" id="edit-banner-name">OFFER</span>
+                                <div class="banner-value" id="edit-banner-value">Up to —% OFF</div>
+                                <div class="banner-cta">Shop Now</div>
+                                <div class="banner-days"><i data-lucide="clock" size="10"></i><span id="edit-banner-days">— DAYS LEFT</span></div>
+                            </div>
+                        </div>
+
+                        <!-- Live Price Preview -->
+                        <div class="modal-section">
+                            <p class="panel-label">Live Price Preview</p>
+                            <div class="price-preview">
+                                <div class="price-row">
+                                    <span class="price-row-label">Original Price</span>
+                                    <span class="price-row-value">₹1,29,900</span>
+                                </div>
+                                <div class="price-row">
+                                    <span class="price-row-label">Applied Discount <span id="edit-pct-label">(—%)</span></span>
+                                    <span class="price-row-discount" id="edit-discount-amt">—</span>
+                                </div>
+                                <div class="price-divider"></div>
+                                <div class="price-final-row">
+                                    <span class="price-final-label">Final Price</span>
+                                    <span class="price-final-value" id="edit-final-price">₹1,29,900</span>
+                                </div>
+                                <div class="price-sim-tag"><i data-lucide="radio" size="10"></i> Live Simulation</div>
+                            </div>
+                        </div>
+
+                    </div><!-- /modal-right -->
+
+                </div><!-- /modal-body -->
+
+                <div class="modal-foot">
+                    <button type="button" class="btn-modal-cancel" onclick="closeModal('editModal')">Cancel</button>
+                    <button type="submit" class="btn-modal-save" id="editSaveBtn">
+                        <span class="btn-spinner"></span>
+                        <span class="btn-label">Update Offer</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+<!-- ==============================================
+     JAVASCRIPT
+=============================================== -->
+<script>
+'use strict';
+
+const SAMPLE_PRICE = 129900; /* ₹1,29,900 demo price */
+
+/* ── MODAL HELPERS ── */
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  document.body.style.overflow = 'hidden';
+  if (window.lucide) lucide.createIcons();
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) closeModal(el.id); });
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape')
+    document.querySelectorAll('.modal-overlay.open').forEach(el => closeModal(el.id));
+});
+
+/* ── ADD BUTTON ── */
+document.getElementById('btnOpenAdd').addEventListener('click', () => {
+  document.getElementById('addOfferForm').reset();
+  setOfferType('add', 'PRODUCT');
+  setDiscType('add', 'PERCENTAGE');
+  document.getElementById('add-isActive').checked = true;
+  updateBanner('add');
+  updatePricePreview('add');
+  openModal('addModal');
+});
+
+/* ── OFFER TYPE TOGGLE ── */
+function setOfferType(prefix, type) {
+  document.getElementById(prefix + '-applyTo').value = type;
+
+  const btnP = document.getElementById(prefix + '-type-product');
+  const btnC = document.getElementById(prefix + '-type-category');
+  btnP.classList.toggle('active', type === 'PRODUCT');
+  btnC.classList.toggle('active', type === 'CATEGORY');
+
+  /* Show/hide options in select */
+  const sel = document.getElementById(prefix + '-targetId');
+  sel.value = '';
+  Array.from(sel.options).forEach(opt => {
+    if (!opt.value) { opt.style.display = ''; return; }
+    const t = opt.dataset.type;
+    opt.style.display = (t === type) ? '' : 'none';
+  });
+
+  /* Update label if it exists */
+  const lbl = document.getElementById(prefix + '-target-label');
+  if (lbl) lbl.textContent = (type === 'PRODUCT' ? 'Select Product *' : 'Select Category *');
+}
+
+/* ── DISCOUNT TYPE CHIPS ── */
+function setDiscType(prefix, type) {
+  document.getElementById(prefix + '-discountType').value = type;
+
+  document.getElementById(prefix + '-disc-pct').classList.toggle('active', type === 'PERCENTAGE');
+  document.getElementById(prefix + '-disc-fixed').classList.toggle('active', type === 'FIXED');
+
+  const suffix = type === 'PERCENTAGE' ? '%' : '₹';
+  document.getElementById(prefix + '-disc-suffix').textContent = suffix;
+  if (document.getElementById(prefix + '-max-suffix'))
+    document.getElementById(prefix + '-max-suffix').textContent = suffix;
+
+  updatePricePreview(prefix);
+}
+
+/* ── BANNER PREVIEW ── */
+function updateBanner(p) {
+  const name  = document.getElementById(p + '-offerName').value.trim().toUpperCase() || 'NEW OFFER';
+  const disc  = document.getElementById(p + '-discountValue').value;
+  const maxD  = document.getElementById(p + '-maxDiscount').value;
+  const end   = document.getElementById(p + '-endDate').value;
+
+  const display = disc
+    ? (maxD && Number(maxD) > Number(disc))
+      ? `Up to ${maxD}% OFF`
+      : `Up to ${disc}% OFF`
+    : 'Up to —% OFF';
+
+  let daysLabel = '— DAYS LEFT';
+  if (end) {
+    const d = Math.ceil((new Date(end) - Date.now()) / 86400000);
+    daysLabel = d > 0 ? `${d} DAYS LEFT` : 'ENDING TODAY';
+  }
+
+  document.getElementById(p + '-banner-name').textContent  = name;
+  document.getElementById(p + '-banner-value').textContent = display;
+  document.getElementById(p + '-banner-days').textContent  = daysLabel;
+}
+
+/* ── LIVE PRICE PREVIEW ── */
+function updatePricePreview(p) {
+  const disc  = Number(document.getElementById(p + '-discountValue').value) || 0;
+  const type  = document.getElementById(p + '-discountType').value;
+  const maxD  = Number(document.getElementById(p + '-maxDiscount').value) || 0;
+
+  let discAmt = 0;
+  if (type === 'PERCENTAGE') {
+    discAmt = Math.round(SAMPLE_PRICE * disc / 100);
+    if (maxD > 0) discAmt = Math.min(discAmt, maxD * 100);
+  } else {
+    discAmt = disc * 100;
+  }
+
+  const final = Math.max(0, SAMPLE_PRICE - discAmt);
+  const label = type === 'PERCENTAGE' ? `(${disc}%)` : '';
+
+  const fmt = n => '₹' + (n / 100).toLocaleString('en-IN');
+
+  document.getElementById(p + '-pct-label').textContent    = label;
+  document.getElementById(p + '-discount-amt').textContent = disc ? `-${fmt(discAmt)}` : '—';
+  document.getElementById(p + '-final-price').textContent  = fmt(final * 100);
+
+  updateBanner(p);
+}
+
+/* ── POPULATE EDIT MODAL ── */
+function openEditModal(data) {
+  const f = id => document.getElementById('edit-' + id);
+
+  f('id').value             = data._id;
+  f('offerName').value      = data.offerName;
+  f('discountValue').value  = data.discountValue;
+  f('maxDiscount').value    = data.maxDiscount;
+  f('minPurchase').value    = data.minPurchase;
+  f('startDate').value      = data.startDate;
+  f('endDate').value        = data.endDate;
+  f('isActive').checked     = data.isActive;
+
+  setOfferType('edit', data.applyTo);
+
+  /* Wait a tick for options to re-filter */
+  setTimeout(() => {
+    f('targetId').value = data.targetId || '';
+  }, 10);
+
+  /* Status indicator */
+  const now = new Date();
+  const stat = !data.isActive ? 'INACTIVE'
+    : new Date(data.endDate) < now ? 'EXPIRED'
+    : new Date(data.startDate) > now ? 'SCHEDULED' : 'ACTIVE';
+
+  const dotColors = { ACTIVE:'#7a4e7c', EXPIRED:'#7f747d', SCHEDULED:'#5a3e4b', INACTIVE:'#94a3b8' };
+  document.getElementById('edit-si-dot').style.background = dotColors[stat] || '#94a3b8';
+  document.getElementById('edit-si-value').textContent    = stat;
+
+  updatePricePreview('edit');
+  openModal('editModal');
+}
+
+/* ── TOAST ── */
+function showToast(icon, title) {
+  Swal.fire({
+    toast: true, position: 'top-end', icon, title,
+    showConfirmButton: false, timer: 2400, timerProgressBar: true,
+    customClass: { popup: 'swal2-toast' }
+  });
+}
+
+/* ── AJAX SUBMIT ── */
+async function submitOfferForm(form, url, saveBtn, modalId, successMsg) {
+  saveBtn.classList.add('loading');
+  saveBtn.disabled = true;
+
+  const data     = new FormData(form);
+  const isActive = form.querySelector('[name="isActive"]');
+  data.set('isActive', isActive && isActive.checked ? 'true' : 'false');
+
+  const body = new URLSearchParams(data).toString();
+
+  try {
+    const res  = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
+      body
+    });
+    const json = await res.json();
+
+    if (json.success) {
+      closeModal(modalId);
+      showToast('success', successMsg);
+      setTimeout(() => location.reload(), 1600);
+    } else {
+      throw new Error(json.message || 'Something went wrong');
+    }
+  } catch (err) {
+    Swal.fire({ icon: 'error', title: 'Error', text: err.message,
+      customClass: { popup: 'swal2-popup', confirmButton: 'swal2-confirm' } });
+  } finally {
+    saveBtn.classList.remove('loading');
+    saveBtn.disabled = false;
+  }
+}
+
+document.getElementById('addOfferForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  submitOfferForm(this, '/admin/offers/add', document.getElementById('addSaveBtn'), 'addModal', 'Offer published successfully!');
+});
+
+document.getElementById('editOfferForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const id = document.getElementById('edit-id').value;
+  submitOfferForm(this, `/admin/offers/edit/${id}`, document.getElementById('editSaveBtn'), 'editModal', 'Offer updated successfully!');
+});
+
+/* ── DELETE ── */
+async function confirmDelete(id, name) {
+  const result = await Swal.fire({
+    title: 'Delete Offer?',
+    html: `Are you sure you want to delete <strong>${name}</strong>?<br>This action cannot be undone.`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Yes, delete it',
+    cancelButtonText: 'Cancel',
+    reverseButtons: true,
+    customClass: { popup: 'swal2-popup', confirmButton: 'swal2-confirm', cancelButton: 'swal2-cancel' }
+  });
+
+  if (!result.isConfirmed) return;
+
+  try {
+    const res  = await fetch(`/admin/offers/delete/${id}`, { method: 'PATCH' });
+    const data = await res.json();
+    if (data.success) {
+      showToast('success', `"${name}" deleted`);
+      setTimeout(() => location.reload(), 1600);
+    } else {
+      throw new Error(data.message || 'Delete failed');
+    }
+  } catch (err) {
+    Swal.fire({ icon: 'error', title: 'Error', text: err.message,
+      customClass: { popup: 'swal2-popup', confirmButton: 'swal2-confirm' } });
+  }
+}
+
+/* ── SEARCH + FILTER ── */
+(function() {
+  const tbody   = document.getElementById('offersTableBody');
+  const allRows = Array.from(tbody.querySelectorAll('tr[data-name]'));
+  const search  = document.getElementById('offerSearch');
+  const status  = document.getElementById('statusFilter');
+
+  function render() {
+    const q  = search.value.trim().toLowerCase();
+    const st = status.value;
+    let visible = 0;
+
+    allRows.forEach(row => {
+      const nameMatch   = !q  || row.dataset.name.includes(q);
+      const statusMatch = !st || row.dataset.status === st;
+      row.style.display = (nameMatch && statusMatch) ? '' : 'none';
+      if (nameMatch && statusMatch) visible++;
+    });
+
+    const empty = document.getElementById('emptyRow');
+    if (empty) empty.style.display = visible === 0 ? '' : 'none';
+  }
+
+  search.addEventListener('input',  render);
+  status.addEventListener('change', render);
+}());
+</script>
+
+<script>lucide.createIcons();</script>
+</body>
+</html>

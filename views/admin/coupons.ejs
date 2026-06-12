@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coupon Management - Admin | iStore</title>
+    <meta name="description" content="Manage all iStore discount coupons — create, activate and expire coupon codes.">
+    <link rel="stylesheet" href="/css/components/admin-sidebar.css">
+    <link rel="stylesheet" href="/css/admin-coupons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+
+<%
+  const now = new Date();
+
+  const totalCoupons   = coupons.length;
+  const activeCoupons  = coupons.filter(c => c.isActive && new Date(c.endDate) >= now).length;
+  const expiredCoupons = coupons.filter(c => new Date(c.endDate) < now).length;
+  const usedCoupons    = coupons.filter(c => c.usedCount > 0).length;
+
+  function statusLabel(c) {
+    if (new Date(c.endDate) < now) return 'EXPIRED';
+    if (!c.isActive) return 'INACTIVE';
+    return 'ACTIVE';
+  }
+  function pillClass(c) {
+    const s = statusLabel(c);
+    return s === 'EXPIRED' ? 'expired' : s === 'INACTIVE' ? 'inactive' : '';
+  }
+  function badgeClass(c) {
+    const s = statusLabel(c);
+    return s === 'EXPIRED' ? 'badge-expired' : s === 'INACTIVE' ? 'badge-inactive' : 'badge-active';
+  }
+  function usagePct(c) {
+    if (!c.totalUsageLimit) return 0;
+    return Math.min(100, Math.round((c.usedCount / c.totalUsageLimit) * 100));
+  }
+  function fmtDate(d) {
+    return new Date(d).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+  }
+  function toInputDate(d) {
+    return new Date(d).toISOString().split('T')[0];
+  }
+  function fmtValue(c) {
+    return c.discountType === 'PERCENTAGE'
+      ? c.discountValue + '%'
+      : '₹' + c.discountValue.toLocaleString('en-IN');
+  }
+  function fmtType(c) {
+    return c.discountType === 'PERCENTAGE' ? 'Percentage' : 'Fixed Amount';
+  }
+%>
+
+    <%- include('../partials/admin/sidebar') %>
+
+    <main class="admin-main dashboard-main">
+
+        <!-- ── PAGE HEADER ── -->
+        <header class="page-header">
+            <div class="header-left">
+                <nav class="breadcrumb">
+                    <a href="/admin/dashboard">DASHBOARD</a>
+                    <i data-lucide="chevron-right" size="12"></i>
+                    <span>OFFERS</span>
+                    <i data-lucide="chevron-right" size="12"></i>
+                    <span class="current">COUPONS</span>
+                </nav>
+                <h1 class="page-title">Coupon Management</h1>
+            </div>
+
+            <!-- Opens Add Modal -->
+            <button class="btn-add" id="btnOpenAdd">
+                <i data-lucide="plus" size="18"></i>
+                <span>Add New Coupon</span>
+            </button>
+        </header>
+
+        <!-- ── STATS ── -->
+        <section class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-top">
+                    <div class="stat-icon"><i data-lucide="ticket" size="20"></i></div>
+                    <span class="stat-badge">Overview</span>
+                </div>
+                <span class="stat-label">Total Coupons</span>
+                <span class="stat-value"><%= totalCoupons %></span>
+            </div>
+            <div class="stat-card">
+                <div class="stat-top">
+                    <div class="stat-icon alt"><i data-lucide="check-circle" size="20"></i></div>
+                    <span class="stat-badge">Live</span>
+                </div>
+                <span class="stat-label">Active Coupons</span>
+                <span class="stat-value active"><%= activeCoupons %></span>
+            </div>
+            <div class="stat-card">
+                <div class="stat-top">
+                    <div class="stat-icon alt2"><i data-lucide="clock" size="20"></i></div>
+                    <span class="stat-badge">Closed</span>
+                </div>
+                <span class="stat-label">Expired Coupons</span>
+                <span class="stat-value"><%= expiredCoupons %></span>
+            </div>
+            <div class="stat-card">
+                <div class="stat-top">
+                    <div class="stat-icon alt3"><i data-lucide="gift" size="20"></i></div>
+                    <span class="stat-badge">Redeemed</span>
+                </div>
+                <span class="stat-label">Used Coupons</span>
+                <span class="stat-value"><%= usedCoupons %></span>
+            </div>
+        </section>
+
+        <!-- ── FILTER BAR ── -->
+        <section class="filter-bar">
+            <div class="search-wrapper">
+                <span class="search-icon"><i data-lucide="search" size="14"></i></span>
+                <input type="text" class="search-input" id="couponSearch" placeholder="Search Coupon Code or Name..." autocomplete="off">
+            </div>
+            <div class="filter-selects">
+                <select class="filter-select" id="statusFilter">
+                    <option value="">Status: All</option>
+                    <option value="ACTIVE">Active</option>
+                    <option value="EXPIRED">Expired</option>
+                    <option value="INACTIVE">Inactive</option>
+                </select>
+                <select class="filter-select" id="typeFilter">
+                    <option value="">Discount Type: All</option>
+                    <option value="PERCENTAGE">Percentage</option>
+                    <option value="FIXED">Fixed Amount</option>
+                </select>
+                <button class="btn-filter" id="resetFilters" title="Reset filters">
+                    <i data-lucide="sliders-horizontal" size="16"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- ── COUPON TABLE ── -->
+        <section class="table-card">
+            <div class="table-header">
+                <span class="table-title">All Coupons</span>
+                <div class="table-sort">
+                    <span>Sort by:</span>
+                    <button class="sort-link" id="sortToggle">
+                        Newest <i data-lucide="chevron-down" size="12"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="coupon-table" id="couponTable">
+                    <thead>
+                        <tr>
+                            <th>Coupon Code</th>
+                            <th>Coupon Name</th>
+                            <th>Type</th>
+                            <th style="text-align:right;">Value</th>
+                            <th class="center">Usage</th>
+                            <th>Expiry</th>
+                            <th>Status</th>
+                            <th style="text-align:right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="couponTableBody">
+
+                    <% if (coupons.length > 0) { %>
+                        <% coupons.forEach(coupon => { %>
+                        <%
+                          const stat  = statusLabel(coupon);
+                          const pct   = usagePct(coupon);
+                          const limit = coupon.totalUsageLimit > 0 ? coupon.totalUsageLimit : '∞';
+                        %>
+                        <tr
+                          data-code="<%= coupon.code.toLowerCase() %>"
+                          data-name="<%= coupon.title.toLowerCase() %>"
+                          data-status="<%= stat %>"
+                          data-type="<%= coupon.discountType %>"
+                        >
+                            <td>
+                                <span class="coupon-code-pill <%= pillClass(coupon) %>">
+                                    <%= coupon.code %>
+                                </span>
+                            </td>
+                            <td class="coupon-name"><%= coupon.title %></td>
+                            <td class="discount-type"><%= fmtType(coupon) %></td>
+                            <td class="right coupon-value"><%= fmtValue(coupon) %></td>
+                            <td class="center">
+                                <div class="usage-cell">
+                                    <span class="usage-text">
+                                        <%= coupon.usedCount %><span class="total"> / <%= limit %></span>
+                                    </span>
+                                    <% if (coupon.totalUsageLimit > 0) { %>
+                                    <div class="usage-bar-bg">
+                                        <div class="usage-bar-fill" style="width:<%= pct %>%"></div>
+                                    </div>
+                                    <% } %>
+                                </div>
+                            </td>
+                            <td class="expiry-date"><%= fmtDate(coupon.endDate) %></td>
+                            <td>
+                                <span class="status-badge <%= badgeClass(coupon) %>"><%= stat %></span>
+                            </td>
+                            <td>
+                                <div class="action-btns">
+                                    <button
+                                        class="action-btn"
+                                        title="Edit coupon"
+
+                                        data-id="<%= coupon._id %>"
+                                        data-code="<%= coupon.code %>"
+                                        data-title="<%= coupon.title %>"
+                                        data-description="<%= coupon.description || '' %>"
+                                        data-discounttype="<%= coupon.discountType %>"
+                                        data-discountvalue="<%= coupon.discountValue %>"
+                                        data-maxdiscount="<%= coupon.maxDiscount || 0 %>"
+                                        data-minpurchase="<%= coupon.minPurchase || 0 %>"
+                                        data-totalusagelimit="<%= coupon.totalUsageLimit || 0 %>"
+                                        data-userusagelimit="<%= coupon.userUsageLimit || 1 %>"
+                                        data-startdate="<%= toInputDate(coupon.startDate) %>"
+                                        data-enddate="<%= toInputDate(coupon.endDate) %>"
+                                        data-isactive="<%= coupon.isActive %>"
+
+                                        onclick="openEditModal(this)"
+                                    >
+                                        <i data-lucide="pencil" size="15"></i>
+                                    </button>
+                                    <button
+                                        class="action-btn delete"
+                                        title="Delete coupon"
+                                        onclick="confirmDelete('<%= coupon._id %>', '<%= coupon.code %>')">
+                                        <i data-lucide="trash-2" size="15"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <% }) %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="8">
+                                <div class="empty-state">
+                                    <div class="empty-state-icon"><i data-lucide="ticket-x" size="48"></i></div>
+                                    <p class="empty-state-title">No coupons yet</p>
+                                    <p class="empty-state-sub">Click "Add New Coupon" to create your first discount code.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    <% } %>
+
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pagination-footer">
+                <span class="pagination-info" id="paginationInfo">Showing 1–<%= coupons.length %> of <%= totalCoupons %> coupons</span>
+                <div class="pagination-controls" id="paginationControls"></div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ============================================================
+         ADD COUPON MODAL
+    ============================================================ -->
+    <div class="modal-overlay" id="addModal" role="dialog" aria-modal="true" aria-labelledby="addModalTitle">
+        <div class="modal-card">
+            <div class="modal-head">
+                <h2 class="modal-title" id="addModalTitle">
+                    <i data-lucide="plus-circle" size="20" style="vertical-align:middle;margin-right:8px;color:#7a4e7c;"></i>
+                    Add New Coupon
+                </h2>
+                <button class="modal-close" onclick="closeModal('addModal')" aria-label="Close">
+                    <i data-lucide="x" size="18"></i>
+                </button>
+            </div>
+
+            <form id="addCouponForm" novalidate>
+                <div class="modal-body">
+
+                    <!-- ── LEFT COLUMN ── -->
+                    <div class="modal-left">
+
+                        <!-- Coupon Details -->
+                        <div class="modal-section">
+                            <div class="modal-section-head">
+                                <i data-lucide="ticket" size="16"></i>
+                                Coupon Details
+                            </div>
+                            <div class="form-row-2">
+                                <div class="m-form-group">
+                                    <label class="m-label" for="add-code">Coupon Code *</label>
+                                    <div class="code-row">
+                                        <input type="text" id="add-code" name="code" class="m-input"
+                                            placeholder="E.g. SUMMER2026" required autocomplete="off"
+                                            style="text-transform:uppercase;">
+                                        <button type="button" class="btn-generate" onclick="generateCode('add-code', 'add-preview-code', 'add-preview-code-pill')">Generate</button>
+                                    </div>
+                                </div>
+                                <div class="m-form-group">
+                                    <label class="m-label" for="add-title">Coupon Name *</label>
+                                    <input type="text" id="add-title" name="title" class="m-input"
+                                        placeholder="Season Sale Special" required>
+                                </div>
+                            </div>
+                            <div class="m-form-group">
+                                <label class="m-label" for="add-description">Coupon Description</label>
+                                <textarea id="add-description" name="description" class="m-textarea"
+                                    placeholder="Briefly describe the purpose and terms of this coupon..."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Discount Config -->
+                        <div class="modal-section">
+                            <div class="modal-section-head">
+                                <i data-lucide="percent" size="16"></i>
+                                Discount Config
+                            </div>
+                            <div class="form-row-2">
+                                <div class="m-form-group">
+                                    <label class="m-label" for="add-discountType">Discount Type *</label>
+                                    <select id="add-discountType" name="discountType" class="m-select"
+                                        onchange="onTypeChange(this, 'add')">
+                                        <option value="PERCENTAGE">Percentage (%)</option>
+                                        <option value="FIXED">Fixed Amount (₹)</option>
+                                    </select>
+                                </div>
+                                <div class="m-form-group">
+                                    <label class="m-label" for="add-discountValue">Discount Value *</label>
+                                    <input type="number" id="add-discountValue" name="discountValue"
+                                        class="m-input" placeholder="10" min="0" required
+                                        oninput="updatePreview('add')">
+                                </div>
+                            </div>
+                            <div class="form-row-2">
+                                <div class="m-form-group" id="add-maxDiscount-group">
+                                    <label class="m-label" for="add-maxDiscount">Max Discount (₹)</label>
+                                    <div class="input-prefix-wrap">
+                                        <span class="input-prefix">₹</span>
+                                        <input type="number" id="add-maxDiscount" name="maxDiscount"
+                                            class="m-input" placeholder="0" min="0" value="0">
+                                    </div>
+                                </div>
+                                <div class="m-form-group">
+                                    <label class="m-label" for="add-minPurchase">Min. Purchase (₹)</label>
+                                    <div class="input-prefix-wrap">
+                                        <span class="input-prefix">₹</span>
+                                        <input type="number" id="add-minPurchase" name="minPurchase"
+                                            class="m-input" placeholder="0" min="0" value="0"
+                                            oninput="updatePreview('add')">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Usage Limits -->
+                        <div class="modal-section">
+                            <div class="modal-section-head">
+                                <i data-lucide="bar-chart-2" size="16"></i>
+                                Usage Limits
+                            </div>
+                            <div class="form-row-2">
+                                <div class="m-form-group">
+                                    <label class="m-label" for="add-totalUsageLimit">Total Usage Limit</label>
+                                    <input type="number" id="add-totalUsageLimit" name="totalUsageLimit"
+                                        class="m-input" placeholder="0 = unlimited" min="0" value="0">
+                                </div>
+                                <div class="m-form-group">
+                                    <label class="m-label" for="add-userUsageLimit">Limit Per User</label>
+                                    <input type="number" id="add-userUsageLimit" name="userUsageLimit"
+                                        class="m-input" placeholder="1" min="1" value="1">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Validity Range -->
+                        <div class="modal-section">
+                            <div class="modal-section-head">
+                                <i data-lucide="calendar" size="16"></i>
+                                Validity Range
+                            </div>
+                            <div class="form-row-2">
+                                <div class="m-form-group">
+                                    <label class="m-label" for="add-startDate">Start Date *</label>
+                                    <input type="date" id="add-startDate" name="startDate" class="m-input" required>
+                                </div>
+                                <div class="m-form-group">
+                                    <label class="m-label" for="add-endDate">Expiry Date *</label>
+                                    <input type="date" id="add-endDate" name="endDate" class="m-input" required
+                                        oninput="updatePreview('add')">
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- ── RIGHT COLUMN ── -->
+                    <div class="modal-right">
+
+                        <!-- Live Preview -->
+                        <div class="preview-section">
+                            <span class="preview-label">Live Preview — Store Front View</span>
+                            <div class="preview-card">
+                                <span class="preview-validity" id="add-preview-validity">VALID UNTIL —</span>
+                                <div class="preview-value" id="add-preview-value">— OFF</div>
+                                <span class="preview-code-pill" id="add-preview-code-pill">CODE</span>
+                                <p class="preview-sub" id="add-preview-sub">Applicable on orders above ₹0.</p>
+                            </div>
+                        </div>
+
+                        <!-- Coupon Status -->
+                        <div class="modal-section">
+                            <div class="modal-section-head">
+                                <i data-lucide="toggle-right" size="16"></i>
+                                Coupon Status
+                            </div>
+                            <div class="toggle-row">
+                                <div class="toggle-info">
+                                    <span class="toggle-info-label">Active</span>
+                                    <span class="toggle-info-sub">Customers can apply this coupon at checkout.</span>
+                                </div>
+                                <label class="toggle-switch-wrap" aria-label="Toggle coupon active status">
+                                    <input type="checkbox" name="isActive" id="add-isActive" value="true" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                    </div>
+                </div><!-- /modal-body -->
+
+                <div class="modal-foot">
+                    <button type="button" class="btn-modal-cancel" onclick="closeModal('addModal')">Discard</button>
+                    <button type="submit" class="btn-modal-save" id="addSaveBtn">
+                        <span class="btn-spinner"></span>
+                        <span class="btn-label">Save Coupon</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         EDIT COUPON MODAL
+    ============================================================ -->
+    <div class="modal-overlay" id="editModal" role="dialog" aria-modal="true" aria-labelledby="editModalTitle">
+        <div class="modal-card">
+            <div class="modal-head">
+                <h2 class="modal-title" id="editModalTitle">
+                    <i data-lucide="pencil" size="18" style="vertical-align:middle;margin-right:8px;color:#7a4e7c;"></i>
+                    Edit Coupon
+                </h2>
+                <button class="modal-close" onclick="closeModal('editModal')" aria-label="Close">
+                    <i data-lucide="x" size="18"></i>
+                </button>
+            </div>
+
+            <form id="editCouponForm" novalidate>
+                <input type="hidden" id="edit-id" name="_couponId">
+                <div class="modal-body">
+
+                    <!-- ── LEFT COLUMN ── -->
+                    <div class="modal-left">
+
+                        <div class="modal-section">
+                            <div class="modal-section-head">
+                                <i data-lucide="ticket" size="16"></i>
+                                Coupon Details
+                            </div>
+                            <div class="form-row-2">
+                                <div class="m-form-group">
+                                    <label class="m-label" for="edit-code">Coupon Code *</label>
+                                    <div class="code-row">
+                                        <input type="text" id="edit-code" name="code" class="m-input"
+                                            required autocomplete="off" style="text-transform:uppercase;">
+                                        <button type="button" class="btn-generate" onclick="generateCode('edit-code','edit-preview-code','edit-preview-code-pill')">Generate</button>
+                                    </div>
+                                </div>
+                                <div class="m-form-group">
+                                    <label class="m-label" for="edit-title">Coupon Name *</label>
+                                    <input type="text" id="edit-title" name="title" class="m-input" required>
+                                </div>
+                            </div>
+                            <div class="m-form-group">
+                                <label class="m-label" for="edit-description">Coupon Description</label>
+                                <textarea id="edit-description" name="description" class="m-textarea"
+                                    placeholder="Briefly describe the purpose and terms..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="modal-section">
+                            <div class="modal-section-head">
+                                <i data-lucide="percent" size="16"></i>
+                                Discount Config
+                            </div>
+                            <div class="form-row-2">
+                                <div class="m-form-group">
+                                    <label class="m-label" for="edit-discountType">Discount Type *</label>
+                                    <select id="edit-discountType" name="discountType" class="m-select"
+                                        onchange="onTypeChange(this,'edit')">
+                                        <option value="PERCENTAGE">Percentage (%)</option>
+                                        <option value="FIXED">Fixed Amount (₹)</option>
+                                    </select>
+                                </div>
+                                <div class="m-form-group">
+                                    <label class="m-label" for="edit-discountValue">Discount Value *</label>
+                                    <input type="number" id="edit-discountValue" name="discountValue"
+                                        class="m-input" min="0" required oninput="updatePreview('edit')">
+                                </div>
+                            </div>
+                            <div class="form-row-2">
+                                <div class="m-form-group" id="edit-maxDiscount-group">
+                                    <label class="m-label" for="edit-maxDiscount">Max Discount (₹)</label>
+                                    <div class="input-prefix-wrap">
+                                        <span class="input-prefix">₹</span>
+                                        <input type="number" id="edit-maxDiscount" name="maxDiscount"
+                                            class="m-input" min="0" value="0">
+                                    </div>
+                                </div>
+                                <div class="m-form-group">
+                                    <label class="m-label" for="edit-minPurchase">Min. Purchase (₹)</label>
+                                    <div class="input-prefix-wrap">
+                                        <span class="input-prefix">₹</span>
+                                        <input type="number" id="edit-minPurchase" name="minPurchase"
+                                            class="m-input" min="0" value="0" oninput="updatePreview('edit')">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal-section">
+                            <div class="modal-section-head">
+                                <i data-lucide="bar-chart-2" size="16"></i>
+                                Usage Limits
+                            </div>
+                            <div class="form-row-2">
+                                <div class="m-form-group">
+                                    <label class="m-label" for="edit-totalUsageLimit">Total Usage Limit</label>
+                                    <input type="number" id="edit-totalUsageLimit" name="totalUsageLimit"
+                                        class="m-input" placeholder="0 = unlimited" min="0" value="0">
+                                </div>
+                                <div class="m-form-group">
+                                    <label class="m-label" for="edit-userUsageLimit">Limit Per User</label>
+                                    <input type="number" id="edit-userUsageLimit" name="userUsageLimit"
+                                        class="m-input" min="1" value="1">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal-section">
+                            <div class="modal-section-head">
+                                <i data-lucide="calendar" size="16"></i>
+                                Validity Range
+                            </div>
+                            <div class="form-row-2">
+                                <div class="m-form-group">
+                                    <label class="m-label" for="edit-startDate">Start Date *</label>
+                                    <input type="date" id="edit-startDate" name="startDate" class="m-input" required>
+                                </div>
+                                <div class="m-form-group">
+                                    <label class="m-label" for="edit-endDate">Expiry Date *</label>
+                                    <input type="date" id="edit-endDate" name="endDate" class="m-input" required
+                                        oninput="updatePreview('edit')">
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- ── RIGHT COLUMN ── -->
+                    <div class="modal-right">
+                        <div class="preview-section">
+                            <span class="preview-label">Live Preview — Store Front View</span>
+                            <div class="preview-card">
+                                <span class="preview-validity" id="edit-preview-validity">VALID UNTIL —</span>
+                                <div class="preview-value" id="edit-preview-value">— OFF</div>
+                                <span class="preview-code-pill" id="edit-preview-code-pill">CODE</span>
+                                <p class="preview-sub" id="edit-preview-sub">Applicable on orders above ₹0.</p>
+                            </div>
+                        </div>
+
+                        <div class="modal-section">
+                            <div class="modal-section-head">
+                                <i data-lucide="toggle-right" size="16"></i>
+                                Coupon Status
+                            </div>
+                            <div class="toggle-row">
+                                <div class="toggle-info">
+                                    <span class="toggle-info-label">Active</span>
+                                    <span class="toggle-info-sub">Customers can apply this coupon at checkout.</span>
+                                </div>
+                                <label class="toggle-switch-wrap">
+                                    <input type="checkbox" name="isActive" id="edit-isActive" value="true">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                </div><!-- /modal-body -->
+
+                <div class="modal-foot">
+                    <button type="button" class="btn-modal-cancel" onclick="closeModal('editModal')">Discard Changes</button>
+                    <button type="submit" class="btn-modal-save" id="editSaveBtn">
+                        <span class="btn-spinner"></span>
+                        <span class="btn-label">Save Changes</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+<!-- ============================================================
+     JAVASCRIPT
+============================================================ -->
+<script>
+'use strict';
+
+/* ────────────────────────────────────────────
+   MODAL OPEN / CLOSE
+──────────────────────────────────────────── */
+function openModal(id) {
+  const el = document.getElementById(id);
+  el.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  if (window.lucide) lucide.createIcons();
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+/* Close on backdrop click */
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', function(e) {
+    if (e.target === this) closeModal(this.id);
+  });
+});
+
+/* Escape key */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-overlay.open').forEach(el => closeModal(el.id));
+  }
+});
+
+/* ────────────────────────────────────────────
+   ADD BUTTON
+──────────────────────────────────────────── */
+document.getElementById('btnOpenAdd').addEventListener('click', () => {
+  document.getElementById('addCouponForm').reset();
+  document.getElementById('add-isActive').checked = true;
+  onTypeChange(document.getElementById('add-discountType'), 'add');
+  updatePreview('add');
+  openModal('addModal');
+});
+
+/* ────────────────────────────────────────────
+   POPULATE EDIT MODAL
+──────────────────────────────────────────── */
+function openEditModal(button) {
+
+  const f = id =>
+    document.getElementById(
+      'edit-' + id
+    );
+
+  f('id').value =
+    button.dataset.id;
+
+  f('code').value =
+    button.dataset.code;
+
+  f('title').value =
+    button.dataset.title;
+
+  f('description').value =
+    button.dataset.description;
+
+  f('discountType').value =
+    button.dataset.discounttype;
+
+  f('discountValue').value =
+    button.dataset.discountvalue;
+
+  f('maxDiscount').value =
+    button.dataset.maxdiscount;
+
+  f('minPurchase').value =
+    button.dataset.minpurchase;
+
+  f('totalUsageLimit').value =
+    button.dataset.totalusagelimit;
+
+  f('userUsageLimit').value =
+    button.dataset.userusagelimit;
+
+  f('startDate').value =
+    button.dataset.startdate;
+
+  f('endDate').value =
+    button.dataset.enddate;
+
+  f('isActive').checked =
+    button.dataset.isactive === 'true';
+
+  onTypeChange(
+    f('discountType'),
+    'edit'
+  );
+
+  updatePreview(
+    'edit'
+  );
+
+  openModal(
+    'editModal'
+  );
+}
+
+/* ────────────────────────────────────────────
+   DISCOUNT TYPE CHANGE — show/hide maxDiscount
+──────────────────────────────────────────── */
+function onTypeChange(sel, prefix) {
+  const group = document.getElementById(prefix + '-maxDiscount-group');
+  group.style.display = sel.value === 'PERCENTAGE' ? '' : 'none';
+  updatePreview(prefix);
+}
+
+/* ────────────────────────────────────────────
+   LIVE PREVIEW UPDATER
+──────────────────────────────────────────── */
+function updatePreview(p) {
+  const val  = document.getElementById(p + '-discountValue').value;
+  const type = document.getElementById(p + '-discountType').value;
+  const end  = document.getElementById(p + '-endDate').value;
+  const code = document.getElementById(p + '-code').value.trim().toUpperCase() || 'CODE';
+  const min  = document.getElementById(p + '-minPurchase').value || '0';
+
+  const display = val
+    ? (type === 'PERCENTAGE' ? val + '% OFF' : '₹' + Number(val).toLocaleString('en-IN') + ' OFF')
+    : '— OFF';
+
+  const validUntil = end
+    ? 'VALID UNTIL ' + new Date(end).toLocaleDateString('en-IN', { month:'short', year:'numeric' }).toUpperCase()
+    : 'VALID UNTIL —';
+
+  document.getElementById(p + '-preview-value').textContent    = display;
+  document.getElementById(p + '-preview-validity').textContent = validUntil;
+  document.getElementById(p + '-preview-code-pill').textContent = code;
+  document.getElementById(p + '-preview-sub').textContent =
+    'Applicable on orders above ₹' + Number(min).toLocaleString('en-IN') + '. Limited time offer.';
+}
+
+/* Also update preview when code is typed */
+['add-code','edit-code'].forEach(id => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener('input', () => updatePreview(id.split('-')[0]));
+});
+
+/* ────────────────────────────────────────────
+   GENERATE RANDOM CODE
+──────────────────────────────────────────── */
+function generateCode(inputId, previewTextId, previewPillId) {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let code = '';
+  for (let i = 0; i < 8; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  document.getElementById(inputId).value = code;
+  if (previewTextId)  document.getElementById(previewTextId).textContent = code;
+  if (previewPillId)  document.getElementById(previewPillId).textContent = code;
+}
+
+/* ────────────────────────────────────────────
+   TOAST HELPER (matches iStore SweetAlert theme)
+──────────────────────────────────────────── */
+function showToast(icon, title) {
+  Swal.fire({
+    toast: true,
+    position: 'top-end',
+    icon,
+    title,
+    showConfirmButton: false,
+    timer: 2400,
+    timerProgressBar: true,
+    customClass: { popup: 'swal2-toast' }
+  });
+}
+
+/* ────────────────────────────────────────────
+   FORM SUBMIT (AJAX)
+──────────────────────────────────────────── */
+async function submitCouponForm(form, url, saveBtn, modalId, successMsg) {
+  saveBtn.classList.add('loading');
+  saveBtn.disabled = true;
+
+  const data     = new FormData(form);
+  const isActive = form.querySelector('[name="isActive"]');
+  if (isActive && !isActive.checked) data.set('isActive', 'false');
+  else if (isActive)                  data.set('isActive', 'true');
+
+  const body = new URLSearchParams(data).toString();
+
+  try {
+    const res  = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      body
+    });
+    const json = await res.json();
+
+    if (json.success) {
+      closeModal(modalId);
+      showToast('success', successMsg);
+      setTimeout(() => location.reload(), 1600);
+    } else {
+      throw new Error(json.message || 'Something went wrong');
+    }
+  } catch (err) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: err.message,
+      customClass: { popup: 'swal2-popup', confirmButton: 'swal2-confirm' }
+    });
+  } finally {
+    saveBtn.classList.remove('loading');
+    saveBtn.disabled = false;
+  }
+}
+
+/* Add form */
+document.getElementById('addCouponForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  submitCouponForm(this, '/admin/coupons/add', document.getElementById('addSaveBtn'), 'addModal', 'Coupon created successfully!');
+});
+
+/* Edit form */
+document.getElementById('editCouponForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const id = document.getElementById('edit-id').value;
+  submitCouponForm(this, `/admin/coupons/edit/${id}`, document.getElementById('editSaveBtn'), 'editModal', 'Coupon updated successfully!');
+});
+
+/* ────────────────────────────────────────────
+   DELETE
+──────────────────────────────────────────── */
+async function confirmDelete(id, code) {
+  const result = await Swal.fire({
+    title: 'Delete Coupon?',
+    html: `Are you sure you want to delete <strong>${code}</strong>?<br>This action cannot be undone.`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Yes, delete it',
+    cancelButtonText: 'Cancel',
+    reverseButtons: true,
+    customClass: {
+      popup: 'swal2-popup',
+      title: 'swal2-title',
+      confirmButton: 'swal2-confirm',
+      cancelButton: 'swal2-cancel',
+    }
+  });
+
+  if (!result.isConfirmed) return;
+
+  try {
+    const res  = await fetch(`/admin/coupons/delete/${id}`, { method: 'PATCH' });
+    const data = await res.json();
+    if (data.success) {
+      showToast('success', `${code} deleted`);
+      setTimeout(() => location.reload(), 1600);
+    } else {
+      throw new Error(data.message || 'Delete failed');
+    }
+  } catch (err) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: err.message,
+      customClass: { popup: 'swal2-popup', confirmButton: 'swal2-confirm' }
+    });
+  }
+}
+
+/* ────────────────────────────────────────────
+   TABLE FILTER + SORT + PAGINATION
+──────────────────────────────────────────── */
+(function () {
+  const PAGE_SIZE = 10;
+  let currentPage = 1;
+  let sortDir     = 'newest';
+
+  const tbody       = document.getElementById('couponTableBody');
+  const allRows     = Array.from(tbody.querySelectorAll('tr[data-code]'));
+  const searchInput = document.getElementById('couponSearch');
+  const statusSel   = document.getElementById('statusFilter');
+  const typeSel     = document.getElementById('typeFilter');
+  const resetBtn    = document.getElementById('resetFilters');
+  const sortToggle  = document.getElementById('sortToggle');
+  const pgInfo      = document.getElementById('paginationInfo');
+  const pgControls  = document.getElementById('paginationControls');
+
+  function getVisible() {
+    const q  = searchInput.value.trim().toLowerCase();
+    const st = statusSel.value;
+    const ty = typeSel.value;
+    return allRows.filter(row => {
+      if (q  && !row.dataset.code.includes(q) && !row.dataset.name.includes(q)) return false;
+      if (st && row.dataset.status !== st) return false;
+      if (ty && row.dataset.type   !== ty) return false;
+      return true;
+    });
+  }
+
+  function sorted(rows) { return sortDir === 'oldest' ? [...rows].reverse() : [...rows]; }
+
+  function render() {
+    const visible = sorted(getVisible());
+    const total   = visible.length;
+    const pages   = Math.max(1, Math.ceil(total / PAGE_SIZE));
+    currentPage   = Math.min(currentPage, pages);
+    const start   = (currentPage - 1) * PAGE_SIZE;
+    const end     = Math.min(start + PAGE_SIZE, total);
+
+    allRows.forEach(r => (r.style.display = 'none'));
+    visible.slice(start, end).forEach(r => (r.style.display = ''));
+
+    const emptyRow = tbody.querySelector('tr:not([data-code])');
+    if (emptyRow) emptyRow.style.display = total === 0 ? '' : 'none';
+
+    pgInfo.textContent = total === 0
+      ? 'No coupons match your filters'
+      : `Showing ${start + 1}–${end} of ${total} coupons`;
+
+    pgControls.innerHTML = '';
+    if (pages <= 1) return;
+
+    pgControls.appendChild(mkBtn('‹', currentPage - 1, currentPage === 1));
+    pageRange(currentPage, pages).forEach(n => {
+      if (n === '…') { const d = document.createElement('span'); d.textContent = '…'; d.style.cssText = 'padding:0 4px;color:#94a3b8;line-height:32px;'; pgControls.appendChild(d); }
+      else pgControls.appendChild(mkBtn(n, n, false, n === currentPage));
+    });
+    pgControls.appendChild(mkBtn('›', currentPage + 1, currentPage === pages));
+  }
+
+  function mkBtn(label, page, disabled, active) {
+    const el = document.createElement('button');
+    el.textContent = label;
+    el.className = 'page-btn' + (active ? ' active' : '');
+    el.disabled  = disabled;
+    el.addEventListener('click', () => { currentPage = page; render(); });
+    return el;
+  }
+
+  function pageRange(cur, pages) {
+    if (pages <= 7) return Array.from({ length: pages }, (_, i) => i + 1);
+    if (cur <= 4)   return [1,2,3,4,5,'…',pages];
+    if (cur >= pages - 3) return [1,'…',pages-4,pages-3,pages-2,pages-1,pages];
+    return [1,'…',cur-1,cur,cur+1,'…',pages];
+  }
+
+  searchInput.addEventListener('input',  () => { currentPage = 1; render(); });
+  statusSel.addEventListener('change',   () => { currentPage = 1; render(); });
+  typeSel.addEventListener('change',     () => { currentPage = 1; render(); });
+  resetBtn.addEventListener('click', () => {
+    searchInput.value = ''; statusSel.value = ''; typeSel.value = '';
+    currentPage = 1; render();
+  });
+  sortToggle.addEventListener('click', () => {
+    sortDir = sortDir === 'newest' ? 'oldest' : 'newest';
+    sortToggle.innerHTML = (sortDir === 'newest' ? 'Newest' : 'Oldest') + ' <i data-lucide="chevron-down" size="12"></i>';
+    if (window.lucide) lucide.createIcons();
+    currentPage = 1; render();
+  });
+
+  render();
+}());
+</script>
+
+<script>lucide.createIcons();</script>
+</body>
+</html>

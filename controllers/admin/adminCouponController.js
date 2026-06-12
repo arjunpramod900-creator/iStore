@@ -4,8 +4,6 @@ import {
 
   createCouponService,
 
-  getCouponByIdService,
-
   updateCouponService,
 
   deleteCouponService,
@@ -47,22 +45,6 @@ async (req, res) => {
 };
 
 /* ============================
-   ADD COUPON PAGE
-============================ */
-
-export const renderAddCoupon =
-(req, res) => {
-
-  res.render(
-    "admin/add-coupon",
-    {
-      page: "coupons",
-    }
-  );
-
-};
-
-/* ============================
    CREATE COUPON
 ============================ */
 
@@ -75,9 +57,11 @@ async (req, res) => {
       req.body
     );
 
-    res.redirect(
-      "/admin/coupons"
-    );
+    return res.json({
+
+      success: true,
+
+    });
 
   }
 
@@ -85,45 +69,14 @@ async (req, res) => {
 
     console.log(error);
 
-    res.send(
-      error.message
-    );
+    return res.status(400).json({
 
-  }
+      success: false,
 
-};
+      message:
+      error.message,
 
-/* ============================
-   EDIT PAGE
-============================ */
-
-export const renderEditCoupon =
-async (req, res) => {
-
-  try {
-
-    const coupon =
-    await getCouponByIdService(
-      req.params.id
-    );
-
-    res.render(
-      "admin/edit-coupon",
-      {
-        page: "coupons",
-        coupon,
-      }
-    );
-
-  }
-
-  catch (error) {
-
-    console.log(error);
-
-    res.redirect(
-      "/admin/coupons"
-    );
+    });
 
   }
 
@@ -146,9 +99,11 @@ async (req, res) => {
 
     );
 
-    res.redirect(
-      "/admin/coupons"
-    );
+    return res.json({
+
+      success: true,
+
+    });
 
   }
 
@@ -156,9 +111,14 @@ async (req, res) => {
 
     console.log(error);
 
-    res.send(
-      error.message
-    );
+    return res.status(400).json({
+
+      success: false,
+
+      message:
+      error.message,
+
+    });
 
   }
 
@@ -177,8 +137,10 @@ async (req, res) => {
       req.params.id
     );
 
-    res.json({
+    return res.json({
+
       success: true,
+
     });
 
   }
@@ -187,12 +149,12 @@ async (req, res) => {
 
     console.log(error);
 
-    res.status(400).json({
+    return res.status(400).json({
 
       success: false,
 
       message:
-        error.message,
+      error.message,
 
     });
 

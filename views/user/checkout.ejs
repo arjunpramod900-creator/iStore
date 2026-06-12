@@ -472,21 +472,67 @@ class="co-add-address-btn">
 
                         <div class="co-coupon-list">
 
-                            <div class="co-coupon" id="couponSave10">
-                                <div class="co-coupon-info">
-                                    <span class="co-coupon-code">SAVE10</span>
-                                    <span class="co-coupon-desc">10% Off on Your Order</span>
-                                </div>
-                                <button class="co-coupon-apply-btn" data-code="SAVE10">Apply</button>
-                            </div>
+                            <% if(availableCoupons && availableCoupons.length > 0){ %>
 
-                            <div class="co-coupon" id="couponWelcome">
-                                <div class="co-coupon-info">
-                                    <span class="co-coupon-code">WELCOME500</span>
-                                    <span class="co-coupon-desc">₹500 Off for NEW or ER*</span>
+                                <% availableCoupons.forEach(coupon => { %>
+
+                                    <div class="co-coupon">
+
+                                        <div class="co-coupon-info">
+
+                                            <span class="co-coupon-code">
+                                                <%= coupon.code %>
+                                            </span>
+
+                                            <span class="co-coupon-desc">
+
+                                                <% if(coupon.discountType === "PERCENTAGE"){ %>
+
+                                                    <%= coupon.discountValue %>% OFF
+
+                                                <% } else { %>
+
+                                                    ₹<%= coupon.discountValue.toLocaleString("en-IN") %> OFF
+
+                                                <% } %>
+
+                                                <% if(coupon.minPurchase > 0){ %>
+
+                                                    • Min ₹<%= coupon.minPurchase.toLocaleString("en-IN") %>
+
+                                                <% } %>
+
+                                            </span>
+
+                                        </div>
+
+                                        <button
+                                            class="co-coupon-apply-btn"
+                                            data-code="<%= coupon.code %>">
+
+                                            Apply
+
+                                        </button>
+
+                                    </div>
+
+                                <% }) %>
+
+                            <% } else { %>
+
+                                <div class="co-coupon">
+
+                                    <div class="co-coupon-info">
+
+                                        <span class="co-coupon-desc">
+                                            No coupons available right now
+                                        </span>
+
+                                    </div>
+
                                 </div>
-                                <button class="co-coupon-apply-btn" data-code="WELCOME500">Apply</button>
-                            </div>
+
+                            <% } %>
 
                         </div>
 

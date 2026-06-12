@@ -1,8 +1,7 @@
 import Cart from "../../models/Cart.js";
-
 import Address from "../../models/Address.js";
-
 import Order from "../../models/Order.js";
+import Coupon from "../../models/Coupon.js";
 
 import {
   calculateCheckoutTotals
@@ -114,12 +113,37 @@ await Address.find({
 
 .lean()
 
+/* LOAD ACTIVE COUPONS */
+
+const availableCoupons =
+await Coupon.find({
+
+  isDeleted: false,
+
+  isActive: true,
+
+  startDate: {
+    $lte: new Date()
+  },
+
+  endDate: {
+    $gte: new Date()
+  }
+
+})
+.sort({
+  createdAt: -1
+})
+.lean();
+
   return {
     success: true,
 
     cartItems: validItems,
 
     addresses,
+
+    availableCoupons,
 
     subtotal:
       totals.subtotal,

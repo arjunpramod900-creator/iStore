@@ -1,5 +1,9 @@
 import Offer from "../../models/Offer.js";
 
+/* =========================================
+   CALCULATE BEST OFFER FOR ITEM
+========================================= */
+
 export const calculateItemOffer =
 async (
   product,
@@ -9,7 +13,9 @@ async (
 
   const now = new Date();
 
-  /* PRODUCT OFFER */
+  /* =========================================
+     PRODUCT OFFER
+  ========================================= */
 
   const productOffer =
   await Offer.findOne({
@@ -19,6 +25,8 @@ async (
     targetId: product._id,
 
     isActive: true,
+
+    isDeleted: false,
 
     startDate: {
       $lte: now,
@@ -30,7 +38,9 @@ async (
 
   }).lean();
 
-  /* CATEGORY OFFER */
+  /* =========================================
+     CATEGORY OFFER
+  ========================================= */
 
   const categoryOffer =
   await Offer.findOne({
@@ -40,6 +50,8 @@ async (
     targetId: product.categoryId,
 
     isActive: true,
+
+    isDeleted: false,
 
     startDate: {
       $lte: now,
@@ -55,77 +67,61 @@ async (
 
   let categoryDiscount = 0;
 
-  /* PRODUCT OFFER VALUE */
+  /* =========================================
+     PRODUCT OFFER DISCOUNT
+  ========================================= */
 
   if (productOffer) {
 
+    productDiscount =
+    (
+      variant.price *
+      productOffer.discountValue
+    ) / 100;
+
     if (
-      productOffer.discountType ===
-      "PERCENTAGE"
+      productOffer.maxDiscount > 0
     ) {
 
       productDiscount =
-      (variant.price *
-      productOffer.discountValue)
-      / 100;
-
-      if (
-        productOffer.maxDiscount > 0
-      ) {
-
-        productDiscount =
-        Math.min(
-          productDiscount,
-          productOffer.maxDiscount
-        );
-
-      }
-
-    } else {
-
-      productDiscount =
-      productOffer.discountValue;
+      Math.min(
+        productDiscount,
+        productOffer.maxDiscount
+      );
 
     }
 
   }
 
-  /* CATEGORY OFFER VALUE */
+  /* =========================================
+     CATEGORY OFFER DISCOUNT
+  ========================================= */
 
   if (categoryOffer) {
 
+    categoryDiscount =
+    (
+      variant.price *
+      categoryOffer.discountValue
+    ) / 100;
+
     if (
-      categoryOffer.discountType ===
-      "PERCENTAGE"
+      categoryOffer.maxDiscount > 0
     ) {
 
       categoryDiscount =
-      (variant.price *
-      categoryOffer.discountValue)
-      / 100;
-
-      if (
-        categoryOffer.maxDiscount > 0
-      ) {
-
-        categoryDiscount =
-        Math.min(
-          categoryDiscount,
-          categoryOffer.maxDiscount
-        );
-
-      }
-
-    } else {
-
-      categoryDiscount =
-      categoryOffer.discountValue;
+      Math.min(
+        categoryDiscount,
+        categoryOffer.maxDiscount
+      );
 
     }
 
   }
 
-  /* LARGEST OFFER */
+  /* =========================================
+     BEST OFFER WINS
+  ========================================= */
 
   const bestDiscount =
   Math.max(
@@ -133,9 +129,39 @@ async (
     categoryDiscount
   );
 
-  const offerPrice =
-  variant.price -
-  bestDiscount;
+  const offerType =
+  productDiscount >= categoryDiscount
+    ? "PRODUCT"
+    : "CATEGORY";
+
+  /* =========================================
+     APPLIED OFFER
+  ========================================= */
+
+  let appliedOffer = null;
+
+  if (bestDiscount > 0) {
+
+    appliedOffer =
+    productDiscount >= categoryDiscount
+      ? productOffer
+      : categoryOffer;
+
+  }
+
+  /* =========================================
+     FINAL PRICE
+  ========================================= */
+
+  const finalPrice =
+  Math.max(
+    0,
+    variant.price - bestDiscount
+  );
+
+  /* =========================================
+     RETURN
+  ========================================= */
 
   return {
 
@@ -145,8 +171,11 @@ async (
     offerDiscount:
       bestDiscount * quantity,
 
-    finalPrice:
-      offerPrice,
+    finalPrice,
+
+    offerType,
+
+    appliedOffer,
 
   };
 

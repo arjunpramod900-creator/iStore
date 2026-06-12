@@ -8,11 +8,7 @@ import {
 
   loadCoupons,
 
-  renderAddCoupon,
-
   addCoupon,
-
-  renderEditCoupon,
 
   updateCoupon,
 
@@ -38,16 +34,6 @@ router.get(
    ADD COUPON
 ============================ */
 
-router.get(
-
-  "/coupons/add",
-
-  adminAuthMiddleware,
-
-  renderAddCoupon,
-
-);
-
 router.post(
 
   "/coupons/add",
@@ -59,18 +45,8 @@ router.post(
 );
 
 /* ============================
-   EDIT COUPON
+   UPDATE COUPON
 ============================ */
-
-router.get(
-
-  "/coupons/edit/:id",
-
-  adminAuthMiddleware,
-
-  renderEditCoupon,
-
-);
 
 router.post(
 
