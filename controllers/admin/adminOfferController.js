@@ -52,6 +52,7 @@ async (
         return res.render(
             "admin/offers",
             {
+                page: "offers",
                 offers,
                 products,
                 categories
@@ -139,12 +140,10 @@ async (
 
         });
 
-        return res.json({
-
-            success:
-            response.success
-
-        });
+            return res.json({
+                success: response.success,
+                message: response.message || null,
+            });
 
     }
 

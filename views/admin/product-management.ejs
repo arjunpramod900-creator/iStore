@@ -424,6 +424,28 @@ SKU:
 
 </span>
 
+<% if(product.productOffer) { %>
+
+<div class="offer-badge offer-product">
+
+<%= product.productOffer.discountValue %>% OFF
+
+(Product Offer)
+
+</div>
+
+<% } else if(product.categoryOffer) { %>
+
+<div class="offer-badge offer-category">
+
+<%= product.categoryOffer.discountValue %>% OFF
+
+(Category Offer)
+
+</div>
+
+<% } %>
+
 </div>
 
 </div>

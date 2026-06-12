@@ -248,24 +248,32 @@
                             <!-- Actions -->
                             <td>
                                 <div class="action-btns">
-                                    <button class="action-btn" title="Edit offer"
-                                        onclick="openEditModal(<%- JSON.stringify({
-                                          _id:           offer._id,
-                                          offerName:     offer.offerName,
-                                          applyTo:       offer.applyTo,
-                                          targetId:      offer.targetId ? offer.targetId._id : '',
-                                          discountValue: offer.discountValue,
-                                          maxDiscount:   offer.maxDiscount || 0,
-                                          minPurchase:   offer.minPurchase || 0,
-                                          startDate:     toInputDate(offer.startDate),
-                                          endDate:       toInputDate(offer.endDate),
-                                          isActive:      offer.isActive
-                                        }) %>)">
+                                    <button
+                                        class="action-btn edit-offer-btn"
+                                        title="Edit offer"
+
+                                        data-id="<%= offer._id %>"
+                                        data-name="<%= offer.offerName %>"
+                                        data-applyto="<%= offer.applyTo %>"
+                                        data-target="<%= offer.targetId ? offer.targetId._id : '' %>"
+                                        data-discount="<%= offer.discountValue %>"
+                                        data-maxdiscount="<%= offer.maxDiscount || 0 %>"
+                                        data-minpurchase="<%= offer.minPurchase || 0 %>"
+                                        data-start="<%= toInputDate(offer.startDate) %>"
+                                        data-end="<%= toInputDate(offer.endDate) %>"
+                                        data-active="<%= offer.isActive %>"
+                                    >
                                         <i data-lucide="pencil" size="15"></i>
                                     </button>
-                                    <button class="action-btn delete" title="Delete offer"
-                                        onclick="confirmDelete('<%= offer._id %>', '<%= offer.offerName.replace(/'/g, &quot;\\'&quot;) %>')">
-                                        <i data-lucide="trash-2" size="15"></i>
+                                    <button
+                                        class="action-btn delete"
+                                        title="Delete offer"
+                                        onclick='confirmDelete("<%= offer._id %>", <%- JSON.stringify(offer.offerName) %>)'
+                                    >
+                                        <i
+                                            data-lucide="trash-2"
+                                            size="15"
+                                        ></i>
                                     </button>
                                 </div>
                             </td>
@@ -681,13 +689,24 @@ const SAMPLE_PRICE = 129900; /* ₹1,29,900 demo price */
 
 /* ── MODAL HELPERS ── */
 function openModal(id) {
-  document.getElementById(id).classList.add('open');
-  document.body.style.overflow = 'hidden';
-  if (window.lucide) lucide.createIcons();
+
+    const modal =
+    document.getElementById(id);
+
+    modal.classList.add("open");
+
+    document.body.style.overflow = "hidden";
+
+    if(window.lucide){
+        lucide.createIcons();
+    }
 }
 function closeModal(id) {
-  document.getElementById(id).classList.remove('open');
-  document.body.style.overflow = '';
+
+    document.getElementById(id)
+    .classList.remove("open");
+
+    document.body.style.overflow = "";
 }
 document.querySelectorAll('.modal-overlay').forEach(el => {
   el.addEventListener('click', e => { if (e.target === el) closeModal(el.id); });
@@ -941,6 +960,53 @@ async function confirmDelete(id, name) {
   search.addEventListener('input',  render);
   status.addEventListener('change', render);
 }());
+
+
+
+
+document
+.querySelectorAll(".edit-offer-btn")
+.forEach(btn => {
+
+    btn.addEventListener("click", () => {
+
+        openEditModal({
+
+            _id:
+            btn.dataset.id,
+
+            offerName:
+            btn.dataset.name,
+
+            applyTo:
+            btn.dataset.applyto,
+
+            targetId:
+            btn.dataset.target,
+
+            discountValue:
+            btn.dataset.discount,
+
+            maxDiscount:
+            btn.dataset.maxdiscount,
+
+            minPurchase:
+            btn.dataset.minpurchase,
+
+            startDate:
+            btn.dataset.start,
+
+            endDate:
+            btn.dataset.end,
+
+            isActive:
+            btn.dataset.active === "true"
+
+        });
+
+    });
+
+});
 </script>
 
 <script>lucide.createIcons();</script>

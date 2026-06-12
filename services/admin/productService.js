@@ -4,6 +4,8 @@ import Variant from "../../models/Variant.js";
 
 import Category from "../../models/Category.js";
 
+import Offer from "../../models/Offer.js";
+
 import { variantSchema } from "../../validators/variantValidator.js";
 
 import { generateSlug } from "../../utils/generateSlug.js";
@@ -96,25 +98,94 @@ export const loadProductsService = async (query) => {
 
   /* VARIANT DETAILS */
 
-  for (const product of products) {
-    const variants = await Variant.find({
-      productId: product._id,
+  const now = new Date();
+for (const product of products) {
 
-      isDeleted: false,
+    const variants =
+    await Variant.find({
+
+        productId: product._id,
+
+        isDeleted: false,
+
     });
 
-    product.variantCount = variants.length;
+    product.variantCount =
+    variants.length;
 
-    product.totalStock = variants.reduce(
-      (acc, item) => acc + item.stock,
+    product.totalStock =
+    variants.reduce(
 
-      0,
+        (acc, item) =>
+        acc + item.stock,
+
+        0
+
     );
 
-    product.defaultPrice = variants[0]?.price || 0;
+    product.defaultPrice =
+    variants[0]?.price || 0;
 
-    product.defaultSKU = variants[0]?.SKU || "N/A";
-  }
+    product.defaultSKU =
+    variants[0]?.SKU || "N/A";
+
+    /* 
+       ACTIVE PRODUCT OFFER
+     */
+
+
+    const productOffer =
+    await Offer.findOne({
+
+        applyTo: "PRODUCT",
+
+        targetId: product._id,
+
+        isActive: true,
+
+        isDeleted: false,
+
+        startDate: {
+            $lte: now
+        },
+
+        endDate: {
+            $gte: now
+        }
+
+    }).lean();
+
+    /* 
+       ACTIVE CATEGORY OFFER
+     */
+
+    const categoryOffer =
+    await Offer.findOne({
+
+        applyTo: "CATEGORY",
+
+        targetId: product.categoryId,
+
+        isActive: true,
+
+        isDeleted: false,
+
+        startDate: {
+            $lte: now
+        },
+
+        endDate: {
+            $gte: now
+        }
+
+    }).lean();
+
+    product.productOffer =
+    productOffer;
+
+    product.categoryOffer =
+    categoryOffer;
+}
 
   /* TOTAL */
 
@@ -597,7 +668,60 @@ export const loadProductDetailsService = async (productId) => {
 
   const totalVariants = variants.filter((variant) => !variant.isDeleted).length;
 
-  return {
+  const now = new Date();
+
+/* 
+   PRODUCT OFFER
+ */
+
+const productOffer =
+await Offer.findOne({
+
+    applyTo: "PRODUCT",
+
+    targetId: product._id,
+
+    isActive: true,
+
+    isDeleted: false,
+
+    startDate: {
+        $lte: now
+    },
+
+    endDate: {
+        $gte: now
+    }
+
+}).lean();
+
+/* 
+   CATEGORY OFFER
+ */
+
+const categoryOffer =
+await Offer.findOne({
+
+    applyTo: "CATEGORY",
+
+    targetId: product.categoryId._id,
+
+    isActive: true,
+
+    isDeleted: false,
+
+    startDate: {
+        $lte: now
+    },
+
+    endDate: {
+        $gte: now
+    }
+
+}).lean();
+
+return {
+
     product,
 
     variants,
@@ -607,7 +731,12 @@ export const loadProductDetailsService = async (productId) => {
     basePrice,
 
     totalVariants,
-  };
+
+    productOffer,
+
+    categoryOffer
+
+};
 };
 
 /* ============================

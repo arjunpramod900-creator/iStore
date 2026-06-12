@@ -386,42 +386,86 @@
 
                     <div class="detail-item">
 
-    <span class="detail-label">
-        Base Price
-    </span>
+                        <span class="detail-label">
+                            Base Price
+                        </span>
 
-    <div class="price-showcase">
+                        <div class="price-showcase">
 
-        <span class="detail-value price">
+                            <span class="detail-value price">
 
-            ₹<%= basePrice.toLocaleString() %>
+                                ₹<%= basePrice.toLocaleString() %>
 
-        </span>
+                            </span>
 
-        <% if(
-            variants[0]?.comparePrice &&
-            variants[0]?.comparePrice > variants[0]?.price
-        ) { %>
+                            <% if(
+                                variants[0]?.comparePrice &&
+                                variants[0]?.comparePrice > variants[0]?.price
+                            ) { %>
 
-            <span class="compare-price-large">
+                                <span class="compare-price-large">
 
-                ₹<%= variants[0].comparePrice.toLocaleString() %>
+                                    ₹<%= variants[0].comparePrice.toLocaleString() %>
 
-            </span>
+                                </span>
 
-            <span class="discount-badge">
+                                <span class="discount-badge">
 
-                <%= variants[0].discountPercentage %>% OFF
+                                    <%= variants[0].discountPercentage %>% OFF
 
-            </span>
+                                </span>
 
-        <% } %>
+                            <% } %>
 
-    </div>
+                        </div>
 
-</div>
+                    </div>
 
                 </div>
+
+                   <div class="detail-item">
+
+                        <span class="detail-label">
+                            Product Offer
+                        </span>
+
+                        <span class="detail-value">
+
+                            <% if(productOffer) { %>
+
+                                <%= productOffer.discountValue %>% OFF
+
+                            <% } else { %>
+
+                                No Active Offer
+
+                            <% } %>
+
+                        </span>
+
+                    </div>
+
+                    <div class="detail-item">
+
+                        <span class="detail-label">
+                            Category Offer
+                        </span>
+
+                        <span class="detail-value">
+
+                            <% if(categoryOffer) { %>
+
+                                <%= categoryOffer.discountValue %>% OFF
+
+                            <% } else { %>
+
+                                No Active Offer
+
+                            <% } %>
+
+                        </span>
+
+                    </div>
 
                 <div class="description-section">
 
