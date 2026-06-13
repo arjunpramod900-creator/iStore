@@ -915,3 +915,35 @@ body {
     width: 100%;
   }
 }
+
+
+.offer-badge{
+  display:inline-flex;
+  align-items:center;
+  padding:4px 10px;
+  border-radius:999px;
+  background:#5d0192;
+  color:#fff;
+  font-size:11px;
+  font-weight:700;
+  margin-bottom:8px;
+}
+
+.original-price{
+  font-size:14px;
+  color:#9ca3af;
+  text-decoration:line-through;
+}
+
+.discount-price{
+  font-size:22px;
+  font-weight:800;
+  color:#5c0262;
+}
+
+.save-price{
+  font-size:13px;
+  font-weight:700;
+  color:#16a34a;
+  margin-top:4px;
+}

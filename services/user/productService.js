@@ -10,6 +10,8 @@ import Cart from "../../models/Cart.js";
 
 import Review from "../../models/Review.js";
 
+import { calculateItemOffer } from "../shared/offerService.js";
+
 /* =========================================
    LOAD ALL PRODUCTS
 ========================================= */
@@ -100,13 +102,25 @@ export const loadAllProductsService = async (
       continue;
     }
 
-    variants.forEach((variant) => {
-      flattenedProducts.push({
-        ...product,
+for (const variant of variants) {
 
-        variant,
-      });
-    });
+  const offerData =
+  await calculateItemOffer(
+    product,
+    variant
+  );
+
+  flattenedProducts.push({
+
+    ...product,
+
+    variant,
+
+    offerData
+
+  });
+
+}
   }
 
   products = flattenedProducts;
@@ -304,6 +318,11 @@ export const loadProductDetailsService = async (
   /* ATTACH */
 
   product.variant = defaultVariant;
+  product.offerData =
+  await calculateItemOffer(
+    product,
+    defaultVariant
+  );
 
   product.variants = variants;
 
@@ -387,6 +406,12 @@ export const loadProductDetailsService = async (
       .lean();
 
     related.variant = relatedVariant;
+
+    related.offerData =
+    await calculateItemOffer(
+      related,
+      relatedVariant
+    );
   }
 
   /* REMOVE EMPTY VARIANTS */

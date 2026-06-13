@@ -50,17 +50,52 @@
 
             </p>
 
+
             <h3 class="card-title">
 
                 <%= product.name %>
 
             </h3>
 
-            <p class="card-price">
+<% if(product.offerData?.offerDiscount > 0){ %>
 
-                ₹<%= product.variant?.price?.toLocaleString() %>
+<div class="offer-price-block">
 
-            </p>
+    <div class="offer-badge">
+
+        <%= product.offerData.appliedOffer.discountValue %>% OFF
+
+    </div>
+
+    <p class="original-price">
+
+        ₹<%= product.offerData.originalPrice.toLocaleString() %>
+
+    </p>
+
+    <p class="discounted-price">
+
+        ₹<%= product.offerData.finalPrice.toLocaleString() %>
+
+    </p>
+
+    <p class="saving-price">
+
+        Save ₹<%= product.offerData.offerDiscount.toLocaleString() %>
+
+    </p>
+
+</div>
+
+<% } else { %>
+
+<p class="card-price">
+
+    ₹<%= product.variant?.price?.toLocaleString() %>
+
+</p>
+
+<% } %>
             <!-- Variant Details -->
 
 <div class="variant-details">

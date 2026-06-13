@@ -1,4 +1,6 @@
 import Offer from "../../models/Offer.js";
+import Product from "../../models/Product.js";
+import Category from "../../models/Category.js";
 
 export const getAllOffersService = async () => {
 
@@ -122,6 +124,61 @@ if (
         "Minimum purchase cannot be negative",
 
     };
+
+}
+/* 
+   TARGET VALIDATION
+ */
+
+if (applyTo === "PRODUCT") {
+
+    const product =
+    await Product.findOne({
+
+        _id: targetId,
+
+        isDeleted: false,
+
+    });
+
+    if (!product) {
+
+        return {
+
+            success: false,
+
+            message:
+            "Selected product does not exist",
+
+        };
+
+    }
+
+}
+
+if (applyTo === "CATEGORY") {
+
+    const category =
+    await Category.findOne({
+
+        _id: targetId,
+
+        isDeleted: false,
+
+    });
+
+    if (!category) {
+
+        return {
+
+            success: false,
+
+            message:
+            "Selected category does not exist",
+
+        };
+
+    }
 
 }
 
@@ -326,6 +383,62 @@ if (
         "Minimum purchase cannot be negative"
 
     };
+
+}
+
+/* =========================
+   TARGET VALIDATION
+========================= */
+
+if (applyTo === "PRODUCT") {
+
+    const product =
+    await Product.findOne({
+
+        _id: targetId,
+
+        isDeleted: false,
+
+    });
+
+    if (!product) {
+
+        return {
+
+            success: false,
+
+            message:
+            "Selected product does not exist"
+
+        };
+
+    }
+
+}
+
+if (applyTo === "CATEGORY") {
+
+    const category =
+    await Category.findOne({
+
+        _id: targetId,
+
+        isDeleted: false,
+
+    });
+
+    if (!category) {
+
+        return {
+
+            success: false,
+
+            message:
+            "Selected category does not exist"
+
+        };
+
+    }
 
 }
 

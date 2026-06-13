@@ -218,11 +218,41 @@
 
                                             <!-- PRICE -->
 
-                                            <div class="item-price">
+                                                <div class="item-price">
 
-                                                ₹<%= item.price.toLocaleString() %>
+                                                    <% if(item.appliedOffer){ %>
 
-                                            </div>
+                                                        <div class="offer-badge">
+
+                                                            <%= item.appliedOffer.discountValue %>% OFF
+
+                                                        </div>
+
+                                                        <div class="original-price">
+
+                                                            ₹<%= item.originalPrice.toLocaleString() %>
+
+                                                        </div>
+
+                                                        <div class="discount-price">
+
+                                                            ₹<%= item.finalPrice.toLocaleString() %>
+
+                                                        </div>
+
+                                                        <div class="save-price">
+
+                                                            Save ₹<%= item.offerDiscount.toLocaleString() %>
+
+                                                        </div>
+
+                                                    <% } else { %>
+
+                                                        ₹<%= item.price.toLocaleString() %>
+
+                                                    <% } %>
+
+                                                </div>
 
                                         </div>
 
@@ -274,9 +304,15 @@
 
                                             <!-- SUBTOTAL -->
 
-                                            <div class="item-subtotal" data-subtotal="<%= item.variantId._id %>">
+                                            <div
+                                                class="item-subtotal"
+                                                data-subtotal="<%= item.variantId._id %>"
+                                            >
 
-                                                ₹<%= (item.price * item.quantity).toLocaleString() %>
+                                                ₹<%= (
+                                                    (item.finalPrice || item.price)
+                                                    * item.quantity
+                                                ).toLocaleString() %>
 
                                             </div>
 
@@ -367,7 +403,28 @@
                                 </span>
 
                             </div>
+                            <% if(cart.offerDiscount > 0){ %>
 
+                            <div class="summary-item">
+
+                                <span class="summary-label">
+
+                                    Offer Discount
+
+                                </span>
+
+                                <span
+                                    class="summary-value"
+                                    style="color:#16a34a;font-weight:700;"
+                                >
+
+                                    - ₹<%= cart.offerDiscount.toLocaleString() %>
+
+                                </span>
+
+                            </div>
+
+                            <% } %>
                             <!-- SHIPPING -->
 
                             <div class="summary-item">

@@ -6,6 +6,9 @@ import Variant from "../../models/Variant.js";
 
 import Wishlist from "../../models/Wishlist.js";
 
+import { calculateItemOffer }
+from "../shared/offerService.js";
+
 /* =========================================
    LOAD CART
 ========================================= */
@@ -134,17 +137,55 @@ if (cartUpdated) {
 
   /* CALCULATE TOTALS */
 
-  let subtotal = 0;
+let subtotal = 0;
 
-  let totalItems = 0;
+let totalItems = 0;
 
-  cart.items.forEach((item) => {
-    subtotal += item.price * item.quantity;
+let offerDiscount = 0;
 
-    totalItems += item.quantity;
-  });
+for (const item of cart.items) {
+
+    const offerData =
+    await calculateItemOffer(
+
+        item.productId,
+
+        item.variantId,
+
+        item.quantity
+
+    );
+
+    item.originalPrice =
+    offerData.originalPrice;
+
+    item.finalPrice =
+    offerData.finalPrice;
+
+    item.offerDiscount =
+    offerData.offerDiscount;
+
+    item.appliedOffer =
+    offerData.appliedOffer;
+
+    item.offerType =
+    offerData.offerType;
+
+    subtotal +=
+    offerData.finalPrice *
+    item.quantity;
+
+    offerDiscount +=
+    offerData.offerDiscount;
+
+    totalItems +=
+    item.quantity;
+
+}
 
   cart.subtotal = subtotal;
+
+  cart.offerDiscount = offerDiscount;
 
   cart.totalItems = totalItems;
 
