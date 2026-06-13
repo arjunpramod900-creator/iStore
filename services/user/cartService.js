@@ -423,23 +423,49 @@ export const updateCartQuantityService = async ({
     }
   }
 
-  const itemSubtotal = item.price * item.quantity;
+let cartSubtotal = 0;
+let totalItems = 0;
+let itemSubtotal = 0;
+let offerDiscount = 0;
 
-  const cartSubtotal = cart.items.reduce(
-    (total, cartItem) => {
-      return total + cartItem.price * cartItem.quantity;
-    },
+for (const cartItem of cart.items) {
 
-    0,
-  );
+    const product =
+    await Product.findById(
+        cartItem.productId
+    );
 
-  const totalItems = cart.items.reduce(
-    (total, cartItem) => {
-      return total + cartItem.quantity;
-    },
+    const variant =
+    await Variant.findById(
+        cartItem.variantId
+    );
 
-    0,
-  );
+    const offerData =
+    await calculateItemOffer(
+        product,
+        variant,
+        cartItem.quantity
+    );
+
+    const lineTotal =
+    offerData.finalPrice *
+    cartItem.quantity;
+
+    if(
+        cartItem.variantId.toString() ===
+        variantId.toString()
+    ){
+        itemSubtotal = lineTotal;
+    }
+
+    cartSubtotal += lineTotal;
+
+    offerDiscount +=
+    offerData.offerDiscount;
+
+    totalItems +=
+    cartItem.quantity;
+}
 
   /* =========================================
    SHIPPING
@@ -461,7 +487,7 @@ export const updateCartQuantityService = async ({
 
   await cart.save();
 
-  return {
+return {
     success: true,
 
     quantity: item.quantity,
@@ -470,6 +496,8 @@ export const updateCartQuantityService = async ({
 
     cartSubtotal,
 
+    offerDiscount,
+
     totalItems,
 
     shipping,
@@ -477,7 +505,7 @@ export const updateCartQuantityService = async ({
     estimatedTax,
 
     finalTotal,
-  };
+};
 };
 
 /* =========================================

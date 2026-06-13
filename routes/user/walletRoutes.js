@@ -11,7 +11,13 @@ import userBlockCheckMiddleware
 from "../../middleware/userBlockCheckMiddleware.js";
 
 import {
+
   loadWalletPage,
+
+  createWalletTopupOrder,
+
+  verifyWalletTopupPayment,
+
 } from "../../controllers/user/walletController.js";
 
 /* =========================================
@@ -35,6 +41,30 @@ router.get(
   "/wallet",
 
   loadWalletPage,
+
+);
+
+/* =========================================
+   CREATE WALLET TOPUP ORDER
+========================================= */
+
+router.post(
+
+  "/wallet/create-order",
+
+  createWalletTopupOrder,
+
+);
+
+/* =========================================
+   VERIFY WALLET TOPUP PAYMENT
+========================================= */
+
+router.post(
+
+  "/wallet/verify-payment",
+
+  verifyWalletTopupPayment,
 
 );
 

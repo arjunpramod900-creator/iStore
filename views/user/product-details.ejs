@@ -109,67 +109,77 @@
 
     <div class="price-stack">
 
-        <div class="price-row">
+<div class="price-row">
 
-            <h2
-                class="product-price"
-                id="productPrice"
-            >
-                ₹<%= product.variant.price.toLocaleString() %>
-            </h2>
+    <h2
+        class="product-price"
+        id="productPrice"
+    >
 
-            <!-- UPDATED -->
+        ₹<%= product.offerData?.finalPrice?.toLocaleString() || product.variant.price.toLocaleString() %>
 
-            <span
-                class="compare-price"
+    </h2>
 
-                id="comparePrice"
+    <% if(product.offerData?.offerDiscount > 0){ %>
 
-                style="
-                display:
-                <%= product.variant.comparePrice > product.variant.price
-                    ? 'inline-flex'
-                    : 'none'
-                %>
-                "
-            >
+        <span
+            class="compare-price"
+            id="comparePrice"
+        >
 
-                ₹<%= product.variant.comparePrice?.toLocaleString() || '' %>
+            ₹<%= product.offerData.originalPrice.toLocaleString() %>
 
-            </span>
+        </span>
 
-            <span
-                class="discount-badge"
+        <span
+            class="discount-badge"
+            id="discountBadge"
+        >
 
-                id="discountBadge"
+            <%= product.offerData.appliedOffer.discountValue %>% OFF
 
-                style="
-                display:
-                <%= product.variant.comparePrice > product.variant.price
-                    ? 'inline-flex'
-                    : 'none'
-                %>
-                "
-            >
+        </span>
 
-               <%= product.variant.comparePrice > 0
+    <% } else { %>
 
-? Math.round(
+        <span
+            class="compare-price"
+            id="comparePrice"
+            style="display:none"
+        ></span>
 
-    (
-        (product.variant.comparePrice - product.variant.price)
-        / product.variant.comparePrice
-    ) * 100
+        <span
+            class="discount-badge"
+            id="discountBadge"
+            style="display:none"
+        ></span>
 
-)
+    <% } %>
 
-: 0
+</div>
 
-%>% OFF
+<div
+    id="offerInfo"
+    class="offer-info"
+>
 
-            </span>
+<% if(product.offerData?.offerDiscount > 0){ %>
 
-        </div>
+    <span class="offer-saving">
+
+        Save ₹<%= product.offerData.offerDiscount.toLocaleString() %>
+
+    </span>
+
+    <span class="offer-name">
+
+        <%= product.offerData.appliedOffer.offerName %>
+
+    </span>
+
+<% } %>
+
+</div>
 
         <p class="tax-text">
             Inclusive of all taxes
@@ -773,6 +783,9 @@ document.getElementById("comparePrice")
 const discountBadge =
 document.getElementById("discountBadge")
 
+const offerInfo =
+document.getElementById("offerInfo")
+
 const stockElement =
 document.getElementById("stockStatus")
 
@@ -1014,56 +1027,62 @@ function updateVariantUI(variant){
 
     variantMessage.innerText = ""
 
-    /* PRICE */
+   /* PRICE */
+
+if(
+
+    variant.offerData &&
+    variant.offerData.offerDiscount > 0
+
+){
+
+    priceElement.innerText =
+    `₹${variant.offerData.finalPrice.toLocaleString()}`
+
+    comparePriceElement.innerText =
+    `₹${variant.offerData.originalPrice.toLocaleString()}`
+
+    comparePriceElement.style.display =
+    "inline-flex"
+
+    discountBadge.innerText =
+    `${variant.offerData.appliedOffer.discountValue}% OFF`
+
+    discountBadge.style.display =
+    "inline-flex"
+
+    offerInfo.innerHTML = `
+
+        <span class="offer-saving">
+
+            Save ₹${variant.offerData.offerDiscount.toLocaleString()}
+
+        </span>
+
+        <span class="offer-name">
+
+            ${variant.offerData.appliedOffer.offerName}
+
+        </span>
+
+    `
+
+}
+
+else{
 
     priceElement.innerText =
     `₹${variant.price.toLocaleString()}`
 
-    /* COMPARE PRICE */
+    comparePriceElement.style.display =
+    "none"
 
-    if(
+    discountBadge.style.display =
+    "none"
 
-        comparePriceElement &&
-        discountBadge &&
-        variant.comparePrice &&
-        variant.comparePrice > variant.price
+    offerInfo.innerHTML = ""
 
-    ){
-
-        comparePriceElement.innerText =
-        `₹${variant.comparePrice.toLocaleString()}`
-
-        comparePriceElement.style.display =
-        "inline-flex"
-
-        const discountPercentage =
-
-        Math.round(
-
-            (
-                (variant.comparePrice - variant.price)
-                / variant.comparePrice
-            ) * 100
-
-        )
-
-        discountBadge.innerText =
-        `${discountPercentage}% OFF`
-
-        discountBadge.style.display =
-        "inline-flex"
-
-    }
-
-    else{
-
-        comparePriceElement.style.display =
-        "none"
-
-        discountBadge.style.display =
-        "none"
-
-    }
+}
 
     /* IMAGE */
 

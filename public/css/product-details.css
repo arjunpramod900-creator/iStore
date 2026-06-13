@@ -388,6 +388,56 @@ body {
   letter-spacing: 0.4px;
 }
 
+/* =========================================
+   OFFER UI
+========================================= */
+
+.offer-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.offer-badge-purple {
+  width: fit-content;
+
+  padding: 8px 14px;
+
+  border-radius: 999px;
+
+  background: linear-gradient(
+    135deg,
+    #603763,
+    #7a4e7c
+  );
+
+  color: white;
+
+  font-size: 12px;
+
+  font-weight: 700;
+
+  letter-spacing: 0.5px;
+
+  text-transform: uppercase;
+}
+
+.offer-saving {
+  font-size: 14px;
+
+  font-weight: 600;
+
+  color: #16a34a;
+}
+
+.offer-name {
+  font-size: 13px;
+
+  color: var(--text-muted);
+
+  font-weight: 500;
+}
+
 .tax-text {
   font-size: 14px;
 

@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="/css/wallet.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 </head>
 <body>
@@ -193,9 +194,12 @@
                         </div>
 
                         <!-- Submit Button -->
-                        <button class="btn-gradient">
-                            Top-up Wallet
-                        </button>
+                    <button
+                        id="topupWalletBtn"
+                        class="btn-gradient"
+                    >
+                        Top-up Wallet
+                    </button>
                     </div>
                 </section>
 
@@ -252,17 +256,335 @@
     <!-- Footer -->
     <%- include("../partials/user/footer") %>
 
-    <script>
-        lucide.createIcons();
+<script>
 
-        // Animation logic
-        gsap.from(".wallet-card-bg", { y: 20, opacity: 0, duration: 0.8, ease: "power3.out" });
-        gsap.from(".abstract-blob", { scale: 0.8, opacity: 0, duration: 1.5, ease: "power3.out", delay: 0.2 });
-        gsap.from(".dashboard-section", { y: 20, opacity: 0, duration: 0.8, stagger: 0.1, ease: "power3.out", delay: 0.2 });
+lucide.createIcons();
 
-        function setAmount(amount) {
-            document.getElementById('topupAmount').value = amount;
-        }
-    </script>
+/* =========================
+   ANIMATIONS
+========================= */
+
+gsap.from(
+".wallet-card-bg",
+{
+y:20,
+opacity:0,
+duration:0.8,
+ease:"power3.out"
+}
+);
+
+gsap.from(
+".abstract-blob",
+{
+scale:0.8,
+opacity:0,
+duration:1.5,
+ease:"power3.out",
+delay:0.2
+}
+);
+
+gsap.from(
+".dashboard-section",
+{
+y:20,
+opacity:0,
+duration:0.8,
+stagger:0.1,
+ease:"power3.out",
+delay:0.2
+}
+);
+
+/* =========================
+   PRESET BUTTONS
+========================= */
+
+function setAmount(amount){
+
+document.getElementById(
+"topupAmount"
+).value = amount;
+
+}
+
+/* =========================
+   WALLET TOPUP
+========================= */
+
+document
+.getElementById(
+"topupWalletBtn"
+)
+
+?.addEventListener(
+
+"click",
+
+async () => {
+
+try {
+
+const amount =
+Number(
+
+document.getElementById(
+"topupAmount"
+).value
+
+);
+
+if (
+
+!amount ||
+
+amount < 1
+
+) {
+
+return Swal.fire({
+
+icon:"warning",
+
+title:"Invalid Amount",
+
+text:"Please enter a valid amount"
+
+});
+
+}
+
+/* CREATE ORDER */
+
+const response =
+await fetch(
+
+"/wallet/create-order",
+
+{
+
+method:"POST",
+
+headers:{
+"Content-Type":
+"application/json"
+},
+
+body:JSON.stringify({
+
+amount
+
+})
+
+}
+
+);
+
+const data =
+await response.json();
+
+if(!data.success){
+
+return Swal.fire({
+
+icon:"error",
+
+title:"Payment Error",
+
+text:data.message
+
+});
+
+}
+
+/* OPEN RAZORPAY */
+
+const options = {
+
+key:
+"<%= razorpayKey %>",
+
+amount:
+data.razorpayOrder.amount,
+
+currency:
+"INR",
+
+name:
+"iStore Wallet",
+
+description:
+"Wallet Topup",
+
+order_id:
+data.razorpayOrder.id,
+
+handler:
+async function(response){
+
+try {
+
+const verifyResponse =
+await fetch(
+
+"/wallet/verify-payment",
+
+{
+
+method:"POST",
+
+headers:{
+"Content-Type":
+"application/json"
+},
+
+body:JSON.stringify({
+
+amount,
+
+razorpay_order_id:
+response.razorpay_order_id,
+
+razorpay_payment_id:
+response.razorpay_payment_id,
+
+razorpay_signature:
+response.razorpay_signature,
+
+})
+
+}
+
+);
+
+const result =
+await verifyResponse.json();
+
+if(!result.success){
+
+return Swal.fire({
+
+icon:"error",
+
+title:
+"Verification Failed",
+
+text:
+result.message,
+
+});
+
+}
+
+await Swal.fire({
+
+icon:"success",
+
+title:
+"Wallet Credited",
+
+text:
+`₹${amount.toLocaleString("en-IN")} added successfully`,
+
+confirmButtonColor:
+"#603763"
+
+});
+
+window.location.reload();
+
+}
+
+catch(error){
+
+Swal.fire({
+
+icon:"error",
+
+title:
+"Verification Failed",
+
+text:
+"Please contact support."
+
+});
+
+}
+
+},
+
+theme: {
+
+color:"#603763"
+
+}
+
+};
+
+const razorpay =
+new Razorpay(options);
+
+/* =========================================
+   PAYMENT FAILED
+========================================= */
+
+razorpay.on(
+
+  "payment.failed",
+
+  function(response){
+
+    console.log(
+      "Razorpay Failed:",
+      response
+    );
+
+    Swal.fire({
+
+      icon:"error",
+
+      title:"Payment Failed",
+
+      text:
+      response.error.description ||
+
+      "Transaction failed",
+
+      confirmButtonColor:
+      "#603763"
+
+    });
+
+  }
+
+);
+
+razorpay.open();
+
+}
+
+catch(error){
+
+Swal.fire({
+
+icon:"error",
+
+title:
+"Something Went Wrong",
+
+text:
+"Please try again later"
+
+});
+
+}
+
+}
+
+);
+
+</script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </body>
 </html>

@@ -45,6 +45,7 @@ new mongoose.Schema(
         "OrderPayment",
         "ReferralBonus",
         "AdminAdjustment",
+        "WalletTopup",
       ],
       required: true,
     },
@@ -52,6 +53,11 @@ new mongoose.Schema(
     description: {
       type: String,
       default: "",
+    },
+
+    razorpayPaymentId: {
+      type: String,
+      default: null,
     },
 
     balanceAfter: {

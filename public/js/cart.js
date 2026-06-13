@@ -138,6 +138,20 @@ const updateCartUI = (
     }
   }
 
+
+      const offerDiscountElement =
+    document.getElementById(
+        "offerDiscountAmount"
+    );
+
+    if(
+        offerDiscountElement &&
+        typeof data.offerDiscount !== "undefined"
+    ){
+        offerDiscountElement.innerText =
+        `- ₹${data.offerDiscount.toLocaleString()}`;
+    }
+
   /* =========================================
        TOTAL ITEMS
     ========================================= */

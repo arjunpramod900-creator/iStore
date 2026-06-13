@@ -47,6 +47,21 @@ const orderItemSchema = new mongoose.Schema({
     required: true,
   },
 
+  originalPrice: {
+    type: Number,
+    default: 0,
+  },
+
+  finalPrice: {
+    type: Number,
+    default: 0,
+  },
+
+  offerDiscount: {
+    type: Number,
+    default: 0,
+  },
+
   itemStatus: {
   type: String,
 

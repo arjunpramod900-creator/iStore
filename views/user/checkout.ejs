@@ -199,126 +199,117 @@ class="co-add-address-btn">
                         <div class="co-payment-card">
 
                             <!-- Payment method tabs -->
-                            <div class="co-payment-tabs">
+                          <div class="co-payment-tabs">
 
-                                <button class="co-pay-tab active" data-method="card" id="tabCard">
+                                <button
+                                    class="co-pay-tab active"
+                                    data-method="razorpay"
+                                    id="tabRazorpay">
+
                                     <i data-lucide="credit-card" size="18"></i>
-                                    <span>Card</span>
+
+                                    <span>Razorpay</span>
+
                                 </button>
 
-                                <button class="co-pay-tab" data-method="upi" id="tabUpi">
-                                    <i data-lucide="smartphone" size="18"></i>
-                                    <span>UPI / Net</span>
-                                </button>
+                                <button
+                                    class="co-pay-tab"
+                                    data-method="wallet"
+                                    id="tabWallet">
 
-                                <button class="co-pay-tab" data-method="wallet" data-lucide-icon="wallet" id="tabWallet">
                                     <i data-lucide="wallet" size="18"></i>
+
                                     <span>Wallet</span>
+
                                 </button>
 
-                                <button class="co-pay-tab" data-method="cod" id="tabCod">
+                                <button
+                                    class="co-pay-tab"
+                                    data-method="cod"
+                                    id="tabCod">
+
                                     <i data-lucide="banknote" size="18"></i>
-                                    <span>COD</span>
+
+                                    <span>Cash On Delivery</span>
+
                                 </button>
 
                             </div>
 
-                            <!-- ── CARD DETAILS ── -->
-                            <div class="co-card-details" id="panelCard">
 
-                                <div class="co-field co-field--full">
-                                    <label class="co-label" for="cardNumber">Card Number</label>
-                                    <div class="co-card-input-wrap">
-                                        <input
-                                            type="text"
-                                            id="cardNumber"
-                                            name="cardNumber"
-                                            class="co-input"
-                                            placeholder="0000 0000 0000 0000"
-                                            maxlength="19"
-                                            autocomplete="cc-number"
-                                        >
-                                        <span class="co-card-brand-badges">
-                                            <span class="co-card-badge visa"></span>
-                                            <span class="co-card-badge mc"></span>
-                                        </span>
-                                    </div>
-                                </div>
+                            <!-- RAZORPAY -->
 
-                                <div class="co-form-grid">
-                                    <div class="co-field">
-                                        <label class="co-label" for="expiry">Expiry Date</label>
-                                        <input
-                                            type="text"
-                                            id="expiry"
-                                            name="expiry"
-                                            class="co-input"
-                                            placeholder="MM/YY"
-                                            maxlength="5"
-                                            autocomplete="cc-exp"
-                                        >
-                                    </div>
-                                    <div class="co-field">
-                                        <label class="co-label" for="cvv">CVV</label>
-                                        <input
-                                            type="password"
-                                            id="cvv"
-                                            name="cvv"
-                                            class="co-input"
-                                            placeholder="•••"
-                                            maxlength="4"
-                                            autocomplete="cc-csc"
-                                        >
-                                    </div>
-                                </div>
+                            <div class="co-card-details" id="panelRazorpay">
 
-                            </div>
-
-                            <!-- ── UPI PANEL ── -->
-                            <div class="co-card-details hidden" id="panelUpi">
-                                <div class="co-field co-field--full">
-                                    <label class="co-label" for="upiId">UPI ID</label>
-                                    <input
-                                        type="text"
-                                        id="upiId"
-                                        name="upiId"
-                                        class="co-input"
-                                        placeholder="yourname@upi"
-                                    >
-                                </div>
-                                <p class="co-panel-note">
-                                    <i data-lucide="info" size="14"></i>
-                                    You'll receive a payment request on your UPI app.
-                                </p>
-                            </div>
-
-                            <!-- ── WALLET PANEL ── -->
-                            <div class="co-card-details hidden" id="panelWallet">
-                                <div class="co-wallet-options">
-                                    <label class="co-wallet-opt">
-                                        <input type="radio" name="wallet" value="paytm" checked>
-                                        <img src="https://upload.wikimedia.org/wikipedia/commons/4/42/Paytm_logo.png" alt="Paytm" class="co-wallet-logo">
-                                    </label>
-                                    <label class="co-wallet-opt">
-                                        <input type="radio" name="wallet" value="phonepe">
-                                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/PhonePe_Logo.png/180px-PhonePe_Logo.png" alt="PhonePe" class="co-wallet-logo">
-                                    </label>
-                                    <label class="co-wallet-opt">
-                                        <input type="radio" name="wallet" value="amazonpay">
-                                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Amazon_logo.svg/200px-Amazon_logo.svg.png" alt="Amazon Pay" class="co-wallet-logo">
-                                    </label>
-                                </div>
-                            </div>
-
-                            <!-- ── COD PANEL ── -->
-                            <div class="co-card-details hidden" id="panelCod">
                                 <div class="co-cod-notice">
-                                    <i data-lucide="package-check" size="24"></i>
+
+                                    <i data-lucide="shield-check" size="24"></i>
+
                                     <div>
-                                        <p class="co-cod-title">Cash on Delivery</p>
-                                        <p class="co-cod-desc">Pay in cash when your order arrives. A convenience fee of ₹29 may apply.</p>
+
+                                        <p class="co-cod-title">
+                                            Secure Razorpay Payment
+                                        </p>
+
+                                        <p class="co-cod-desc">
+                                            Pay using UPI, Cards, Net Banking,
+                                            Wallets and more through Razorpay.
+                                        </p>
+
                                     </div>
+
                                 </div>
+
+                            </div>
+
+
+                            <!-- WALLET -->
+
+                            <div class="co-card-details hidden" id="panelWallet">
+
+                                <div class="co-cod-notice">
+
+                                    <i data-lucide="wallet" size="24"></i>
+
+                                    <div>
+
+                                        <p class="co-cod-title">
+                                            Wallet Payment
+                                        </p>
+
+                                        <p class="co-cod-desc">
+                                            Your iStore wallet balance will be used.
+                                        </p>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- COD -->
+
+                            <div class="co-card-details hidden" id="panelCod">
+
+                                <div class="co-cod-notice">
+
+                                    <i data-lucide="package-check" size="24"></i>
+
+                                    <div>
+
+                                        <p class="co-cod-title">
+                                            Cash On Delivery
+                                        </p>
+
+                                        <p class="co-cod-desc">
+                                            Pay when your order arrives.
+                                        </p>
+
+                                    </div>
+
+                                </div>
+
                             </div>
 
                         </div>
@@ -354,11 +345,36 @@ class="co-add-address-btn">
                                         <div class="co-item-meta">
                                             <p class="co-item-name"><%= item.productId.name %></p>
                                             <p class="co-item-variant">
+                                                <% if(item.offerDiscount > 0){ %>
+
+                                                <div
+                                                style="
+                                                font-size:12px;
+                                                font-weight:600;
+                                                color:#16A34A;
+                                                margin-top:4px;
+                                                ">
+
+                                                Offer Applied
+
+                                                </div>
+
+                                                <% } %>
                                                 <%= [item.variantId.color, item.variantId.storage].filter(Boolean).join(' • ') %>
                                                 <% if (item.quantity > 1) { %> &nbsp;·&nbsp; Qty: <%= item.quantity %><% } %>
                                             </p>
                                         </div>
-                                        <span class="co-item-price">₹<%= (item.price * item.quantity).toLocaleString('en-IN') %></span>
+                                        <span class="co-item-price">
+
+                                        ₹<%= (
+                                        (
+                                        item.finalPrice || item.price
+                                        )
+                                        *
+                                        item.quantity
+                                        ).toLocaleString('en-IN') %>
+
+                                        </span>
                                     </div>
 
                                 <% }) %>
@@ -824,44 +840,70 @@ class="co-add-address-btn">
         gsap.from('.co-section', { y: 20, opacity: 0, duration: 0.5, stagger: 0.12, delay: 0.2, ease: 'power2.out' });
 
         /* ── Payment method tab switching ── */
-        let selectedPaymentMethod = "COD";
-        const tabs   = document.querySelectorAll('.co-pay-tab');
-        const panels = {
-            card:   document.getElementById('panelCard'),
-            upi:    document.getElementById('panelUpi'),
-            wallet: document.getElementById('panelWallet'),
-            cod:    document.getElementById('panelCod'),
-        };
 
-        tabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                tabs.forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
-                const method = tab.dataset.method;
-                switch (method) {
 
-                    case "cod":
-                        selectedPaymentMethod = "COD";
-                        break;
+const tabs =
+document.querySelectorAll(
+'.co-pay-tab'
+);
 
-                    case "wallet":
-                        selectedPaymentMethod = "WALLET";
-                        break;
+const panels = {
 
-                    case "card":
-                    case "upi":
-                        selectedPaymentMethod = "RAZORPAY";
-                        break;
+    razorpay:
+    document.getElementById(
+        'panelRazorpay'
+    ),
 
-                    default:
-                        selectedPaymentMethod = "COD";
+    wallet:
+    document.getElementById(
+        'panelWallet'
+    ),
 
-                }
-                Object.values(panels).forEach(p => p.classList.add('hidden'));
-                panels[method].classList.remove('hidden');
-                lucide.createIcons();
+    cod:
+    document.getElementById(
+        'panelCod'
+    ),
+
+};
+
+tabs.forEach(tab => {
+
+    tab.addEventListener(
+        'click',
+        () => {
+
+            tabs.forEach(t =>
+                t.classList.remove(
+                    'active'
+                )
+            );
+
+            tab.classList.add(
+                'active'
+            );
+
+            const method =
+            tab.dataset.method;
+
+            Object.values(
+                panels
+            ).forEach(panel => {
+
+                panel.classList.add(
+                    "hidden"
+                );
+
             });
-        });
+
+            panels[method]
+            ?.classList.remove(
+                "hidden"
+            );
+
+        }
+    );
+
+});
 
         /* ── Delivery option selection ── */
                     const deliveryCards =
@@ -945,24 +987,6 @@ class="co-add-address-btn">
 
                 });
 
-        /* ── Card number formatting ── */
-        const cardInput = document.getElementById('cardNumber');
-        if (cardInput) {
-            cardInput.addEventListener('input', e => {
-                let v = e.target.value.replace(/\D/g, '').slice(0, 16);
-                e.target.value = v.replace(/(.{4})/g, '$1 ').trim();
-            });
-        }
-
-        /* ── Expiry formatting ── */
-        const expiryInput = document.getElementById('expiry');
-        if (expiryInput) {
-            expiryInput.addEventListener('input', e => {
-                let v = e.target.value.replace(/\D/g, '').slice(0, 4);
-                if (v.length >= 2) v = v.slice(0,2) + '/' + v.slice(2);
-                e.target.value = v;
-            });
-        }
 
         /* ── Coupon apply ── */
         document.querySelectorAll('.co-coupon-apply-btn').forEach(btn => {

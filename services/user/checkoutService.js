@@ -3,6 +3,7 @@ import Address from "../../models/Address.js";
 import Order from "../../models/Order.js";
 import Coupon from "../../models/Coupon.js";
 
+
 import {
   calculateCheckoutTotals
 }
@@ -19,6 +20,11 @@ import {
 import {
   verifyRazorpaySignature,
 } from "./razorpayService.js";
+
+import {
+  calculateItemOffer
+}
+from "../shared/offerService.js";
 
 
 /* =========================================
@@ -72,6 +78,32 @@ async (
       item.variantId.stock > 0
     );
   });
+    for (const item of validItems) {
+
+      const offerData =
+      await calculateItemOffer(
+
+          item.productId,
+
+          item.variantId,
+
+          item.quantity
+
+      );
+
+      item.originalPrice =
+      offerData.originalPrice;
+
+      item.finalPrice =
+      offerData.finalPrice;
+
+      item.offerDiscount =
+      offerData.offerDiscount;
+
+      item.appliedOffer =
+      offerData.appliedOffer;
+
+  }
 
   /* CALCULATE TOTALS */
 
@@ -305,35 +337,62 @@ totals.finalAmount;
 
   /* ORDER ITEMS */
 
-  const orderItems =
-    cart.items.map(item => ({
-      productId:
-        item.productId._id,
+    const orderItems = [];
 
-      variantId:
-        item.variantId._id,
+    for (const item of cart.items) {
 
-      productName:
-        item.productId.name,
+        const offerData =
+        await calculateItemOffer(
 
-      productImage:
-        item.variantId.images?.[0] ||
-        item.productId.thumbnail,
+            item.productId,
 
-      variantName:
-        [
-          item.variantId.color,
-          item.variantId.storage,
-        ]
-          .filter(Boolean)
-          .join(" • "),
+            item.variantId,
 
-      quantity:
-        item.quantity,
+            item.quantity
 
-      price:
-        item.price,
-    }));
+        );
+
+        orderItems.push({
+
+            productId:
+            item.productId._id,
+
+            variantId:
+            item.variantId._id,
+
+            productName:
+            item.productId.name,
+
+            productImage:
+            item.variantId.images?.[0] ||
+            item.productId.thumbnail,
+
+            variantName:
+            [
+                item.variantId.color,
+                item.variantId.storage,
+            ]
+            .filter(Boolean)
+            .join(" • "),
+
+            quantity:
+            item.quantity,
+
+            originalPrice:
+            item.price,
+
+            finalPrice:
+            offerData.finalPrice,
+
+            offerDiscount:
+            offerData.offerDiscount,
+
+            price:
+            offerData.finalPrice,
+
+        });
+
+    }
 
   /* GENERATE ORDER ID */
 
@@ -391,6 +450,18 @@ totals.finalAmount;
       discountAmount:
         totals.offerDiscount +
         totals.couponDiscount,
+
+      offerDiscount:
+      totals.offerDiscount,
+
+      couponDiscount:
+      totals.couponDiscount,
+
+      couponCode:
+      totals.coupon?.code || null,
+
+      couponId:
+      totals.coupon?._id || null,
 
       taxAmount:
         totals.taxAmount,
@@ -530,38 +601,62 @@ async (
 
   }
 
-  const orderItems =
-  cart.items.map(item => ({
+const orderItems = [];
 
-    productId:
-      item.productId._id,
+for (const item of cart.items) {
 
-    variantId:
-      item.variantId._id,
+    const offerData =
+    await calculateItemOffer(
 
-    productName:
-      item.productId.name,
+        item.productId,
 
-    productImage:
-      item.variantId.images?.[0]
-      ||
-      item.productId.thumbnail,
+        item.variantId,
 
-    variantName:
-      [
-        item.variantId.color,
-        item.variantId.storage,
-      ]
-      .filter(Boolean)
-      .join(" • "),
+        item.quantity
 
-    quantity:
-      item.quantity,
+    );
 
-    price:
-      item.price,
+    orderItems.push({
 
-  }));
+        productId:
+        item.productId._id,
+
+        variantId:
+        item.variantId._id,
+
+        productName:
+        item.productId.name,
+
+        productImage:
+        item.variantId.images?.[0] ||
+        item.productId.thumbnail,
+
+        variantName:
+        [
+            item.variantId.color,
+            item.variantId.storage,
+        ]
+        .filter(Boolean)
+        .join(" • "),
+
+        quantity:
+        item.quantity,
+
+        originalPrice:
+        item.price,
+
+        finalPrice:
+        offerData.finalPrice,
+
+        offerDiscount:
+        offerData.offerDiscount,
+
+        price:
+        offerData.finalPrice,
+
+    });
+
+}
 
   const order =
   await Order.create({
@@ -611,6 +706,18 @@ async (
     discountAmount:
       totals.offerDiscount +
       totals.couponDiscount,
+
+      offerDiscount:
+      totals.offerDiscount,
+
+      couponDiscount:
+      totals.couponDiscount,
+
+      couponCode:
+      totals.coupon?.code || null,
+
+      couponId:
+      totals.coupon?._id || null,
 
     taxAmount:
       totals.taxAmount,

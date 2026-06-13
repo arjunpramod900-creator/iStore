@@ -324,7 +324,27 @@ export const loadProductDetailsService = async (
     defaultVariant
   );
 
-  product.variants = variants;
+product.variants = await Promise.all(
+
+    variants.map(async (variant) => {
+
+        const offerData =
+        await calculateItemOffer(
+            product,
+            variant
+        );
+
+        return {
+
+            ...variant,
+
+            offerData
+
+        };
+
+    })
+
+);
 
   /* =========================================
    REVIEWS

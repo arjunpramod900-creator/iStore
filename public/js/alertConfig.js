@@ -223,7 +223,7 @@ window.showConfirmAlert = ({
     showCancelButton: true,
 
     confirmButtonText:
-    confirmText,a
+    confirmText,
 
     cancelButtonText:
     cancelText,
