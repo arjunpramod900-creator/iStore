@@ -8,6 +8,9 @@ import connectDB from "./config/db.js";
 
 import authRoutes from "./routes/user/authRoutes.js";
 
+import authController
+from "./controllers/user/authController.js";
+
 import profileRoutes from "./routes/user/profileRoutes.js";
 
 import productRoutes from "./routes/user/productRoutes.js";
@@ -139,10 +142,7 @@ PROTECTED HOME ROUTE
 
 app.get(
   "/",
-
-  (req, res) => {
-    res.render("user/home");
-  },
+  authController.loadHome
 );
 
 //* USER AUTH ROUTES */

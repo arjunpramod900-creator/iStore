@@ -1,5 +1,13 @@
 import User from "../../models/User.js";
 import OTP from "../../models/OTP.js";
+import Product from "../../models/Product.js";
+import Variant from "../../models/Variant.js";
+import Category from "../../models/Category.js";
+import Wishlist from "../../models/Wishlist.js";
+import Cart from "../../models/Cart.js";
+
+import { calculateItemOffer }
+from "../../services/shared/offerService.js";
 
 import generateOTP from "../../utils/generateOTP.js";
 
@@ -55,10 +63,360 @@ const loadResetPassword = (req, res) => {
 
 /*LOAD HOME PAGE*/
 
-const loadHome = (req, res) => {
-  res.render("user/home");
-};
+const loadHome = async (req, res) => {
 
+  try {
+
+    /* ==========================
+       CATEGORIES
+    ========================== */
+
+    const categories =
+    await Category.find({
+
+      isDeleted: false,
+
+      isActive: true,
+
+    })
+
+    .sort({
+      createdAt: -1
+    })
+
+    .limit(6)
+
+    .lean();
+
+
+
+    /* ==========================
+       FEATURED PRODUCTS
+    ========================== */
+
+    let featuredProducts =
+    await Product.find({
+
+      isFeatured: true,
+
+      isDeleted: false,
+
+      isActive: true,
+
+    })
+
+    .populate("categoryId")
+
+    .limit(8)
+
+    .lean();
+
+
+
+    if (!featuredProducts.length) {
+
+      featuredProducts =
+      await Product.find({
+
+        isDeleted: false,
+
+        isActive: true,
+
+      })
+
+      .populate("categoryId")
+
+      .sort({
+
+        createdAt: -1,
+
+      })
+
+      .limit(8)
+
+      .lean();
+
+    }
+
+
+
+    for (const product of featuredProducts) {
+
+      const variant =
+      await Variant.findOne({
+
+        productId: product._id,
+
+        isDeleted: false,
+
+        isActive: true,
+
+        stock: { $gt: 0 },
+
+      }).lean();
+
+      if (!variant) continue;
+
+      product.variant = variant;
+
+      product.offerData =
+      await calculateItemOffer(
+        product,
+        variant
+      );
+
+    }
+
+
+
+    featuredProducts =
+    featuredProducts.filter(
+      product => product.variant
+    );
+
+
+
+    /* ==========================
+       BEST SELLERS
+    ========================== */
+
+    let bestSellerProducts =
+    await Product.find({
+
+      isBestSeller: true,
+
+      isDeleted: false,
+
+      isActive: true,
+
+    })
+
+    .populate("categoryId")
+
+    .limit(8)
+
+    .lean();
+
+
+
+    if (!bestSellerProducts.length) {
+
+      bestSellerProducts =
+      await Product.find({
+
+        isDeleted: false,
+
+        isActive: true,
+
+      })
+
+      .populate("categoryId")
+
+      .sort({
+
+        createdAt: -1,
+
+      })
+
+      .limit(8)
+
+      .lean();
+
+    }
+
+
+
+    for (const product of bestSellerProducts) {
+
+      const variant =
+      await Variant.findOne({
+
+        productId: product._id,
+
+        isDeleted: false,
+
+        isActive: true,
+
+        stock: { $gt: 0 },
+
+      }).lean();
+
+      if (!variant) continue;
+
+      product.variant = variant;
+
+      product.offerData =
+      await calculateItemOffer(
+        product,
+        variant
+      );
+
+    }
+
+
+
+    bestSellerProducts =
+    bestSellerProducts.filter(
+      product => product.variant
+    );
+
+
+
+    /* ==========================
+       DEAL PRODUCTS
+    ========================== */
+
+    let dealProducts =
+    await Product.find({
+
+      isDeal: true,
+
+      isDeleted: false,
+
+      isActive: true,
+
+    })
+
+    .populate("categoryId")
+
+    .limit(3)
+
+    .lean();
+
+
+
+    for (const product of dealProducts) {
+
+      const variant =
+      await Variant.findOne({
+
+        productId: product._id,
+
+        isDeleted: false,
+
+        isActive: true,
+
+        stock: { $gt: 0 },
+
+      }).lean();
+
+      if (!variant) continue;
+
+      product.variant = variant;
+
+      product.offerData =
+      await calculateItemOffer(
+        product,
+        variant
+      );
+
+    }
+
+
+
+    dealProducts =
+    dealProducts.filter(
+      product => product.variant
+    );
+
+
+
+    /* ==========================
+       WISHLIST IDS
+    ========================== */
+
+    let wishlistVariantIds = [];
+
+    let cartVariantIds = [];
+
+
+
+    if (req.session.userId) {
+
+      const wishlist =
+      await Wishlist.findOne({
+
+        userId:
+        req.session.userId,
+
+      });
+
+      if (wishlist) {
+
+        wishlistVariantIds =
+        wishlist.items.map(
+
+          item =>
+          item.variantId.toString()
+
+        );
+
+      }
+
+
+
+      const cart =
+      await Cart.findOne({
+
+        userId:
+        req.session.userId,
+
+      });
+
+      if (cart) {
+
+        cartVariantIds =
+        cart.items.map(
+
+          item =>
+          item.variantId.toString()
+
+        );
+
+      }
+
+    }
+
+
+
+    res.render(
+
+      "user/home",
+
+      {
+
+        page: "home",
+
+        categories,
+
+        featuredProducts,
+
+        bestSellerProducts,
+
+        dealProducts,
+
+        wishlistVariantIds,
+
+        cartVariantIds,
+
+      }
+
+    );
+
+  }
+
+  catch (error) {
+
+    console.log(
+      "Load Home Error:",
+      error
+    );
+
+    res.redirect("/");
+
+  }
+
+};
 /*LOAD PROFILE PAGE*/
 
 const loadProfile = async (req, res) => {
