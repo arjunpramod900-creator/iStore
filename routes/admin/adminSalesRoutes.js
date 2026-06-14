@@ -12,6 +12,10 @@ import {
   downloadSalesReportPDF,
 } from "../../controllers/admin/salesReportController.js";
 
+import {
+  downloadSalesReportExcel,
+} from "../../controllers/admin/excelReportController.js";
+
 /* ============================
    SALES REPORT
 ============================ */
@@ -35,6 +39,20 @@ router.get(
   adminAuthMiddleware,
 
   downloadSalesReportPDF,
+
+);
+
+/* ============================
+   DOWNLOAD SALES REPORT EXCEL
+============================ */
+
+router.get(
+
+  "/sales-report/excel",
+
+  adminAuthMiddleware,
+
+  downloadSalesReportExcel,
 
 );
 

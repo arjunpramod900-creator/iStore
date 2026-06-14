@@ -32,6 +32,19 @@ async (filter = "weekly") => {
     };
 
   }
+  else if (filter === "weekly") {
+
+  const start = new Date();
+
+  start.setDate(
+    start.getDate() - 7
+  );
+
+  matchStage.createdAt = {
+    $gte: start,
+  };
+
+}
 
   else if (filter === "monthly") {
 
@@ -65,27 +78,24 @@ async (filter = "weekly") => {
      TOTAL REVENUE
   ========================== */
 
-  const revenueResult =
-  await Order.aggregate([
+const revenueResult =
+await Order.aggregate([
 
-    {
-      $match: {
-        orderStatus: "Delivered",
+  {
+    $match: matchStage,
+  },
+
+  {
+    $group: {
+      _id: null,
+
+      totalRevenue: {
+        $sum: "$finalAmount",
       },
     },
+  },
 
-    {
-      $group: {
-        _id: null,
-
-        totalRevenue: {
-          $sum: "$finalAmount",
-        },
-      },
-    },
-
-  ]);
-
+]);
   /* ==========================
      TOTAL ORDERS
   ========================== */
@@ -116,7 +126,7 @@ async (filter = "weekly") => {
   ========================== */
 
   const recentOrders =
-  await Order.find()
+await Order.find(matchStage)
 
     .populate(
       "userId",
@@ -182,11 +192,9 @@ async (filter = "weekly") => {
 
   await Order.aggregate([
 
-    {
-      $match: {
-        orderStatus: "Delivered",
-      },
-    },
+{
+  $match: matchStage,
+},
 
     {
       $unwind: "$items",
@@ -272,11 +280,9 @@ async (filter = "weekly") => {
 
   await Order.aggregate([
 
-    {
-      $match: {
-        orderStatus: "Delivered",
-      },
-    },
+{
+  $match: matchStage,
+},
 
     {
       $unwind: "$items",

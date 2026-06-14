@@ -5,6 +5,14 @@ import generateOTP from "../../utils/generateOTP.js";
 
 import sendEmail from "../../services/emailService.js";
 
+import generateReferralCode
+from "../../utils/generateReferralCode.js";
+
+import {
+  creditWallet
+}
+from "../../services/shared/walletService.js";
+
 import bcrypt from "bcrypt";
 
 import { signupSchema } from "../../validators/authValidator.js";
@@ -14,7 +22,17 @@ import { signupSchema } from "../../validators/authValidator.js";
 ================================ */
 
 const loadSignup = (req, res) => {
-  res.render("user/signup");
+
+  const referralCode =
+  req.query.ref || "";
+
+  res.render(
+    "user/signup",
+    {
+      referralCode
+    }
+  );
+
 };
 
 const loadLogin = (req, res) => {
@@ -45,6 +63,7 @@ const loadHome = (req, res) => {
 
 const loadProfile = async (req, res) => {
   try {
+
     const userId = req.session.userId;
 
     const user = await User.findById(userId);
@@ -53,9 +72,27 @@ const loadProfile = async (req, res) => {
       return res.redirect("/login");
     }
 
+
+    const referralLink =
+`${req.protocol}://${req.get("host")}/signup?ref=${user.referralCode}`;
+
     res.render("user/profile", {
+
       user,
+
+      referralCode:
+      user.referralCode || "",
+
+      referralCount:
+      user.referralCount || 0,
+
+      referralRewards:
+      user.referralRewardEarned || 0,
+
+      referralLink,
+
     });
+
   } catch (error) {
     console.log("Profile Load Error:", error);
 
@@ -122,7 +159,7 @@ const sendSignupOTP = async (req, res) => {
       });
     }
 
-    const { fullName, phoneNumber, email, password } = result.data;
+    const {fullName, phoneNumber, email, password, referralCode} = req.body;
 
     const existingUser = await User.findOne({ email });
 
@@ -151,12 +188,19 @@ const sendSignupOTP = async (req, res) => {
       expiresAt,
     });
 
-    req.session.signupData = {
-      fullName,
-      phoneNumber,
-      email,
-      password,
-    };
+req.session.signupData = {
+
+  fullName,
+
+  phoneNumber,
+
+  email,
+
+  password,
+
+  referralCode,
+
+};
 
     await sendEmail(
       email,
@@ -218,19 +262,125 @@ const verifySignupOTP = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(signupData.password, 10);
 
-    await User.create({
-      fullName: signupData.fullName,
+let referredByUser = null;
 
-      phoneNumber: signupData.phoneNumber,
+if (
 
-      email: signupData.email,
+  signupData.referralCode &&
 
-      password: hashedPassword,
+  typeof signupData.referralCode === "string"
+
+) {
+
+  const referralCode =
+  signupData.referralCode.trim();
+
+  if (
+    referralCode &&
+    referralCode !== "null" &&
+    referralCode !== "undefined"
+  ) {
+
+    referredByUser =
+    await User.findOne({
+      referralCode
     });
 
-    await OTP.deleteMany({
-      email: signupData.email,
-    });
+  }
+
+}
+
+const existingUser =
+await User.findOne({
+
+  email:
+  signupData.email,
+
+});
+
+if (existingUser) {
+
+  return res.status(400).json({
+
+    success: false,
+
+    message:
+    "User already registered",
+
+  });
+
+}
+
+const newUser =
+await User.create({
+
+  fullName:
+  signupData.fullName,
+
+  phoneNumber:
+  signupData.phoneNumber,
+
+  email:
+  signupData.email,
+
+  password:
+  hashedPassword,
+
+  referralCode:
+  generateReferralCode(
+    signupData.fullName
+  ),
+
+  referredBy:
+  referredByUser?._id || null,
+
+});
+await OTP.deleteMany({
+  email: signupData.email,
+  type: "signup",
+});
+
+if (referredByUser) {
+
+  await creditWallet({
+
+    userId:
+    referredByUser._id,
+
+    amount: 200,
+
+    transactionType:
+    "ReferralBonus",
+
+    description:
+    `Referral reward for inviting ${newUser.fullName}`,
+
+  });
+
+  await creditWallet({
+
+    userId:
+    newUser._id,
+
+    amount: 100,
+
+    transactionType:
+    "ReferralBonus",
+
+    description:
+    "Welcome referral bonus",
+
+  });
+
+  referredByUser.referralCount += 1;
+
+  referredByUser.referralRewardEarned += 200;
+
+  await referredByUser.save();
+
+}
+
+
 
     delete req.session.signupData;
 

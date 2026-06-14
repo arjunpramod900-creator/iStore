@@ -223,6 +223,115 @@
                     </div>
                 </div>
 
+                <!-- REFERRAL PROGRAM -->
+
+<section class="referral-section">
+
+    <div class="referral-header">
+
+        <i data-lucide="gift"></i>
+
+        <h2>Referral Rewards</h2>
+
+    </div>
+
+    <div class="referral-grid">
+
+        <div class="referral-stat">
+
+            <span class="referral-label">
+
+                Referral Code
+
+            </span>
+
+            <div class="referral-copy-row">
+
+                <strong id="referralCode">
+
+                    <%= referralCode %>
+
+                </strong>
+
+                <button
+                type="button"
+                class="copy-btn"
+                onclick="copyReferralCode()">
+
+                    Copy
+
+                </button>
+
+            </div>
+
+        </div>
+
+        <div class="referral-stat">
+
+            <span class="referral-label">
+
+                Referral Link
+
+            </span>
+
+            <div class="referral-copy-row">
+
+                <small
+                id="referralLink">
+
+                <%= referralLink %>
+
+                </small>
+
+                <button
+                type="button"
+                class="copy-btn"
+                onclick="copyReferralLink()">
+
+                    Copy
+
+                </button>
+
+            </div>
+
+        </div>
+
+        <div class="referral-stat">
+
+            <span class="referral-label">
+
+                Friends Joined
+
+            </span>
+
+            <strong>
+
+                <%= referralCount %>
+
+            </strong>
+
+        </div>
+
+        <div class="referral-stat">
+
+            <span class="referral-label">
+
+                Rewards Earned
+
+            </span>
+
+            <strong>
+
+                ₹<%= referralRewards.toLocaleString("en-IN") %>
+
+            </strong>
+
+        </div>
+
+    </div>
+
+</section>
+
                 <!-- Account Settings Section -->
              <section class="settings-section">
 
@@ -347,6 +456,67 @@ window.addEventListener("popstate", function () {
 window.location.reload()
 
 })
+
+
+function copyReferralCode() {
+
+    const code =
+    document
+    .getElementById(
+        "referralCode"
+    )
+    .innerText;
+
+    navigator.clipboard
+    .writeText(code);
+
+Swal.fire({
+
+    toast: true,
+
+    position: "top",
+
+    icon: "success",
+
+    title: "Copied",
+
+    showConfirmButton: false,
+
+    timer: 1500,
+
+});
+
+}
+
+function copyReferralLink() {
+
+    const link =
+    document
+    .getElementById(
+        "referralLink"
+    )
+    .innerText;
+
+    navigator.clipboard
+    .writeText(link);
+
+Swal.fire({
+
+    toast: true,
+
+    position: "top",
+
+    icon: "success",
+
+    title: "Copied",
+
+    showConfirmButton: false,
+
+    timer: 1500,
+
+});
+
+}
 
     </script>
 

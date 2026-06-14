@@ -36,34 +36,22 @@
   const chartLabels = safeReport.chartLabels || ['01 Oct','07 Oct','14 Oct','21 Oct','28 Oct','31 Oct'];
   const chartData   = safeReport.chartData   || [12000, 15000, 35000, 40000, 38000, 48000];
 
-  const categoriesData = safeReport.categories || [
-    { name:'Smartphones', revenue:1420000, percentage:85, colorClass:'fill-purple-gradient' },
-    { name:'Laptops',     revenue: 815400, percentage:55, colorClass:'fill-purple-solid' },
-    { name:'Accessories', revenue: 200000, percentage:20, colorClass:'fill-pink-solid' }
-  ];
+const categoriesData = safeReport.topCategories || [];
 
-  const regionsData = safeReport.regions || [
-    { name:'Kerala',     percentage:42, dotClass:'dot-1' },
-    { name:'Tamil Nadu', percentage:33, dotClass:'dot-2' },
-    { name:'Karnataka',  percentage:25, dotClass:'dot-3' }
-  ];
 
-  const paymentsData = safeReport.payments || { upi:58, cards:32, others:10 };
 
-  const topProducts = safeReport.topProducts || [
-    { name:'iPhone 15 Pro',     icon:'smartphone', units:142, revenue:11345600 },
-    { name:'MacBook Pro M3',    icon:'laptop',     units:24,  revenue:456000 },
-    { name:'AirPods Max',       icon:'headphones', units:38,  revenue:516000 },
-    { name:'Apple Watch Ultra', icon:'watch',      units:55,  revenue:385000 }
-  ];
+ const paymentsData =
+safeReport.paymentMethods || {
+  cod: 0,
+  razorpay: 0,
+  wallet: 0
+};
+
+const topProducts = safeReport.topProducts || [];
 
 const recentOrders = safeReport.recentOrders || [];
 
-  const customerBase = safeReport.customerBase || {
-    returningPercentage: 72,
-    returningCount: 12450,
-    newCount: 4820
-  };
+
 
   const totalRevenue = safeReport.totalOrderAmount || 0;
   const totalCount = safeReport.totalSalesCount || 0;
@@ -96,13 +84,23 @@ const recentOrders = safeReport.recentOrders || [];
       <p class="page-subtitle">Deep dive into your revenue performance and customer growth.</p>
     </div>
 
-    <a
-    href="/admin/sales-report/pdf?filter=<%= filter %>&startDate=<%= startDate || '' %>&endDate=<%= endDate || '' %>"
-    class="btn-add"
-    >
-    <i data-lucide="download" size="18"></i>
-    <span>Download Report</span>
-    </a>
+<div style="display:flex;gap:12px;">
+
+<a
+href="/admin/sales-report/pdf?filter=<%= filter %>&startDate=<%= startDate || '' %>&endDate=<%= endDate || '' %>"
+class="btn-add"
+>
+PDF Report
+</a>
+
+<a
+href="/admin/sales-report/excel?filter=<%= filter %>&startDate=<%= startDate || '' %>&endDate=<%= endDate || '' %>"
+class="btn-add"
+>
+Excel Report
+</a>
+
+</div>
 
   </header>
 
@@ -137,9 +135,7 @@ const recentOrders = safeReport.recentOrders || [];
     <div class="stat-card">
       <div class="stat-header">
         <span class="stat-label">TOTAL SALES REVENUE</span>
-        <span class="metric-badge negative">
-          <i data-lucide="trending-down" size="11"></i> 12.4%
-        </span>
+  
       </div>
       <span class="stat-value">₹<%= totalRevenue.toLocaleString('en-IN') %></span>
       <div class="stat-sub">Gross revenue across all categories</div>
@@ -198,9 +194,7 @@ const recentOrders = safeReport.recentOrders || [];
     <div class="stat-card">
       <div class="stat-header">
         <span class="stat-label">AVG ORDER VALUE (AOV)</span>
-        <span class="metric-badge positive">
-          <i data-lucide="trending-up" size="11"></i> 5.2%
-        </span>
+ 
       </div>
       <span class="stat-value">₹<%= aov.toLocaleString('en-IN') %></span>
       <div class="stat-sub">Average cart value per transaction</div>
@@ -209,11 +203,11 @@ const recentOrders = safeReport.recentOrders || [];
     <div class="stat-card">
       <div class="stat-header">
         <span class="stat-label">RETURN RATE</span>
-        <span class="metric-badge neutral">
-          <i data-lucide="trending-down" size="11"></i> 0.8%
-        </span>
+
       </div>
-      <span class="stat-value">2.4%</span>
+      <span class="stat-value">
+  <%= report.returnRate || 0 %>%
+</span>
       <div class="stat-sub">Percentage of orders returned</div>
     </div>
 
@@ -228,6 +222,12 @@ const recentOrders = safeReport.recentOrders || [];
          class="filter-chip <%= (filter||'') === 'daily'  ? 'active' : '' %>">Today</a>
       <a href="/admin/sales-report?filter=weekly"
          class="filter-chip <%= (filter||'weekly') === 'weekly' ? 'active' : '' %>">Last 7 Days</a>
+         <a
+href="/admin/sales-report?filter=monthly"
+class="filter-chip <%= (filter||'') === 'monthly' ? 'active' : '' %>"
+>
+This Month
+</a>
       <a href="/admin/sales-report?filter=yearly"
          class="filter-chip <%= (filter||'') === 'yearly' ? 'active' : '' %>">This Year</a>
       <a href="#" id="customFilterBtn"
@@ -263,10 +263,6 @@ const recentOrders = safeReport.recentOrders || [];
           <div class="legend-dot current"></div>
           <span>Current Period</span>
         </div>
-        <div class="legend-item">
-          <div class="legend-dot previous"></div>
-          <span>Previous Period</span>
-        </div>
       </div>
     </div>
 
@@ -287,53 +283,80 @@ const recentOrders = safeReport.recentOrders || [];
         <% categoriesData.forEach(cat => { %>
           <div class="progress-item">
             <div class="progress-info">
-              <span><%= cat.name %></span>
+              <span><%= cat._id %></span>
               <span>₹<%= cat.revenue.toLocaleString('en-IN') %></span>
             </div>
             <div class="progress-bar-bg">
-              <div class="progress-bar-fill <%= cat.colorClass %>" style="width: <%= cat.percentage %>%;"></div>
+              <div
+  class="progress-bar-fill fill-purple-gradient"
+  style="width:<%= cat.percentage %>%"
+></div>
             </div>
           </div>
         <% }) %>
       </div>
     </div>
 
-    <!-- Regional Distribution -->
-    <div class="perf-card">
-      <h3 class="perf-card-title">Regional Distribution</h3>
-      <div class="region-list">
-        <% regionsData.forEach(region => { %>
-          <div class="region-item">
-            <div class="region-left">
-              <div class="region-dot <%= region.dotClass %>"></div>
-              <span class="region-name"><%= region.name %></span>
-            </div>
-            <span class="region-value"><%= region.percentage %>%</span>
-          </div>
-        <% }) %>
-      </div>
-    </div>
+
 
     <!-- Payment Methods -->
-    <div class="perf-card">
-      <h3 class="perf-card-title">Payment Methods</h3>
-      <div class="payment-grid">
-        <div class="pay-card">
-          <i data-lucide="smartphone" class="pay-icon"></i>
-          <span class="pay-label">UPI</span>
-          <span class="pay-value"><%= paymentsData.upi %>%</span>
-        </div>
-        <div class="pay-card">
-          <i data-lucide="credit-card" class="pay-icon"></i>
-          <span class="pay-label">Cards</span>
-          <span class="pay-value"><%= paymentsData.cards %>%</span>
-        </div>
-        <div class="pay-card wide">
-          <span class="pay-label">Others (COD / Net)</span>
-          <span class="pay-value"><%= paymentsData.others %>%</span>
-        </div>
-      </div>
+<div class="perf-card">
+
+  <h3 class="perf-card-title">
+    Payment Methods
+  </h3>
+
+  <div class="payment-grid">
+
+    <div class="pay-card">
+
+      <i
+        data-lucide="banknote"
+        class="pay-icon"
+      ></i>
+
+      <span class="pay-label">
+        COD
+      </span>
+
+      <span class="pay-value">
+        <%= paymentsData.cod %>%
+      </span>
+
     </div>
+
+    <div class="pay-card">
+
+      <i
+        data-lucide="credit-card"
+        class="pay-icon"
+      ></i>
+
+      <span class="pay-label">
+        Razorpay
+      </span>
+
+      <span class="pay-value">
+        <%= paymentsData.razorpay %>%
+      </span>
+
+    </div>
+
+    <div class="pay-card wide">
+
+      <span class="pay-label">
+        Wallet
+      </span>
+
+      <span class="pay-value">
+        <%= paymentsData.wallet %>%
+      </span>
+
+    </div>
+
+  </div>
+
+</div>
 
   </div>
 
@@ -356,66 +379,68 @@ const recentOrders = safeReport.recentOrders || [];
               <th class="td-right">Revenue</th>
             </tr>
           </thead>
-          <tbody>
-            <% topProducts.forEach(product => { %>
-              <tr>
-                <td>
-                  <div class="prod-cell">
-                    <div class="prod-icon">
-                      <i data-lucide="<%= product.icon %>" size="18"></i>
-                    </div>
-                    <span class="prod-name"><%= product.name %></span>
-                  </div>
-                </td>
-                <td class="td-center"><%= product.units %></td>
-                <td class="td-right">₹<%= product.revenue.toLocaleString('en-IN') %></td>
-              </tr>
-            <% }) %>
-          </tbody>
+<tbody>
+
+<% if(topProducts.length > 0){ %>
+
+  <% topProducts.forEach(product => { %>
+
+    <tr>
+
+      <td>
+
+        <div class="prod-cell">
+
+          <div class="prod-icon">
+
+            <i
+              data-lucide="package"
+              size="18"
+            ></i>
+
+          </div>
+
+          <span class="prod-name">
+            <%= product.name %>
+          </span>
+
+        </div>
+
+      </td>
+
+      <td class="td-center">
+
+        <%= product.units %>
+
+      </td>
+
+      <td class="td-right">
+
+        ₹<%= product.revenue.toLocaleString("en-IN") %>
+
+      </td>
+
+    </tr>
+
+  <% }) %>
+
+<% } else { %>
+
+  <tr>
+
+    <td colspan="3">
+
+      No sales data found
+
+    </td>
+
+  </tr>
+
+<% } %>
+
+</tbody>
         </table>
       </div>
-    </div>
-
-    <!-- Customer Base -->
-    <div class="customer-card">
-
-      <h3 class="perf-card-title">Customer Base</h3>
-
-      <div class="donut-wrap">
-        <canvas id="customerChart" width="160" height="160" style="max-width:160px;max-height:160px;"></canvas>
-        <div class="donut-center">
-          <div class="donut-value"><%= customerBase.returningPercentage %>%</div>
-          <div class="donut-label">Returning</div>
-        </div>
-      </div>
-
-      <div class="cust-legend">
-        <div class="cust-legend-item">
-          <div class="cust-legend-left">
-            <div class="region-dot dot-1"></div>
-            <span class="region-name">Returning</span>
-          </div>
-          <span class="region-value"><%= customerBase.returningCount.toLocaleString() %></span>
-        </div>
-        <div class="cust-legend-item">
-          <div class="cust-legend-left">
-            <div class="region-dot" style="background:#FFD6FC;"></div>
-            <span class="region-name">New</span>
-          </div>
-          <span class="region-value"><%= customerBase.newCount.toLocaleString() %></span>
-        </div>
-      </div>
-
-      <div class="loyalty-box">
-        <div class="loyalty-title">
-          <i data-lucide="award" size="14"></i>
-          Loyalty Program
-        </div>
-        <div class="loyalty-text">
-          High-value customers spending over ₹50k increased by 14% this month.
-        </div>
-      </div>
-
     </div>
 
   </div>
@@ -617,7 +642,6 @@ const recentOrders = safeReport.recentOrders || [];
   /* Server data → JS */
   const serverLabels = <%- JSON.stringify(chartLabels) %>;
   const serverData   = <%- JSON.stringify(chartData) %>;
-  const donutData    = <%- JSON.stringify([customerBase.returningPercentage, 100 - customerBase.returningPercentage]) %>;
 
   document.addEventListener('DOMContentLoaded', function () {
 
@@ -682,40 +706,19 @@ const recentOrders = safeReport.recentOrders || [];
           y: {
             display: false,
             beginAtZero: false,
-            suggestedMax: Math.max(...serverData) * 1.25
+           suggestedMax:
+
+serverData.length > 0
+
+? Math.max(...serverData) * 1.25
+
+: 1000
           }
         },
         interaction: { mode: 'nearest', axis: 'x', intersect: false }
       }
     });
 
-    /* ── Customer Donut Chart ── */
-    const ctxCustomer = document.getElementById('customerChart').getContext('2d');
-    new Chart(ctxCustomer, {
-      type: 'doughnut',
-      data: {
-        labels: ['Returning', 'New'],
-        datasets: [{
-          data: donutData,
-          backgroundColor: ['#603763', '#FFD6FC'],
-          borderWidth: 0,
-          hoverOffset: 4
-        }]
-      },
-      options: {
-        responsive: false,
-        maintainAspectRatio: false,
-        cutout: '74%',
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            callbacks: {
-              label: ctx => ' ' + ctx.label + ': ' + ctx.parsed + '%'
-            }
-          }
-        }
-      }
-    });
 
   });
 

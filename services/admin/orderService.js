@@ -168,27 +168,35 @@ switch (sort) {
       filter
     );
 
-  const stats = {
+const stats = {
 
-    total: await Order.countDocuments(),
+  total: await Order.countDocuments(),
 
-    pending: await Order.countDocuments({
-        orderStatus: "Pending",
-    }),
+  pending: await Order.countDocuments({
+      orderStatus: "Pending",
+  }),
 
-    processing: await Order.countDocuments({
-        orderStatus: "Processing",
-    }),
+  processing: await Order.countDocuments({
+      orderStatus: "Processing",
+  }),
 
-    shipped: await Order.countDocuments({
-        orderStatus: "Shipped",
-    }),
+  shipped: await Order.countDocuments({
+      orderStatus: "Shipped",
+  }),
 
-    delivered: await Order.countDocuments({
-        orderStatus: "Delivered",
-    }),
+  delivered: await Order.countDocuments({
+      orderStatus: "Delivered",
+  }),
 
-    };
+  cancelled: await Order.countDocuments({
+      orderStatus: "Cancelled",
+  }),
+
+  returned: await Order.countDocuments({
+      orderStatus: "Returned",
+  }),
+
+};
 
   return {
 
@@ -474,22 +482,20 @@ async (
     order.returnStatus =
       "Approved";
 
+    order.returnApprovedAt =
+      new Date();
+
     order.orderStatus =
       "Returned";
 
-  if (
-    order.paymentMethod !== "COD"
-  ) {
     order.paymentStatus =
       "Refunded";
-  }
 
   /* ==========================
    WALLET REFUND
 ========================== */
 
 if (
-  order.paymentMethod !== "COD" &&
   !order.isRefundProcessed
 ) {
 

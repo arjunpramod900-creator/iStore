@@ -852,20 +852,54 @@
                     </div>
 
                     <!-- ACTIONS -->
-                    <% if(order.returnStatus === "Requested"){ %>
+<% if(order.returnStatus === "Requested"){ %>
 
-                        <div class="od-info-card">
+<div class="od-info-card">
 
-                            <div class="od-info-card-text">
+    <div class="od-info-card-text">
 
-                                Return Request:
-                                Pending Approval
+        Return Request:
+        Pending Approval
 
-                            </div>
+    </div>
 
-                        </div>
+</div>
 
-                        <% } %>
+<% } %>
+
+<% if(order.returnStatus === "Approved"){ %>
+
+<div class="od-info-card">
+
+    <div class="od-info-card-text">
+
+        Return Approved
+
+        <br>
+
+        Refund Credited To Wallet
+
+        (<%= fmt(order.refundAmount || 0) %>)
+
+    </div>
+
+</div>
+
+<% } %>
+
+<% if(order.returnStatus === "Rejected"){ %>
+
+<div class="od-info-card">
+
+    <div class="od-info-card-text">
+
+        Return Request Rejected
+
+    </div>
+
+</div>
+
+<% } %>
                     <div
                         class="od-actions"
                         id="odActions"

@@ -256,6 +256,14 @@ const orderSchema = new mongoose.Schema(
       default: "None",
 
     },
+    
+    returnApprovedAt: {
+
+      type: Date,
+
+      default: null,
+
+    },
 
     deliveredDate: {
       type: Date,
