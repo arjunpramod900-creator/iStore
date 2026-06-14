@@ -45,6 +45,9 @@ async (
         transactions:
           response.transactions,
 
+        recentRefunds:
+          response.recentRefunds,
+
         pagination:
           response.pagination,
 

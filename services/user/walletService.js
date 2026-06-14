@@ -37,11 +37,46 @@ export const loadWalletService = async (
       .limit(limit)
       .lean();
 
+  const recentRefunds =
+    await WalletTransaction.find({
+
+      userId,
+
+      transactionType: {
+
+        $in: [
+
+          "Refund",
+
+          "CancellationRefund",
+
+          "ReturnRefund",
+
+          "AdminCancellationRefund",
+
+        ],
+
+      },
+
+    })
+
+    .sort({
+
+      createdAt: -1,
+
+    })
+
+    .limit(3)
+
+    .lean();
+
   return {
 
     wallet,
 
     transactions,
+
+    recentRefunds,
 
     pagination: {
 
@@ -130,21 +165,26 @@ async (
   amount,
 ) => {
 
-  if (
-    !amount ||
-    amount < 1
-  ) {
+if (
 
-    return {
+  !amount ||
 
-      success: false,
+  amount < 100 ||
 
-      message:
-        "Invalid amount",
+  amount > 50000
 
-    };
+) {
 
-  }
+  return {
+
+    success: false,
+
+    message:
+      "Top-up amount must be between ₹100 and ₹50,000",
+
+  };
+
+} 
 
   const razorpayResponse =
     await createRazorpayOrder({
@@ -194,6 +234,46 @@ async ({
 
 }) => {
 
+  if (
+
+  !amount ||
+
+  amount < 100 ||
+
+  amount > 50000
+
+) {
+
+  return {
+
+    success: false,
+
+    message:
+      "Invalid wallet top-up amount",
+
+  };
+
+}
+const existingTransaction =
+await WalletTransaction.findOne({
+
+  razorpayPaymentId,
+
+});
+
+if (existingTransaction) {
+
+  return {
+
+    success: false,
+
+    message:
+      "Payment already processed",
+
+  };
+
+}
+
   const isValid =
     verifyRazorpaySignature({
 
@@ -217,29 +297,6 @@ async ({
     };
 
   }
-  /* =========================================
-      DUPLICATE PAYMENT PROTECTION
-    ========================================= */
-
-    const existingTransaction =
-      await WalletTransaction.findOne({
-
-        razorpayPaymentId,
-
-      });
-
-    if (existingTransaction) {
-
-      return {
-
-        success: false,
-
-        message:
-          "Payment already processed",
-
-      };
-
-    }
 
   const creditResponse =
     await creditWalletTopupService({

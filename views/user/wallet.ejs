@@ -181,7 +181,13 @@
                             <label class="input-label">ENTER AMOUNT</label>
                             <div class="amount-input-wrapper">
                                 <span class="currency-symbol">₹</span>
-                                <input type="number" id="topupAmount" placeholder="0.00" />
+                               <input
+                                type="number"
+                                id="topupAmount"
+                                placeholder="Min ₹100 • Max ₹50,000"
+                                min="100"
+                                max="50000"
+                                />
                             </div>
                         </div>
 
@@ -219,31 +225,76 @@
                 <section class="dashboard-section gap-24">
                     <h3>Recent Refunds</h3>
                     
-                    <div class="refunds-list">
-                        <!-- Item 1 -->
+                        <div class="refunds-list">
+
+                        <% if(
+
+                        recentRefunds &&
+
+                        recentRefunds.length > 0
+
+                        ){ %>
+
+                        <% recentRefunds.forEach(refund => { %>
+
                         <div class="refund-item">
+
                             <div class="refund-info">
-                                <span class="refund-order">Order #IST445566</span>
-                                <span class="refund-date">24 Oct, 2024</span>
+
+                                <span class="refund-order">
+
+                                    <%= refund.transactionType %>
+
+                                </span>
+
+                                <span class="refund-date">
+
+                                    <%= new Date(
+                                    refund.createdAt
+                                    ).toLocaleDateString(
+                                    "en-IN"
+                                    ) %>
+
+                                </span>
+
                             </div>
+
                             <div class="refund-amount-col">
-                                <span class="refund-amount">₹899.00</span>
-                                <span class="refund-status">CREDITED</span>
+
+                                <span class="refund-amount">
+
+                                    ₹<%= refund.amount
+                                    .toLocaleString("en-IN") %>
+
+                                </span>
+
+                                <span class="refund-status">
+
+                                    CREDITED
+
+                                </span>
+
                             </div>
+
                         </div>
 
-                        <!-- Item 2 -->
+                        <% }) %>
+
+                        <% } else { %>
+
                         <div class="refund-item">
+
                             <div class="refund-info">
-                                <span class="refund-order">Order #IST998877</span>
-                                <span class="refund-date">18 Oct, 2024</span>
+
+                                No refund history
+
                             </div>
-                            <div class="refund-amount-col">
-                                <span class="refund-amount">₹2,490.00</span>
-                                <span class="refund-status">CREDITED</span>
-                            </div>
+
                         </div>
-                    </div>
+
+                        <% } %>
+
+                        </div>
 
                     <!-- Digital Art -->
                     <div class="digital-payment-bg"></div>
@@ -339,7 +390,9 @@ if (
 
 !amount ||
 
-amount < 1
+amount < 100 ||
+
+amount > 50000
 
 ) {
 
@@ -349,7 +402,8 @@ icon:"warning",
 
 title:"Invalid Amount",
 
-text:"Please enter a valid amount"
+text:
+"Top-up amount must be between ₹100 and ₹50,000"
 
 });
 

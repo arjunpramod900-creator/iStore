@@ -56,8 +56,13 @@ new mongoose.Schema(
     },
 
     razorpayPaymentId: {
+
       type: String,
+
       default: null,
+
+      index: true,
+
     },
 
     balanceAfter: {
