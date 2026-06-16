@@ -9,12 +9,8 @@
 <title>iStore - Create Your Account</title>
 
 <link rel="stylesheet" href="/css/index.css">
-
-<link rel="stylesheet"
-href="/css/sweetalert-theme.css">
-
-<link rel="stylesheet"
-href="/css/login.css">
+<link rel="stylesheet" href="/css/sweetalert-theme.css">
+<link rel="stylesheet" href="/css/login.css">
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
 
@@ -23,6 +19,26 @@ href="/css/login.css">
 
 <!-- Axios -->
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+<style>
+  /* Inline field error messages */
+  .field-error {
+    display: none;
+    color: #e74c3c;
+    font-size: 12px;
+    margin-top: 5px;
+    padding-left: 2px;
+  }
+  .field-error.visible {
+    display: block;
+  }
+  .input-field.error {
+    border-color: #e74c3c !important;
+  }
+  .input-field.success {
+    border-color: #2ecc71 !important;
+  }
+</style>
 
 </head>
 
@@ -42,76 +58,32 @@ href="/css/login.css">
 <div class="branding-content">
 
 <div class="logo-container">
-
-<h1 class="logo-text">
-iStore
-</h1>
-
-<p class="sub-greeting">
-Join the future of Apple shopping.
-</p>
-
+  <h1 class="logo-text">iStore</h1>
+  <p class="sub-greeting">Join the future of Apple shopping.</p>
 </div>
-
-
 
 <!-- PRODUCT SHOWCASE -->
-
 <div class="product-showcase">
 
-<div class="glass-card card-1">
+  <div class="glass-card card-1">
+    <div class="product-img" style="background-image: url('/images/iphone.png');"></div>
+    <span class="card-label">iPhone 17</span>
+  </div>
 
-<div class="product-img"
-style="background-image: url('/images/iphone.png');">
-</div>
+  <div class="glass-card card-2">
+    <div class="product-img" style="background-image: url('/images/macbook.png');"></div>
+    <span class="card-label">MacBook Pro M5</span>
+  </div>
 
-<span class="card-label">
-iPhone 17
-</span>
+  <div class="glass-card card-3">
+    <div class="product-img" style="background-image: url('/images/watch.png');"></div>
+    <span class="card-label">Watch Ultra</span>
+  </div>
 
-</div>
-
-
-
-<div class="glass-card card-2">
-
-<div class="product-img"
-style="background-image: url('/images/macbook.png');">
-</div>
-
-<span class="card-label">
-MacBook Pro M5
-</span>
-
-</div>
-
-
-
-<div class="glass-card card-3">
-
-<div class="product-img"
-style="background-image: url('/images/watch.png');">
-</div>
-
-<span class="card-label">
-Watch Ultra
-</span>
-
-</div>
-
-
-
-<div class="glass-card card-4">
-
-<div class="product-img"
-style="background-image: url('/images/airpods.png');">
-</div>
-
-<span class="card-label">
-AirPods Pro
-</span>
-
-</div>
+  <div class="glass-card card-4">
+    <div class="product-img" style="background-image: url('/images/airpods.png');"></div>
+    <span class="card-label">AirPods Pro</span>
+  </div>
 
 </div>
 
@@ -128,226 +100,116 @@ AirPods Pro
 <div class="form-container">
 
 <header class="form-header">
-
-<h1>
-Create Your Account
-</h1>
-
-<p>
-Start your Apple shopping journey.
-</p>
-
+  <h1>Create Your Account</h1>
+  <p>Start your Apple shopping journey.</p>
 </header>
 
 
 
-<form class="signup-form"
-id="signupForm">
-
-
-
-<!-- Name -->
-
-<div class="form-group">
-
-<label>
-Full Name
-</label>
-
-<input
-type="text"
-id="fullName"
-class="input-field"
-placeholder="Enter your full name"
-maxlength="50"
-required>
-
-</div>
-
-
-
-<!-- Phone -->
-
-<div class="form-group">
-
-<label>
-Phone Number
-</label>
-
-<input 
-type="tel"
-id="phone"
-class="input-field"
-name="phoneNumber"
-placeholder="Enter your phone number"
-maxlength="10"
-pattern="[0-9]{10}"
-inputmode="numeric"
-title="Enter a valid 10-digit phone number">
-</div>
-
-
-
-<!-- Email -->
-
-<div class="form-group">
-
-<label>
-Email
-</label>
-
-<input
-type="email"
-id="email"
-class="input-field"
-placeholder="Enter your email"
-maxlength="100"
-required>
-
-</div>
-
-<div class="form-group">
-
-<label>
-Referral Code (Optional)
-</label>
-
-<input
-type="text"
-id="referralCode"
-class="input-field"
-placeholder="Enter referral code"
-value="<%= referralCode || '' %>">
-
-</div>
-
-
-<!-- Password -->
-
-<div class="form-group">
-
-<label>
-Password
-</label>
-
-<div class="password-wrapper">
-
-<input
-type="password"
-id="password"
-class="input-field"
-placeholder="Create password"
-required>
-
-<span
-class="toggle-password"
-data-target="password">
-
-👁️
-
-</span>
-
-</div>
-
-<!-- Strength Meter -->
-
-<div class="strength-meter">
-
-<div class="strength-bar">
-
-<div
-id="strengthFill"
-class="strength-fill">
-
-</div>
-
-</div>
-
-<span
-id="strengthText"
-class="strength-text">
-
-Password strength
-
-</span>
-
-</div>
-
-</div>
-
-
-
-<!-- Confirm Password -->
-
-<div class="form-group">
-
-<label>
-Confirm Password
-</label>
-
-<div class="password-wrapper">
-
-<input
-type="password"
-id="confirmPassword"
-class="input-field"
-placeholder="Confirm password"
-required>
-
-<span
-class="toggle-password"
-data-target="confirmPassword">
-
-👁️
-
-</span>
-
-</div>
-
-</div>
-
-
-
-<button
-type="submit"
-class="submit-btn">
-
-Create Account
-
-</button>
-
-
-
-<div class="divider">
-
-<span>OR</span>
-
-</div>
-
-
-<a
-href="/auth/google"
-class="google-login-btn">
-
-<img
-src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-alt="Google">
-
-Continue with Google
-
-</a>
-
-
-
-<div class="footer-link">
-
-Already have an account?
-
-<a href="/login">
-Login
-</a>
-
-</div>
+<form class="signup-form" id="signupForm" novalidate>
+
+  <!-- Full Name -->
+  <div class="form-group">
+    <label>Full Name</label>
+    <input
+      type="text"
+      id="fullName"
+      class="input-field"
+      placeholder="Enter your full name"
+      maxlength="50"
+      autocomplete="name">
+    <span class="field-error" id="fullNameError"></span>
+  </div>
+
+  <!-- Phone -->
+  <div class="form-group">
+    <label>Phone Number <span style="font-weight:400;color:#888;">(Optional)</span></label>
+    <input
+      type="tel"
+      id="phone"
+      class="input-field"
+      name="phoneNumber"
+      placeholder="Enter your phone number (10 digits)"
+      maxlength="10"
+      inputmode="numeric"
+      autocomplete="tel">
+    <span class="field-error" id="phoneError"></span>
+  </div>
+
+  <!-- Email -->
+  <div class="form-group">
+    <label>Email</label>
+    <input
+      type="email"
+      id="email"
+      class="input-field"
+      placeholder="Enter your email"
+      maxlength="100"
+      autocomplete="email">
+    <span class="field-error" id="emailError"></span>
+  </div>
+
+  <!-- Referral Code -->
+  <div class="form-group">
+    <label>Referral Code <span style="font-weight:400;color:#888;">(Optional)</span></label>
+    <input
+      type="text"
+      id="referralCode"
+      class="input-field"
+      placeholder="Enter referral code"
+      value="<%= referralCode || '' %>">
+  </div>
+
+  <!-- Password -->
+  <div class="form-group">
+    <label>Password</label>
+    <div class="password-wrapper">
+      <input
+        type="password"
+        id="password"
+        class="input-field"
+        placeholder="Create password"
+        autocomplete="new-password">
+      <span class="toggle-password" data-target="password">👁️</span>
+    </div>
+    <span class="field-error" id="passwordError"></span>
+
+    <!-- Strength Meter -->
+    <div class="strength-meter">
+      <div class="strength-bar">
+        <div id="strengthFill" class="strength-fill"></div>
+      </div>
+      <span id="strengthText" class="strength-text">Password strength</span>
+    </div>
+  </div>
+
+  <!-- Confirm Password -->
+  <div class="form-group">
+    <label>Confirm Password</label>
+    <div class="password-wrapper">
+      <input
+        type="password"
+        id="confirmPassword"
+        class="input-field"
+        placeholder="Confirm password"
+        autocomplete="new-password">
+      <span class="toggle-password" data-target="confirmPassword">👁️</span>
+    </div>
+    <span class="field-error" id="confirmPasswordError"></span>
+  </div>
+
+  <button type="submit" class="submit-btn">Create Account</button>
+
+  <div class="divider"><span>OR</span></div>
+
+  <a href="/auth/google" class="google-login-btn">
+    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+    Continue with Google
+  </a>
+
+  <div class="footer-link">
+    Already have an account? <a href="/login">Login</a>
+  </div>
 
 </form>
 
@@ -359,325 +221,280 @@ Login
 
 
 <!-- SweetAlert -->
-
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-<!-- GLOBAL ALERT CONFIG -->
-
 <script src="/js/alertConfig.js"></script>
 
 
 
-<!-- Signup Logic -->
-
 <script>
 
-const signupForm =
-document.getElementById("signupForm")
+/* =============================================
+   HELPERS
+============================================= */
 
-signupForm.addEventListener(
-
-"submit",
-
-async (e) => {
-
-e.preventDefault()
-
-
-const formData = {
-
-fullName:
-document.getElementById("fullName").value,
-
-phoneNumber:
-document.getElementById("phone")?.value || "",
-
-email:
-document.getElementById("email").value,
-
-password:
-document.getElementById("password").value,
-
-confirmPassword:
-document.getElementById("confirmPassword").value,
-
-referralCode:
-document.getElementById("referralCode")?.value || ""
-
+function showError(inputId, errorId, message) {
+  const input = document.getElementById(inputId)
+  const error = document.getElementById(errorId)
+  if (!input || !error) return
+  input.classList.add("error")
+  input.classList.remove("success")
+  error.textContent = message
+  error.classList.add("visible")
 }
 
-
-
-try {
-
-/* Loading */
-
-showLoadingAlert("Sending OTP...")
-
-
-
-const response =
-await axios.post(
-"/send-otp",
-formData
-)
-
-
-
-if (response.data.success) {
-
-/* Success */
-
-showSuccessAlert(
-"OTP Sent",
-"Check your email"
-)
-
-
-
-setTimeout(() => {
-
-window.location.href =
-"/verify-otp?type=signup"
-
-}, 1500)
-
+function showSuccess(inputId, errorId) {
+  const input = document.getElementById(inputId)
+  const error = document.getElementById(errorId)
+  if (!input || !error) return
+  input.classList.remove("error")
+  input.classList.add("success")
+  error.textContent = ""
+  error.classList.remove("visible")
 }
 
+/* =============================================
+   INDIVIDUAL FIELD VALIDATORS
+   Each returns true (valid) or false (invalid)
+============================================= */
+
+function validateFullName() {
+  const val = document.getElementById("fullName").value.trim()
+  if (!val) {
+    showError("fullName", "fullNameError", "Full name is required")
+    return false
+  }
+  if (val.length < 3) {
+    showError("fullName", "fullNameError", "Name must be at least 3 characters")
+    return false
+  }
+  if (val.length > 50) {
+    showError("fullName", "fullNameError", "Name cannot exceed 50 characters")
+    return false
+  }
+  if (/^\s+$/.test(val)) {
+    showError("fullName", "fullNameError", "Name cannot be only spaces")
+    return false
+  }
+  if (!/^[a-zA-Z\s]+$/.test(val)) {
+    showError("fullName", "fullNameError", "Name can only contain letters and spaces")
+    return false
+  }
+  showSuccess("fullName", "fullNameError")
+  return true
 }
 
-catch (error) {
-
-/* Error */
-
-showErrorAlert(
-
-"Signup Failed",
-
-error.response?.data?.message
-|| "Something went wrong"
-
-)
-
+function validatePhone() {
+  const val = document.getElementById("phone").value.trim()
+  /* Phone is optional — only validate if filled */
+  if (!val) {
+    showSuccess("phone", "phoneError")
+    return true
+  }
+  if (!/^[0-9]{10}$/.test(val)) {
+    showError("phone", "phoneError", "Phone number must be exactly 10 digits")
+    return false
+  }
+  showSuccess("phone", "phoneError")
+  return true
 }
 
+function validateEmail() {
+  const val = document.getElementById("email").value.trim()
+  if (!val) {
+    showError("email", "emailError", "Email is required")
+    return false
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
+    showError("email", "emailError", "Enter a valid email address")
+    return false
+  }
+  if (val.length > 100) {
+    showError("email", "emailError", "Email cannot exceed 100 characters")
+    return false
+  }
+  showSuccess("email", "emailError")
+  return true
 }
 
-)
-
-
-
-/* =========================
-   OPTIONAL PHONE VALIDATION
-========================= */
-
-const signupPhone =
-document.querySelector(
-'input[name="phoneNumber"]'
-)
-
-if (signupPhone) {
-
-signupPhone.addEventListener(
-"input",
-
-function () {
-
-const value =
-signupPhone.value.trim()
-
-/* Allow empty */
-
-if (value === "") {
-
-signupPhone.setCustomValidity("")
-return
-
+function validatePassword() {
+  const val = document.getElementById("password").value
+  if (!val) {
+    showError("password", "passwordError", "Password is required")
+    return false
+  }
+  if (val.length < 6) {
+    showError("password", "passwordError", "Password must be at least 6 characters")
+    return false
+  }
+  if (val.length > 50) {
+    showError("password", "passwordError", "Password cannot exceed 50 characters")
+    return false
+  }
+  showSuccess("password", "passwordError")
+  /* Re-check confirm password if already filled */
+  if (document.getElementById("confirmPassword").value) {
+    validateConfirmPassword()
+  }
+  return true
 }
 
-/* Must be exactly 10 digits */
-
-if (!/^[0-9]{10}$/.test(value)) {
-
-signupPhone.setCustomValidity(
-"Enter a valid 10-digit phone number"
-)
-
+function validateConfirmPassword() {
+  const pass    = document.getElementById("password").value
+  const confirm = document.getElementById("confirmPassword").value
+  if (!confirm) {
+    showError("confirmPassword", "confirmPasswordError", "Please confirm your password")
+    return false
+  }
+  if (pass !== confirm) {
+    showError("confirmPassword", "confirmPasswordError", "Passwords do not match")
+    return false
+  }
+  showSuccess("confirmPassword", "confirmPasswordError")
+  return true
 }
 
-else {
+/* =============================================
+   REAL-TIME VALIDATION
+   Show error on blur, clear as they fix it
+============================================= */
 
-signupPhone.setCustomValidity("")
+document.getElementById("fullName").addEventListener("blur", validateFullName)
+document.getElementById("phone").addEventListener("blur", validatePhone)
+document.getElementById("email").addEventListener("blur", validateEmail)
+document.getElementById("password").addEventListener("blur", validatePassword)
+document.getElementById("confirmPassword").addEventListener("blur", validateConfirmPassword)
 
-}
+/* Re-validate while typing only after the field has already errored */
+document.getElementById("fullName").addEventListener("input", function () {
+  if (this.classList.contains("error")) validateFullName()
+})
+document.getElementById("phone").addEventListener("input", function () {
+  /* Only allow digits */
+  this.value = this.value.replace(/[^0-9]/g, "")
+  if (this.classList.contains("error")) validatePhone()
+})
+document.getElementById("email").addEventListener("input", function () {
+  if (this.classList.contains("error")) validateEmail()
+})
+document.getElementById("password").addEventListener("input", function () {
+  if (this.classList.contains("error")) validatePassword()
+})
+document.getElementById("confirmPassword").addEventListener("input", function () {
+  if (this.classList.contains("error")) validateConfirmPassword()
+})
 
-}
+/* =============================================
+   FORM SUBMIT
+============================================= */
 
-)
+const signupForm = document.getElementById("signupForm")
 
-}
+signupForm.addEventListener("submit", async (e) => {
+  e.preventDefault()
 
+  /* Run all validators */
+  const nameOk    = validateFullName()
+  const phoneOk   = validatePhone()
+  const emailOk   = validateEmail()
+  const passOk    = validatePassword()
+  const confirmOk = validateConfirmPassword()
 
+  /* Stop if any field is invalid */
+  if (!nameOk || !phoneOk || !emailOk || !passOk || !confirmOk) return
 
-/* =========================
+  const formData = {
+    fullName:        document.getElementById("fullName").value.trim(),
+    phoneNumber:     document.getElementById("phone").value.trim(),
+    email:           document.getElementById("email").value.trim(),
+    password:        document.getElementById("password").value,
+    confirmPassword: document.getElementById("confirmPassword").value,
+    referralCode:    document.getElementById("referralCode")?.value.trim() || ""
+  }
+
+  try {
+    showLoadingAlert("Sending OTP...")
+
+    const response = await axios.post("/send-otp", formData)
+
+    if (response.data.success) {
+      showSuccessAlert("OTP Sent", "Check your email")
+      setTimeout(() => {
+        window.location.href = "/verify-otp?type=signup"
+      }, 1500)
+    }
+
+  } catch (error) {
+    const msg = error.response?.data?.message || "Something went wrong"
+
+    /* Show server errors under the relevant field */
+    if (msg.toLowerCase().includes("email")) {
+      showError("email", "emailError", msg)
+    } else if (msg.toLowerCase().includes("name")) {
+      showError("fullName", "fullNameError", msg)
+    } else if (msg.toLowerCase().includes("phone")) {
+      showError("phone", "phoneError", msg)
+    } else if (msg.toLowerCase().includes("password")) {
+      showError("password", "passwordError", msg)
+    } else {
+      showErrorAlert("Signup Failed", msg)
+    }
+  }
+})
+
+/* =============================================
    PASSWORD SHOW / HIDE
-========================= */
+============================================= */
 
-document
-.querySelectorAll(".toggle-password")
-
-.forEach(icon => {
-
-icon.addEventListener("click", () => {
-
-const target =
-icon.dataset.target
-
-const input =
-document.getElementById(target)
-
-if (!input) return
-
-if (input.type === "password") {
-
-input.type = "text"
-
-icon.textContent = "🙈"
-
-}
-
-else {
-
-input.type = "password"
-
-icon.textContent = "👁️"
-
-}
-
+document.querySelectorAll(".toggle-password").forEach(icon => {
+  icon.addEventListener("click", () => {
+    const input = document.getElementById(icon.dataset.target)
+    if (!input) return
+    if (input.type === "password") {
+      input.type = "text"
+      icon.textContent = "🙈"
+    } else {
+      input.type = "password"
+      icon.textContent = "👁️"
+    }
+  })
 })
 
-})
-
-
-
-/* =========================
+/* =============================================
    PASSWORD STRENGTH METER
-========================= */
+============================================= */
 
-const passwordInput =
-document.getElementById("password")
+const passwordInput  = document.getElementById("password")
+const strengthFill   = document.getElementById("strengthFill")
+const strengthText   = document.getElementById("strengthText")
 
-const strengthFill =
-document.getElementById("strengthFill")
+if (passwordInput && strengthFill && strengthText) {
+  passwordInput.addEventListener("input", () => {
+    const value = passwordInput.value
+    let strength = 0
 
-const strengthText =
-document.getElementById("strengthText")
+    if (value.length >= 6)           strength++
+    if (/[A-Z]/.test(value))         strength++
+    if (/[0-9]/.test(value))         strength++
+    if (/[^A-Za-z0-9]/.test(value))  strength++
 
-if (
-passwordInput &&
-strengthFill &&
-strengthText
-) {
+    const levels = [
+      { width: "0%",   color: "#ccc",     label: "Password strength" },
+      { width: "25%",  color: "#e74c3c",  label: "Weak password" },
+      { width: "50%",  color: "orange",   label: "Medium password" },
+      { width: "75%",  color: "#4caf50",  label: "Strong password" },
+      { width: "100%", color: "#2e7d32",  label: "Very strong password" },
+    ]
 
-passwordInput.addEventListener(
-
-"input",
-
-() => {
-
-const value =
-passwordInput.value
-
-let strength = 0
-
-
-
-if (value.length >= 6)
-strength++
-
-if (/[A-Z]/.test(value))
-strength++
-
-if (/[0-9]/.test(value))
-strength++
-
-if (/[^A-Za-z0-9]/.test(value))
-strength++
-
-
-
-switch (strength) {
-
-case 0:
-
-strengthFill.style.width = "0%"
-strengthFill.style.background = "#ccc"
-strengthText.textContent =
-"Password strength"
-
-break
-
-
-
-case 1:
-
-strengthFill.style.width = "25%"
-strengthFill.style.background = "red"
-strengthText.textContent =
-"Weak password"
-
-break
-
-
-
-case 2:
-
-strengthFill.style.width = "50%"
-strengthFill.style.background = "orange"
-strengthText.textContent =
-"Medium password"
-
-break
-
-
-
-case 3:
-
-strengthFill.style.width = "75%"
-strengthFill.style.background = "#4caf50"
-strengthText.textContent =
-"Strong password"
-
-break
-
-
-
-case 4:
-
-strengthFill.style.width = "100%"
-strengthFill.style.background = "#2e7d32"
-strengthText.textContent =
-"Very strong password"
-
-break
-
-}
-
-}
-
-)
-
+    strengthFill.style.width      = levels[strength].width
+    strengthFill.style.background = levels[strength].color
+    strengthText.textContent      = levels[strength].label
+  })
 }
 
 </script>
-
-
-
-<!-- Animations -->
 
 <script src="/js/animations.js"></script>
 <script src="/js/tilt.js"></script>
 
 </body>
-
 </html>

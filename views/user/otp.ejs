@@ -2,635 +2,259 @@
 <html lang="en">
 
 <head>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>iStore - OTP Verification</title>
-
-<link rel="stylesheet" href="/css/index.css">
-<link rel="stylesheet" href="/css/login.css">
-<link rel="stylesheet" href="/css/sweetalert-theme.css">
-
-<!-- Fonts -->
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
-
-<!-- GSAP -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-
-<!-- Axios -->
-<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-
-<!-- SweetAlert -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-<!-- Alert Config -->
-<script src="/js/alertConfig.js"></script>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>iStore - OTP Verification</title>
+  <link rel="stylesheet" href="/css/index.css">
+  <link rel="stylesheet" href="/css/login.css">
+  <link rel="stylesheet" href="/css/sweetalert-theme.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="/js/alertConfig.js"></script>
 </head>
-
-
 
 <body>
 
 <div class="main-container">
 
-<!-- LEFT PANEL -->
+  <!-- LEFT PANEL -->
+  <section class="branding-panel">
+    <div class="blur-circle blur-circle-1"></div>
+    <div class="blur-circle blur-circle-2"></div>
 
-<section class="branding-panel">
+    <div class="branding-content">
+      <div class="logo-container">
+        <h1 class="logo-text">iStore</h1>
+        <p class="sub-greeting">
+          <%= type === "reset"
+            ? "Verify reset OTP securely."
+            : "Verify your identity securely." %>
+        </p>
+      </div>
 
-<div class="blur-circle blur-circle-1"></div>
-<div class="blur-circle blur-circle-2"></div>
+      <div class="product-showcase">
+        <div class="glass-card card-1">
+          <div class="product-img" style="background-image: url('/images/iphone.png');"></div>
+          <span class="card-label">iPhone 17</span>
+        </div>
+        <div class="glass-card card-2">
+          <div class="product-img" style="background-image: url('/images/macbook.png');"></div>
+          <span class="card-label">MacBook Pro M5</span>
+        </div>
+        <div class="glass-card card-3">
+          <div class="product-img" style="background-image: url('/images/watch.png');"></div>
+          <span class="card-label">Watch Ultra</span>
+        </div>
+        <div class="glass-card card-4">
+          <div class="product-img" style="background-image: url('/images/airpods.png');"></div>
+          <span class="card-label">AirPods Pro</span>
+        </div>
+      </div>
+    </div>
+  </section>
 
-<div class="branding-content">
+  <!-- RIGHT PANEL -->
+  <section class="otp-section auth-section">
+    <div class="otp-card">
 
-<div class="logo-container">
+      <header class="form-header" style="text-align:center;align-items:center;">
+        <h1 style="font-weight:800;font-size:30px;">OTP Verification</h1>
+        <p>Enter the 6-digit code sent to your email.</p>
+      </header>
 
-<h1 class="logo-text">
-iStore
-</h1>
+      <form id="otpForm" class="signup-form" style="gap:32px;">
 
-<p class="sub-greeting">
+        <!-- OTP INPUTS -->
+        <div class="otp-inputs">
+          <input type="text" class="otp-input" maxlength="1" inputmode="numeric">
+          <input type="text" class="otp-input" maxlength="1" inputmode="numeric">
+          <input type="text" class="otp-input" maxlength="1" inputmode="numeric">
+          <input type="text" class="otp-input" maxlength="1" inputmode="numeric">
+          <input type="text" class="otp-input" maxlength="1" inputmode="numeric">
+          <input type="text" class="otp-input" maxlength="1" inputmode="numeric">
+        </div>
 
-<%= type === "reset"
-? "Verify reset OTP securely."
-: "Verify your identity securely." %>
+        <button type="submit" class="submit-btn">Verify OTP</button>
 
-</p>
+        <!-- TIMER -->
+        <p id="timerText" style="margin-top:10px;font-size:14px;text-align:center;">
+          Resend OTP in <strong id="countdown">30</strong>s
+        </p>
 
-</div>
+        <button
+          type="button"
+          id="resendBtn"
+          style="display:none;margin-top:10px;background:none;border:none;color:#9d6bff;font-weight:600;cursor:pointer;"
+        >
+          Resend OTP
+        </button>
 
-
-
-<!-- PRODUCT SHOWCASE -->
-
-<div class="product-showcase">
-
-<div class="glass-card card-1">
-<div class="product-img"
-style="background-image: url('/images/iphone.png');"></div>
-<span class="card-label">iPhone 17</span>
-</div>
-
-<div class="glass-card card-2">
-<div class="product-img"
-style="background-image: url('/images/macbook.png');"></div>
-<span class="card-label">MacBook Pro M5</span>
-</div>
-
-<div class="glass-card card-3">
-<div class="product-img"
-style="background-image: url('/images/watch.png');"></div>
-<span class="card-label">Watch Ultra</span>
-</div>
-
-<div class="glass-card card-4">
-<div class="product-img"
-style="background-image: url('/images/airpods.png');"></div>
-<span class="card-label">AirPods Pro</span>
-</div>
-
-</div>
-
-</div>
-
-</section>
-
-
-
-<!-- RIGHT PANEL -->
-
-<section class="otp-section auth-section">
-
-<div class="otp-card">
-
-<header class="form-header"
-style="text-align:center;align-items:center;">
-
-<h1 style="font-weight:800;font-size:30px;">
-OTP Verification
-</h1>
-
-<p>
-Enter the 6-digit code sent to your email.
-</p>
-
-</header>
-
-
-
-<form id="otpForm"
-class="signup-form"
-style="gap:32px;">
-
-
-
-<!-- OTP INPUTS -->
-
-<div class="otp-inputs">
-
-<input type="text" class="otp-input" maxlength="1">
-<input type="text" class="otp-input" maxlength="1">
-<input type="text" class="otp-input" maxlength="1">
-<input type="text" class="otp-input" maxlength="1">
-<input type="text" class="otp-input" maxlength="1">
-<input type="text" class="otp-input" maxlength="1">
+      </form>
+    </div>
+  </section>
 
 </div>
-
-
-
-<button
-type="submit"
-class="submit-btn">
-
-Verify OTP
-
-</button>
-
-
-
-<!-- TIMER -->
-
-<p id="timerText"
-style="margin-top:10px;font-size:14px;text-align:center;">
-
-Resend OTP in 30s
-
-</p>
-
-
-
-<button
-type="button"
-id="resendBtn"
-style="
-display:none;
-margin-top:10px;
-background:none;
-border:none;
-color:#9d6bff;
-font-weight:600;
-cursor:pointer;
-">
-
-Resend OTP
-
-</button>
-
-
-
-</form>
-
-</div>
-
-</section>
-
-</div>
-
-
 
 <script>
 
 /* ============================
-   OTP TYPE
+   DATA FROM SERVER (safe EJS)
 ============================ */
 
-const otpType =
-"<%= type %>"
-
-
+const otpType  = "<%- type %>"
+const otpEmail = "<%- email %>"
 
 /* ============================
    OTP INPUT NAVIGATION
 ============================ */
 
-const inputs =
-document.querySelectorAll(".otp-input")
+const inputs = document.querySelectorAll(".otp-input")
 
 inputs.forEach((input, index) => {
+  input.addEventListener("input", () => {
+    input.value = input.value.replace(/[^0-9]/g, "")
+    if (input.value && index < inputs.length - 1) {
+      inputs[index + 1].focus()
+    }
+  })
 
-input.addEventListener("input", () => {
-
-input.value =
-input.value.replace(/[^0-9]/g, "")
-
-if (
-input.value &&
-index < inputs.length - 1
-) {
-
-inputs[index + 1].focus()
-
-}
-
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Backspace" && !input.value && index > 0) {
+      inputs[index - 1].focus()
+    }
+  })
 })
 
-
-
-input.addEventListener("keydown", (e) => {
-
-if (
-e.key === "Backspace" &&
-!input.value &&
-index > 0
-) {
-
-inputs[index - 1].focus()
-
-}
-
+/* PASTE SUPPORT */
+inputs[0].addEventListener("paste", (e) => {
+  const paste = e.clipboardData.getData("text").replace(/[^0-9]/g, "")
+  if (paste.length === 6) {
+    inputs.forEach((input, i) => { input.value = paste[i] || "" })
+    inputs[5].focus()
+  }
+  e.preventDefault()
 })
-
-})
-
-
 
 /* ============================
-   PASTE SUPPORT
+   IN-MEMORY COUNTDOWN TIMER
+   (no localStorage — avoids
+    stale state across sessions)
 ============================ */
 
-inputs[0].addEventListener(
-
-"paste",
-
-(e) => {
-
-const paste =
-e.clipboardData.getData("text")
-
-if (paste.length === 6) {
-
-inputs.forEach((input, i) => {
-
-input.value = paste[i]
-
-})
-
-}
-
-}
-
-)
-
-
-
-/* ============================
-   TIMER
-============================ */
-/* ============================
-   PREMIUM RESEND TIMER
-============================ */
-
-const timerText =
-document.getElementById("timerText")
-
-const resendBtn =
-document.getElementById("resendBtn")
+const timerText   = document.getElementById("timerText")
+const countdown   = document.getElementById("countdown")
+const resendBtn   = document.getElementById("resendBtn")
 
 const TIMER_DURATION = 30
+let remaining = TIMER_DURATION
 
-/* UNIQUE STORAGE KEY */
+function startTimer() {
+  resendBtn.style.display   = "none"
+  timerText.style.display   = "block"
+  remaining = TIMER_DURATION
 
-const storageKey =
-`otpTimer_${otpType}`
+  const interval = setInterval(() => {
+    remaining--
+    countdown.textContent = remaining
 
-/* GET EXISTING TIMER */
-
-let endTime =
-localStorage.getItem(storageKey)
-
-/* CREATE TIMER IF NOT EXISTS */
-
-if(!endTime){
-
-    endTime =
-
-    Date.now() +
-    (TIMER_DURATION * 1000)
-
-    localStorage.setItem(
-
-        storageKey,
-
-        endTime
-
-    )
-
-}
-
-/* TIMER FUNCTION */
-
-function updateTimer(){
-
-    const now = Date.now()
-
-    const remaining =
-
-    Math.floor(
-
-        (endTime - now) / 1000
-
-    )
-
-    /* TIMER FINISHED */
-
-    if(remaining <= 0){
-
-        timerText.style.display =
-        "none"
-
-        resendBtn.style.display =
-        "inline-block"
-
-        localStorage.removeItem(
-            storageKey
-        )
-
-        return
-
+    if (remaining <= 0) {
+      clearInterval(interval)
+      timerText.style.display = "none"
+      resendBtn.style.display = "inline-block"
     }
-
-    /* UPDATE UI */
-
-    timerText.innerHTML =
-
-    `Resend OTP in <strong>${remaining}s</strong>`
-
-    resendBtn.style.display =
-    "none"
-
-    requestAnimationFrame(() => {
-
-        setTimeout(updateTimer, 1000)
-
-    })
-
+  }, 1000)
 }
 
-/* START TIMER */
-
-updateTimer()
-
-
+startTimer()
 
 /* ============================
    RESEND OTP
+   Sends { email, type } to the
+   dedicated /resend-otp endpoint
 ============================ */
 
-resendBtn.addEventListener(
+resendBtn.addEventListener("click", async () => {
+  if (!otpEmail) {
+    showErrorAlert("Error", "Cannot resend OTP. Please restart the process.")
+    return
+  }
 
-"click",
+  try {
+    showLoadingAlert("Resending OTP...")
 
-async () => {
+    const response = await axios.post("/resend-otp", {
+      email: otpEmail,
+      type: otpType === "reset" ? "forgotPassword" : "signup"
+    })
 
-try {
-
-showLoadingAlert(
-"Resending OTP..."
-)
-
-
-
-let endpoint = ""
-
-if (otpType === "reset") {
-
-endpoint =
-"/forgot-password"
-
-}
-
-else {
-
-endpoint =
-"/send-otp"
-
-}
-
-
-
-const response = await axios.post(
-
-    endpoint,
-
-    otpType === "reset"
-
-    ? {
-
-        email: localStorage.getItem("resetEmail")
-
-      }
-
-    : {}
-
-)
-
-
-
-if (response.data.success) {
-
-showSuccessAlert(
-"OTP Sent",
-"Check your email"
-)
-
-location.reload()
-
-}
-
-}
-
-catch (error) {
-
-showErrorAlert(
-
-"Failed",
-
-error.response?.data?.message
-|| "Could not resend OTP"
-
-)
-
-}
-
-}
-
-)
-
-
+    if (response.data.success) {
+      showSuccessAlert("OTP Sent", response.data.message)
+      /* Clear current inputs */
+      inputs.forEach(input => { input.value = "" })
+      inputs[0].focus()
+      /* Restart timer */
+      startTimer()
+    }
+  } catch (error) {
+    showErrorAlert(
+      "Failed",
+      error.response?.data?.message || "Could not resend OTP"
+    )
+  }
+})
 
 /* ============================
    VERIFY OTP
 ============================ */
 
-const otpForm =
-document.getElementById("otpForm")
+const otpForm  = document.getElementById("otpForm")
+const submitBtn = document.querySelector(".submit-btn")
 
-const submitBtn =
-document.querySelector(".submit-btn")
+otpForm.addEventListener("submit", async (e) => {
+  e.preventDefault()
+  submitBtn.disabled = true
 
-otpForm.addEventListener(
+  let otp = ""
+  inputs.forEach(input => { otp += input.value.trim() })
 
-"submit",
+  if (otp.length !== 6) {
+    showErrorAlert("Incomplete OTP", "Please enter all 6 digits")
+    submitBtn.disabled = false
+    return
+  }
 
-async (e) => {
+  try {
+    showLoadingAlert("Verifying OTP...")
 
-e.preventDefault()
+    const endpoint = otpType === "reset" ? "/verify-reset-otp" : "/verify-otp"
 
-submitBtn.disabled = true
+    const response = await axios.post(endpoint, { otp })
 
-
-
-let otp = ""
-
-inputs.forEach(input => {
-
-otp += input.value.trim()
-
+    if (response.data.success) {
+      if (otpType === "signup") {
+        showSuccessAlert("Signup Successful", "Redirecting to login...")
+        setTimeout(() => { window.location.href = "/login" }, 1500)
+      } else if (otpType === "reset") {
+        showSuccessAlert("OTP Verified", "Redirecting...")
+        setTimeout(() => { window.location.href = "/reset-password" }, 1500)
+      }
+    }
+  } catch (error) {
+    showErrorAlert(
+      "Verification Failed",
+      error.response?.data?.message || "Invalid or expired OTP"
+    )
+  } finally {
+    submitBtn.disabled = false
+  }
 })
 
-
-
-if (otp.length !== 6) {
-
-showErrorAlert(
-
-"Incomplete OTP",
-
-"Please enter all 6 digits"
-
-)
-
-submitBtn.disabled = false
-
-return
-
-}
-
-
-
-try {
-
-showLoadingAlert(
-"Verifying OTP..."
-)
-
-
-
-let endpoint = ""
-
-if (otpType === "reset") {
-
-endpoint =
-"/verify-reset-otp"
-
-}
-
-else {
-
-endpoint =
-"/verify-otp"
-
-}
-
-
-
-const response =
-await axios.post(
-
-endpoint,
-
-{ otp }
-
-)
-
-
-
-if (response.data.success) {
-
-/* Signup */
-
-if (otpType === "signup") {
-
-showSuccessAlert(
-
-"Signup Successful",
-
-"Redirecting to login..."
-
-)
-
-setTimeout(() => {
-
-window.location.href =
-"/login"
-
-}, 1500)
-
-}
-
-
-
-/* Reset */
-
-if (otpType === "reset") {
-
-showSuccessAlert(
-
-"OTP Verified",
-
-"Redirecting..."
-
-)
-
-setTimeout(() => {
-
-window.location.href =
-"/reset-password"
-
-}, 1500)
-
-}
-
-}
-
-}
-
-
-
-catch (error) {
-
-showErrorAlert(
-
-"Verification Failed",
-
-error.response?.data?.message
-|| "Invalid or expired OTP"
-
-)
-
-}
-
-
-
-finally {
-
-submitBtn.disabled = false
-
-}
-
-}
-
-)
-
 </script>
-
-
 
 <script src="/js/animations.js"></script>
 <script src="/js/tilt.js"></script>
 
 </body>
-
 </html>

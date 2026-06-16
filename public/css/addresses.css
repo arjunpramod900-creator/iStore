@@ -1040,3 +1040,31 @@ input:checked + .slider:before {
 .modal-overlay.active {
   display: flex;
 }
+
+/* =========================
+   ISTORE SWAL SUCCESS BUTTON
+   Add this to addresses.css
+========================= */
+
+.swal-confirm-istore-success {
+  background: #4c0080;
+  color: white;
+  border: none;
+  border-radius: 16px;
+  width: 150px !important;
+  height: 46px !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: 0.2s;
+  box-sizing: border-box;
+}
+
+.swal-confirm-istore-success:hover {
+  background: #6100c6;
+  transform: translateY(-1px);
+}

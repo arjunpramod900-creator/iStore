@@ -16,67 +16,48 @@ const router = express.Router();
    SIGNUP ROUTES
 ========================= */
 
-router.get(
-  "/signup",
+router.get("/signup", isLoggedOut, authController.loadSignup);
 
-  isLoggedOut,
+router.post("/send-otp", authController.sendSignupOTP);
 
-  authController.loadSignup,
-);
+/* =========================
+   RESEND OTP
+   Handles resend for signup
+   and forgotPassword flows.
+   Expects { email, type } in body.
+========================= */
 
-router.post(
-  "/send-otp",
-
-  authController.sendSignupOTP,
-);
+router.post("/resend-otp", authController.resendOTP);
 
 /* =========================
    OTP ROUTES
 ========================= */
 
-router.get(
-  "/verify-otp",
+router.get("/verify-otp", (req, res) => {
+  const type = req.query.type || "signup";
 
-  (req, res) => {
-    const type = req.query.type || "signup";
+  /* Pass email from session so the OTP page can send it on resend */
+  const email =
+    type === "signup"
+      ? req.session.signupData?.email || ""
+      : req.session.resetEmail || "";
 
-    res.render("user/otp", { type });
-  },
-);
+  res.render("user/otp", { type, email });
+});
 
 /* Verify Signup OTP */
-
-router.post(
-  "/verify-otp",
-
-  authController.verifySignupOTP,
-);
+router.post("/verify-otp", authController.verifySignupOTP);
 
 /* Verify Reset OTP */
-
-router.post(
-  "/verify-reset-otp",
-
-  authController.verifyResetOTP,
-);
+router.post("/verify-reset-otp", authController.verifyResetOTP);
 
 /* =========================
    LOGIN ROUTES
 ========================= */
 
-router.get(
-  "/login",
+router.get("/login", isLoggedOut, authController.loadLogin);
 
-  isLoggedOut,
-
-  authController.loadLogin,
-);
-
-router.post(
-  "/login",
-
-  authController.loginUser,
-);
+router.post("/login", authController.loginUser);
 
 /* =========================
    GOOGLE AUTH
@@ -84,120 +65,65 @@ router.post(
 
 router.get(
   "/auth/google",
-
-  passport.authenticate(
-    "google",
-
-    {
-      scope: ["profile", "email"],
-    },
-  ),
+  passport.authenticate("google", { scope: ["profile", "email"] })
 );
 
 router.get(
   "/auth/google/callback",
-
-  passport.authenticate(
-    "google",
-
-    {
-      failureRedirect: "/login",
-    },
-  ),
-
+  passport.authenticate("google", { failureRedirect: "/login" }),
   (req, res) => {
     req.session.userId = req.user._id;
-
     res.redirect("/");
-  },
+  }
 );
 
 /* =========================
    PROFILE ROUTE
 ========================= */
 
-router.get(
-  "/profile",
-
-  isLoggedIn,
-
-  authController.loadProfile,
-);
+router.get("/profile", isLoggedIn, authController.loadProfile);
 
 /* =========================
    FORGOT PASSWORD
 ========================= */
 
-router.get(
-  "/forgot-password",
+router.get("/forgot-password", isLoggedOut, authController.loadForgotPassword);
 
-  isLoggedOut,
-
-  authController.loadForgotPassword,
-);
-
-router.post(
-  "/forgot-password",
-
-  authController.sendForgotOTP,
-);
+router.post("/forgot-password", authController.sendForgotOTP);
 
 /* =========================
    RESET PASSWORD
 ========================= */
 
-router.get(
-  "/reset-password",
+router.get("/reset-password", isResetVerified, authController.loadResetPassword);
 
-  isResetVerified,
-
-  authController.loadResetPassword,
-);
-
-router.post(
-  "/reset-password",
-
-  authController.resetPassword,
-);
+router.post("/reset-password", authController.resetPassword);
 
 /* =========================
    CHANGE PASSWORD OTP
 ========================= */
 
-router.post("/send-change-password-otp", authController.sendChangePasswordOTP);
+router.post("/send-change-password-otp", isLoggedIn, authController.sendChangePasswordOTP);
 
 /* =========================
    EMAIL CHANGE OTP
 ========================= */
 
-router.post("/send-email-change-otp", authController.sendEmailChangeOTP);
+router.post("/send-email-change-otp", isLoggedIn, authController.sendEmailChangeOTP);
 
 /* =========================
    LOGOUT ROUTE
 ========================= */
 
-router.get(
-  "/logout",
-
-  isLoggedIn,
-
-  authController.logoutUser,
-);
+router.get("/logout", isLoggedIn, authController.logoutUser);
 
 /* =========================
    VERIFY EMAIL / PASSWORD OTP PAGE
 ========================= */
 
-router.get(
-  "/verify-email-otp",
-
-  isLoggedIn,
-
-  (req, res) => {
-    const flow = req.query.flow;
-
-    res.render("user/verify-emailpass-otp", { flow });
-  },
-);
+router.get("/verify-email-otp", isLoggedIn, (req, res) => {
+  const flow = req.query.flow;
+  res.render("user/verify-emailpass-otp", { flow });
+});
 
 export default router;

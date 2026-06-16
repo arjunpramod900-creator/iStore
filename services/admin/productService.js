@@ -28,6 +28,38 @@ const normalizeVariantValue = (value) => {
 const allowedMimeTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 
 /* ============================
+   COMPARE PRICE HELPERS
+   (fixes false-positive "must be greater than price" error
+   when comparePrice is left empty, and keeps discount logic
+   consistent everywhere it's used)
+============================ */
+
+const hasComparePrice = (comparePrice) =>
+  comparePrice !== undefined &&
+  comparePrice !== null &&
+  String(comparePrice).trim() !== "";
+
+const validateComparePrice = (comparePrice, price) => {
+  if (hasComparePrice(comparePrice)) {
+    if (Number(comparePrice) <= Number(price)) {
+      throw new Error("Compare price must be greater than price");
+    }
+  }
+};
+
+const calcDiscountPercentage = (comparePrice, price) => {
+  if (hasComparePrice(comparePrice) && Number(comparePrice) > Number(price)) {
+    return Math.round(
+      ((Number(comparePrice) - Number(price)) / Number(comparePrice)) * 100,
+    );
+  }
+  return 0;
+};
+
+const safeComparePrice = (comparePrice) =>
+  hasComparePrice(comparePrice) ? Number(comparePrice) : 0;
+
+/* ============================
    LOAD PRODUCTS
 ============================ */
 
@@ -297,9 +329,8 @@ export const createProductService = async (data) => {
   }
 
   /* 5. VALIDATE VARIANT SCHEMA */
-  if (body.comparePrice && Number(body.comparePrice) <= Number(body.price)) {
-    throw new Error("Compare price must be greater than price");
-  }
+  validateComparePrice(body.comparePrice, body.price);
+
   const stockValue =
   Number(body.stock);
 
@@ -321,16 +352,9 @@ export const createProductService = async (data) => {
 
     price: Number(body.price),
 
-    comparePrice: body.comparePrice ? Number(body.comparePrice) : 0,
+    comparePrice: safeComparePrice(body.comparePrice),
 
-    discountPercentage:
-      Number(body.comparePrice) > Number(body.price)
-        ? Math.round(
-            ((Number(body.comparePrice) - Number(body.price)) /
-              Number(body.comparePrice)) *
-              100,
-          )
-        : 0,
+    discountPercentage: calcDiscountPercentage(body.comparePrice, body.price),
     isDefault: body.isDefault,
     isActive: body.isActive === "true",
     images: ["placeholder", "placeholder", "placeholder"],
@@ -392,16 +416,9 @@ export const createProductService = async (data) => {
     color: normalizeVariantValue(body.color),
     RAM: normalizeVariantValue(body.RAM),
     stock: stockValue,
-    price: body.price,
-    comparePrice: body.comparePrice,
-    discountPercentage:
-      Number(body.comparePrice) > Number(body.price)
-        ? Math.round(
-            ((Number(body.comparePrice) - Number(body.price)) /
-              Number(body.comparePrice)) *
-              100,
-          )
-        : 0,
+    price: Number(body.price),
+    comparePrice: safeComparePrice(body.comparePrice),
+    discountPercentage: calcDiscountPercentage(body.comparePrice, body.price),
     isDefault: body.isDefault,
     isActive: body.isActive === "true",
     images,
@@ -456,7 +473,12 @@ export const updateProductService = async (
     },
   );
 
-  /* UPDATE VARIANT */
+  /* UPDATE VARIANT — target the exact variant document.
+     Never use upsert here: matching by {productId} alone and
+     upserting could update the wrong variant (if more than one
+     exists) or silently create a duplicate instead of updating
+     the one the user is actually editing. The edit form must
+     submit `variantId`. */
 
   const stockValue =
   Number(body.stock);
@@ -470,14 +492,23 @@ export const updateProductService = async (
   );
   }
 
-  if (body.comparePrice && Number(body.comparePrice) <= Number(body.price)) {
-    throw new Error("Compare price must be greater than price");
+  validateComparePrice(body.comparePrice, body.price);
+
+  if (!body.variantId) {
+    throw new Error("variantId is required to update this product's stock/price");
   }
 
-  await Variant.findOneAndUpdate(
-    {
-      productId,
-    },
+  const variant = await Variant.findOne({
+    _id: body.variantId,
+    productId,
+  });
+
+  if (!variant) {
+    throw new Error("Variant not found for this product");
+  }
+
+  await Variant.findByIdAndUpdate(
+    variant._id,
 
     {
       SKU: body.SKU,
@@ -490,28 +521,15 @@ export const updateProductService = async (
 
       stock: stockValue,
 
-      price: body.price,
+      price: Number(body.price),
 
-      comparePrice: body.comparePrice,
+      comparePrice: safeComparePrice(body.comparePrice),
 
-      discountPercentage:
-        Number(body.comparePrice) > Number(body.price)
-          ? Math.round(
-              ((Number(body.comparePrice) - Number(body.price)) /
-                Number(body.comparePrice)) *
-                100,
-            )
-          : 0,
+      discountPercentage: calcDiscountPercentage(body.comparePrice, body.price),
 
       isActive: body.isActive === "true",
 
       isDeleted: false,
-    },
-
-    {
-      new: true,
-
-      upsert: true,
     },
   );
 };
@@ -796,9 +814,8 @@ export const addVariantService = async (data) => {
 
   /* VARIANT DATA */
 
-  if (body.comparePrice && Number(body.comparePrice) <= Number(body.price)) {
-    throw new Error("Compare price must be greater than price");
-  }
+  validateComparePrice(body.comparePrice, body.price);
+
   const stockValue =
   Number(body.stock);
 
@@ -826,16 +843,9 @@ export const addVariantService = async (data) => {
 
     price: Number(body.price),
 
-    comparePrice: body.comparePrice ? Number(body.comparePrice) : 0,
+    comparePrice: safeComparePrice(body.comparePrice),
 
-    discountPercentage:
-      Number(body.comparePrice) > Number(body.price)
-        ? Math.round(
-            ((Number(body.comparePrice) - Number(body.price)) /
-              Number(body.comparePrice)) *
-              100,
-          )
-        : 0,
+    discountPercentage: calcDiscountPercentage(body.comparePrice, body.price),
 
     images,
   };
@@ -946,9 +956,8 @@ export const updateVariantService = async (
   "Stock cannot be negative"
   );
   }
-  if (body.comparePrice && Number(body.comparePrice) <= Number(body.price)) {
-    throw new Error("Compare price must be greater than price");
-  }
+
+  validateComparePrice(body.comparePrice, body.price);
 
   await Variant.findByIdAndUpdate(
     variantId,
@@ -964,18 +973,11 @@ export const updateVariantService = async (
 
       stock: stockValue,
 
-      price: body.price,
+      price: Number(body.price),
 
-      comparePrice: body.comparePrice,
+      comparePrice: safeComparePrice(body.comparePrice),
 
-      discountPercentage:
-        Number(body.comparePrice) > Number(body.price)
-          ? Math.round(
-              ((Number(body.comparePrice) - Number(body.price)) /
-                Number(body.comparePrice)) *
-                100,
-            )
-          : 0,
+      discountPercentage: calcDiscountPercentage(body.comparePrice, body.price),
 
       images,
     },

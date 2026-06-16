@@ -22,6 +22,26 @@
 <!-- SweetAlert -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+<style>
+  /* Inline field error messages */
+  .field-error {
+    display: none;
+    color: #e74c3c;
+    font-size: 12px;
+    margin-top: 5px;
+    padding-left: 2px;
+  }
+  .field-error.visible {
+    display: block;
+  }
+  .input-field.error {
+    border-color: #e74c3c !important;
+  }
+  .input-field.success {
+    border-color: #2ecc71 !important;
+  }
+</style>
+
 </head>
 
 
@@ -72,13 +92,8 @@ style="background-image: url('/images/airpods.png');">
 </div>
 
 <div class="branding-text">
-
 <h1>iStore</h1>
-
-<p>
-Your Apple ecosystem, simplified.
-</p>
-
+<p>Your Apple ecosystem, simplified.</p>
 </div>
 
 </div>
@@ -94,151 +109,71 @@ Your Apple ecosystem, simplified.
 <div class="form-container">
 
 <header class="form-header">
-
 <h2>Welcome Back</h2>
-
-<p>
-Login to access your orders and devices.
-</p>
-
+<p>Login to access your orders and devices.</p>
 </header>
 
 
 
-<form
-class="login-form"
-id="loginForm">
+<form class="login-form" id="loginForm" novalidate>
 
 <!-- Email -->
-
 <div class="form-group">
-
-<label>Email Address</label>
-
-<div class="input-wrapper">
-
-<input
-type="email"
-id="email"
-name="email"
-placeholder="Enter your email"
-required
-class="input-field">
-
+  <label>Email Address</label>
+  <div class="input-wrapper">
+    <input
+      type="email"
+      id="email"
+      name="email"
+      placeholder="Enter your email"
+      class="input-field"
+      autocomplete="email">
+  </div>
+  <!-- Inline error -->
+  <span class="field-error" id="emailError"></span>
 </div>
-
-</div>
-
-
 
 <!-- Password -->
-
 <div class="form-group">
+  <label>Password</label>
+  <div class="input-wrapper password-wrapper">
+    <input
+      type="password"
+      id="password"
+      name="password"
+      placeholder="Enter your password"
+      class="input-field"
+      autocomplete="current-password">
 
-<label>Password</label>
-
-<div class="input-wrapper password-wrapper">
-
-<input
-type="password"
-id="password"
-name="password"
-placeholder="Enter your password"
-required
-class="input-field">
-
-<button
-type="button"
-class="eye-btn"
-id="togglePassword">
-
-<svg
-class="eye-icon"
-xmlns="http://www.w3.org/2000/svg"
-viewBox="0 0 24 24">
-
-<path
-stroke="currentColor"
-stroke-width="2"
-fill="none"
-d="M1 12s4-8 11-8
-11 8 11 8
--4 8-11 8
--11-8-11-8z"/>
-
-<circle
-cx="12"
-cy="12"
-r="3"
-stroke="currentColor"
-stroke-width="2"
-fill="none"/>
-
-</svg>
-
-</button>
-
+    <button type="button" class="eye-btn" id="togglePassword">
+      <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+        <path stroke="currentColor" stroke-width="2" fill="none"
+          d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+        <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none"/>
+      </svg>
+    </button>
+  </div>
+  <!-- Inline error -->
+  <span class="field-error" id="passwordError"></span>
 </div>
-
-</div>
-
-
 
 <div class="form-options">
-
-<a href="/forgot-password"
-class="forgot-link">
-Forgot Password?
-</a>
-
+  <a href="/forgot-password" class="forgot-link">Forgot Password?</a>
 </div>
 
+<button type="submit" class="login-btn">Login</button>
 
+<div class="divider"><span>OR</span></div>
 
-<button
-type="submit"
-class="login-btn">
-
-Login
-
-</button>
-
-
-<div class="divider">
-
-<span>OR</span>
-
-</div>
-
-<a href="/auth/google"
-class="google-login-btn">
-
-<img
-src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-alt="Google">
-
-Continue with Google
-
+<a href="/auth/google" class="google-login-btn">
+  <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+  Continue with Google
 </a>
 
 </form>
 
-
-
 <footer class="form-footer">
-
-<p>
-
-New to iStore?
-
-<a href="/signup">
-
-Create an Account
-
-</a>
-
-</p>
-
+  <p>New to iStore? <a href="/signup">Create an Account</a></p>
 </footer>
 
 </div>
@@ -250,85 +185,32 @@ Create an Account
 
 
 <!-- ============================
-   PASSWORD TOGGLE SCRIPT
+   PASSWORD TOGGLE
 ============================ -->
 
 <script>
 
-const togglePassword =
-document.getElementById("togglePassword")
+const togglePassword = document.getElementById("togglePassword")
+const passwordField  = document.getElementById("password")
 
-const passwordField =
-document.getElementById("password")
-
-togglePassword.addEventListener(
-"click",
-
-function () {
-
-if (passwordField.type === "password") {
-
-passwordField.type = "text"
-
-/* Eye OFF Icon */
-
-this.innerHTML = `
-<svg
-class="eye-icon"
-xmlns="http://www.w3.org/2000/svg"
-viewBox="0 0 24 24">
-
-<path
-stroke="currentColor"
-stroke-width="2"
-fill="none"
-d="M17.94 17.94
-A10.94 10.94 0 0 1 12 20
-C5 20 1 12 1 12
-A21.76 21.76 0 0 1
-5.06 5.06M9.88 9.88
-A3 3 0 0 1 14.12
-14.12M1 1l22 22"/>
-
-</svg>
-`
-
-}
-
-else {
-
-passwordField.type = "password"
-
-/* Eye ON Icon */
-
-this.innerHTML = `
-<svg
-class="eye-icon"
-xmlns="http://www.w3.org/2000/svg"
-viewBox="0 0 24 24">
-
-<path
-stroke="currentColor"
-stroke-width="2"
-fill="none"
-d="M1 12s4-8 11-8
-11 8 11 8
--4 8-11 8
--11-8-11-8z"/>
-
-<circle
-cx="12"
-cy="12"
-r="3"
-stroke="currentColor"
-stroke-width="2"
-fill="none"/>
-
-</svg>
-`
-
-}
-
+togglePassword.addEventListener("click", function () {
+  if (passwordField.type === "password") {
+    passwordField.type = "text"
+    this.innerHTML = `
+      <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+        <path stroke="currentColor" stroke-width="2" fill="none"
+          d="M17.94 17.94A10.94 10.94 0 0 1 12 20C5 20 1 12 1 12A21.76 21.76 0 0 1
+          5.06 5.06M9.88 9.88A3 3 0 0 1 14.12 14.12M1 1l22 22"/>
+      </svg>`
+  } else {
+    passwordField.type = "password"
+    this.innerHTML = `
+      <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+        <path stroke="currentColor" stroke-width="2" fill="none"
+          d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+        <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none"/>
+      </svg>`
+  }
 })
 
 </script>
@@ -336,160 +218,155 @@ fill="none"/>
 
 
 <!-- ============================
-   LOGIN REQUEST SCRIPT
+   VALIDATION + LOGIN
 ============================ -->
 
 <script>
 
-const loginForm =
-document.getElementById("loginForm")
+/* ---- helpers ---- */
 
-const loginBtn =
-document.querySelector(".login-btn")
-
-loginForm.addEventListener(
-"submit",
-
-async (e) => {
-
-e.preventDefault()
-
-loginBtn.disabled = true
-
-
-
-const email =
-document.getElementById("email").value.trim()
-
-const password =
-document.getElementById("password").value.trim()
-
-
-
-try {
-
-/* Loading */
-
-Swal.fire({
-
-title: "Logging in...",
-
-allowOutsideClick: false,
-
-didOpen: () => {
-
-Swal.showLoading()
-
+function showError(inputId, errorId, message) {
+  const input = document.getElementById(inputId)
+  const error = document.getElementById(errorId)
+  input.classList.add("error")
+  input.classList.remove("success")
+  error.textContent = message
+  error.classList.add("visible")
 }
 
+function showSuccess(inputId, errorId) {
+  const input = document.getElementById(inputId)
+  const error = document.getElementById(errorId)
+  input.classList.remove("error")
+  input.classList.add("success")
+  error.textContent = ""
+  error.classList.remove("visible")
+}
+
+function clearState(inputId, errorId) {
+  const input = document.getElementById(inputId)
+  const error = document.getElementById(errorId)
+  input.classList.remove("error", "success")
+  error.textContent = ""
+  error.classList.remove("visible")
+}
+
+/* ---- individual field validators ---- */
+
+function validateEmail() {
+  const val = document.getElementById("email").value.trim()
+  if (!val) {
+    showError("email", "emailError", "Email is required")
+    return false
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
+    showError("email", "emailError", "Enter a valid email address")
+    return false
+  }
+  if (val.length > 100) {
+    showError("email", "emailError", "Email cannot exceed 100 characters")
+    return false
+  }
+  showSuccess("email", "emailError")
+  return true
+}
+
+function validatePassword() {
+  const val = document.getElementById("password").value
+  if (!val) {
+    showError("password", "passwordError", "Password is required")
+    return false
+  }
+  if (val.length < 6) {
+    showError("password", "passwordError", "Password must be at least 6 characters")
+    return false
+  }
+  showSuccess("password", "passwordError")
+  return true
+}
+
+/* ---- real-time validation on blur ---- */
+
+document.getElementById("email").addEventListener("blur", validateEmail)
+document.getElementById("password").addEventListener("blur", validatePassword)
+
+/* clear error state while typing after a failed attempt */
+document.getElementById("email").addEventListener("input", function () {
+  if (this.classList.contains("error")) validateEmail()
+})
+document.getElementById("password").addEventListener("input", function () {
+  if (this.classList.contains("error")) validatePassword()
 })
 
+/* ---- form submit ---- */
 
+const loginForm = document.getElementById("loginForm")
+const loginBtn  = document.querySelector(".login-btn")
 
-const response =
-await axios.post(
+loginForm.addEventListener("submit", async (e) => {
+  e.preventDefault()
 
-"/login",
+  /* Run all validators — stop if any fail */
+  const emailOk    = validateEmail()
+  const passwordOk = validatePassword()
 
-{
-email,
-password
-}
+  if (!emailOk || !passwordOk) return
 
-)
+  loginBtn.disabled = true
 
+  const email    = document.getElementById("email").value.trim()
+  const password = document.getElementById("password").value.trim()
 
+  try {
+    Swal.fire({
+      title: "Logging in...",
+      allowOutsideClick: false,
+      didOpen: () => { Swal.showLoading() }
+    })
 
-if (response.data.success) {
+    const response = await axios.post("/login", { email, password })
 
-Swal.fire({
+    if (response.data.success) {
+      Swal.fire({
+        icon: "success",
+        title: "Login Successful",
+        timer: 1200,
+        showConfirmButton: false
+      })
+      setTimeout(() => { window.location.href = "/" }, 1200)
+    }
 
-icon: "success",
+  } catch (error) {
 
-title: "Login Successful",
+    if (error.response?.status === 403) {
+      Swal.fire({
+        icon: "warning",
+        title: "Account Blocked",
+        text: "Your account has been blocked by admin"
+      })
+      return
+    }
 
-timer: 1200,
+    /* Show server error under the relevant field if possible */
+    const msg = error.response?.data?.message || "Invalid credentials"
 
-showConfirmButton: false
+    if (msg.toLowerCase().includes("email") || msg.toLowerCase().includes("account")) {
+      showError("email", "emailError", msg)
+    } else if (msg.toLowerCase().includes("password")) {
+      showError("password", "passwordError", msg)
+    } else {
+      Swal.fire({ icon: "error", title: "Login Failed", text: msg })
+    }
 
+  } finally {
+    loginBtn.disabled = false
+  }
 })
-
-
-
-setTimeout(() => {
-
-window.location.href = "/"
-
-}, 1200)
-
-}
-
-}
-
-
-catch (error) {
-
-/* BLOCKED USER */
-
-if (error.response?.status === 403) {
-
-Swal.fire({
-
-icon: "warning",
-
-title: "Account Blocked",
-
-text:
-"Your account has been blocked by admin"
-
-})
-
-return
-
-}
-
-
-
-/* OTHER LOGIN ERRORS */
-
-Swal.fire({
-
-icon: "error",
-
-title: "Login Failed",
-
-text:
-
-error.response?.data?.message ||
-
-"Invalid credentials"
-
-})
-
-}
-
-
-finally {
-
-loginBtn.disabled = false
-
-}
-
-}
-
-)
 
 </script>
-
-
-
-<!-- Shared Animations -->
 
 <script src="/js/animations.js"></script>
 <script src="/js/tilt.js"></script>
 
-
-
 </body>
-
 </html>

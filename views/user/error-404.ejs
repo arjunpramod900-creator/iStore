@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page Not Found — iStore</title>
+    <link rel="stylesheet" href="/css/components/header.css">
+    <link rel="stylesheet" href="/css/components/footer.css">
+    <link rel="stylesheet" href="/css/user-error-404.css">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+</head>
+<body>
+
+    <%- include("../partials/user/header", { page: '' }) %>
+
+    <main class="error-main">
+
+        <!-- Ambient background orbs -->
+        <div class="orb orb-1" aria-hidden="true"></div>
+        <div class="orb orb-2" aria-hidden="true"></div>
+        <div class="orb orb-3" aria-hidden="true"></div>
+
+        <div class="error-container">
+
+            <!-- The signature 404 display -->
+            <div class="error-display" aria-hidden="true">
+                <span class="digit digit-4-left">4</span>
+                <div class="digit-zero-wrapper">
+                    <span class="digit digit-zero">0</span>
+                    <div class="zero-inner-ring"></div>
+                </div>
+                <span class="digit digit-4-right">4</span>
+            </div>
+
+            <!-- Floating tag above heading -->
+            <div class="error-eyebrow">
+                <i data-lucide="map-pin-off"></i>
+                <span>Page not found</span>
+            </div>
+
+            <h1 class="error-heading">
+                Looks like this page<br>took a wrong turn.
+            </h1>
+
+            <p class="error-body">
+                The link you followed may be broken, expired, or the page may have been moved.
+                Let's get you back to somewhere familiar.
+            </p>
+
+            <!-- Quick nav links -->
+            <div class="error-links">
+                <a href="/" class="error-link-pill">
+                    <i data-lucide="home"></i>
+                    <span>Home</span>
+                </a>
+                <a href="/products" class="error-link-pill">
+                    <i data-lucide="shopping-bag"></i>
+                    <span>Shop</span>
+                </a>
+                <a href="/profile" class="error-link-pill">
+                    <i data-lucide="user"></i>
+                    <span>My Account</span>
+                </a>
+                <a href="/cart" class="error-link-pill">
+                    <i data-lucide="shopping-cart"></i>
+                    <span>Cart</span>
+                </a>
+            </div>
+
+            <!-- Primary CTA -->
+            <a href="/" class="error-cta">
+                Take me home
+                <i data-lucide="arrow-right"></i>
+            </a>
+
+            <!-- Subtle path indicator -->
+            <p class="error-path" id="error-path"></p>
+
+        </div>
+
+    </main>
+
+    <%- include("../partials/user/footer") %>
+
+    <script>
+        lucide.createIcons();
+
+        /* Show what URL the user tried */
+        const pathEl = document.getElementById("error-path");
+        if (pathEl && window.location.pathname !== "/404") {
+            pathEl.textContent = "Tried: " + window.location.pathname;
+        }
+
+        /* ── Entrance animations ── */
+        const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+
+        tl.from(".orb", {
+            scale: 0, opacity: 0, duration: 1.2, stagger: 0.15, ease: "power2.out"
+        })
+        .from(".digit-4-left", {
+            x: -60, opacity: 0, duration: 0.7, ease: "back.out(1.4)"
+        }, "-=0.6")
+        .from(".digit-zero-wrapper", {
+            scale: 0.4, opacity: 0, duration: 0.8, ease: "back.out(2)"
+        }, "-=0.5")
+        .from(".digit-4-right", {
+            x: 60, opacity: 0, duration: 0.7, ease: "back.out(1.4)"
+        }, "-=0.6")
+        .from(".zero-inner-ring", {
+            scale: 0, opacity: 0, duration: 0.5, ease: "back.out(2)"
+        }, "-=0.3")
+        .from(".error-eyebrow", {
+            y: 20, opacity: 0, duration: 0.5
+        }, "-=0.2")
+        .from(".error-heading", {
+            y: 24, opacity: 0, duration: 0.6
+        }, "-=0.3")
+        .from(".error-body", {
+            y: 16, opacity: 0, duration: 0.5
+        }, "-=0.3")
+        .from(".error-link-pill", {
+            y: 12, opacity: 0, duration: 0.4, stagger: 0.08
+        }, "-=0.2")
+        .from(".error-cta", {
+            y: 12, opacity: 0, duration: 0.4
+        }, "-=0.2")
+        .from(".error-path", {
+            opacity: 0, duration: 0.4
+        }, "-=0.1");
+
+        /* ── Gentle float on the 0 ── */
+        gsap.to(".digit-zero-wrapper", {
+            y: -10,
+            duration: 2.4,
+            repeat: -1,
+            yoyo: true,
+            ease: "sine.inOut",
+            delay: 1
+        });
+
+        /* ── Inner ring pulse ── */
+        gsap.to(".zero-inner-ring", {
+            scale: 1.08,
+            opacity: 0.6,
+            duration: 1.8,
+            repeat: -1,
+            yoyo: true,
+            ease: "sine.inOut",
+            delay: 1.2
+        });
+    </script>
+
+</body>
+</html>

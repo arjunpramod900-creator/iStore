@@ -1,752 +1,650 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Category Management - Admin | iStore</title>
-    <link rel="stylesheet" href="/css/components/admin-sidebar.css">
-    <link rel="stylesheet" href="/css/admin-categories.css">
-    <link rel="stylesheet" href="/css/admin-dashboard.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Category Management - Admin | iStore</title>
+  <link rel="stylesheet" href="/css/components/admin-sidebar.css">
+  <link rel="stylesheet" href="/css/admin-dashboard.css">
+  <link rel="stylesheet" href="/css/admin-categories.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
 
-    <!-- Sidebar Navbar -->
-   <%- include('../partials/admin/sidebar') %>
+  <%- include('../partials/admin/sidebar') %>
 
-    <main class="admin-main dashboard-main">
-        
-        <!-- Breadcrumbs & Header -->
-        <header class="page-header">
-            <div class="header-left">
-                <nav class="breadcrumb">
-                    <a href="/admin/dashboard">DASHBOARD</a>
-                    <i data-lucide="chevron-right" size="12"></i>
-                    <span class="current">CATEGORIES</span>
-                </nav>
-                <h1 class="page-title">Category Management</h1>
-            </div>
-            <button class="btn-add" onclick="window.location.href='/admin/add-category'">
-                <i data-lucide="plus-circle" size="18"></i>
-                <span>Add New Category</span>
-            </button>
-        </header>
+  <main class="admin-main dashboard-main">
 
-        <!-- Stats Grid -->
-        <section class="stats-grid">
-            <div class="stat-card">
-                <span class="stat-label">TOTAL CATEGORIES</span>
-                <div class="stat-value-group">
-                    <span class="stat-value"><%= stats.total || 0 %></span>
-                    <span class="stat-trend">+2 this month</span>
-                </div>
-            </div>
-            <div class="stat-card">
-                <span class="stat-label">ACTIVE</span>
-                <div class="stat-value-group">
-                    <span class="stat-value"><%= stats.active || 0 %></span>
-                    <span class="status-indicator indicator-active"></span>
-                </div>
-            </div>
-            <div class="stat-card">
-                <span class="stat-label">INACTIVE</span>
-                <div class="stat-value-group">
-                    <span class="stat-value"><%= stats.inactive || 0 %></span>
-                    <span class="status-indicator indicator-inactive"></span>
-                </div>
-            </div>
-        </section>
+    <!-- ── PAGE HEADER ── -->
+    <header class="page-header">
+      <div class="header-left">
+        <nav class="breadcrumb">
+          <a href="/admin/dashboard">DASHBOARD</a>
+          <i data-lucide="chevron-right" size="12"></i>
+          <span class="current">CATEGORIES</span>
+        </nav>
+        <h1 class="page-title">Category Management</h1>
+      </div>
+      <button class="btn-add" id="openAddModal">
+        <i data-lucide="plus-circle" size="18"></i>
+        <span>Add New Category</span>
+      </button>
+    </header>
 
-        <!-- Search & Filter Bar -->
-       <form
-method="GET"
-action="/admin/categories"
-class="filter-bar"
->
+    <!-- ── STATS ── -->
+    <section class="stats-grid">
+      <div class="stat-card">
+        <span class="stat-label">TOTAL CATEGORIES</span>
+        <div class="stat-value-group">
+          <span class="stat-value"><%= stats.total || 0 %></span>
+          <span class="stat-trend">+2 this month</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">ACTIVE</span>
+        <div class="stat-value-group">
+          <span class="stat-value"><%= stats.active || 0 %></span>
+          <span class="status-indicator indicator-active"></span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">INACTIVE</span>
+        <div class="stat-value-group">
+          <span class="stat-value"><%= stats.inactive || 0 %></span>
+          <span class="status-indicator indicator-inactive"></span>
+        </div>
+      </div>
+    </section>
 
-<div class="search-wrapper">
+    <!-- ── SEARCH & FILTER ── -->
+    <form method="GET" action="/admin/categories" class="filter-bar">
+      <div class="search-wrapper">
+        <i data-lucide="search" size="18" class="search-icon"></i>
+        <input type="text" name="search" class="search-input"
+          placeholder="Search categories..." value="<%= search %>">
+      </div>
+      <div class="filter-group">
+        <span class="filter-label">Filter Status:</span>
+        <div class="filter-select-wrapper">
+          <select name="status" class="filter-select">
+            <option value="all"      <%= status === "all"      ? "selected" : "" %>>All</option>
+            <option value="active"   <%= status === "active"   ? "selected" : "" %>>Active</option>
+            <option value="inactive" <%= status === "inactive" ? "selected" : "" %>>Inactive</option>
+            <option value="trash"    <%= status === "trash"    ? "selected" : "" %>>Trash</option>
+          </select>
+          <i data-lucide="chevron-down" size="18" class="select-chevron"></i>
+        </div>
+      </div>
+      <button type="submit" class="btn-add">Search</button>
+      <a href="/admin/categories" class="page-btn">Clear</a>
+    </form>
 
-<i
-data-lucide="search"
-size="18"
-class="search-icon">
-</i>
+    <!-- ── TABLE ── -->
+    <div class="table-card">
+      <div class="table-header">
+        <h2>All Categories</h2>
+      </div>
 
-<input
-type="text"
-name="search"
-class="search-input"
-placeholder="Search categories..."
-value="<%= search %>"
->
-
-</div>
-
-<div class="filter-group">
-
-<span class="filter-label">
-Filter Status:
-</span>
-
-<div class="filter-select-wrapper">
-
-<select
-name="status"
-class="filter-select"
->
-
-<option
-value="all"
-<%= status === "all" ? "selected" : "" %>>
-All
-</option>
-
-<option
-value="active"
-<%= status === "active" ? "selected" : "" %>>
-Active
-</option>
-
-<option
-value="inactive"
-<%= status === "inactive" ? "selected" : "" %>>
-Inactive
-</option>
-
-<option
-value="trash"
-<%= status === "trash" ? "selected" : "" %>>
-Trash
-</option>
-
-</select>
-
-<i
-data-lucide="chevron-down"
-size="18"
-class="select-chevron">
-</i>
-
-</div>
-
-</div>
-
-<button
-type="submit"
-class="btn-add"
-style="height: 48px;"
->
-
-Search
-
-</button>
-
-<a
-href="/admin/categories"
-class="page-btn"
->
-
-Clear
-
-</a>
-
-</form>
-
-        <!-- Categories Table -->
-        <div class="table-card">
-            <div class="table-header">
-                <h2>All Categories</h2>
-            </div>
-            
-            <div class="table-responsive">
-                <table class="categories-table">
-                    <thead>
-                        <tr>
-                            <th>PREVIEW</th>
-                            <th>CATEGORY NAME</th>
-                            <th>PARENT CATEGORY</th>
-                            <th>TOTAL PRODUCTS</th>
-                            <th>STATUS</th>
-                            <th style="text-align: right;">ACTIONS</th>
-                        </tr>
-                    </thead>
-                    <tbody id="categoryTableBody">
-                        <% if (categories && categories.length > 0) { %>
-                            <% categories.forEach(category => { %>
-                                <tr data-id="<%= category._id %>">
-                                    <td>
-                                        <img src="<%= category.image || '/img/placeholder-category.jpg' %>" alt="<%= category.name %>" class="category-preview">
-                                    </td>
-                                    <td>
-                                        <a href="#" class="category-name"><%= category.name %></a>
-                                    </td>
-                                    <td>
-                                        <span class="parent-category"><%= category.parentName || 'Top-level' %></span>
-                                    </td>
-                                    <td>
-                                        <span class="product-count-badge"><%= category.productCount || 0 %> Products</span>
-                                    </td>
-                                    <td>
-                                        <div class="status-badge <%= category.isActive ? '' : 'inactive' %>">
-                                            <span class="status-indicator <%= category.isActive ? 'indicator-active' : 'indicator-inactive' %>"></span>
-                                            <%= category.isActive ? 'Active' : 'Inactive' %>
-                                        </div>
-                                    </td>
-                                   <td class="actions-cell">
-
-<% if(!category.isDeleted) { %>
-
-<!-- EDIT -->
-
-<button
-class="action-btn"
-title="Edit Category"
-onclick="window.location.href='/admin/edit-category/<%= category._id %>'"
->
-
-<i data-lucide="edit-3" size="18"></i>
-
-</button>
-
-<!-- SOFT DELETE -->
-
-<button
-class="action-btn delete-btn"
-title="Delete Category"
-data-id="<%= category._id %>"
->
-
-<i data-lucide="trash-2" size="18"></i>
-
-</button>
-
-<% } else { %>
-
-<!-- RESTORE -->
-
-<button
-class="action-btn restore-btn"
-title="Restore Category"
-data-id="<%= category._id %>"
->
-
-<i data-lucide="rotate-ccw" size="18"></i>
-
-</button>
-
-<!-- PERMANENT DELETE -->
-
-<button
-class="action-btn permanent-delete-btn"
-title="Delete Permanently"
-data-id="<%= category._id %>"
->
-
-<i data-lucide="x-circle" size="18"></i>
-
-</button>
-
-<% } %>
-
-</td>
-                                </tr>
-                            <% }) %>
-                        <% } else { %>
-                            <tr>
-                                <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-muted);">
-                                    No categories found.
-                                </td>
-                            </tr>
-                        <% } %>
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Pagination Footer -->
-            <div class="pagination-footer">
-                <span class="pagination-info">
-                    Showing <%= (currentPage - 1) * limit + 1 %> - <%= Math.min(currentPage * limit, totalCategories) %> of <%= totalCategories %> Categories
-                </span>
-                <div class="pagination-controls">
-                    <% if (currentPage > 1) { %>
-                        <a href="?page=<%= currentPage - 1 %>" class="page-btn">Previous</a>
+      <div class="table-responsive">
+        <table class="categories-table">
+          <thead>
+            <tr>
+              <th>PREVIEW</th>
+              <th>CATEGORY NAME</th>
+              <th>PARENT CATEGORY</th>
+              <th>TOTAL PRODUCTS</th>
+              <th>STATUS</th>
+              <th style="text-align:right;">ACTIONS</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (categories && categories.length > 0) { %>
+              <% categories.forEach(category => { %>
+                <tr data-id="<%= category._id %>">
+                  <td>
+                    <img
+                      src="<%= category.image || '/img/placeholder-category.jpg' %>"
+                      alt="<%= category.name %>"
+                      class="category-preview">
+                  </td>
+                  <td>
+                    <a href="#" class="category-name"><%= category.name %></a>
+                  </td>
+                  <td>
+                    <span class="parent-category"><%= category.parentName || 'Top-level' %></span>
+                  </td>
+                  <td>
+                    <span class="product-count-badge"><%= category.productCount || 0 %> Products</span>
+                  </td>
+                  <td>
+                    <div class="status-badge <%= category.isActive ? '' : 'inactive' %>">
+                      <span class="status-indicator <%= category.isActive ? 'indicator-active' : 'indicator-inactive' %>"></span>
+                      <%= category.isActive ? 'Active' : 'Inactive' %>
+                    </div>
+                  </td>
+                  <td class="actions-cell">
+                    <% if (!category.isDeleted) { %>
+                      <button class="action-btn edit-category-btn" title="Edit Category"
+                        data-id="<%= category._id %>"
+                        data-name="<%= category.name %>"
+                        data-description="<%= category.description || '' %>"
+                        data-image="<%= category.image || '' %>"
+                        data-active="<%= category.isActive %>">
+                        <i data-lucide="edit-3" size="18"></i>
+                      </button>
+                      <button class="action-btn delete-btn" title="Delete Category"
+                        data-id="<%= category._id %>">
+                        <i data-lucide="trash-2" size="18"></i>
+                      </button>
+                    <% } else { %>
+                      <button class="action-btn restore-btn" title="Restore Category"
+                        data-id="<%= category._id %>">
+                        <i data-lucide="rotate-ccw" size="18"></i>
+                      </button>
+                      <button class="action-btn permanent-delete-btn" title="Delete Permanently"
+                        data-id="<%= category._id %>">
+                        <i data-lucide="x-circle" size="18"></i>
+                      </button>
                     <% } %>
-                    
-                    <% for(let i = 1; i <= totalPages; i++) { %>
-                        <a href="?page=<%= i %>" class="page-btn <%= i === currentPage ? 'active' : '' %>"><%= i %></a>
-                    <% } %>
+                  </td>
+                </tr>
+              <% }) %>
+            <% } else { %>
+              <tr>
+                <td colspan="6" class="empty-state">No categories found.</td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
 
-                    <% if (currentPage < totalPages) { %>
-                        <a href="?page=<%= currentPage + 1 %>" class="page-btn">Next</a>
-                    <% } %>
-                </div>
+      <!-- Pagination -->
+      <div class="pagination-footer">
+        <span class="pagination-info">
+          Showing <%= (currentPage - 1) * limit + 1 %> –
+          <%= Math.min(currentPage * limit, totalCategories) %>
+          of <%= totalCategories %> Categories
+        </span>
+        <div class="pagination-controls">
+          <% if (currentPage > 1) { %>
+            <a href="?page=<%= currentPage - 1 %>" class="page-btn">Previous</a>
+          <% } %>
+          <% for (let i = 1; i <= totalPages; i++) { %>
+            <a href="?page=<%= i %>" class="page-btn <%= i === currentPage ? 'active' : '' %>"><%= i %></a>
+          <% } %>
+          <% if (currentPage < totalPages) { %>
+            <a href="?page=<%= currentPage + 1 %>" class="page-btn">Next</a>
+          <% } %>
+        </div>
+      </div>
+    </div>
+
+    <footer class="page-footer">
+      <span class="footer-text">© 2026 iStore Admin</span>
+    </footer>
+  </main>
+
+
+  <!-- ============================================================
+       ADD CATEGORY MODAL
+  ============================================================ -->
+  <div class="cat-modal-overlay" id="addModal">
+    <div class="cat-modal">
+
+      <div class="cat-modal-header">
+        <div>
+          <h2>Add New Category</h2>
+          <p>Fill in the details to create a new category.</p>
+        </div>
+        <button class="modal-close-btn" id="closeAddModal">
+          <i data-lucide="x" size="16"></i>
+        </button>
+      </div>
+
+      <form id="addCategoryForm" action="/admin/add-category"
+        method="POST" enctype="multipart/form-data" novalidate>
+
+        <div class="cat-modal-body">
+
+          <!-- LEFT: details -->
+          <div>
+            <div class="modal-form-group">
+              <label class="modal-form-label">Category Name</label>
+              <input type="text" class="modal-form-input" name="name"
+                id="add-name" placeholder="e.g. Smartphones" maxlength="40">
+              <span class="field-error" id="add-name-error"></span>
             </div>
+
+            <div class="modal-form-group">
+              <label class="modal-form-label">
+                Description <span class="optional-label">(Optional)</span>
+              </label>
+              <textarea class="modal-form-textarea" name="description"
+                id="add-desc" maxlength="200"
+                placeholder="Describe the category's purpose..."></textarea>
+              <span class="field-error" id="add-desc-error"></span>
+            </div>
+
+            <div class="modal-status-row">
+              <div class="modal-status-info">
+                <span class="modal-status-label">Category Status</span>
+                <span class="modal-status-desc">Visible in store navigation</span>
+              </div>
+              <div class="modal-toggle" id="addToggle">
+                <div class="modal-toggle-handle"></div>
+              </div>
+            </div>
+            <input type="hidden" name="isActive" id="add-isActive" value="true">
+          </div>
+
+          <!-- RIGHT: image -->
+          <div class="modal-right-col">
+            <div>
+              <label class="modal-form-label">Category Image</label>
+              <div class="modal-image-box" id="addImageBox">
+                <div class="upload-icon-wrap">
+                  <i data-lucide="upload-cloud" size="28"></i>
+                  <span class="upload-text">Drop image here</span>
+                  <span class="upload-hint">PNG, JPG up to 5MB</span>
+                </div>
+                <img id="addPreviewImg" src="" alt="" style="display:none;">
+                <input type="file" name="image" id="addImageInput" accept="image/*">
+              </div>
+              <span class="field-error" id="add-image-error"></span>
+              <div class="modal-image-actions">
+                <button type="button" class="modal-img-action modal-img-replace" id="addReplaceBtn">Replace</button>
+                <button type="button" class="modal-img-action modal-img-remove"  id="addRemoveBtn">Remove</button>
+              </div>
+            </div>
+          </div>
+
         </div>
 
-        <footer class="page-footer">
-            <span class="footer-text">© 2026 iStore Admin</span>
-        </footer>
+        <div class="cat-modal-footer">
+          <button type="button" class="modal-btn-cancel" id="closeAddModal2">Cancel</button>
+          <button type="submit" class="modal-btn-save">Save Category</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ============================================================
+       EDIT CATEGORY MODAL
+  ============================================================ -->
+  <div class="cat-modal-overlay" id="editModal">
+    <div class="cat-modal">
+
+      <div class="cat-modal-header">
+        <div>
+          <h2>Edit Category</h2>
+          <p>Update the category details below.</p>
+        </div>
+        <button class="modal-close-btn" id="closeEditModal">
+          <i data-lucide="x" size="16"></i>
+        </button>
+      </div>
+
+      <form id="editCategoryForm" action=""
+        method="POST" enctype="multipart/form-data" novalidate>
+
+        <div class="cat-modal-body">
+
+          <!-- LEFT -->
+          <div>
+            <div class="modal-form-group">
+              <label class="modal-form-label">Category Name</label>
+              <input type="text" class="modal-form-input" name="name"
+                id="edit-name" maxlength="40">
+              <span class="field-error" id="edit-name-error"></span>
+            </div>
+
+            <div class="modal-form-group">
+              <label class="modal-form-label">
+                Description <span class="optional-label">(Optional)</span>
+              </label>
+              <textarea class="modal-form-textarea" name="description"
+                id="edit-desc" maxlength="200"
+                placeholder="Describe this category..."></textarea>
+              <span class="field-error" id="edit-desc-error"></span>
+            </div>
+
+            <div class="modal-status-row">
+              <div class="modal-status-info">
+                <span class="modal-status-label">Category Status</span>
+                <span class="modal-status-desc">Visible in store navigation</span>
+              </div>
+              <div class="modal-toggle" id="editToggle">
+                <div class="modal-toggle-handle"></div>
+              </div>
+            </div>
+            <input type="hidden" name="isActive" id="edit-isActive" value="true">
+          </div>
+
+          <!-- RIGHT -->
+          <div class="modal-right-col">
+            <div>
+              <label class="modal-form-label">Category Image</label>
+              <div class="modal-image-box" id="editImageBox">
+                <div class="upload-icon-wrap" id="editUploadPrompt">
+                  <i data-lucide="upload-cloud" size="28"></i>
+                  <span class="upload-text">Replace image</span>
+                  <span class="upload-hint">PNG, JPG up to 5MB</span>
+                </div>
+                <img id="editPreviewImg" src="" alt="" style="display:none;">
+                <input type="file" name="image" id="editImageInput" accept="image/*">
+              </div>
+              <div class="modal-image-actions">
+                <button type="button" class="modal-img-action modal-img-replace" id="editReplaceBtn">Replace</button>
+                <button type="button" class="modal-img-action modal-img-remove"  id="editRemoveBtn">Remove</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="cat-modal-footer">
+          <button type="button" class="modal-btn-cancel" id="closeEditModal2">Cancel</button>
+          <button type="submit" class="modal-btn-save">Update Category</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <script>
+    lucide.createIcons();
+
+    /* ================================================
+       TOAST
+    ================================================ */
+    const toast = (title, icon = "success") => Swal.fire({
+      toast: true, position: "top", icon, title,
+      showConfirmButton: false, timer: 2200, timerProgressBar: true,
+      background: "#FFFFFF", color: "#2C1421", iconColor: "#701A75",
+      customClass: { popup: "premium-toast" },
+      showClass: { popup: "animate__animated animate__fadeInDown animate__faster" },
+      hideClass: { popup: "animate__animated animate__fadeOutUp animate__faster" }
+    });
+
+    const params  = new URLSearchParams(window.location.search);
+    const success = params.get("success");
+    const errMsg  = params.get("error");
+    if (success === "added")   toast("Category added successfully");
+    if (success === "updated") toast("Category updated successfully");
+    if (errMsg)                toast(errMsg, "error");
+    if (success || errMsg)     window.history.replaceState({}, document.title, window.location.pathname);
+
+    /* ================================================
+       MODAL HELPERS
+    ================================================ */
+    const addModal  = document.getElementById("addModal");
+    const editModal = document.getElementById("editModal");
+
+    function openModal(el)  { el.classList.add("open");    document.body.style.overflow = "hidden"; }
+    function closeModal(el) { el.classList.remove("open"); document.body.style.overflow = "";       }
+
+    document.getElementById("openAddModal").addEventListener("click",   () => { resetAddForm(); openModal(addModal); });
+    document.getElementById("closeAddModal").addEventListener("click",  () => closeModal(addModal));
+    document.getElementById("closeAddModal2").addEventListener("click", () => closeModal(addModal));
+    document.getElementById("closeEditModal").addEventListener("click",  () => closeModal(editModal));
+    document.getElementById("closeEditModal2").addEventListener("click", () => closeModal(editModal));
+
+    [addModal, editModal].forEach(m => {
+      m.addEventListener("click", e => { if (e.target === m) closeModal(m); });
+    });
+
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape") { closeModal(addModal); closeModal(editModal); }
+    });
+
+    /* ================================================
+       INLINE VALIDATION HELPERS
+    ================================================ */
+    function setError(inputEl, errorId, msg) {
+      inputEl.classList.add("input-error");
+      inputEl.classList.remove("input-success");
+      const s = document.getElementById(errorId);
+      if (s) { s.textContent = msg; s.classList.add("visible"); }
+    }
+
+    function setSuccess(inputEl, errorId) {
+      inputEl.classList.remove("input-error");
+      inputEl.classList.add("input-success");
+      const s = document.getElementById(errorId);
+      if (s) { s.textContent = ""; s.classList.remove("visible"); }
+    }
+
+    function clearField(inputEl, errorId) {
+      inputEl.classList.remove("input-error", "input-success");
+      const s = document.getElementById(errorId);
+      if (s) { s.textContent = ""; s.classList.remove("visible"); }
+    }
+
+    function validateCatName(inputId, errorId) {
+      const el  = document.getElementById(inputId);
+      const val = el.value.trim();
+      if (!val)                        { setError(el, errorId, "Category name is required");                return false; }
+      if (val.length < 3)              { setError(el, errorId, "Name must be at least 3 characters");       return false; }
+      if (val.length > 40)             { setError(el, errorId, "Name cannot exceed 40 characters");         return false; }
+      if (!/^[A-Za-z\s]+$/.test(val)) { setError(el, errorId, "Name can only contain letters and spaces"); return false; }
+      setSuccess(el, errorId); return true;
+    }
+
+    function validateCatDesc(inputId, errorId) {
+      const el  = document.getElementById(inputId);
+      const val = el.value.trim();
+      if (val && val.length < 10) { setError(el, errorId, "Description must be at least 10 characters if provided"); return false; }
+      setSuccess(el, errorId); return true;
+    }
+
+    function validateImageFile(file, errorId) {
+      const span    = errorId ? document.getElementById(errorId) : null;
+      const showErr = msg => { if (span) { span.textContent = msg; span.classList.add("visible"); } };
+      const clearErr = ()  => { if (span) { span.textContent = ""; span.classList.remove("visible"); } };
+
+      if (!file)                                                                     { showErr("Please upload a category image");        return false; }
+      if (!["image/jpeg","image/png","image/jpg","image/webp"].includes(file.type)) { showErr("Only JPG, PNG or WEBP allowed");          return false; }
+      if (file.size > 5 * 1024 * 1024)                                              { showErr("Image must be under 5MB");                return false; }
+      clearErr(); return true;
+    }
+
+    /* ================================================
+       ADD MODAL
+    ================================================ */
+    let addIsActive     = true;
+    const addToggle     = document.getElementById("addToggle");
+    const addImageInput = document.getElementById("addImageInput");
+    const addPreviewImg = document.getElementById("addPreviewImg");
+
+    addToggle.addEventListener("click", () => {
+      addIsActive = !addIsActive;
+      document.getElementById("add-isActive").value = addIsActive;
+      addToggle.classList.toggle("off", !addIsActive);
+    });
+
+    addImageInput.addEventListener("change", function () {
+      const file = this.files[0];
+      if (!file) return;
+      if (!validateImageFile(file, "add-image-error")) { this.value = ""; return; }
+      const reader = new FileReader();
+      reader.onload = e => { addPreviewImg.src = e.target.result; addPreviewImg.style.display = "block"; };
+      reader.readAsDataURL(file);
+    });
+
+    document.getElementById("addReplaceBtn").addEventListener("click", () => addImageInput.click());
+    document.getElementById("addRemoveBtn").addEventListener("click",  () => {
+      addPreviewImg.src = ""; addPreviewImg.style.display = "none"; addImageInput.value = "";
+    });
+
+    document.getElementById("add-name").addEventListener("blur",  () => validateCatName("add-name", "add-name-error"));
+    document.getElementById("add-desc").addEventListener("blur",  () => validateCatDesc("add-desc", "add-desc-error"));
+    document.getElementById("add-name").addEventListener("input", function () { if (this.classList.contains("input-error")) validateCatName("add-name", "add-name-error"); });
+    document.getElementById("add-desc").addEventListener("input", function () { if (this.classList.contains("input-error")) validateCatDesc("add-desc", "add-desc-error"); });
+
+    document.getElementById("addCategoryForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+      const nameOk  = validateCatName("add-name", "add-name-error");
+      const descOk  = validateCatDesc("add-desc", "add-desc-error");
+      const imageOk = validateImageFile(addImageInput.files[0], "add-image-error");
+      if (!nameOk || !descOk || !imageOk) return;
+      Swal.fire({ title: "Saving Category...", allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      this.submit();
+    });
+
+    function resetAddForm() {
+      document.getElementById("addCategoryForm").reset();
+      addPreviewImg.src = ""; addPreviewImg.style.display = "none";
+      clearField(document.getElementById("add-name"), "add-name-error");
+      clearField(document.getElementById("add-desc"), "add-desc-error");
+      const imgErr = document.getElementById("add-image-error");
+      if (imgErr) { imgErr.textContent = ""; imgErr.classList.remove("visible"); }
+      addIsActive = true;
+      document.getElementById("add-isActive").value = "true";
+      addToggle.classList.remove("off");
+    }
+
+    /* ================================================
+       EDIT MODAL
+    ================================================ */
+    let editIsActive       = true;
+    const editToggle       = document.getElementById("editToggle");
+    const editImageInput   = document.getElementById("editImageInput");
+    const editPreviewImg   = document.getElementById("editPreviewImg");
+    const editUploadPrompt = document.getElementById("editUploadPrompt");
+
+    editToggle.addEventListener("click", () => {
+      editIsActive = !editIsActive;
+      document.getElementById("edit-isActive").value = editIsActive;
+      editToggle.classList.toggle("off", !editIsActive);
+    });
+
+    editImageInput.addEventListener("change", function () {
+      const file = this.files[0];
+      if (!file) return;
+      if (!validateImageFile(file, null)) { toast("Only JPG/PNG/WEBP under 5MB allowed", "error"); this.value = ""; return; }
+      const reader = new FileReader();
+      reader.onload = e => {
+        editPreviewImg.src = e.target.result;
+        editPreviewImg.style.display = "block";
+        editUploadPrompt.style.display = "none";
+      };
+      reader.readAsDataURL(file);
+    });
+
+    document.getElementById("editReplaceBtn").addEventListener("click", () => editImageInput.click());
+    document.getElementById("editRemoveBtn").addEventListener("click",  () => {
+      editPreviewImg.src = ""; editPreviewImg.style.display = "none";
+      editUploadPrompt.style.display = "flex"; editImageInput.value = "";
+    });
+
+    document.querySelectorAll(".edit-category-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const id          = btn.dataset.id;
+        const name        = btn.dataset.name;
+        const description = btn.dataset.description;
+        const image       = btn.dataset.image;
+        const isActive    = btn.dataset.active === "true";
+
+        document.getElementById("edit-name").value = name;
+        document.getElementById("edit-desc").value = description;
+        document.getElementById("editCategoryForm").action = `/admin/edit-category/${id}`;
+
+        if (image) {
+          editPreviewImg.src = image;
+          editPreviewImg.style.display = "block";
+          editUploadPrompt.style.display = "none";
+        } else {
+          editPreviewImg.src = ""; editPreviewImg.style.display = "none";
+          editUploadPrompt.style.display = "flex";
+        }
+
+        editIsActive = isActive;
+        document.getElementById("edit-isActive").value = isActive;
+        editToggle.classList.toggle("off", !isActive);
+
+        clearField(document.getElementById("edit-name"), "edit-name-error");
+        clearField(document.getElementById("edit-desc"), "edit-desc-error");
+
+        openModal(editModal);
+      });
+    });
+
+    document.getElementById("edit-name").addEventListener("blur",  () => validateCatName("edit-name", "edit-name-error"));
+    document.getElementById("edit-desc").addEventListener("blur",  () => validateCatDesc("edit-desc", "edit-desc-error"));
+    document.getElementById("edit-name").addEventListener("input", function () { if (this.classList.contains("input-error")) validateCatName("edit-name", "edit-name-error"); });
+    document.getElementById("edit-desc").addEventListener("input", function () { if (this.classList.contains("input-error")) validateCatDesc("edit-desc", "edit-desc-error"); });
+
+    document.getElementById("editCategoryForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+      const nameOk = validateCatName("edit-name", "edit-name-error");
+      const descOk = validateCatDesc("edit-desc", "edit-desc-error");
+      if (!nameOk || !descOk) return;
+      Swal.fire({ title: "Updating Category...", allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      this.submit();
+    });
+
+    /* ================================================
+       DELETE / RESTORE / PERMANENT DELETE
+    ================================================ */
+    document.querySelectorAll(".delete-btn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const id = btn.dataset.id;
+        const result = await Swal.fire({
+          title: "Delete Category?", text: "This category will be removed from the store.",
+          icon: "warning", background: "#FFFFFF", color: "#2C1421",
+          confirmButtonColor: "#603763", cancelButtonColor: "#E5E7EB",
+          confirmButtonText: "Delete", cancelButtonText: "Cancel", reverseButtons: true,
+          showClass: { popup: "animate__animated animate__zoomIn animate__faster" },
+          hideClass: { popup: "animate__animated animate__zoomOut animate__faster" }
+        });
+        if (!result.isConfirmed) return;
+        try {
+          const res  = await fetch(`/admin/delete-category/${id}`, { method: "PATCH" });
+          const data = await res.json();
+          data.success
+            ? (toast("Category deleted successfully"), setTimeout(() => location.reload(), 1200))
+            : toast(data.message || "Failed to delete", "error");
+        } catch { toast("Something went wrong", "error"); }
+      });
+    });
+
+    document.querySelectorAll(".restore-btn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const id = btn.dataset.id;
+        try {
+          const res  = await fetch(`/admin/restore-category/${id}`, { method: "PATCH" });
+          const data = await res.json();
+          data.success
+            ? (toast("Category restored successfully"), setTimeout(() => location.reload(), 1200))
+            : toast("Failed to restore", "error");
+        } catch { toast("Something went wrong", "error"); }
+      });
+    });
+
+    document.querySelectorAll(".permanent-delete-btn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const id = btn.dataset.id;
+        const result = await Swal.fire({
+          title: "Delete Permanently?", text: "This action cannot be undone.",
+          icon: "warning", background: "#FFFFFF", color: "#2C1421",
+          confirmButtonColor: "#BA1A1A", cancelButtonColor: "#E5E7EB",
+          confirmButtonText: "Delete Forever", cancelButtonText: "Cancel", reverseButtons: true
+        });
+        if (!result.isConfirmed) return;
+        try {
+          const res  = await fetch(`/admin/permanent-delete-category/${id}`, { method: "DELETE" });
+          const data = await res.json();
+          data.success
+            ? (toast("Category permanently deleted"), setTimeout(() => location.reload(), 1200))
+            : toast("Permanent delete failed", "error");
+        } catch { toast("Something went wrong", "error"); }
+      });
+    });
+  </script>
 
-    </main>
-
-    <script>
-
-lucide.createIcons()
-
-/* =========================
-   PREMIUM TOAST FUNCTION
-========================= */
-
-const premiumToast = (title, icon = "success") => {
-
-Swal.fire({
-
-toast: true,
-
-position: "top",
-
-icon,
-
-title,
-
-showConfirmButton: false,
-
-timer: 2200,
-
-timerProgressBar: true,
-
-background: "#FFFFFF",
-
-color: "#2C1421",
-
-iconColor: "#701A75",
-
-customClass: {
-
-popup: "premium-toast"
-
-},
-
-showClass: {
-
-popup: `
-animate__animated
-animate__fadeInDown
-animate__faster
-`
-
-},
-
-hideClass: {
-
-popup: `
-animate__animated
-animate__fadeOutUp
-animate__faster
-`
-
-}
-
-})
-
-}
-
-
-
-/* =========================
-   SUCCESS TOASTS
-========================= */
-const params =
-new URLSearchParams(window.location.search)
-
-const success =
-params.get("success")
-
-const error =
-params.get("error")
-
-if (success === "added") {
-
-premiumToast(
-"Category added successfully"
-)
-
-}
-
-
-
-if (success === "updated") {
-
-premiumToast(
-"Category updated successfully"
-)
-
-}
-
-
-
-/* 
-ERROR TOAST
- */
-
-if (error) {
-
-premiumToast(
-error,
-"error"
-)
-
-}
-
-/* REMOVE URL PARAMS */
-
-if (success || error) {
-
-window.history.replaceState(
-
-{},
-
-document.title,
-
-window.location.pathname
-
-)
-
-}
-
-
-
-/* =========================
-   DELETE CATEGORY
-========================= */
-
-document
-.querySelectorAll('.delete-btn')
-
-.forEach(btn => {
-
-btn.addEventListener(
-
-'click',
-
-async () => {
-
-const categoryId =
-btn.dataset.id
-
-
-
-const result =
-await Swal.fire({
-
-title: 'Delete Category?',
-
-text:
-"This category will be removed from the store.",
-
-icon: 'warning',
-
-background: '#FFFFFF',
-
-color: '#2C1421',
-
-confirmButtonColor: '#603763',
-
-cancelButtonColor: '#E5E7EB',
-
-confirmButtonText: 'Delete',
-
-cancelButtonText: 'Cancel',
-
-reverseButtons: true,
-
-showClass: {
-
-popup: `
-animate__animated
-animate__zoomIn
-animate__faster
-`
-
-},
-
-hideClass: {
-
-popup: `
-animate__animated
-animate__zoomOut
-animate__faster
-`
-
-}
-
-})
-
-
-
-if (result.isConfirmed) {
-
-try {
-
-const response =
-await fetch(
-
-`/admin/delete-category/${categoryId}`,
-
-{
-
-method: "PATCH"
-
-}
-
-)
-
-
-
-const data =
-await response.json()
-
-
-
-if (data.success) {
-
-premiumToast(
-"Category deleted successfully"
-)
-
-
-
-setTimeout(() => {
-
-window.location.reload()
-
-}, 1200)
-
-}
-
-else {
-
-premiumToast(
-data.message ||
-"Failed to delete category",
-"error"
-)
-
-}
-
-}
-
-catch (error) {
-
-console.log(error)
-
-premiumToast(
-"Something went wrong",
-"error"
-)
-
-}
-
-}
-
-}
-
-)
-
-})
-
-
-
-/* =========================
-   RESTORE CATEGORY
-========================= */
-
-document
-.querySelectorAll('.restore-btn')
-
-.forEach(btn => {
-
-btn.addEventListener(
-
-'click',
-
-async () => {
-
-const categoryId =
-btn.dataset.id
-
-try {
-
-const response =
-await fetch(
-
-`/admin/restore-category/${categoryId}`,
-
-{
-
-method: "PATCH"
-
-}
-
-)
-
-const data =
-await response.json()
-
-if (data.success) {
-
-premiumToast(
-"Category restored successfully"
-)
-
-setTimeout(() => {
-
-window.location.reload()
-
-}, 1200)
-
-}
-
-else {
-
-premiumToast(
-"Failed to restore category",
-"error"
-)
-
-}
-
-}
-
-catch (error) {
-
-premiumToast(
-"Something went wrong",
-"error"
-)
-
-}
-
-}
-
-)
-
-})
-
-
-
-/* =========================
-   PERMANENT DELETE
-========================= */
-
-document
-.querySelectorAll('.permanent-delete-btn')
-
-.forEach(btn => {
-
-btn.addEventListener(
-
-'click',
-
-async () => {
-
-const categoryId =
-btn.dataset.id
-
-const result =
-await Swal.fire({
-
-title:
-"Delete Permanently?",
-
-text:
-"This action cannot be undone.",
-
-icon:
-"warning",
-
-background: "#FFFFFF",
-
-color: "#2C1421",
-
-confirmButtonColor:
-"#BA1A1A",
-
-cancelButtonColor:
-"#E5E7EB",
-
-confirmButtonText:
-"Delete Forever",
-
-cancelButtonText:
-"Cancel",
-
-reverseButtons: true
-
-})
-
-if (!result.isConfirmed) return
-
-try {
-
-const response =
-await fetch(
-
-`/admin/permanent-delete-category/${categoryId}`,
-
-{
-
-method: "DELETE"
-
-}
-
-)
-
-const data =
-await response.json()
-
-if (data.success) {
-
-premiumToast(
-"Category permanently deleted"
-)
-
-setTimeout(() => {
-
-window.location.reload()
-
-}, 1200)
-
-}
-
-else {
-
-premiumToast(
-"Permanent delete failed",
-"error"
-)
-
-}
-
-}
-
-catch (error) {
-
-premiumToast(
-"Something went wrong",
-"error"
-)
-
-}
-
-}
-
-)
-
-})
-</script>
 </body>
 </html>

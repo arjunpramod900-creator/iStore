@@ -2,6 +2,14 @@
    HEADER
 ========================= */
 
+.header,
+.nav,
+.nav-link,
+.login-btn,
+.mobile-nav-item span {
+    font-family: 'Inter', sans-serif;
+}
+
 .header {
   position: fixed;
 

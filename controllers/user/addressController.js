@@ -202,3 +202,32 @@ export const updateAddress = async (req, res) => {
 });
   }
 };
+
+/* =========================
+   SET DEFAULT ADDRESS
+   Add this to addressController.js
+========================= */
+
+export const setDefaultAddress = async (req, res) => {
+  try {
+    const addressId = req.params.id;
+    const userId = req.session.userId;
+
+    // Unset all existing defaults for this user
+    await Address.updateMany({ userId }, { isDefault: false });
+
+    // Set the chosen address as default
+    await Address.findByIdAndUpdate(addressId, { isDefault: true });
+
+    return res.status(200).json({
+      success: true,
+      message: "Default address updated successfully.",
+    });
+  } catch (error) {
+    console.log("Set Default Address Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong while updating your default address.",
+    });
+  }
+};

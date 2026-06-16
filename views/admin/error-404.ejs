@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page Not Found — iStore Admin</title>
+    <link rel="stylesheet" href="/css/components/admin-sidebar.css">
+    <link rel="stylesheet" href="/css/admin-error-404.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+    <%- include("../partials/admin/sidebar", { page: '' }) %>
+
+    <main class="admin-main admin-404-main">
+
+        <!-- Ambient gradient orbs matching Figma -->
+        <div class="a404-orb a404-orb-1" aria-hidden="true"></div>
+        <div class="a404-orb a404-orb-2" aria-hidden="true"></div>
+
+        <div class="a404-container">
+
+            <!-- Broken link icon -->
+            <div class="a404-icon-wrap" aria-hidden="true">
+                <i data-lucide="link-2-off"></i>
+            </div>
+
+            <!-- 404 number -->
+            <h1 class="a404-number">404</h1>
+
+            <!-- Heading + body -->
+            <h2 class="a404-heading">Page Not Found</h2>
+            <p class="a404-body">
+                The page you are looking for does not exist. It might
+                have been moved, deleted, or you might have the wrong URL.
+            </p>
+
+            <!-- Action buttons -->
+            <div class="a404-actions">
+                <a href="/admin/dashboard" class="a404-btn-primary">
+                    Go to Dashboard
+                </a>
+                <button type="button" class="a404-btn-secondary" onclick="history.back()">
+                    Go Back
+                </button>
+            </div>
+
+            <!-- Info card -->
+            <div class="a404-info-card">
+                <div class="a404-info-top">
+                    <i data-lucide="info" class="a404-info-icon"></i>
+                    <span>Need help? Contact system administrator.</span>
+                </div>
+                <div class="a404-info-meta">
+                    <span class="a404-meta-item">
+                        ERROR ID: <strong>ERR-404</strong>
+                    </span>
+                    <span class="a404-meta-divider" aria-hidden="true"></span>
+                    <span class="a404-meta-item" id="a404-timestamp">
+                        TIMESTAMP: <strong id="a404-time">—</strong>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Footer label -->
+            <p class="a404-footer-label">iStore Admin</p>
+
+        </div>
+
+    </main>
+
+    <script>
+        lucide.createIcons();
+
+        /* Live timestamp matching Figma */
+        const el = document.getElementById("a404-time");
+        if (el) {
+            const now = new Date();
+            const day = String(now.getDate()).padStart(2, "0");
+            const month = String(now.getMonth() + 1).padStart(2, "0");
+            const year = now.getFullYear();
+            const hrs  = String(now.getHours()).padStart(2, "0");
+            const mins = String(now.getMinutes()).padStart(2, "0");
+            el.textContent = `${day} ${month} ${year}, ${hrs}:${mins}`;
+        }
+    </script>
+
+</body>
+</html>

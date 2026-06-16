@@ -16,6 +16,7 @@ import {
   addAddress,
   deleteAddress,
   updateAddress,
+  setDefaultAddress,
 } from "../../controllers/user/addressController.js";
 
 import { isLoggedIn } from "../../middleware/authMiddleware.js";
@@ -199,6 +200,17 @@ router.post(
   isLoggedIn,
   userBlockCheckMiddleware,
   updateAddress,
+);
+
+/* =========================
+SET DEFAULT ADDRESS ROUTE
+========================= */
+
+router.post(
+  "/set-default-address/:id",
+  isLoggedIn,
+  userBlockCheckMiddleware,
+  setDefaultAddress,
 );
 
 export default router;

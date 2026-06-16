@@ -28,6 +28,12 @@ rel="stylesheet"
 href="/css/admin-products.css"
 >
 
+
+<link
+rel="stylesheet"
+href="/css/admin-product-modal.css"
+>
+
 <link
 href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
 rel="stylesheet"
@@ -63,25 +69,15 @@ href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
 DASHBOARD
 </a>
 
-<i
-data-lucide="chevron-right"
-size="12"
->
-</i>
+<i data-lucide="chevron-right" size="12"></i>
 
-<span class="current">
-PRODUCTS
-</span>
+<span class="current">PRODUCTS</span>
 
 </nav>
 
-<h1 class="page-title">
-Product Management
-</h1>
+<h1 class="page-title">Product Management</h1>
 
-<p class="page-subtitle">
-Manage all store products efficiently.
-</p>
+<p class="page-subtitle">Manage all store products efficiently.</p>
 
 </div>
 
@@ -91,122 +87,48 @@ Manage all store products efficiently.
 
 <section class="stats-grid">
 
-<!-- TOTAL -->
-
 <div class="stat-card">
-
 <div class="stat-header">
-
-<span class="stat-label">
-TOTAL PRODUCTS
-</span>
-
-<i
-data-lucide="package"
-size="20"
->
-</i>
-
+<span class="stat-label">TOTAL PRODUCTS</span>
+<i data-lucide="package" size="20"></i>
 </div>
-
-<span class="stat-value">
-
-<%= stats.total %>
-
-</span>
-
+<span class="stat-value"><%= stats.total %></span>
 <div class="stat-sub">
-
-<i
-data-lucide="trending-up"
-size="14"
->
-</i>
-
+<i data-lucide="trending-up" size="14"></i>
 Inventory products
-
 </div>
-
 </div>
-
-<!-- ACTIVE -->
 
 <div class="stat-card">
-
 <div class="stat-header">
-
-<span class="stat-label">
-ACTIVE PRODUCTS
-</span>
-
-<div class="status-dot-small dot-pink">
+<span class="stat-label">ACTIVE PRODUCTS</span>
+<div class="status-dot-small dot-pink"></div>
 </div>
-
+<span class="stat-value"><%= stats.active %></span>
+<div class="stat-sub">Currently visible in store</div>
 </div>
-
-<span class="stat-value">
-
-<%= stats.active %>
-
-</span>
-
-<div class="stat-sub">
-Currently visible in store
-</div>
-
-</div>
-
-<!-- INACTIVE -->
 
 <div class="stat-card">
-
 <div class="stat-header">
-
-<span class="stat-label">
-INACTIVE PRODUCTS
-</span>
-
-<div class="status-dot-small dot-gray">
+<span class="stat-label">INACTIVE PRODUCTS</span>
+<div class="status-dot-small dot-gray"></div>
 </div>
-
-</div>
-
-<span class="stat-value">
-
-<%= stats.inactive %>
-
-</span>
-
-<div class="stat-sub">
-Hidden from storefront
-</div>
-
+<span class="stat-value"><%= stats.inactive %></span>
+<div class="stat-sub">Hidden from storefront</div>
 </div>
 
 </section>
 
 <!-- ACTION BAR -->
 
-<form
-method="GET"
-action="/admin/products"
->
+<form method="GET" action="/admin/products">
 
 <section class="action-bar">
 
 <div class="filters-left">
 
-<!-- SEARCH -->
-
 <div class="search-wrapper">
-
-<i
-data-lucide="search"
-size="16"
-class="search-icon-inline"
->
-</i>
-
+<i data-lucide="search" size="16" class="search-icon-inline"></i>
 <input
 type="text"
 name="search"
@@ -214,115 +136,38 @@ class="search-input-field"
 placeholder="Search products..."
 value="<%= search %>"
 >
-
 </div>
 
-<!-- CATEGORY -->
-
-<select
-name="category"
-class="filter-select"
->
-
-<option value="">
-All Categories
-</option>
-
+<select name="category" class="filter-select">
+<option value="">All Categories</option>
 <% categories.forEach(categoryItem => { %>
-
 <option
 value="<%= categoryItem._id %>"
-<%= categoryItem._id.toString() === category
-? "selected"
-: "" %>
+<%= categoryItem._id.toString() === category ? "selected" : "" %>
 >
-
 <%= categoryItem.name %>
-
 </option>
-
 <% }) %>
-
 </select>
 
-<!-- STATUS -->
-
-<select
-name="status"
-class="filter-select"
->
-
-<option
-value="all"
-<%= status === "all"
-? "selected"
-: "" %>
->
-
-All Status
-
-</option>
-
-<option
-value="active"
-<%= status === "active"
-? "selected"
-: "" %>
->
-
-Active
-
-</option>
-
-<option
-value="inactive"
-<%= status === "inactive"
-? "selected"
-: "" %>
->
-
-Inactive
-
-</option>
-
-<option
-value="trash"
-<%= status === "trash"
-? "selected"
-: "" %>
->
-
-Trash
-
-</option>
-
+<select name="status" class="filter-select">
+<option value="all" <%= status === "all" ? "selected" : "" %>>All Status</option>
+<option value="active" <%= status === "active" ? "selected" : "" %>>Active</option>
+<option value="inactive" <%= status === "inactive" ? "selected" : "" %>>Inactive</option>
+<option value="trash" <%= status === "trash" ? "selected" : "" %>>Trash</option>
 </select>
 
-<button
-type="submit"
-class="btn-add"
->
-
-<i data-lucide="filter">
-</i>
-
+<button type="submit" class="btn-add">
+<i data-lucide="filter"></i>
 Apply
-
 </button>
 
 </div>
 
-<a
-href="/admin/products/add"
-class="btn-add"
->
-
-<i data-lucide="plus">
-</i>
-
+<button type="button" id="openAddModalBtn" class="btn-add">
+<i data-lucide="plus"></i>
 Add Product
-
-</a>
+</button>
 
 </section>
 
@@ -333,20 +178,8 @@ Add Product
 <div class="table-card">
 
 <div class="table-header-row">
-
-<h2 class="table-title">
-All Products
-</h2>
-
-<a
-href="#"
-class="btn-export"
->
-
-Export CSV
-
-</a>
-
+<h2 class="table-title">All Products</h2>
+<a href="#" class="btn-export">Export CSV</a>
 </div>
 
 <div class="table-wrapper">
@@ -354,39 +187,15 @@ Export CSV
 <table>
 
 <thead>
-
 <tr>
-
-<th>
-PRODUCT
-</th>
-
-<th>
-CATEGORY
-</th>
-
-<th>
-VARIANTS
-</th>
-
-<th>
-PRICE
-</th>
-
-<th style="text-align:right;">
-STOCK
-</th>
-
-<th>
-STATUS
-</th>
-
-<th style="text-align:right;">
-ACTIONS
-</th>
-
+<th>PRODUCT</th>
+<th>CATEGORY</th>
+<th>VARIANTS</th>
+<th>PRICE</th>
+<th style="text-align:right;">STOCK</th>
+<th>STATUS</th>
+<th style="text-align:right;">ACTIONS</th>
 </tr>
-
 </thead>
 
 <tbody>
@@ -397,187 +206,78 @@ ACTIONS
 
 <tr>
 
-<!-- PRODUCT -->
-
 <td>
-
 <div class="product-info-cell">
-
 <img
 src="<%= product.thumbnail || '/images/default-product.png' %>"
 class="product-thumb"
 alt="<%= product.name %>"
 >
-
 <div class="product-details">
-
-<span class="product-name">
-
-<%= product.name %>
-
-</span>
-
-<span class="product-sku">
-
-SKU:
-<%= product.defaultSKU %>
-
-</span>
-
+<span class="product-name"><%= product.name %></span>
+<span class="product-sku">SKU: <%= product.defaultSKU %></span>
 <% if(product.productOffer) { %>
-
 <div class="offer-badge offer-product">
-
-<%= product.productOffer.discountValue %>% OFF
-
-(Product Offer)
-
+<%= product.productOffer.discountValue %>% OFF (Product Offer)
 </div>
-
 <% } else if(product.categoryOffer) { %>
-
 <div class="offer-badge offer-category">
-
-<%= product.categoryOffer.discountValue %>% OFF
-
-(Category Offer)
-
+<%= product.categoryOffer.discountValue %>% OFF (Category Offer)
 </div>
-
 <% } %>
-
 </div>
-
 </div>
-
 </td>
 
-<!-- CATEGORY -->
+<td><%= product.categoryId?.name || "N/A" %></td>
+
+<td><%= product.variantCount %> Variants</td>
+
+<td class="price-text">₹<%= product.defaultPrice.toLocaleString() %></td>
+
+<td style="text-align:right;"><%= product.totalStock %></td>
 
 <td>
-
-<%= product.categoryId?.name || "N/A" %>
-
-</td>
-
-<!-- VARIANTS -->
-
-<td>
-
-<%= product.variantCount %> Variants
-
-</td>
-
-<!-- PRICE -->
-
-<td class="price-text">
-
-₹<%= product.defaultPrice.toLocaleString() %>
-
-</td>
-
-<!-- STOCK -->
-
-<td style="text-align:right;">
-
-<%= product.totalStock %>
-
-</td>
-
-<!-- STATUS -->
-
-<td>
-
 <div class="status-badge">
-
-<div
-class="status-dot-small
-<%= product.isActive
-? 'dot-pink'
-: 'dot-gray' %>"
->
+<div class="status-dot-small <%= product.isActive ? 'dot-pink' : 'dot-gray' %>"></div>
+<%= product.isActive ? "Active" : "Inactive" %>
 </div>
-
-<%= product.isActive
-? "Active"
-: "Inactive" %>
-
-</div>
-
 </td>
 
-<!-- ACTIONS -->
-
 <td>
-
 <div class="action-btns">
 
 <% if(!product.isDeleted) { %>
 
-<!-- VIEW -->
-
-<a
-href="/admin/products/<%= product._id %>"
-class="btn-icon-action"
->
-
+<a href="/admin/products/<%= product._id %>" class="btn-icon-action">
 <i data-lucide="eye"></i>
-
 </a>
-
-<!-- EDIT -->
-
-<a
-href="/admin/products/edit/<%= product._id %>"
-class="btn-icon-action"
->
-
-<i data-lucide="edit-2"></i>
-
-</a>
-
-<!-- DELETE -->
 
 <button
 type="button"
-class="btn-icon-action delete-btn"
+class="btn-icon-action edit-btn"
 data-id="<%= product._id %>"
 >
+<i data-lucide="edit-2"></i>
+</button>
 
+<button type="button" class="btn-icon-action delete-btn" data-id="<%= product._id %>">
 <i data-lucide="trash-2"></i>
-
 </button>
 
 <% } else { %>
 
-<!-- RESTORE -->
-
-<button
-type="button"
-class="btn-icon-action restore-btn"
-data-id="<%= product._id %>"
->
-
+<button type="button" class="btn-icon-action restore-btn" data-id="<%= product._id %>">
 <i data-lucide="rotate-ccw"></i>
-
 </button>
 
-<!-- PERMANENT DELETE -->
-
-<button
-type="button"
-class="btn-icon-action permanent-delete-btn"
-data-id="<%= product._id %>"
->
-
+<button type="button" class="btn-icon-action permanent-delete-btn" data-id="<%= product._id %>">
 <i data-lucide="x-circle"></i>
-
 </button>
 
 <% } %>
 
 </div>
-
 </td>
 
 </tr>
@@ -587,16 +287,7 @@ data-id="<%= product._id %>"
 <% } else { %>
 
 <tr>
-
-<td
-colspan="7"
-class="empty-table"
->
-
-No products found
-
-</td>
-
+<td colspan="7" class="empty-table">No products found</td>
 </tr>
 
 <% } %>
@@ -612,73 +303,36 @@ No products found
 <div class="pagination-container">
 
 <span class="pagination-info">
-
 Showing
-
 <%= ((currentPage - 1) * limit) + 1 %>
-
 to
-
 <%= Math.min(currentPage * limit, totalProducts) %>
-
 of
-
 <%= totalProducts %>
-
 entries
-
 </span>
 
 <div class="pagination-controls">
 
-<!-- PREVIOUS -->
-
 <% if(currentPage > 1) { %>
-
-<a
-href="?page=<%= currentPage - 1 %>&search=<%= search %>&category=<%= category %>&status=<%= status %>"
-class="page-nav"
->
-
-<i data-lucide="chevron-left">
-</i>
-
+<a href="?page=<%= currentPage - 1 %>&search=<%= search %>&category=<%= category %>&status=<%= status %>" class="page-nav">
+<i data-lucide="chevron-left"></i>
 </a>
-
 <% } %>
-
-<!-- PAGE NUMBERS -->
 
 <% for(let i = 1; i <= totalPages; i++) { %>
-
 <a
 href="?page=<%= i %>&search=<%= search %>&category=<%= category %>&status=<%= status %>"
-class="page-num
-<%= currentPage === i
-? 'active'
-: '' %>"
+class="page-num <%= currentPage === i ? 'active' : '' %>"
 >
-
 <%= i %>
-
 </a>
-
 <% } %>
-
-<!-- NEXT -->
 
 <% if(currentPage < totalPages) { %>
-
-<a
-href="?page=<%= currentPage + 1 %>&search=<%= search %>&category=<%= category %>&status=<%= status %>"
-class="page-nav"
->
-
-<i data-lucide="chevron-right">
-</i>
-
+<a href="?page=<%= currentPage + 1 %>&search=<%= search %>&category=<%= category %>&status=<%= status %>" class="page-nav">
+<i data-lucide="chevron-right"></i>
 </a>
-
 <% } %>
 
 </div>
@@ -687,357 +341,774 @@ class="page-nav"
 
 </div>
 
-<!-- FOOTER -->
-
 <footer class="page-footer">
-
-<span class="footer-text">
-© 2026 iStore Admin
-</span>
-
+<span class="footer-text">© 2026 iStore Admin</span>
 </footer>
 
 </main>
 
+<!-- =========================================
+     ADD PRODUCT MODAL
+========================================= -->
 
-<% if (req.query.success === "added") { %>
+<div class="modal-overlay" id="addProductModal" style="display:none;">
 
-<script>
+<div class="modal-box">
 
-document.addEventListener(
+<div class="modal-header">
+<h2>Add New Product</h2>
+<button type="button" class="modal-close-btn" id="closeAddModalBtn">
+<i data-lucide="x"></i>
+</button>
+</div>
 
-"DOMContentLoaded",
+<div class="modal-body">
 
-() => {
+<div class="error-alert" id="addProductError" style="display:none;"></div>
 
-Swal.fire({
+<form
+id="addProductForm"
+class="bento-form-grid"
+enctype="multipart/form-data"
+>
 
-toast: true,
+<div class="column">
 
-position: "top",
+<section class="section-card">
+<div class="section-header">
+<i data-lucide="package" size="20"></i>
+<h2>Product Basic Details</h2>
+</div>
 
-icon: "success",
+<div class="form-group">
+<label class="form-label">Product Name</label>
+<input type="text" name="name" class="form-input" placeholder="e.g., iPhone 17 Pro Max" required>
+</div>
 
-title: "Product added successfully",
+<div class="form-row">
 
-showConfirmButton: false,
+<div class="form-group">
+<label class="form-label">Category</label>
+<select name="categoryId" class="form-select" required>
+<option value="">Select Category</option>
+<% categories.forEach(category => { %>
+<option value="<%= category._id %>"><%= category.name %></option>
+<% }) %>
+</select>
+</div>
 
-timer: 2400,
+<div class="form-group">
+<label class="form-label">Product Status</label>
+<select name="isActive" class="form-select">
+<option value="true">Active</option>
+<option value="false">Inactive</option>
+</select>
+</div>
 
-timerProgressBar: true,
+</div>
 
-width: "380px",
+<div class="form-group">
+<label class="form-label">Description</label>
+<textarea name="description" class="form-textarea" placeholder="Write premium product description..." required></textarea>
+</div>
 
-padding: "16px 18px",
+</section>
 
-background: "#FFFFFF",
+<section class="section-card">
+<div class="section-header">
+<i data-lucide="image" size="18"></i>
+<h2>Product Images</h2>
+</div>
 
-color: "#2C1421",
+<div class="image-grid">
 
-iconColor: "#701A75",
+<label class="upload-slot">
+<input type="file" name="thumbnail" id="addThumbnailInput" accept="image/*" hidden required>
+<i data-lucide="plus-circle" size="24"></i>
+<span>Upload Image</span>
+</label>
 
-customClass: {
+<div class="image-preview" id="addThumbnailPreview" style="display:none;">
+<img src="" id="addPreviewImage" alt="Preview">
+<button type="button" class="remove-img-btn" id="addRemoveImageBtn">
+<i data-lucide="x" size="14"></i>
+</button>
+</div>
 
-popup:
-"animate__animated animate__fadeInDown animate__faster"
+</div>
 
-}
+<p class="image-note">Recommended size: 2000×2000px</p>
 
-})
+<div class="variant-images-wrapper">
+<label class="form-label">Variant Gallery Images</label>
+<input type="file" name="variantImages" id="addVariantImages" accept="image/*" multiple required>
+<p class="image-note">Upload minimum 3 images</p>
+<div class="variant-preview-grid" id="addVariantPreviewGrid"></div>
+</div>
 
-}
+</section>
 
-)
+</div>
 
-</script>
+<div class="column">
 
-<% } %>
+<section class="section-card">
+<div class="section-header">
+<i data-lucide="banknote" size="20"></i>
+<h2>Pricing & Stock</h2>
+</div>
+
+<div class="form-group">
+<label class="form-label">Price</label>
+<div class="price-input-wrapper">
+<span class="price-symbol">₹</span>
+<input type="number" name="price" class="form-input" placeholder="129900" required>
+</div>
+</div>
+
+<div class="form-group">
+<label class="form-label">Compare Price</label>
+<div class="price-input-wrapper">
+<span class="price-symbol">₹</span>
+<input type="number" name="comparePrice" class="form-input" placeholder="139900">
+</div>
+</div>
+
+<div class="form-row">
+
+<div class="form-group">
+<label class="form-label">Stock</label>
+<input type="number" name="stock" class="form-input" placeholder="100" required>
+</div>
+
+<div class="form-group">
+<label class="form-label">SKU</label>
+<input type="text" name="SKU" class="form-input sku-input" placeholder="APL-IP17-512" required>
+</div>
+
+</div>
+
+</section>
+
+<section class="section-card">
+<div class="section-header">
+<i data-lucide="cpu" size="18"></i>
+<h2>Technical Specs</h2>
+</div>
+
+<div class="form-group">
+<label class="form-label">Storage</label>
+<input type="text" name="storage" class="form-input" placeholder="256GB">
+</div>
+
+<div class="form-group">
+<label class="form-label">RAM</label>
+<input type="text" name="RAM" class="form-input" placeholder="8GB">
+</div>
+
+<div class="form-group">
+<label class="form-label">Color</label>
+<input type="text" name="color" class="form-input" placeholder="Titanium">
+</div>
+
+</section>
+
+<section class="section-card">
+<div class="section-header">
+<i data-lucide="eye" size="18"></i>
+<h2>Visibility</h2>
+</div>
+
+<div class="status-row">
+<span class="form-label">Featured Product</span>
+<label class="switch">
+<input type="checkbox" name="isFeatured" value="true">
+<span class="slider"></span>
+</label>
+</div>
+
+<div class="status-row">
+<span class="form-label">Best Seller</span>
+<label class="switch">
+<input type="checkbox" name="isBestSeller" value="true">
+<span class="slider"></span>
+</label>
+</div>
+
+<div class="status-row">
+<span class="form-label">Deal Product</span>
+<label class="switch">
+<input type="checkbox" name="isDeal" value="true">
+<span class="slider"></span>
+</label>
+</div>
+
+</section>
+
+</div>
+
+<div class="footer-actions" style="grid-column:1/-1;">
+<span class="draft-note">iStore Premium Inventory System</span>
+<button type="button" class="btn-cancel" id="cancelAddModalBtn">Cancel</button>
+<button type="submit" class="btn-save" id="addProductSubmitBtn">Save Product</button>
+</div>
+
+</form>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- =========================================
+     EDIT PRODUCT MODAL
+========================================= -->
+
+<div class="modal-overlay" id="editProductModal" style="display:none;">
+
+<div class="modal-box">
+
+<div class="modal-header">
+<h2>Edit Product</h2>
+<button type="button" class="modal-close-btn" id="closeEditModalBtn">
+<i data-lucide="x"></i>
+</button>
+</div>
+
+<div class="modal-body">
+
+<div class="error-alert" id="editProductError" style="display:none;"></div>
+
+<form
+id="editProductForm"
+class="bento-form-grid"
+enctype="multipart/form-data"
+>
+
+<input type="hidden" name="productId" id="editProductId">
+<input type="hidden" name="variantId" id="editVariantId">
+
+<div class="column">
+
+<section class="section-card">
+<div class="section-header">
+<i data-lucide="package" size="20"></i>
+<h2>Product Basic Details</h2>
+</div>
+
+<div class="form-group">
+<label class="form-label">Product Name</label>
+<input type="text" name="name" id="editName" class="form-input" required>
+</div>
+
+<div class="form-row">
+
+<div class="form-group">
+<label class="form-label">Category</label>
+<select name="categoryId" id="editCategoryId" class="form-select" required>
+<% categories.forEach(category => { %>
+<option value="<%= category._id %>"><%= category.name %></option>
+<% }) %>
+</select>
+</div>
+
+<div class="form-group">
+<label class="form-label">Product Status</label>
+<select name="isActive" id="editIsActive" class="form-select">
+<option value="true">Active</option>
+<option value="false">Inactive</option>
+</select>
+</div>
+
+</div>
+
+<div class="form-group">
+<label class="form-label">Description</label>
+<textarea name="description" id="editDescription" class="form-textarea" required></textarea>
+</div>
+
+</section>
+
+<section class="section-card">
+<div class="section-header">
+<i data-lucide="image" size="18"></i>
+<h2>Product Images</h2>
+</div>
+
+<div class="image-grid">
+
+<label class="upload-slot">
+<input type="file" name="thumbnail" id="editThumbnailInput" accept="image/*" hidden>
+<i data-lucide="plus-circle" size="24"></i>
+<span>Replace Image</span>
+</label>
+
+<div class="image-preview" id="editThumbnailPreview">
+<img src="" id="editPreviewImage" alt="Preview">
+<button type="button" class="remove-img-btn" id="editRemoveImageBtn">
+<i data-lucide="x" size="14"></i>
+</button>
+</div>
+
+</div>
+
+<p class="image-note">Upload a new image only if needed.</p>
+
+</section>
+
+</div>
+
+<div class="column">
+
+<section class="section-card">
+<div class="section-header">
+<i data-lucide="banknote" size="20"></i>
+<h2>Pricing & Stock</h2>
+</div>
+
+<div class="form-group">
+<label class="form-label">Price</label>
+<div class="price-input-wrapper">
+<span class="price-symbol">₹</span>
+<input type="number" name="price" id="editPrice" class="form-input" required>
+</div>
+</div>
+
+<div class="form-group">
+<label class="form-label">Compare Price</label>
+<div class="price-input-wrapper">
+<span class="price-symbol">₹</span>
+<input type="number" name="comparePrice" id="editComparePrice" class="form-input">
+</div>
+</div>
+
+<div class="form-row">
+
+<div class="form-group">
+<label class="form-label">Stock</label>
+<input type="number" name="stock" id="editStock" class="form-input" required>
+</div>
+
+<div class="form-group">
+<label class="form-label">SKU</label>
+<input type="text" name="SKU" id="editSKU" class="form-input sku-input" required>
+</div>
+
+</div>
+
+</section>
+
+<section class="section-card">
+<div class="section-header">
+<i data-lucide="cpu" size="18"></i>
+<h2>Technical Specs</h2>
+</div>
+
+<div class="form-group">
+<label class="form-label">Storage</label>
+<input type="text" name="storage" id="editStorage" class="form-input">
+</div>
+
+<div class="form-group">
+<label class="form-label">RAM</label>
+<input type="text" name="RAM" id="editRAM" class="form-input">
+</div>
+
+<div class="form-group">
+<label class="form-label">Color</label>
+<input type="text" name="color" id="editColor" class="form-input">
+</div>
+
+</section>
+
+<section class="section-card">
+<div class="section-header">
+<i data-lucide="eye" size="18"></i>
+<h2>Visibility</h2>
+</div>
+
+<div class="status-row">
+<span class="form-label">Featured Product</span>
+<label class="switch">
+<input type="checkbox" name="isFeatured" id="editIsFeatured" value="true">
+<span class="slider"></span>
+</label>
+</div>
+
+<div class="status-row">
+<span class="form-label">Best Seller</span>
+<label class="switch">
+<input type="checkbox" name="isBestSeller" id="editIsBestSeller" value="true">
+<span class="slider"></span>
+</label>
+</div>
+
+<div class="status-row">
+<span class="form-label">Deal Product</span>
+<label class="switch">
+<input type="checkbox" name="isDeal" id="editIsDeal" value="true">
+<span class="slider"></span>
+</label>
+</div>
+
+</section>
+
+</div>
+
+<div class="footer-actions" style="grid-column:1/-1;">
+<span class="draft-note">iStore Premium Inventory System</span>
+<button type="button" class="btn-cancel" id="cancelEditModalBtn">Cancel</button>
+<button type="submit" class="btn-save" id="editProductSubmitBtn">Update Product</button>
+</div>
+
+</form>
+
+</div>
+
+</div>
+
+</div>
+
 <script>
 
 lucide.createIcons()
 
-/* =========================
-DELETE PRODUCT
-========================= */
+/* =========================================
+   MODAL OPEN / CLOSE HELPERS
+========================================= */
 
-document.addEventListener(
+const addModal = document.getElementById("addProductModal")
+const editModal = document.getElementById("editProductModal")
 
-"click",
+function openModal(modal) {
+  modal.style.display = "flex"
+  document.body.style.overflow = "hidden"
+}
 
-async (e) => {
+function closeModal(modal) {
+  modal.style.display = "none"
+  document.body.style.overflow = ""
+}
 
-const btn =
-e.target.closest(".delete-btn")
-
-if (!btn) return
-
-const productId =
-btn.dataset.id
-
-const result =
-await Swal.fire({
-
-title:
-"Delete Product?",
-
-text:
-"This product will be hidden from the store.",
-
-icon:
-"warning",
-
-showCancelButton:
-true,
-
-confirmButtonColor:
-"#603763",
-
-cancelButtonColor:
-"#E5E7EB",
-
-confirmButtonText:
-"Delete"
-
+document.getElementById("openAddModalBtn").addEventListener("click", () => {
+  document.getElementById("addProductForm").reset()
+  document.getElementById("addThumbnailPreview").style.display = "none"
+  document.getElementById("addVariantPreviewGrid").innerHTML = ""
+  document.getElementById("addProductError").style.display = "none"
+  openModal(addModal)
+  lucide.createIcons()
 })
 
-if (!result.isConfirmed) return
+document.getElementById("closeAddModalBtn").addEventListener("click", () => closeModal(addModal))
+document.getElementById("cancelAddModalBtn").addEventListener("click", () => closeModal(addModal))
 
-try {
+document.getElementById("closeEditModalBtn").addEventListener("click", () => closeModal(editModal))
+document.getElementById("cancelEditModalBtn").addEventListener("click", () => closeModal(editModal))
 
-const response =
-await fetch(
+addModal.addEventListener("click", (e) => { if (e.target === addModal) closeModal(addModal) })
+editModal.addEventListener("click", (e) => { if (e.target === editModal) closeModal(editModal) })
 
-`/admin/delete-product/${productId}`,
+/* =========================================
+   ADD PRODUCT — IMAGE PREVIEWS
+========================================= */
 
-{
-method: "PATCH"
-}
+const addThumbnailInput = document.getElementById("addThumbnailInput")
+const addThumbnailPreview = document.getElementById("addThumbnailPreview")
+const addPreviewImage = document.getElementById("addPreviewImage")
+const addRemoveImageBtn = document.getElementById("addRemoveImageBtn")
 
-)
-
-const data =
-await response.json()
-
-if (data.success) {
-
-await Swal.fire({
-
-icon:
-"success",
-
-title:
-"Deleted Successfully",
-
-timer:
-1200,
-
-showConfirmButton:
-false
-
+addThumbnailInput.addEventListener("change", function () {
+  const file = this.files[0]
+  if (!file) return
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    addPreviewImage.src = e.target.result
+    addThumbnailPreview.style.display = "block"
+  }
+  reader.readAsDataURL(file)
 })
 
-window.location.reload()
-
-}
-
-else {
-
-throw new Error()
-
-}
-
-}
-
-catch (error) {
-
-Swal.fire({
-
-icon:
-"error",
-
-title:
-"Failed to delete product"
-
+addRemoveImageBtn.addEventListener("click", () => {
+  addThumbnailInput.value = ""
+  addPreviewImage.src = ""
+  addThumbnailPreview.style.display = "none"
 })
 
-}
+const addVariantImages = document.getElementById("addVariantImages")
+const addVariantPreviewGrid = document.getElementById("addVariantPreviewGrid")
 
-}
-
-)
-
-/* =========================
-RESTORE PRODUCT
-========================= */
-
-document.addEventListener(
-
-"click",
-
-async (e) => {
-
-const btn =
-e.target.closest(".restore-btn")
-
-if (!btn) return
-
-const productId =
-btn.dataset.id
-
-try {
-
-const response =
-await fetch(
-
-`/admin/restore-product/${productId}`,
-
-{
-method: "PATCH"
-}
-
-)
-
-const data =
-await response.json()
-
-if (data.success) {
-
-await Swal.fire({
-
-icon: "success",
-
-title:
-"Product restored",
-
-timer: 1200,
-
-showConfirmButton: false
-
+addVariantImages.addEventListener("change", function () {
+  addVariantPreviewGrid.innerHTML = ""
+  Array.from(this.files).forEach(file => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      addVariantPreviewGrid.innerHTML += `
+        <div class="variant-preview-item">
+          <img src="${e.target.result}" alt="Variant">
+        </div>
+      `
+    }
+    reader.readAsDataURL(file)
+  })
 })
 
-window.location.reload()
+/* =========================================
+   ADD PRODUCT — SUBMIT
+========================================= */
 
-}
+document.getElementById("addProductForm").addEventListener("submit", async (e) => {
+  e.preventDefault()
 
-}
+  const form = e.target
+  const errorBox = document.getElementById("addProductError")
+  const submitBtn = document.getElementById("addProductSubmitBtn")
 
-catch (error) {
+  errorBox.style.display = "none"
+  submitBtn.disabled = true
+  submitBtn.textContent = "Saving..."
 
-Swal.fire({
+  try {
+    const response = await fetch("/admin/products/add", {
+      method: "POST",
+      body: new FormData(form),
+    })
 
-icon: "error",
+    const data = await response.json()
 
-title:
-"Restore failed"
+    if (!data.success) {
+      errorBox.textContent = data.message || "Failed to add product"
+      errorBox.style.display = "block"
+      return
+    }
 
+    closeModal(addModal)
+
+    await Swal.fire({
+      toast: true,
+      position: "top",
+      icon: "success",
+      title: "Product added successfully",
+      showConfirmButton: false,
+      timer: 2000,
+      timerProgressBar: true,
+    })
+
+    window.location.reload()
+
+  } catch (error) {
+    errorBox.textContent = "Something went wrong. Please try again."
+    errorBox.style.display = "block"
+  } finally {
+    submitBtn.disabled = false
+    submitBtn.textContent = "Save Product"
+  }
 })
 
-}
+/* =========================================
+   EDIT PRODUCT — OPEN + POPULATE
+========================================= */
 
-}
+document.addEventListener("click", async (e) => {
+  const btn = e.target.closest(".edit-btn")
+  if (!btn) return
 
-)
+  const productId = btn.dataset.id
 
+  try {
+    const response = await fetch(`/admin/products/${productId}/json`)
+    const data = await response.json()
 
+    if (!data.success) {
+      Swal.fire({ icon: "error", title: "Failed to load product" })
+      return
+    }
 
-/* =========================
-PERMANENT DELETE
-========================= */
+    const product = data.product
+    const variant = data.variant || {}
 
-document.addEventListener(
+    document.getElementById("editProductId").value = product._id
+    document.getElementById("editVariantId").value = variant._id || ""
+    document.getElementById("editName").value = product.name || ""
+    document.getElementById("editCategoryId").value = product.categoryId?._id || product.categoryId || ""
+    document.getElementById("editIsActive").value = String(product.isActive)
+    document.getElementById("editDescription").value = product.description || ""
 
-"click",
+    document.getElementById("editPreviewImage").src = product.thumbnail || "/images/default-product.png"
+    document.getElementById("editThumbnailInput").value = ""
 
-async (e) => {
+    document.getElementById("editPrice").value = variant.price || ""
+    document.getElementById("editComparePrice").value = variant.comparePrice || ""
+    document.getElementById("editStock").value = variant.stock || ""
+    document.getElementById("editSKU").value = variant.SKU || ""
+    document.getElementById("editStorage").value = variant.storage || ""
+    document.getElementById("editRAM").value = variant.RAM || ""
+    document.getElementById("editColor").value = variant.color || ""
 
-const btn =
-e.target.closest(
-".permanent-delete-btn"
-)
+    document.getElementById("editIsFeatured").checked = !!product.isFeatured
+    document.getElementById("editIsBestSeller").checked = !!product.isBestSeller
+    document.getElementById("editIsDeal").checked = !!product.isDeal
 
-if (!btn) return
+    document.getElementById("editProductError").style.display = "none"
 
-const productId =
-btn.dataset.id
+    openModal(editModal)
+    lucide.createIcons()
 
-const result =
-await Swal.fire({
-
-title:
-"Delete Permanently?",
-
-text:
-"This action cannot be undone.",
-
-icon:
-"warning",
-
-showCancelButton:
-true,
-
-confirmButtonColor:
-"#BA1A1A",
-
-confirmButtonText:
-"Delete Forever"
-
+  } catch (error) {
+    Swal.fire({ icon: "error", title: "Failed to load product" })
+  }
 })
 
-if (!result.isConfirmed) return
+/* =========================================
+   EDIT PRODUCT — IMAGE PREVIEW
+========================================= */
 
-try {
-
-const response =
-await fetch(
-
-`/admin/permanent-delete-product/${productId}`,
-
-{
-method: "DELETE"
-}
-
-)
-
-const data =
-await response.json()
-
-if (data.success) {
-
-await Swal.fire({
-
-icon: "success",
-
-title:
-"Product permanently deleted",
-
-timer: 1200,
-
-showConfirmButton: false
-
+document.getElementById("editThumbnailInput").addEventListener("change", function () {
+  const file = this.files[0]
+  if (!file) return
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    document.getElementById("editPreviewImage").src = e.target.result
+  }
+  reader.readAsDataURL(file)
 })
 
-window.location.reload()
+/* =========================================
+   EDIT PRODUCT — SUBMIT
+========================================= */
 
-}
+document.getElementById("editProductForm").addEventListener("submit", async (e) => {
+  e.preventDefault()
 
-}
+  const form = e.target
+  const productId = document.getElementById("editProductId").value
+  const errorBox = document.getElementById("editProductError")
+  const submitBtn = document.getElementById("editProductSubmitBtn")
 
-catch (error) {
+  errorBox.style.display = "none"
+  submitBtn.disabled = true
+  submitBtn.textContent = "Updating..."
 
-Swal.fire({
+  try {
+    const response = await fetch(`/admin/products/edit/${productId}`, {
+      method: "POST",
+      body: new FormData(form),
+    })
 
-icon: "error",
+    const data = await response.json()
 
-title:
-"Delete failed"
+    if (!data.success) {
+      errorBox.textContent = data.message || "Failed to update product"
+      errorBox.style.display = "block"
+      return
+    }
 
+    closeModal(editModal)
+
+    await Swal.fire({
+      toast: true,
+      position: "top",
+      icon: "success",
+      title: "Product updated successfully",
+      showConfirmButton: false,
+      timer: 2000,
+      timerProgressBar: true,
+    })
+
+    window.location.reload()
+
+  } catch (error) {
+    errorBox.textContent = "Something went wrong. Please try again."
+    errorBox.style.display = "block"
+  } finally {
+    submitBtn.disabled = false
+    submitBtn.textContent = "Update Product"
+  }
 })
 
-}
+/* =========================================
+   DELETE / RESTORE / PERMANENT DELETE
+   (unchanged from before)
+========================================= */
 
-}
+document.addEventListener("click", async (e) => {
+  const btn = e.target.closest(".delete-btn")
+  if (!btn) return
+  const productId = btn.dataset.id
 
-)
+  const result = await Swal.fire({
+    title: "Delete Product?",
+    text: "This product will be hidden from the store.",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#603763",
+    cancelButtonColor: "#E5E7EB",
+    confirmButtonText: "Delete"
+  })
+
+  if (!result.isConfirmed) return
+
+  try {
+    const response = await fetch(`/admin/delete-product/${productId}`, { method: "PATCH" })
+    const data = await response.json()
+
+    if (data.success) {
+      await Swal.fire({ icon: "success", title: "Deleted Successfully", timer: 1200, showConfirmButton: false })
+      window.location.reload()
+    } else {
+      throw new Error()
+    }
+  } catch (error) {
+    Swal.fire({ icon: "error", title: "Failed to delete product" })
+  }
+})
+
+document.addEventListener("click", async (e) => {
+  const btn = e.target.closest(".restore-btn")
+  if (!btn) return
+  const productId = btn.dataset.id
+
+  try {
+    const response = await fetch(`/admin/restore-product/${productId}`, { method: "PATCH" })
+    const data = await response.json()
+
+    if (data.success) {
+      await Swal.fire({ icon: "success", title: "Product restored", timer: 1200, showConfirmButton: false })
+      window.location.reload()
+    }
+  } catch (error) {
+    Swal.fire({ icon: "error", title: "Restore failed" })
+  }
+})
+
+document.addEventListener("click", async (e) => {
+  const btn = e.target.closest(".permanent-delete-btn")
+  if (!btn) return
+  const productId = btn.dataset.id
+
+  const result = await Swal.fire({
+    title: "Delete Permanently?",
+    text: "This action cannot be undone.",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#BA1A1A",
+    confirmButtonText: "Delete Forever"
+  })
+
+  if (!result.isConfirmed) return
+
+  try {
+    const response = await fetch(`/admin/permanent-delete-product/${productId}`, { method: "DELETE" })
+    const data = await response.json()
+
+    if (data.success) {
+      await Swal.fire({ icon: "success", title: "Product permanently deleted", timer: 1200, showConfirmButton: false })
+      window.location.reload()
+    }
+  } catch (error) {
+    Swal.fire({ icon: "error", title: "Delete failed" })
+  }
+})
 
 </script>
 

@@ -12,11 +12,31 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        /* ---- Inline field error styles ---- */
+        .field-error {
+            display: none;
+            color: #e74c3c;
+            font-size: 12px;
+            margin-top: 5px;
+            padding-left: 2px;
+        }
+        .field-error.visible {
+            display: block;
+        }
+        .address-input-error {
+            border: 1.5px solid #e74c3c !important;
+            border-radius: 12px;
+        }
+        .address-input-success {
+            border: 1.5px solid #2ecc71 !important;
+            border-radius: 12px;
+        }
+    </style>
 </head>
 <body>
-    <!-- Header -->
     <%- include("../partials/user/header", { page: 'addresses' }) %>
-
 
     <main class="addresses-main">
         <!-- Breadcrumb -->
@@ -47,82 +67,86 @@
         <!-- Address Grid -->
         <div class="addresses-grid" id="address-grid">
 
-<% if(!addresses || addresses.length === 0) { %>
-<p>No addresses added yet.</p>
+            <% if(!addresses || addresses.length === 0) { %>
+            <p>No addresses added yet.</p>
+            <% } %>
 
-<% } %>
+            <% addresses.forEach(address => { %>
+                <%- include("../partials/user/address-card", { address }) %>
+            <% }) %>
 
+            <div class="add-placeholder-card" id="add-card-placeholder">
+                Add Address
+            </div>
+        </div>
 
-
-<% addresses.forEach(address => { %>
-
-    <%- include(
-    "../partials/user/address-card",
-    { address }
-) %>
-
-<% }) %>
-
-
-
-<!-- Add Placeholder -->
-
-<div class="add-placeholder-card"
-
-id="add-card-placeholder">
-
-Add Address
-
-</div>
-
-</div>
-
-        <!-- Add Address Modal -->
+        <!-- ================================
+             ADD ADDRESS MODAL
+        ================================ -->
         <div class="modal-overlay" id="address-modal">
             <div class="modal-card">
                 <div class="modal-header">
                     <h2>Add New Address</h2>
                     <p>Enter your delivery details for a seamless shipping experience.</p>
                 </div>
-              <form
-                id="new-address-form"
-                class="address-form-v2"
-                method="POST"
-                action="/add-address"
-                >
+
+                <form id="new-address-form" class="address-form-v2" method="POST" action="/add-address" novalidate>
+
                     <div class="form-row">
                         <div class="form-group">
                             <label>Full Name</label>
-                            <input type="text" id="form-name" name="fullName" placeholder="e.g. fullName" required style="width: 100%; padding: 14px 16px; background: #EEEEF0; border: none; border-radius: 12px;">
+                            <input type="text" id="form-name" name="fullName"
+                                placeholder="e.g. John Doe"
+                                style="width:100%;padding:14px 16px;background:#EEEEF0;border:none;border-radius:12px;">
+                            <span class="field-error" id="form-name-error"></span>
                         </div>
                         <div class="form-group">
                             <label>Phone Number</label>
-                            <input type="tel" id="form-phone" name="phoneNumber" placeholder="(+91)00 00 00 00" required style="width: 100%; padding: 14px 16px; background: #EEEEF0; border: none; border-radius: 12px;">
+                            <input type="tel" id="form-phone" name="phoneNumber"
+                                placeholder="10-digit mobile number"
+                                maxlength="10" inputmode="numeric"
+                                style="width:100%;padding:14px 16px;background:#EEEEF0;border:none;border-radius:12px;">
+                            <span class="field-error" id="form-phone-error"></span>
                         </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Street Address</label>
-                        <input type="text" id="form-address" name="addressLine1" placeholder="In Hariharnagar In" required style="width: 100%; padding: 14px 16px; background: #EEEEF0; border: none; border-radius: 12px;">
                     </div>
 
                     <div class="form-group">
-                        <label>Apartment / Building (Optional)</label>
-                        <input type="text" id="form-building" placeholder="Suite, floor, gate code" style="width: 100%; padding: 14px 16px; background: #EEEEF0; border: none; border-radius: 12px;">
+                        <label>Street Address</label>
+                        <input type="text" id="form-address" name="addressLine1"
+                            placeholder="House no., street name, area"
+                            style="width:100%;padding:14px 16px;background:#EEEEF0;border:none;border-radius:12px;">
+                        <span class="field-error" id="form-address-error"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Apartment / Building <span style="font-weight:400;color:#888;">(Optional)</span></label>
+                        <input type="text" id="form-building"
+                            placeholder="Suite, floor, gate code"
+                            style="width:100%;padding:14px 16px;background:#EEEEF0;border:none;border-radius:12px;">
                     </div>
 
                     <div class="form-row-3">
                         <div class="form-group">
                             <label>City</label>
-                            <input type="text" id="form-city" name="city" placeholder="Kannur" required style="width: 100%; padding: 14px 16px; background: #EEEEF0; border: none; border-radius: 12px;">
+                            <input type="text" id="form-city" name="city"
+                                placeholder="City"
+                                style="width:100%;padding:14px 16px;background:#EEEEF0;border:none;border-radius:12px;">
+                            <span class="field-error" id="form-city-error"></span>
                         </div>
                         <div class="form-group">
                             <label>State</label>
-                            <input type="text" id="form-state" name="state" placeholder="Kerala" required style="width: 100%; padding: 14px 16px; background: #EEEEF0; border: none; border-radius: 12px;">
+                            <input type="text" id="form-state" name="state"
+                                placeholder="State"
+                                style="width:100%;padding:14px 16px;background:#EEEEF0;border:none;border-radius:12px;">
+                            <span class="field-error" id="form-state-error"></span>
                         </div>
                         <div class="form-group">
                             <label>Pin Code</label>
-                            <input type="text" id="form-pin" name="pincode" placeholder="670571" required style="width: 100%; padding: 14px 16px; background: #EEEEF0; border: none; border-radius: 12px;">
+                            <input type="text" id="form-pin" name="pincode"
+                                placeholder="6-digit PIN"
+                                maxlength="6" inputmode="numeric"
+                                style="width:100%;padding:14px 16px;background:#EEEEF0;border:none;border-radius:12px;">
+                            <span class="field-error" id="form-pin-error"></span>
                         </div>
                     </div>
 
@@ -144,24 +168,15 @@ Add Address
                         <div class="type-selector-premium">
                             <div class="type-option-premium">
                                 <input type="radio" name="type" id="type-home" value="Home" checked>
-                                <label for="type-home">
-                                    <i data-lucide="home"></i>
-                                    <span>Home</span>
-                                </label>
+                                <label for="type-home"><i data-lucide="home"></i><span>Home</span></label>
                             </div>
                             <div class="type-option-premium">
                                 <input type="radio" name="type" id="type-work" value="Work">
-                                <label for="type-work">
-                                    <i data-lucide="briefcase"></i>
-                                    <span>Work</span>
-                                </label>
+                                <label for="type-work"><i data-lucide="briefcase"></i><span>Work</span></label>
                             </div>
                             <div class="type-option-premium">
                                 <input type="radio" name="type" id="type-other" value="Other">
-                                <label for="type-other">
-                                    <i data-lucide="more-horizontal"></i>
-                                    <span>Other</span>
-                                </label>
+                                <label for="type-other"><i data-lucide="more-horizontal"></i><span>Other</span></label>
                             </div>
                         </div>
                     </div>
@@ -176,30 +191,39 @@ Add Address
 
                     <div class="modal-actions-premium">
                         <button type="button" class="cancel-btn-premium" id="close-modal">Cancel</button>
-                        <button type="submit" class="save-address-btn-premium">Save Address</button>
+                        <button type="submit" class="save-address-btn-premium" id="save-address-btn">Save Address</button>
                     </div>
                 </form>
             </div>
         </div>
 
-        <!-- Edit Address Modal -->
+        <!-- ================================
+             EDIT ADDRESS MODAL
+        ================================ -->
         <div class="modal-overlay" id="edit-address-modal">
             <div class="edit-modal-card">
                 <div class="edit-modal-left">
-                    <div class="modal-header" style="margin-bottom: 32px;">
+                    <div class="modal-header" style="margin-bottom:32px;">
                         <h2>Edit Address</h2>
                         <p>Update your delivery details.</p>
                     </div>
-                    <form class="address-form-v2" id="edit-address-form" method="POST">
+
+                    <form class="address-form-v2" id="edit-address-form" method="POST" novalidate>
+
                         <div class="form-group">
                             <label>Full Name</label>
-                            <input type="text" id="edit-form-name" name="fullName" required style="width: 100%; padding: 14px 16px; background: #EEEEF0; border: none; border-radius: 12px;">
+                            <input type="text" id="edit-form-name" name="fullName"
+                                style="width:100%;padding:14px 16px;background:#EEEEF0;border:none;border-radius:12px;">
+                            <span class="field-error" id="edit-name-error"></span>
                         </div>
-                        
+
                         <div class="form-row">
                             <div class="form-group">
                                 <label>Phone Number</label>
-                                <input type="tel" id="edit-form-phone" name="phoneNumber" required style="width: 100%; padding: 14px 16px; background: #EEEEF0; border: none; border-radius: 12px;">
+                                <input type="tel" id="edit-form-phone" name="phoneNumber"
+                                    maxlength="10" inputmode="numeric"
+                                    style="width:100%;padding:14px 16px;background:#EEEEF0;border:none;border-radius:12px;">
+                                <span class="field-error" id="edit-phone-error"></span>
                             </div>
                             <div class="form-group">
                                 <label>Address Type</label>
@@ -222,74 +246,72 @@ Add Address
 
                         <div class="form-group">
                             <label>Street Address</label>
-                            <input type="text" id="edit-form-address" name="addressLine1" required style="width: 100%; padding: 14px 16px; background: #EEEEF0; border: none; border-radius: 12px;">
+                            <input type="text" id="edit-form-address" name="addressLine1"
+                                style="width:100%;padding:14px 16px;background:#EEEEF0;border:none;border-radius:12px;">
+                            <span class="field-error" id="edit-address-error"></span>
                         </div>
 
                         <div class="form-group">
-                            <label>Apartment / Area</label>
-                            <input type="text" id="edit-form-building" name="building" style="width: 100%; padding: 14px 16px; background: #EEEEF0; border: none; border-radius: 12px;">
+                            <label>Apartment / Area <span style="font-weight:400;color:#888;">(Optional)</span></label>
+                            <input type="text" id="edit-form-building" name="building"
+                                style="width:100%;padding:14px 16px;background:#EEEEF0;border:none;border-radius:12px;">
                         </div>
 
                         <div class="form-row-3">
                             <div class="form-group">
                                 <label>City</label>
-                                <input type="text" id="edit-form-city" name="city" required style="width: 100%; padding: 14px 16px; background: #EEEEF0; border: none; border-radius: 12px;">
+                                <input type="text" id="edit-form-city" name="city"
+                                    style="width:100%;padding:14px 16px;background:#EEEEF0;border:none;border-radius:12px;">
+                                <span class="field-error" id="edit-city-error"></span>
                             </div>
                             <div class="form-group">
                                 <label>State</label>
-                                <input type="text" id="edit-form-state" name="state" required style="width: 100%; padding: 14px 16px; background: #EEEEF0; border: none; border-radius: 12px;">
+                                <input type="text" id="edit-form-state" name="state"
+                                    style="width:100%;padding:14px 16px;background:#EEEEF0;border:none;border-radius:12px;">
+                                <span class="field-error" id="edit-state-error"></span>
                             </div>
-                           <div class="form-group">
+                            <div class="form-group">
                                 <label>Country</label>
-
-                                <select
-                                id="edit-form-country"
-                                name="country"
-                                required
-                                style="
-                                width: 100%;
-                                padding: 14px 16px;
-                                background: #EEEEF0;
-                                border: none;
-                                border-radius: 12px;
-                                ">
-
-                                <option value="India">India</option>
-                                <option value="United States">United States</option>
-                                <option value="United Kingdom">United Kingdom</option>
-                                <option value="Canada">Canada</option>
-                                <option value="Australia">Australia</option>
-                                <option value="Germany">Germany</option>
-                                <option value="France">France</option>
-                                <option value="Singapore">Singapore</option>
-                                <option value="UAE">UAE</option>
-
+                                <select id="edit-form-country" name="country"
+                                    style="width:100%;padding:14px 16px;background:#EEEEF0;border:none;border-radius:12px;">
+                                    <option value="India">India</option>
+                                    <option value="United States">United States</option>
+                                    <option value="United Kingdom">United Kingdom</option>
+                                    <option value="Canada">Canada</option>
+                                    <option value="Australia">Australia</option>
+                                    <option value="Germany">Germany</option>
+                                    <option value="France">France</option>
+                                    <option value="Singapore">Singapore</option>
+                                    <option value="UAE">UAE</option>
                                 </select>
-
-                                </div>
+                            </div>
                             <div class="form-group">
                                 <label>Postal Code</label>
-                                <input type="text" id="edit-form-pin" name="pincode" required style="width: 100%; padding: 14px 16px; background: #EEEEF0; border: none; border-radius: 12px;">
+                                <input type="text" id="edit-form-pin" name="pincode"
+                                    maxlength="6" inputmode="numeric"
+                                    style="width:100%;padding:14px 16px;background:#EEEEF0;border:none;border-radius:12px;">
+                                <span class="field-error" id="edit-pin-error"></span>
                             </div>
                         </div>
 
                         <label class="custom-checkbox-container">
                             <input type="checkbox" id="edit-form-default" name="isDefault" value="true">
-                            <span class="checkmark"></i></span>
-                            <span class="toggle-label" style="font-size: 14px;">Set as Default Address</span>
+                            <span class="checkmark"></span>
+                            <span class="toggle-label" style="font-size:14px;">Set as Default Address</span>
                         </label>
 
                         <div class="edit-modal-actions">
-                            <button type="submit" class="update-address-btn">Update Address</button>
+                            <button type="submit" class="update-address-btn" id="update-address-btn">Update Address</button>
                             <button type="button" class="edit-cancel-btn" id="close-edit-modal">Cancel</button>
                         </div>
                     </form>
                 </div>
+
                 <div class="edit-modal-right">
                     <div class="edit-info-card">
                         <i data-lucide="truck"></i>
                         <h3>Delivery Precision</h3>
-                        <p>Accurate addresses ensure your iStore orders reach you on time. Make sure your postal code matches your city to avoid shipping delays.</p>
+                        <p>Accurate addresses ensure your iStore orders reach you on time.</p>
                     </div>
                     <div class="edit-image-container">
                         <img src="/images/premium_apartment.png" alt="Premium Apartment">
@@ -306,17 +328,15 @@ Add Address
                 </div>
                 <h2>Delete Address?</h2>
                 <p>Are you sure you want to delete this address?<br>This action cannot be undone.</p>
-                
+
                 <div class="delete-address-preview">
-                    <div class="preview-tags" id="delete-preview-tags">
-                        <!-- Tags will be injected here -->
-                    </div>
+                    <div class="preview-tags" id="delete-preview-tags"></div>
                     <h4 id="delete-preview-name">John Doe</h4>
                     <p class="preview-phone" id="delete-preview-phone">+91 9876543210</p>
-                    <p class="preview-text" id="delete-preview-address">Flat No. 203, Green Residency, MG Road, Kochi, Kerala, 682001</p>
+                    <p class="preview-text" id="delete-preview-address"></p>
                 </div>
 
-                <div class="delete-warning-alert" id="delete-default-warning" style="display: none;">
+                <div class="delete-warning-alert" id="delete-default-warning" style="display:none;">
                     <i data-lucide="alert-circle"></i>
                     <p>This is your default address. Another address will automatically become default.</p>
                 </div>
@@ -335,578 +355,651 @@ Add Address
             </div>
             <div class="privacy-content">
                 <h2>Your Privacy & Security</h2>
-                <p>We only use your address for logistics and delivery purposes. Your data is encrypted and managed according to our high-standard privacy policy. You can remove or edit your addresses at any time.</p>
+                <p>We only use your address for logistics and delivery purposes. Your data is encrypted and managed according to our high-standard privacy policy.</p>
             </div>
         </section>
     </main>
 
-    <!-- Footer -->
     <%- include("../partials/user/footer") %>
 
     <script>
         lucide.createIcons();
 
-        const modal = document.getElementById('address-modal');
-        const openBtnMain = document.getElementById('add-btn-main');
-        const openBtnPlaceholder = document.getElementById('add-card-placeholder');
-        const closeBtn = document.getElementById('close-modal');
-        const addressForm = document.getElementById('new-address-form');
-        const addressGrid = document.getElementById('address-grid');
-        const placeholderCard = document.getElementById('add-card-placeholder');
+        /* ================================
+           MODAL HELPERS
+        ================================ */
 
-        // Modal Controls
+        const modal             = document.getElementById('address-modal');
+        const editModal         = document.getElementById('edit-address-modal');
+        const deleteModal       = document.getElementById('delete-address-modal');
+
+        const addressForm       = document.getElementById('new-address-form');
+        const editForm          = document.getElementById('edit-address-form');
+
         const openModal = () => {
             modal.style.display = 'flex';
-            gsap.from(".modal-card", {
-                scale: 0.9,
-                opacity: 0,
-                duration: 0.4,
-                ease: "back.out(1.7)"
+            gsap.from(".modal-card", { scale: 0.9, opacity: 0, duration: 0.4, ease: "back.out(1.7)" });
+        };
+
+        const closeModal = () => {
+            gsap.to(".modal-card", {
+                scale: 0.9, opacity: 0, duration: 0.3, ease: "power2.in",
+                onComplete: () => {
+                    modal.style.display = "none";
+                    gsap.set(".modal-card", { clearProps: "all" });
+                    addressForm.reset();
+                    clearAllErrors("add");
+                }
             });
         };
 
-       const closeModal = () => {
-
-gsap.to(".modal-card", {
-
-scale: 0.9,
-opacity: 0,
-duration: 0.3,
-ease: "power2.in",
-
-onComplete: () => {
-
-modal.style.display = "none"
-
-/* RESET STATE */
-gsap.set(".modal-card", {
-clearProps: "all"
-})
-
-addressForm.reset()
-
-}
-
-})
-
-};
-        openBtnMain.addEventListener('click', openModal);
-        openBtnPlaceholder.addEventListener('click', openModal);
-        closeBtn.addEventListener('click', closeModal);
-
-       
-        // Edit Modal Controls
-        const editModal = document.getElementById('edit-address-modal');
-        const editForm = document.getElementById('edit-address-form');
-        const closeEditBtn = document.getElementById('close-edit-modal');
-        let currentEditingCard = null;
-
         const openEditModal = (card) => {
-            currentEditingCard = card;
-            const name = card.querySelector('.address-content h3').textContent;
-            const phone = card.querySelector('.address-phone').textContent;
+            const name       = card.querySelector('.address-content h3').textContent;
+            const phone      = card.querySelector('.address-phone').textContent;
             const addressText = card.querySelector('.address-text');
-            const type = card.querySelector('.tag-secondary').textContent.trim();
-            const isDefault = card.querySelector('.tag-primary') !== null;
+            const type       = card.querySelector('.tag-secondary').textContent.trim();
+            const isDefault  = card.querySelector('.tag-primary') !== null;
 
-            document.getElementById('edit-form-name').value = name;
-            document.getElementById('edit-form-phone').value = phone;
-            document.getElementById('edit-form-address').value = addressText.dataset.street || "";
-            document.getElementById('edit-form-building').value = addressText.dataset.building || "";
-            document.getElementById('edit-form-city').value = addressText.dataset.city || "";
-            document.getElementById('edit-form-state').value = addressText.dataset.state || "";
-            document.getElementById('edit-form-country').value =addressText.dataset.country || "India";
-            document.getElementById('edit-form-pin').value = addressText.dataset.pin || "";
+            document.getElementById('edit-form-name').value    = name;
+            document.getElementById('edit-form-phone').value   = phone;
+            document.getElementById('edit-form-address').value = addressText.dataset.street   || "";
+            document.getElementById('edit-form-building').value= addressText.dataset.building || "";
+            document.getElementById('edit-form-city').value    = addressText.dataset.city     || "";
+            document.getElementById('edit-form-state').value   = addressText.dataset.state    || "";
+            document.getElementById('edit-form-country').value = addressText.dataset.country  || "India";
+            document.getElementById('edit-form-pin').value     = addressText.dataset.pin      || "";
             document.getElementById('edit-form-default').checked = isDefault;
 
             const typeRadio = editModal.querySelector(`input[name="type"][value="${type}"]`);
             if (typeRadio) typeRadio.checked = true;
-            const addressId =card.querySelector(".edit-trigger").dataset.id 
-            editForm.action =`/edit-address/${addressId}`
+
+            const addressId = card.querySelector(".edit-trigger").dataset.id;
+            editForm.action = `/edit-address/${addressId}`;
+
+            clearAllErrors("edit");
 
             editModal.style.display = 'flex';
-            gsap.from(".edit-modal-card", {
-                scale: 0.95,
-                opacity: 0,
-                duration: 0.4,
-                ease: "power2.out"
-            });
+            gsap.from(".edit-modal-card", { scale: 0.95, opacity: 0, duration: 0.4, ease: "power2.out" });
         };
 
         const closeEditModal = () => {
             gsap.to(".edit-modal-card", {
-                scale: 0.95,
-                opacity: 0,
-                duration: 0.3,
-                ease: "power2.in",
+                scale: 0.95, opacity: 0, duration: 0.3, ease: "power2.in",
                 onComplete: () => {
                     editModal.style.display = 'none';
-                    /* RESET STATE */
-
-gsap.set(".edit-modal-card", {
-
-clearProps: "all"
-
-})
+                    gsap.set(".edit-modal-card", { clearProps: "all" });
                 }
             });
         };
 
-        closeEditBtn.addEventListener('click', closeEditModal);
-
-        
-/* =========================
-   EDIT ADDRESS SWEET ALERT
-========================= */
-
-editForm.addEventListener("submit", function(e) {
-
-e.preventDefault();
-
-
-
-Swal.fire({
-
-title: "Update Address?",
-
-text: "Save changes to this address?",
-
-icon: "question",
-
-iconColor: "#4C0080",
-
-showCancelButton: true,
-
-confirmButtonText: "Update",
-
-cancelButtonText: "Cancel",
-
-background: "#FFFFFF",
-
-color: "#2D004F",
-
-customClass: {
-
-popup: "swal-popup-istore",
-
-confirmButton: "swal-confirm-istore",
-
-cancelButton: "swal-cancel-istore"
-
-},
-
-buttonsStyling: false
-
-})
-
-.then((result) => {
-
-if (result.isConfirmed) {
-
-/* Animate modal close */
-
-gsap.to(".edit-modal-card", {
-
-scale: 0.95,
-
-opacity: 0,
-
-duration: 0.25,
-
-ease: "power2.in",
-
-onComplete: () => {
-
-editForm.submit();
-
-}
-
-});
-
-}
-
-});
-
-});
-
-        // Delete Modal Controls
-        const deleteModal = document.getElementById('delete-address-modal');
-        const closeDeleteBtn = document.getElementById('close-delete-modal');
-        const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
         let cardToDelete = null;
 
         const openDeleteModal = (card) => {
             cardToDelete = card;
-            const name = card.querySelector('.address-content h3').textContent;
-            const phone = card.querySelector('.address-phone').textContent;
-            const address = card.querySelector('.address-text').textContent;
-            const type = card.querySelector('.tag-secondary').textContent;
+            const name      = card.querySelector('.address-content h3').textContent;
+            const phone     = card.querySelector('.address-phone').textContent;
+            const address   = card.querySelector('.address-text').textContent;
+            const type      = card.querySelector('.tag-secondary').textContent;
             const isDefault = card.querySelector('.tag-primary') !== null;
 
-            document.getElementById('delete-preview-name').textContent = name;
-            document.getElementById('delete-preview-phone').textContent = phone;
+            document.getElementById('delete-preview-name').textContent    = name;
+            document.getElementById('delete-preview-phone').textContent   = phone;
             document.getElementById('delete-preview-address').textContent = address;
-            
-            const tagsContainer = document.getElementById('delete-preview-tags');
-            tagsContainer.innerHTML = `
+
+            document.getElementById('delete-preview-tags').innerHTML = `
                 <span class="preview-tag">${type}</span>
                 ${isDefault ? '<span class="preview-tag">DEFAULT ADDRESS</span>' : ''}
             `;
-
             document.getElementById('delete-default-warning').style.display = isDefault ? 'flex' : 'none';
 
             deleteModal.style.display = 'flex';
-            gsap.from(".delete-modal-card", {
-                scale: 0.9,
-                opacity: 0,
-                duration: 0.4,
-                ease: "back.out(1.7)"
-            });
+            gsap.from(".delete-modal-card", { scale: 0.9, opacity: 0, duration: 0.4, ease: "back.out(1.7)" });
         };
 
         const closeDeleteModal = () => {
             gsap.to(".delete-modal-card", {
-                scale: 0.9,
-                opacity: 0,
-                duration: 0.3,
-                ease: "power2.in",
+                scale: 0.9, opacity: 0, duration: 0.3, ease: "power2.in",
                 onComplete: () => {
                     deleteModal.style.display = 'none';
-                    /* RESET STATE */
-
-gsap.set(".delete-modal-card", {
-
-clearProps: "all"
-
-})
+                    gsap.set(".delete-modal-card", { clearProps: "all" });
                 }
             });
         };
 
-        closeDeleteBtn.addEventListener('click', closeDeleteModal);
+        document.getElementById('add-btn-main').addEventListener('click', openModal);
+        document.getElementById('add-card-placeholder').addEventListener('click', openModal);
+        document.getElementById('close-modal').addEventListener('click', closeModal);
+        document.getElementById('close-edit-modal').addEventListener('click', closeEditModal);
+        document.getElementById('close-delete-modal').addEventListener('click', closeDeleteModal);
 
-       confirmDeleteBtn.addEventListener('click', () => {
+        document.addEventListener('click', (e) => {
+            const editBtn   = e.target.closest('.edit-trigger');
+            const deleteBtn = e.target.closest('.delete-trigger');
+            if (editBtn)   { e.preventDefault(); openEditModal(editBtn.closest('.address-card-v2')); }
+            if (deleteBtn) { e.preventDefault(); openDeleteModal(deleteBtn.closest('.address-card-v2')); }
+        });
 
-if (!cardToDelete) return;
-
-const addressId =
-cardToDelete
-.querySelector(".delete-trigger")
-.dataset.id;
-
-
-
-/* SWEET ALERT CONFIRM */
-
-Swal.fire({
-
-title: "Delete Address?",
-
-text: "This action cannot be undone.",
-
-icon: "warning",
-
-showCancelButton: true,
-
-confirmButtonText: "Delete",
-
-cancelButtonText: "Cancel",
-
-background: "#FFFFFF",
-
-color: "#2D004F",
-
-customClass: {
-
-popup: "swal-popup-istore",
-
-confirmButton: "swal-confirm-istore",
-
-cancelButton: "swal-cancel-istore"
-
-},
-
-buttonsStyling: false
-
-})
-
-.then((result) => {
-
-if (result.isConfirmed) {
-
-/* RUN GSAP ANIMATION */
-
-gsap.to(cardToDelete, {
-
-scale: 0.8,
-
-opacity: 0,
-
-duration: 0.4,
-
-ease: "power2.in",
-
-onComplete: () => {
-
-window.location.href =
-`/delete-address/${addressId}`;
-
-closeDeleteModal();
-
-}
-
-});
-
-}
-
-});
-
-});
-
-        // Global Trigger Handler
-       document.addEventListener('click', (e) => {
-
-const editBtn =
-e.target.closest('.edit-trigger')
-
-const deleteBtn =
-e.target.closest('.delete-trigger')
-
-if (editBtn) {
-
-e.preventDefault()
-
-openEditModal(
-editBtn.closest('.address-card-v2')
-)
-
-}
-
-if (deleteBtn) {
-
-e.preventDefault()
-
-openDeleteModal(
-deleteBtn.closest('.address-card-v2')
-)
-
-}
-
-})
-
-        
-        // Entrance animation
-        gsap.from(".address-card-v2, .add-placeholder-card", {
-            y: 30,
-            opacity: 0,
-            duration: 0.8,
-            stagger: 0.1,
-            ease: "power2.out",
-            onComplete: () => {
-                gsap.set(".address-card-v2, .add-placeholder-card", { clearProps: "all" });
+        window.addEventListener("click", (e) => {
+            if (e.target.classList.contains("modal-overlay")) {
+                closeModal(); closeEditModal(); closeDeleteModal();
             }
         });
 
-        gsap.from(".privacy-section", {
-            y: 40,
-            opacity: 0,
-            duration: 1,
-            ease: "power2.out",
-            delay: 0.4
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape") {
+                if (modal.style.display       === "flex") closeModal();
+                if (editModal.style.display   === "flex") closeEditModal();
+                if (deleteModal.style.display === "flex") closeDeleteModal();
+            }
+        });
+
+        /* ================================
+           DELETE CONFIRM
+        ================================ */
+
+        document.getElementById('confirm-delete-btn').addEventListener('click', () => {
+            if (!cardToDelete) return;
+            const addressId = cardToDelete.querySelector(".delete-trigger").dataset.id;
+
+            Swal.fire({
+                title: "Delete Address?",
+                text: "This action cannot be undone.",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Delete",
+                cancelButtonText: "Cancel",
+                background: "#FFFFFF",
+                color: "#2D004F",
+                customClass: { popup: "swal-popup-istore", confirmButton: "swal-confirm-istore", cancelButton: "swal-cancel-istore" },
+                buttonsStyling: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    gsap.to(cardToDelete, {
+                        scale: 0.8, opacity: 0, duration: 0.4, ease: "power2.in",
+                        onComplete: () => {
+                            window.location.href = `/delete-address/${addressId}`;
+                            closeDeleteModal();
+                        }
+                    });
+                }
+            });
+        });
+
+        /* ================================================
+        SET DEFAULT ADDRESS — "Deliver Here"
+        ================================================ */
+
+        document.addEventListener("click", async (e) => {
+            const btn = e.target.closest(".set-default-trigger");
+            if (!btn) return;
+
+            e.preventDefault();
+            const addressId = btn.dataset.id;
+
+            // Optimistic UI — disable button while request is in flight
+            btn.disabled = true;
+            btn.textContent = "Setting…";
+
+            try {
+                const response = await fetch(`/set-default-address/${addressId}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    Swal.fire({
+                        title: "Default Updated!",
+                        text: "This address is now your default delivery address.",
+                        icon: "success",
+                        iconColor: "#4C0080",
+                        confirmButtonText: "Got it",
+                        background: "#FFFFFF",
+                        color: "#2D004F",
+                        customClass: {
+                            popup: "swal-popup-istore",
+                            confirmButton: "swal-confirm-istore-success"
+                        },
+                        buttonsStyling: false
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        title: "Failed",
+                        text: data.message || "Could not set default address.",
+                        icon: "error",
+                        confirmButtonText: "OK",
+                        background: "#FFFFFF",
+                        color: "#2D004F",
+                        customClass: { popup: "swal-popup-istore", confirmButton: "swal-confirm-istore" },
+                        buttonsStyling: false
+                    });
+                    btn.disabled = false;
+                    btn.textContent = "Deliver Here";
+                }
+            } catch (err) {
+                Swal.fire({
+                    title: "Network Error",
+                    text: "Could not reach the server. Please try again.",
+                    icon: "error",
+                    confirmButtonText: "OK",
+                    background: "#FFFFFF",
+                    color: "#2D004F",
+                    customClass: { popup: "swal-popup-istore", confirmButton: "swal-confirm-istore" },
+                    buttonsStyling: false
+                });
+                btn.disabled = false;
+                btn.textContent = "Deliver Here";
+            }
+        });
+
+        /* ================================
+           ENTRANCE ANIMATIONS
+        ================================ */
+
+        gsap.from(".address-card-v2, .add-placeholder-card", {
+            y: 30, opacity: 0, duration: 0.8, stagger: 0.1, ease: "power2.out",
+            onComplete: () => { gsap.set(".address-card-v2, .add-placeholder-card", { clearProps: "all" }); }
+        });
+
+        gsap.from(".privacy-section", { y: 40, opacity: 0, duration: 1, ease: "power2.out", delay: 0.4 });
+
+        /* ================================
+           SAFARI BACK BUTTON FIX
+        ================================ */
+
+        window.addEventListener("pageshow", function (event) {
+            if (event.persisted) window.location.reload();
         });
 
 
-
-
-
-
-
-
-/* =========================
-   ADD ADDRESS VALIDATION
-========================= */
-
-const newForm = document.getElementById("new-address-form")
-
-newForm.addEventListener("submit", function (e) {
-
-let errors = []
-
-const fullName = document.getElementById("form-name").value.trim()
-const phone = document.getElementById("form-phone").value.trim()
-const address = document.getElementById("form-address").value.trim()
-const city = document.getElementById("form-city").value.trim()
-const state = document.getElementById("form-state").value.trim()
-const pin = document.getElementById("form-pin").value.trim()
-
-/* VALIDATIONS */
-
-// Full Name
-if (fullName.length < 3) {
-errors.push("Name must be at least 3 characters")
-}
-
-// Phone
-if (!/^[0-9]{10}$/.test(phone)) {
-errors.push("Phone must be 10 digits")
-}
-
-// Address
-if (address.length < 5) {
-errors.push("Address is too short")
-}
-
-// City
-if (city.length < 2) {
-errors.push("Enter valid city")
-}
-
-// State
-if (state.length < 2) {
-errors.push("Enter valid state")
-}
-
-// PIN
-if (!/^[0-9]{6}$/.test(pin)) {
-errors.push("PIN must be 6 digits")
-}
-
-/* ERROR HANDLING */
-
-if (errors.length > 0) {
-
-e.preventDefault()
-
-Swal.fire({
-icon: "error",
-title: "Invalid Input",
-html: errors.join("<br>")
-})
-
-}
-
-})
-
-
-
-
-
-
-/* =========================
-   EDIT ADDRESS VALIDATION
-========================= */
-
-editForm.addEventListener("submit", function (e) {
-
-let errors = []
-
-const fullName = document.getElementById("edit-form-name").value.trim()
-const phone = document.getElementById("edit-form-phone").value.trim()
-const address = document.getElementById("edit-form-address").value.trim()
-const city = document.getElementById("edit-form-city").value.trim()
-const state = document.getElementById("edit-form-state").value.trim()
-const pin = document.getElementById("edit-form-pin").value.trim()
-
-/* VALIDATIONS */
-
-if (fullName.length < 3) {
-errors.push("Name must be at least 3 characters")
-}
-
-if (!/^[0-9]{10}$/.test(phone)) {
-errors.push("Phone must be 10 digits")
-}
-
-if (address.length < 5) {
-errors.push("Address is too short")
-}
-
-if (city.length < 2) {
-errors.push("Enter valid city")
-}
-
-if (state.length < 2) {
-errors.push("Enter valid state")
-}
-
-if (!/^[0-9]{6}$/.test(pin)) {
-errors.push("PIN must be 6 digits")
-}
-
-/* ERROR */
-
-if (errors.length > 0) {
-
-e.preventDefault()
-
-Swal.fire({
-icon: "error",
-title: "Invalid Input",
-html: errors.join("<br>")
-})
-
-return
-}
-
-/* KEEP YOUR EXISTING SWEET ALERT CONFIRM */
-
-})
-
-
-
-
-/* =========================
-   CLOSE MODAL ON OUTSIDE CLICK
-========================= */
-
-window.addEventListener("click", (e) => {
-
-if (e.target.classList.contains("modal-overlay")) {
-
-closeModal()
-closeEditModal()
-closeDeleteModal()
-
-}
-
-})
-
-/* =========================
-   ESC KEY CLOSE
-========================= */
-
-document.addEventListener("keydown", (e) => {
-
-if (e.key === "Escape") {
-
-if (modal.style.display === "flex")
-closeModal()
-
-if (editModal.style.display === "flex")
-closeEditModal()
-
-if (deleteModal.style.display === "flex")
-closeDeleteModal()
-
-}
-
-})
-
-
-/* =========================
-   SAFARI BACK BUTTON FIX
-========================= */
-
-window.addEventListener("pageshow", function (event) {
-
-if (event.persisted) {
-
-window.location.reload()
-
-}
-
-})
-
+        /* ================================================
+           INLINE VALIDATION HELPERS
+        ================================================ */
+
+        function setError(inputEl, errorId, message) {
+            inputEl.classList.add("address-input-error");
+            inputEl.classList.remove("address-input-success");
+            const span = document.getElementById(errorId);
+            if (span) { span.textContent = message; span.classList.add("visible"); }
+        }
+
+        function setSuccess(inputEl, errorId) {
+            inputEl.classList.remove("address-input-error");
+            inputEl.classList.add("address-input-success");
+            const span = document.getElementById(errorId);
+            if (span) { span.textContent = ""; span.classList.remove("visible"); }
+        }
+
+        function clearAllErrors(prefix) {
+            /* prefix = "add" | "edit" */
+            const ids = prefix === "add"
+                ? ["form-name","form-phone","form-address","form-city","form-state","form-pin"]
+                : ["edit-form-name","edit-form-phone","edit-form-address","edit-form-city","edit-form-state","edit-form-pin"];
+
+            ids.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) { el.classList.remove("address-input-error","address-input-success"); }
+            });
+
+            const errorIds = prefix === "add"
+                ? ["form-name-error","form-phone-error","form-address-error","form-city-error","form-state-error","form-pin-error"]
+                : ["edit-name-error","edit-phone-error","edit-address-error","edit-city-error","edit-state-error","edit-pin-error"];
+
+            errorIds.forEach(id => {
+                const span = document.getElementById(id);
+                if (span) { span.textContent = ""; span.classList.remove("visible"); }
+            });
+        }
+
+        /* ---- individual field validators ---- */
+
+        function validateName(inputId, errorId) {
+            const el  = document.getElementById(inputId);
+            const val = el.value.trim();
+            if (!val) {
+                setError(el, errorId, "Full name is required"); return false;
+            }
+            if (val.length < 3) {
+                setError(el, errorId, "Name must be at least 3 characters"); return false;
+            }
+            if (val.length > 50) {
+                setError(el, errorId, "Name cannot exceed 50 characters"); return false;
+            }
+            if (!/^[a-zA-Z\s]+$/.test(val)) {
+                setError(el, errorId, "Name can only contain letters and spaces"); return false;
+            }
+            setSuccess(el, errorId); return true;
+        }
+
+        function validatePhone(inputId, errorId) {
+            const el  = document.getElementById(inputId);
+            const val = el.value.trim();
+            if (!val) {
+                setError(el, errorId, "Phone number is required"); return false;
+            }
+            if (!/^[0-9]{10}$/.test(val)) {
+                setError(el, errorId, "Phone must be exactly 10 digits"); return false;
+            }
+            setSuccess(el, errorId); return true;
+        }
+
+        function validateAddress(inputId, errorId) {
+            const el  = document.getElementById(inputId);
+            const val = el.value.trim();
+            if (!val) {
+                setError(el, errorId, "Street address is required"); return false;
+            }
+            if (val.length < 5) {
+                setError(el, errorId, "Address must be at least 5 characters"); return false;
+            }
+            if (val.length > 200) {
+                setError(el, errorId, "Address is too long"); return false;
+            }
+            setSuccess(el, errorId); return true;
+        }
+
+        function validateCity(inputId, errorId) {
+            const el  = document.getElementById(inputId);
+            const val = el.value.trim();
+            if (!val) {
+                setError(el, errorId, "City is required"); return false;
+            }
+            if (val.length < 2) {
+                setError(el, errorId, "Enter a valid city name"); return false;
+            }
+            if (!/^[a-zA-Z\s]+$/.test(val)) {
+                setError(el, errorId, "City name can only contain letters"); return false;
+            }
+            setSuccess(el, errorId); return true;
+        }
+
+        function validateState(inputId, errorId) {
+            const el  = document.getElementById(inputId);
+            const val = el.value.trim();
+            if (!val) {
+                setError(el, errorId, "State is required"); return false;
+            }
+            if (val.length < 2) {
+                setError(el, errorId, "Enter a valid state name"); return false;
+            }
+            if (!/^[a-zA-Z\s]+$/.test(val)) {
+                setError(el, errorId, "State name can only contain letters"); return false;
+            }
+            setSuccess(el, errorId); return true;
+        }
+
+        function validatePin(inputId, errorId) {
+            const el  = document.getElementById(inputId);
+            const val = el.value.trim();
+            if (!val) {
+                setError(el, errorId, "PIN code is required"); return false;
+            }
+            if (!/^[0-9]{6}$/.test(val)) {
+                setError(el, errorId, "PIN must be exactly 6 digits"); return false;
+            }
+            setSuccess(el, errorId); return true;
+        }
+
+
+        /* ================================================
+           ADD ADDRESS — real-time + submit validation
+        ================================================ */
+
+        /* Only allow digits in phone and pin fields */
+        document.getElementById("form-phone").addEventListener("input", function () {
+            this.value = this.value.replace(/[^0-9]/g, "");
+            if (this.classList.contains("address-input-error")) validatePhone("form-phone","form-phone-error");
+        });
+        document.getElementById("form-pin").addEventListener("input", function () {
+            this.value = this.value.replace(/[^0-9]/g, "");
+            if (this.classList.contains("address-input-error")) validatePin("form-pin","form-pin-error");
+        });
+
+        /* Blur = validate immediately when user leaves field */
+        document.getElementById("form-name").addEventListener("blur",    () => validateName("form-name","form-name-error"));
+        document.getElementById("form-phone").addEventListener("blur",   () => validatePhone("form-phone","form-phone-error"));
+        document.getElementById("form-address").addEventListener("blur", () => validateAddress("form-address","form-address-error"));
+        document.getElementById("form-city").addEventListener("blur",    () => validateCity("form-city","form-city-error"));
+        document.getElementById("form-state").addEventListener("blur",   () => validateState("form-state","form-state-error"));
+        document.getElementById("form-pin").addEventListener("blur",     () => validatePin("form-pin","form-pin-error"));
+
+        /* Re-validate while typing once a field is in error state */
+        document.getElementById("form-name").addEventListener("input",    function () { if (this.classList.contains("address-input-error")) validateName("form-name","form-name-error"); });
+        document.getElementById("form-address").addEventListener("input", function () { if (this.classList.contains("address-input-error")) validateAddress("form-address","form-address-error"); });
+        document.getElementById("form-city").addEventListener("input",    function () { if (this.classList.contains("address-input-error")) validateCity("form-city","form-city-error"); });
+        document.getElementById("form-state").addEventListener("input",   function () { if (this.classList.contains("address-input-error")) validateState("form-state","form-state-error"); });
+
+        /* ------------------------------------------------
+           ADD ADDRESS — fetch submit (shows success in-page)
+        ------------------------------------------------ */
+        addressForm.addEventListener("submit", async function (e) {
+            e.preventDefault();
+
+            const nameOk    = validateName("form-name","form-name-error");
+            const phoneOk   = validatePhone("form-phone","form-phone-error");
+            const addressOk = validateAddress("form-address","form-address-error");
+            const cityOk    = validateCity("form-city","form-city-error");
+            const stateOk   = validateState("form-state","form-state-error");
+            const pinOk     = validatePin("form-pin","form-pin-error");
+
+            if (!nameOk || !phoneOk || !addressOk || !cityOk || !stateOk || !pinOk) {
+                const firstError = addressForm.querySelector(".address-input-error");
+                if (firstError) firstError.scrollIntoView({ behavior: "smooth", block: "center" });
+                return;
+            }
+
+            /* Show loading state on button */
+            const saveBtn = document.getElementById("save-address-btn");
+            const originalText = saveBtn.textContent;
+            saveBtn.disabled = true;
+            saveBtn.textContent = "Saving…";
+
+            try {
+                const formData = new FormData(addressForm);
+                const response = await fetch(addressForm.action, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    body: new URLSearchParams(formData).toString()
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    /* 1. Close modal with animation */
+                    gsap.to(".modal-card", {
+                        scale: 0.9, opacity: 0, duration: 0.3, ease: "power2.in",
+                        onComplete: () => {
+                            modal.style.display = "none";
+                            gsap.set(".modal-card", { clearProps: "all" });
+                            addressForm.reset();
+                            clearAllErrors("add");
+
+                            /* 2. Show success popup on the same page */
+                            Swal.fire({
+                                title: "Address Saved!",
+                                text: data.message || "Your new address has been added successfully.",
+                                icon: "success",
+                                iconColor: "#4C0080",
+                                confirmButtonText: "Great",
+                                background: "#FFFFFF",
+                                color: "#2D004F",
+                                customClass: {
+                                    popup: "swal-popup-istore",
+                                    confirmButton: "swal-confirm-istore-success"
+                                },
+                                buttonsStyling: false
+                            }).then(() => {
+                                /* 3. Reload page to show new address in the grid */
+                                window.location.href = data.redirectTo || "/addresses";
+                            });
+                        }
+                    });
+                } else {
+                    /* Server returned an error (e.g. validation failed) */
+                    Swal.fire({
+                        title: "Could Not Save",
+                        text: data.message || "Something went wrong. Please try again.",
+                        icon: "error",
+                        confirmButtonText: "OK",
+                        background: "#FFFFFF",
+                        color: "#2D004F",
+                        customClass: { popup: "swal-popup-istore", confirmButton: "swal-confirm-istore" },
+                        buttonsStyling: false
+                    });
+                }
+            } catch (err) {
+                Swal.fire({
+                    title: "Network Error",
+                    text: "Unable to save address. Please check your connection and try again.",
+                    icon: "error",
+                    confirmButtonText: "OK",
+                    background: "#FFFFFF",
+                    color: "#2D004F",
+                    customClass: { popup: "swal-popup-istore", confirmButton: "swal-confirm-istore" },
+                    buttonsStyling: false
+                });
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.textContent = originalText;
+            }
+        });
+
+
+        /* ================================================
+           EDIT ADDRESS — real-time + submit validation
+        ================================================ */
+
+        document.getElementById("edit-form-phone").addEventListener("input", function () {
+            this.value = this.value.replace(/[^0-9]/g, "");
+            if (this.classList.contains("address-input-error")) validatePhone("edit-form-phone","edit-phone-error");
+        });
+        document.getElementById("edit-form-pin").addEventListener("input", function () {
+            this.value = this.value.replace(/[^0-9]/g, "");
+            if (this.classList.contains("address-input-error")) validatePin("edit-form-pin","edit-pin-error");
+        });
+
+        document.getElementById("edit-form-name").addEventListener("blur",    () => validateName("edit-form-name","edit-name-error"));
+        document.getElementById("edit-form-phone").addEventListener("blur",   () => validatePhone("edit-form-phone","edit-phone-error"));
+        document.getElementById("edit-form-address").addEventListener("blur", () => validateAddress("edit-form-address","edit-address-error"));
+        document.getElementById("edit-form-city").addEventListener("blur",    () => validateCity("edit-form-city","edit-city-error"));
+        document.getElementById("edit-form-state").addEventListener("blur",   () => validateState("edit-form-state","edit-state-error"));
+        document.getElementById("edit-form-pin").addEventListener("blur",     () => validatePin("edit-form-pin","edit-pin-error"));
+
+        document.getElementById("edit-form-name").addEventListener("input",    function () { if (this.classList.contains("address-input-error")) validateName("edit-form-name","edit-name-error"); });
+        document.getElementById("edit-form-address").addEventListener("input", function () { if (this.classList.contains("address-input-error")) validateAddress("edit-form-address","edit-address-error"); });
+        document.getElementById("edit-form-city").addEventListener("input",    function () { if (this.classList.contains("address-input-error")) validateCity("edit-form-city","edit-city-error"); });
+        document.getElementById("edit-form-state").addEventListener("input",   function () { if (this.classList.contains("address-input-error")) validateState("edit-form-state","edit-state-error"); });
+
+        /* ------------------------------------------------
+           EDIT ADDRESS — fetch submit (shows success in-page)
+        ------------------------------------------------ */
+        editForm.addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            const nameOk    = validateName("edit-form-name","edit-name-error");
+            const phoneOk   = validatePhone("edit-form-phone","edit-phone-error");
+            const addressOk = validateAddress("edit-form-address","edit-address-error");
+            const cityOk    = validateCity("edit-form-city","edit-city-error");
+            const stateOk   = validateState("edit-form-state","edit-state-error");
+            const pinOk     = validatePin("edit-form-pin","edit-pin-error");
+
+            if (!nameOk || !phoneOk || !addressOk || !cityOk || !stateOk || !pinOk) {
+                const firstError = editForm.querySelector(".address-input-error");
+                if (firstError) firstError.scrollIntoView({ behavior: "smooth", block: "center" });
+                return;
+            }
+
+            /* Confirm before updating */
+            Swal.fire({
+                title: "Update Address?",
+                text: "Save changes to this address?",
+                icon: "question",
+                iconColor: "#4C0080",
+                showCancelButton: true,
+                confirmButtonText: "Update",
+                cancelButtonText: "Cancel",
+                background: "#FFFFFF",
+                color: "#2D004F",
+                customClass: { popup: "swal-popup-istore", confirmButton: "swal-confirm-istore-success", cancelButton: "swal-cancel-istore" },
+                buttonsStyling: false
+            }).then(async (result) => {
+                if (!result.isConfirmed) return;
+
+                const updateBtn = document.getElementById("update-address-btn");
+                const originalText = updateBtn.textContent;
+                updateBtn.disabled = true;
+                updateBtn.textContent = "Updating…";
+
+                try {
+                    const formData = new FormData(editForm);
+                    const response = await fetch(editForm.action, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                        body: new URLSearchParams(formData).toString()
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        /* 1. Close edit modal with animation */
+                        gsap.to(".edit-modal-card", {
+                            scale: 0.95, opacity: 0, duration: 0.25, ease: "power2.in",
+                            onComplete: () => {
+                                editModal.style.display = "none";
+                                gsap.set(".edit-modal-card", { clearProps: "all" });
+
+                                /* 2. Show success popup on the same page */
+                                Swal.fire({
+                                    title: "Address Updated!",
+                                    text: data.message || "Your address has been updated successfully.",
+                                    icon: "success",
+                                    iconColor: "#4C0080",
+                                    confirmButtonText: "Done",
+                                    background: "#FFFFFF",
+                                    color: "#2D004F",
+                                    customClass: {
+                                        popup: "swal-popup-istore",
+                                        confirmButton: "swal-confirm-istore-success"
+                                    },
+                                    buttonsStyling: false
+                                }).then(() => {
+                                    /* 3. Reload to reflect updated address in grid */
+                                    window.location.href = data.redirectTo || "/addresses";
+                                });
+                            }
+                        });
+                    } else {
+                        Swal.fire({
+                            title: "Update Failed",
+                            text: data.message || "Something went wrong. Please try again.",
+                            icon: "error",
+                            confirmButtonText: "OK",
+                            background: "#FFFFFF",
+                            color: "#2D004F",
+                            customClass: { popup: "swal-popup-istore", confirmButton: "swal-confirm-istore" },
+                            buttonsStyling: false
+                        });
+                    }
+                } catch (err) {
+                    Swal.fire({
+                        title: "Network Error",
+                        text: "Unable to update address. Please check your connection and try again.",
+                        icon: "error",
+                        confirmButtonText: "OK",
+                        background: "#FFFFFF",
+                        color: "#2D004F",
+                        customClass: { popup: "swal-popup-istore", confirmButton: "swal-confirm-istore" },
+                        buttonsStyling: false
+                    });
+                } finally {
+                    updateBtn.disabled = false;
+                    updateBtn.textContent = originalText;
+                }
+            });
+        });
 
     </script>
 </body>

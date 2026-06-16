@@ -187,12 +187,28 @@ app.use("/admin", couponRoutes);
 
 app.use("/admin", offerRoutes);
 
+
+
+
 /* ================================
-   404 HANDLER
+404 HANDLER
 ================================ */
+app.use("/admin", (req, res) => {
+    res.status(404).render("admin/error-404");
+});
+
 
 app.use((req, res) => {
-  res.status(404).send("404 Page Not Found");
+    res.status(404).render("user/error-404");
+});
+
+ 
+/* ============================================================
+  General 500 error handler
+============================================================ */
+app.use((err, req, res, next) => {
+    console.error("Server Error:", err.stack);
+    res.status(500).render("user/error-404");
 });
 
 /* ================================

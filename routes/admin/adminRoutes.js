@@ -28,14 +28,13 @@ import {
 
 import {
   loadProducts,
-  renderAddProduct,
   addProduct,
-  renderEditProduct,
   updateProduct,
   deleteProduct,
   restoreProduct,
   permanentDeleteProduct,
   loadProductDetails,
+  getProductJson,
   addVariant,
   updateVariant,
   deleteVariant,
@@ -206,19 +205,7 @@ router.get(
 );
 
 /* ============================
-   RENDER ADD PRODUCT
-============================ */
-
-router.get(
-  "/products/add",
-
-  adminAuthMiddleware,
-
-  renderAddProduct,
-);
-
-/* ============================
-   ADD PRODUCT
+   ADD PRODUCT (modal submit, JSON response)
 ============================ */
 
 router.post(
@@ -244,19 +231,21 @@ router.post(
 );
 
 /* ============================
-   RENDER EDIT PRODUCT
+   GET PRODUCT JSON (for Edit modal population)
+   Must come before "/products/:id" below, otherwise
+   Express matches :id to "json" segment incorrectly.
 ============================ */
 
 router.get(
-  "/products/edit/:id",
+  "/products/:id/json",
 
   adminAuthMiddleware,
 
-  renderEditProduct,
+  getProductJson,
 );
 
 /* ============================
-   UPDATE PRODUCT
+   UPDATE PRODUCT (modal submit, JSON response)
 ============================ */
 
 router.post(
@@ -269,6 +258,12 @@ router.post(
       name: "thumbnail",
 
       maxCount: 1,
+    },
+
+    {
+      name: "variantImages",
+
+      maxCount: 10,
     },
   ]),
 
@@ -388,6 +383,9 @@ router.delete(
 
 /* ============================
    PRODUCT DETAILS
+   Must come after "/products/add" and "/products/:id/json",
+   otherwise this would swallow those routes since :id matches
+   any string.
 ============================ */
 
 router.get(

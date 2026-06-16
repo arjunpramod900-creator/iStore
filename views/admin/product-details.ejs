@@ -113,19 +113,7 @@
 
 </button>
 
-                    <button
-                        class="btn-detail btn-edit"
-                        onclick="window.location.href='/admin/products/edit/<%= product._id %>'"
-                    >
 
-                        <i
-                            data-lucide="edit-3"
-                            size="18"
-                        ></i>
-
-                        Edit Product
-
-                    </button>
 
                     <button
                         class="btn-detail btn-delete"
@@ -873,127 +861,6 @@
 
         </section>
 
-        <!-- =========================================
-             ANALYTICS + LOGS
-        ========================================== -->
-
-        <section class="analytics-logs-grid">
-
-            <!-- LEFT -->
-            <div class="chart-card">
-
-                <div class="chart-header">
-
-                    <h3 class="chart-title">
-                        Sales Performance
-                    </h3>
-
-                    <div class="chart-tabs">
-
-                        <span class="tab active">
-                            Weekly
-                        </span>
-
-                        <span class="tab">
-                            Monthly
-                        </span>
-
-                    </div>
-
-                </div>
-
-                <div
-                    style="
-                        height:320px;
-                        position:relative;
-                    "
-                >
-
-                    <canvas id="salesChart"></canvas>
-
-                </div>
-
-            </div>
-
-            <!-- RIGHT -->
-
-            <div class="log-card">
-
-                <h3 class="chart-title">
-                    Product Activity Log
-                </h3>
-
-                <div class="log-timeline">
-
-                    <div class="log-item">
-
-                        <div
-                            class="log-dot"
-                            style="background:#FFD6FC;"
-                        ></div>
-
-                        <div class="log-content">
-
-                            <span class="log-title">
-                                Price updated
-                            </span>
-
-                            <span class="log-desc">
-                                Admin changed base price to ₹2,39,900
-                            </span>
-
-                            <span class="log-time">
-                                2 hours ago
-                            </span>
-
-                        </div>
-
-                    </div>
-
-                    <div class="log-item">
-
-                        <div
-                            class="log-dot"
-                            style="background:#FFD8E8;"
-                        ></div>
-
-                        <div class="log-content">
-
-                            <span class="log-title">
-                                New variant added
-                            </span>
-
-                            <span class="log-desc">
-                                Space Black 2 TB added to inventory
-                            </span>
-
-                            <span class="log-time">
-                                Yesterday at 4:32 PM
-                            </span>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-                <button
-                    class="btn-detail"
-                    style="
-                        width:100%;
-                        background:none;
-                        border:1px solid rgba(96,55,99,0.12);
-                        color:var(--secondary);
-                    "
-                >
-
-                    View All Activity
-
-                </button>
-
-            </div>
-
-        </section>
 
 
 

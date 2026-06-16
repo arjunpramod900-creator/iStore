@@ -43,33 +43,7 @@ export const loadProducts = async (req, res) => {
 };
 
 /* ============================
-   RENDER ADD PRODUCT
-============================ */
-
-export const renderAddProduct = async (req, res) => {
-  try {
-    const categories = await getCategoriesService();
-
-    res.render(
-      "admin/add-product",
-
-      {
-        page: "products",
-
-        categories,
-
-        error: null,
-      },
-    );
-  } catch (error) {
-    console.log("Render Add Product Error:", error);
-
-    res.redirect("/admin/products");
-  }
-};
-
-/* ============================
-   ADD PRODUCT
+   ADD PRODUCT  (modal submit, JSON response)
 ============================ */
 
 export const addProduct = async (req, res) => {
@@ -79,19 +53,11 @@ export const addProduct = async (req, res) => {
     const productValidation = productSchema.safeParse(req.body);
 
     if (!productValidation.success) {
-      const categories = await getCategoriesService();
+      return res.status(400).json({
+        success: false,
 
-      return res.status(400).render(
-        "admin/add-product",
-
-        {
-          page: "products",
-
-          categories,
-
-          error: productValidation.error.errors[0].message,
-        },
-      );
+        message: productValidation.error.errors[0].message,
+      });
     }
 
     /* CREATE PRODUCT */
@@ -106,59 +72,24 @@ export const addProduct = async (req, res) => {
 
     /* SUCCESS */
 
-    res.redirect("/admin/products?success=added");
+    res.json({
+      success: true,
+
+      message: "Product added successfully",
+    });
   } catch (error) {
     console.log("Add Product Error:", error);
-    const categories = await getCategoriesService();
 
-    res.status(500).render(
-      "admin/add-product",
+    res.status(500).json({
+      success: false,
 
-      {
-        page: "products",
-
-        categories,
-
-        error: error.message,
-      },
-    );
+      message: error.message,
+    });
   }
 };
 
 /* ============================
-   RENDER EDIT PRODUCT
-============================ */
-
-export const renderEditProduct = async (req, res) => {
-  try {
-    const data = await loadProductDetailsService(req.params.id);
-
-    const categories = await getCategoriesService();
-
-    res.render(
-      "admin/edit-product",
-
-      {
-        page: "products",
-
-        product: data.product,
-
-        variant: data.variants[0],
-
-        categories,
-
-        error: null,
-      },
-    );
-  } catch (error) {
-    console.log("Render Edit Product Error:", error);
-
-    res.redirect("/admin/products");
-  }
-};
-
-/* ============================
-   UPDATE PRODUCT
+   UPDATE PRODUCT  (modal submit, JSON response)
 ============================ */
 
 export const updateProduct = async (req, res) => {
@@ -166,7 +97,11 @@ export const updateProduct = async (req, res) => {
     const productValidation = productSchema.safeParse(req.body);
 
     if (!productValidation.success) {
-      throw new Error(productValidation.error.errors[0].message);
+      return res.status(400).json({
+        success: false,
+
+        message: productValidation.error.errors[0].message,
+      });
     }
 
     await updateProductService(
@@ -181,11 +116,19 @@ export const updateProduct = async (req, res) => {
       },
     );
 
-    res.redirect("/admin/products?success=updated");
+    res.json({
+      success: true,
+
+      message: "Product updated successfully",
+    });
   } catch (error) {
     console.log("Update Product Error:", error);
 
-    res.redirect("/admin/products");
+    res.status(500).json({
+      success: false,
+
+      message: error.message,
+    });
   }
 };
 
@@ -276,6 +219,34 @@ export const loadProductDetails = async (req, res) => {
     console.log("Load Product Details Error:", error);
 
     res.redirect("/admin/products");
+  }
+};
+
+/* ============================
+   GET PRODUCT (JSON) — for Edit modal
+============================ */
+
+export const getProductJson = async (req, res) => {
+  try {
+    const data = await loadProductDetailsService(req.params.id);
+
+    const activeVariant = data.variants.find((v) => !v.isDeleted) || null;
+
+    res.json({
+      success: true,
+
+      product: data.product,
+
+      variant: activeVariant,
+    });
+  } catch (error) {
+    console.log("Get Product JSON Error:", error);
+
+    res.status(404).json({
+      success: false,
+
+      message: "Product not found",
+    });
   }
 };
 
