@@ -100,33 +100,19 @@
                 <div class="action-buttons">
 
                    <button
-    class="btn-detail btn-add-variant"
-    id="openVariantModalBtn"
->
-
-    <i
-        data-lucide="plus-circle"
-        size="18"
-    ></i>
-
-    Add Variant
-
-</button>
-
-
+                        class="btn-detail btn-add-variant"
+                        id="openVariantModalBtn"
+                    >
+                        <i data-lucide="plus-circle" size="18"></i>
+                        Add Variant
+                    </button>
 
                     <button
                         class="btn-detail btn-delete"
                         id="deleteProductBtn"
                     >
-
-                        <i
-                            data-lucide="trash-2"
-                            size="18"
-                        ></i>
-
+                        <i data-lucide="trash-2" size="18"></i>
                         Delete
-
                     </button>
 
                 </div>
@@ -142,122 +128,49 @@
         <section class="analytics-grid">
 
             <div class="analytic-card">
-
                 <div class="analytic-icon-wrapper">
-
-                    <i
-                        data-lucide="package"
-                        size="20"
-                    ></i>
-
+                    <i data-lucide="package" size="20"></i>
                 </div>
-
-               <div class="analytic-info">
-
-    <span class="analytic-label">
-        Total Stock
-    </span>
-
-    <span class="analytic-value">
-        <%= totalStock %>
-    </span>
-
-    <span class="analytic-subtext">
-        Units
-    </span>
-
-</div>
-
-            </div>
-
-            <div class="analytic-card">
-
-                <div class="analytic-icon-wrapper">
-
-                    <i
-                        data-lucide="shopping-bag"
-                        size="20"
-                    ></i>
-
-                </div>
-
-               <div class="analytic-info">
-
-    <span class="analytic-label">
-        Total Sales
-    </span>
-
-    <span class="analytic-value">
-        <%= typeof totalSales !== 'undefined' ? totalSales : 0 %>
-    </span>
-
-    <span class="analytic-subtext">
-        Orders
-    </span>
-
-</div>
-            </div>
-
-            <div class="analytic-card">
-
-                <div class="analytic-icon-wrapper">
-
-                    <i
-                        data-lucide="refresh-cw"
-                        size="20"
-                    ></i>
-
-                </div>
-
                 <div class="analytic-info">
-
-    <span class="analytic-label">
-        Total Returns
-    </span>
-
-    <span class="analytic-value">
-        <%= typeof totalReturns !== 'undefined' ? totalReturns : 0 %>
-    </span>
-
-    <span class="analytic-subtext">
-        Returned
-    </span>
-
-</div>
+                    <span class="analytic-label">Total Stock</span>
+                    <span class="analytic-value"><%= totalStock %></span>
+                    <span class="analytic-subtext">Units</span>
+                </div>
             </div>
 
             <div class="analytic-card">
-
                 <div class="analytic-icon-wrapper">
-
-                    <i
-                        data-lucide="banknote"
-                        size="20"
-                    ></i>
-
+                    <i data-lucide="shopping-bag" size="20"></i>
                 </div>
+                <div class="analytic-info">
+                    <span class="analytic-label">Total Sales</span>
+                    <span class="analytic-value"><%= typeof totalSales !== 'undefined' ? totalSales : 0 %></span>
+                    <span class="analytic-subtext">Orders</span>
+                </div>
+            </div>
 
-               <div class="analytic-info">
+            <div class="analytic-card">
+                <div class="analytic-icon-wrapper">
+                    <i data-lucide="refresh-cw" size="20"></i>
+                </div>
+                <div class="analytic-info">
+                    <span class="analytic-label">Total Returns</span>
+                    <span class="analytic-value"><%= typeof totalReturns !== 'undefined' ? totalReturns : 0 %></span>
+                    <span class="analytic-subtext">Returned</span>
+                </div>
+            </div>
 
-    <span class="analytic-label">
-        Revenue
-    </span>
-
-    <span class="analytic-value">
-
-        ₹<%= typeof totalRevenue !== 'undefined'
-            ? totalRevenue.toLocaleString()
-            : '18,245,600'
-        %>
-
-    </span>
-
-    <span class="analytic-subtext">
-        Total Revenue
-    </span>
-
-</div>
-
+            <div class="analytic-card">
+                <div class="analytic-icon-wrapper">
+                    <i data-lucide="banknote" size="20"></i>
+                </div>
+                <div class="analytic-info">
+                    <span class="analytic-label">Revenue</span>
+                    <span class="analytic-value">
+                        ₹<%= typeof totalRevenue !== 'undefined' ? totalRevenue.toLocaleString() : '18,245,600' %>
+                    </span>
+                    <span class="analytic-subtext">Total Revenue</span>
+                </div>
             </div>
 
         </section>
@@ -272,38 +185,24 @@
             <div class="product-gallery">
 
                 <div class="main-image-container">
-
                     <img
                         id="mainProductImage"
                         src="<%= variants[0]?.images?.[0] || product.thumbnail %>"
                         alt="<%= product.name %>"
                     >
-
                 </div>
 
                 <div class="thumbnail-list">
-
-                    <% 
+                    <%
                       const galleryImages = variants[0]?.images?.length
-    ? variants[0].images
-    : [product.thumbnail]
+                        ? variants[0].images
+                        : [product.thumbnail]
                     %>
-
                     <% galleryImages.forEach((image, index) => { %>
-
-                        <div
-                            class="thumbnail-item <%= index === 0 ? 'active' : '' %>"
-                        >
-
-                            <img
-                                src="<%= image %>"
-                                alt="Thumbnail"
-                            >
-
+                        <div class="thumbnail-item <%= index === 0 ? 'active' : '' %>">
+                            <img src="<%= image %>" alt="Thumbnail">
                         </div>
-
                     <% }) %>
-
                 </div>
 
             </div>
@@ -314,30 +213,15 @@
                 <div class="info-header">
 
                     <div class="product-title-group">
-
-                        <span class="badge-status">
-                            Premium Series
-                        </span>
-
-                        <h2>
-                            <%= product.name %>
-                        </h2>
-
+                        <span class="badge-status">Premium Series</span>
+                        <h2><%= product.name %></h2>
                     </div>
 
-                    <div class="
-                        status-active-badge
-                        <%= product.isActive ? 'active' : 'blocked' %>
-                    ">
-
+                    <div class="status-active-badge <%= product.isActive ? 'active' : 'blocked' %>">
                         <div class="status-dot-blur"></div>
-
                         <span class="status-active-text">
-
-                           <%= product.isActive ? 'Active' : 'Inactive' %>
-
+                            <%= product.isActive ? 'Active' : 'Inactive' %>
                         </span>
-
                     </div>
 
                 </div>
@@ -345,193 +229,73 @@
                 <div class="info-details-grid">
 
                     <div class="detail-item">
-
-                        <span class="detail-label">
-                            Category
-                        </span>
-
-                        <span class="detail-value">
-
-                            <%= product.categoryId?.name || "N/A" %>
-
-                        </span>
-
+                        <span class="detail-label">Category</span>
+                        <span class="detail-value"><%= product.categoryId?.name || "N/A" %></span>
                     </div>
 
                     <div class="detail-item">
-
-                        <span class="detail-label">
-                            Variants
-                        </span>
-
-                        <span class="detail-value">
-
-                            <%= totalVariants %> Configs Available
-
-                        </span>
-
+                        <span class="detail-label">Variants</span>
+                        <span class="detail-value"><%= totalVariants %> Configs Available</span>
                     </div>
 
                     <div class="detail-item">
-
-                        <span class="detail-label">
-                            Base Price
-                        </span>
-
+                        <span class="detail-label">Base Price</span>
                         <div class="price-showcase">
-
-                            <span class="detail-value price">
-
-                                ₹<%= basePrice.toLocaleString() %>
-
-                            </span>
-
-                            <% if(
-                                variants[0]?.comparePrice &&
-                                variants[0]?.comparePrice > variants[0]?.price
-                            ) { %>
-
-                                <span class="compare-price-large">
-
-                                    ₹<%= variants[0].comparePrice.toLocaleString() %>
-
-                                </span>
-
-                                <span class="discount-badge">
-
-                                    <%= variants[0].discountPercentage %>% OFF
-
-                                </span>
-
+                            <span class="detail-value price">₹<%= basePrice.toLocaleString() %></span>
+                            <% if(variants[0]?.comparePrice && variants[0]?.comparePrice > variants[0]?.price) { %>
+                                <span class="compare-price-large">₹<%= variants[0].comparePrice.toLocaleString() %></span>
+                                <span class="discount-badge"><%= variants[0].discountPercentage %>% OFF</span>
                             <% } %>
-
                         </div>
-
                     </div>
 
                 </div>
 
-                   <div class="detail-item">
+                <div class="detail-item">
+                    <span class="detail-label">Product Offer</span>
+                    <span class="detail-value">
+                        <% if(productOffer) { %>
+                            <%= productOffer.discountValue %>% OFF
+                        <% } else { %>
+                            No Active Offer
+                        <% } %>
+                    </span>
+                </div>
 
-                        <span class="detail-label">
-                            Product Offer
-                        </span>
-
-                        <span class="detail-value">
-
-                            <% if(productOffer) { %>
-
-                                <%= productOffer.discountValue %>% OFF
-
-                            <% } else { %>
-
-                                No Active Offer
-
-                            <% } %>
-
-                        </span>
-
-                    </div>
-
-                    <div class="detail-item">
-
-                        <span class="detail-label">
-                            Category Offer
-                        </span>
-
-                        <span class="detail-value">
-
-                            <% if(categoryOffer) { %>
-
-                                <%= categoryOffer.discountValue %>% OFF
-
-                            <% } else { %>
-
-                                No Active Offer
-
-                            <% } %>
-
-                        </span>
-
-                    </div>
+                <div class="detail-item">
+                    <span class="detail-label">Category Offer</span>
+                    <span class="detail-value">
+                        <% if(categoryOffer) { %>
+                            <%= categoryOffer.discountValue %>% OFF
+                        <% } else { %>
+                            No Active Offer
+                        <% } %>
+                    </span>
+                </div>
 
                 <div class="description-section">
-
-                    <span class="detail-label">
-                        Description
-                    </span>
-
-                    <p class="description-text">
-
-                        <%= product.description %>
-
-                    </p>
-
+                    <span class="detail-label">Description</span>
+                    <p class="description-text"><%= product.description %></p>
                 </div>
 
-                <!-- =========================================
-                     TECHNICAL HIGHLIGHTS
-                ========================================== -->
-
                 <div class="technical-highlights">
-
-                    <span class="detail-label">
-                        Technical Highlights
-                    </span>
-
-                   <div class="highlight-tags">
-
-                    <span class="tag">
-                        Premium Build
-                    </span>
-
-                    <span class="tag">
-                        Official Apple Product
-                    </span>
-
-                    <span class="tag">
-                        High Performance
-                    </span>
-
+                    <span class="detail-label">Technical Highlights</span>
+                    <div class="highlight-tags">
+                        <span class="tag">Premium Build</span>
+                        <span class="tag">Official Apple Product</span>
+                        <span class="tag">High Performance</span>
                     </div>
-
                 </div>
-                <!-- =========================================
-                    VARIANT SPECIFICATIONS
-                ========================================= -->
 
                 <div class="technical-highlights">
-
-                    <span class="detail-label">
-                        Variant Specifications
-                    </span>
-
-                    <div
-                        id="variantSpecsContainer"
-                        class="highlight-tags">
-
-                        <span class="tag" id="specColor">
-                            Black
-                        </span>
-
-                        <span class="tag" id="specStorage">
-                            256GB
-                        </span>
-
-                        <span class="tag" id="specRAM">
-                            8GB RAM
-                        </span>
-
-                        <span class="tag" id="specSKU">
-                            IP17-BLK-256
-                        </span>
-
-                        <span class="tag" id="specStock">
-                            5 Units
-                        </span>
-
+                    <span class="detail-label">Variant Specifications</span>
+                    <div id="variantSpecsContainer" class="highlight-tags">
+                        <span class="tag" id="specColor">Black</span>
+                        <span class="tag" id="specStorage">256GB</span>
+                        <span class="tag" id="specRAM">8GB RAM</span>
+                        <span class="tag" id="specSKU">IP17-BLK-256</span>
+                        <span class="tag" id="specStock">5 Units</span>
                     </div>
-
                 </div>
 
             </div>
@@ -544,80 +308,41 @@
 
         <section class="variants-section">
 
-            <h3 class="section-title">
-                Variant Management
-            </h3>
+            <h3 class="section-title">Variant Management</h3>
 
-            <!-- SEARCH -->
+            <div class="variant-toolbar">
 
-           <div class="variant-toolbar">
+                <div class="variant-toolbar-left">
+                    <div class="search-wrapper">
+                        <i data-lucide="search" size="16"></i>
+                        <input
+                            type="text"
+                            id="variantSearch"
+                            class="variant-search"
+                            placeholder="Search variants..."
+                        >
+                    </div>
+                </div>
 
-    <div class="variant-toolbar-left">
+                <div class="variant-toolbar-right">
+                    <select id="stockFilter" class="variant-filter">
+                        <option value="all">All Stock</option>
+                        <option value="instock">In Stock</option>
+                        <option value="low">Low Stock</option>
+                        <option value="critical">Critical</option>
+                        <option value="trash">Trash</option>
+                    </select>
+                    <div class="variant-count-badge"><%= totalVariants %> Variants</div>
+                </div>
 
-        <div class="search-wrapper">
-
-            <i
-                data-lucide="search"
-                size="16"
-            ></i>
-
-            <input
-                type="text"
-                id="variantSearch"
-                class="variant-search"
-                placeholder="Search variants..."
-            >
-
-        </div>
-
-    </div>
-
-    <div class="variant-toolbar-right">
-
-        <select
-            id="stockFilter"
-            class="variant-filter"
-        >
-
-            <option value="all">
-                All Stock
-            </option>
-
-            <option value="instock">
-                In Stock
-            </option>
-
-            <option value="low">
-                Low Stock
-            </option>
-
-            <option value="critical">
-                Critical
-            </option>
-            <option value="trash">
-                Trash
-            </option>
-
-        </select>
-
-        <div class="variant-count-badge">
-
-            <%= totalVariants %> Variants
-
-        </div>
-
-    </div>
-
-</div>
+            </div>
 
             <div class="table-card">
 
                 <table class="variants-table">
 
                     <thead>
-
                         <tr>
-
                             <th>Preview</th>
                             <th>Variant Name</th>
                             <th>Storage</th>
@@ -625,13 +350,8 @@
                             <th>Color</th>
                             <th>Price</th>
                             <th>Stock</th>
-
-                            <th style="text-align:right;">
-                                Actions
-                            </th>
-
+                            <th style="text-align:right;">Actions</th>
                         </tr>
-
                     </thead>
 
                     <tbody>
@@ -640,122 +360,50 @@
 
                             <% variants.forEach(variant => { %>
 
-                               <tr
-    class="variant-row"
-
-    data-deleted="<%= variant.isDeleted %>"
-    data-sku="<%= variant.SKU %>"
-    data-storage="<%= variant.storage %>"
-    data-ram="<%= variant.RAM %>"
-    data-color="<%= variant.color %>"
-    data-price="<%= variant.price %>"
-    data-compareprice="<%= variant.comparePrice %>"
-    data-stock="<%= variant.stock %>"
-    data-images='<%- JSON.stringify(variant.images) %>'
->
+                                <tr
+                                    class="variant-row"
+                                    data-deleted="<%= variant.isDeleted %>"
+                                    data-sku="<%= variant.SKU %>"
+                                    data-storage="<%= variant.storage %>"
+                                    data-ram="<%= variant.RAM %>"
+                                    data-color="<%= variant.color %>"
+                                    data-price="<%= variant.price %>"
+                                    data-compareprice="<%= variant.comparePrice %>"
+                                    data-stock="<%= variant.stock %>"
+                                    data-images='<%- JSON.stringify(variant.images) %>'
+                                >
                                     <td>
-
                                         <div class="variant-preview">
-
-                                            <img
-                                                src="<%= variant.images?.[0] || product.thumbnail %>"
-                                                alt=""
-                                            >
-
+                                            <img src="<%= variant.images?.[0] || product.thumbnail %>" alt="">
                                         </div>
-
                                     </td>
-
-                                    <td class="font-bold">
-                                        <%= variant.SKU %>
-                                    </td>
-
-                                    <td>
-                                        <%= variant.storage %>
-                                    </td>
-
-                                    <td>
-                                        <%= variant.RAM %>
-                                    </td>
-
-                                    <td>
-                                        <%= variant.color %>
-                                    </td>
-
+                                    <td class="font-bold"><%= variant.SKU %></td>
+                                    <td><%= variant.storage %></td>
+                                    <td><%= variant.RAM %></td>
+                                    <td><%= variant.color %></td>
                                     <td class="price-cell">
-
-    <div class="variant-price-wrap">
-
-        <span class="sale-price">
-
-            ₹<%= variant.price.toLocaleString() %>
-
-        </span>
-
-        <% if(
-            variant.comparePrice &&
-            variant.comparePrice > variant.price
-        ) { %>
-
-            <span class="compare-price">
-
-                ₹<%= variant.comparePrice.toLocaleString() %>
-
-            </span>
-
-            <span class="discount-badge">
-
-                <%= variant.discountPercentage %>% OFF
-
-            </span>
-
-        <% } %>
-
-    </div>
-
-</td>
-
-                                    <td>
-
-                                        <% if(variant.stock <= 10) { %>
-
-                                            <span class="stock-badge critical">
-
-                                                <%= variant.stock %> units
-
-                                            </span>
-
-                                        <% } else if(variant.stock <= 50) { %>
-
-                                            <span class="stock-badge low">
-
-                                                <%= variant.stock %> units
-
-                                            </span>
-
-                                        <% } else { %>
-
-                                            <span class="stock-badge">
-
-                                                <%= variant.stock %> units
-
-                                            </span>
-
-                                        <% } %>
-
+                                        <div class="variant-price-wrap">
+                                            <span class="sale-price">₹<%= variant.price.toLocaleString() %></span>
+                                            <% if(variant.comparePrice && variant.comparePrice > variant.price) { %>
+                                                <span class="compare-price">₹<%= variant.comparePrice.toLocaleString() %></span>
+                                                <span class="discount-badge"><%= variant.discountPercentage %>% OFF</span>
+                                            <% } %>
+                                        </div>
                                     </td>
-
                                     <td>
-
+                                        <% if(variant.stock <= 10) { %>
+                                            <span class="stock-badge critical"><%= variant.stock %> units</span>
+                                        <% } else if(variant.stock <= 50) { %>
+                                            <span class="stock-badge low"><%= variant.stock %> units</span>
+                                        <% } else { %>
+                                            <span class="stock-badge"><%= variant.stock %> units</span>
+                                        <% } %>
+                                    </td>
+                                    <td>
                                         <div class="variant-actions">
-
-                                                <% if(!variant.isDeleted) { %>
-
-                                                <!-- EDIT -->
-
+                                            <% if(!variant.isDeleted) { %>
                                                 <button
                                                     class="btn-icon edit-variant-btn"
-
                                                     data-id="<%= variant._id %>"
                                                     data-sku="<%= variant.SKU %>"
                                                     data-color="<%= variant.color %>"
@@ -764,62 +412,23 @@
                                                     data-price="<%= variant.price %>"
                                                     data-compareprice="<%= variant.comparePrice %>"
                                                     data-stock="<%= variant.stock %>"
-                                                    data-images='<%- JSON.stringify(variant.images) %>'>
-
-                                                    <i
-                                                        data-lucide="edit-2"
-                                                        size="16"
-                                                    ></i>
-
+                                                    data-images='<%- JSON.stringify(variant.images) %>'
+                                                >
+                                                    <i data-lucide="edit-2" size="16"></i>
                                                 </button>
-
-                                                <!-- SOFT DELETE -->
-
-                                                <button
-                                                    class="btn-icon delete-variant-btn"
-                                                    data-id="<%= variant._id %>">
-
-                                                    <i
-                                                        data-lucide="trash-2"
-                                                        size="16"
-                                                    ></i>
-
+                                                <button class="btn-icon delete-variant-btn" data-id="<%= variant._id %>">
+                                                    <i data-lucide="trash-2" size="16"></i>
                                                 </button>
-
-                                                <% } else { %>
-
-                                                <!-- RESTORE -->
-
-                                                <button
-                                                    class="btn-icon restore-variant-btn"
-                                                    data-id="<%= variant._id %>">
-
-                                                    <i
-                                                        data-lucide="rotate-ccw"
-                                                        size="16"
-                                                    ></i>
-
+                                            <% } else { %>
+                                                <button class="btn-icon restore-variant-btn" data-id="<%= variant._id %>">
+                                                    <i data-lucide="rotate-ccw" size="16"></i>
                                                 </button>
-
-                                                <!-- PERMANENT DELETE -->
-
-                                                <button
-                                                    class="btn-icon permanent-delete-variant-btn"
-                                                    data-id="<%= variant._id %>">
-
-                                                    <i
-                                                        data-lucide="x-circle"
-                                                        size="16"
-                                                    ></i>
-
+                                                <button class="btn-icon permanent-delete-variant-btn" data-id="<%= variant._id %>">
+                                                    <i data-lucide="x-circle" size="16"></i>
                                                 </button>
-
-                                                <% } %>
-
-                                         </div>
-
+                                            <% } %>
+                                        </div>
                                     </td>
-
                                 </tr>
 
                             <% }) %>
@@ -827,28 +436,13 @@
                         <% } else { %>
 
                             <tr>
-
                                 <td colspan="7">
-
-                                   <div class="empty-variants">
-
-    <i
-        data-lucide="package-open"
-        size="52"
-    ></i>
-
-    <h4>
-        No Variants Found
-    </h4>
-
-    <p>
-        Start by adding your first variant.
-    </p>
-
-</div>
-
+                                    <div class="empty-variants">
+                                        <i data-lucide="package-open" size="52"></i>
+                                        <h4>No Variants Found</h4>
+                                        <p>Start by adding your first variant.</p>
+                                    </div>
                                 </td>
-
                             </tr>
 
                         <% } %>
@@ -862,457 +456,211 @@
         </section>
 
 
+        <!-- =========================================
+             VARIANT MODAL
+        ========================================== -->
 
+        <div class="variant-modal-overlay" id="variantModal">
 
- <!-- =========================================
-     VARIANT MODAL
-========================================= -->
+            <div class="variant-modal">
 
-<div
-    class="variant-modal-overlay"
-    id="variantModal"
->
-
-    <div class="variant-modal">
-
-        <!-- HEADER -->
-
-        <div class="variant-modal-header">
-
-            <div>
-
-                <h2 id="variantModalTitle">
-                    Add Variant
-                </h2>
-
-                <p>
-                    Configure variant inventory and pricing
-                </p>
-
-            </div>
-
-            <button
-                class="modal-close-btn"
-                id="closeVariantModal"
-            >
-
-                <i
-                    data-lucide="x"
-                    size="22"
-                ></i>
-
-            </button>
-
-        </div>
-
-        <!-- BODY -->
-
-        <div class="variant-modal-body">
-
-            <!-- =========================================
-                 FORM SECTION
-            ========================================== -->
-
-            <form
-                class="variant-form-section"
-                id="variantForm"
-            >
-
-                <!-- HIDDEN FIELDS -->
-
-                <input
-                    type="hidden"
-                    id="variantProductId"
-                    value="<%= product._id %>"
-                >
-
-                <input
-                    type="hidden"
-                    id="variantMode"
-                    value="add"
-                >
-
-                <input
-                    type="hidden"
-                    id="editingVariantId"
-                >
-
-                <!-- CONFIG -->
-
-                <div class="variant-form-group">
-
-                    <h4>
-                        Configuration
-                    </h4>
-
-                    <div class="variant-grid-3">
-
-                        <div class="field">
-
-                            <label>
-                                Color
-                            </label>
-
-                            <input
-                                type="text"
-                                id="variantColor"
-                                placeholder="Space Black"
-                            >
-
-                        </div>
-
-                        <div class="field">
-
-                            <label>
-                                Storage
-                            </label>
-
-                            <input
-                                type="text"
-                                id="variantStorage"
-                                placeholder="256GB"
-                            >
-
-                        </div>
-
-                        <div class="field">
-
-                            <label>
-                                RAM
-                            </label>
-
-                            <input
-                                type="text"
-                                id="variantRAM"
-                                placeholder="8GB"
-                            >
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-                <!-- SKU -->
-
-                <div class="variant-form-group">
-
-                    <h4>
-                        SKU & Pricing
-                    </h4>
-
-                    <div class="variant-grid-3">
-
-                        <div class="field">
-
-                            <label>
-                                SKU
-                            </label>
-
-                            <input
-                                type="text"
-                                id="variantSKU"
-                                placeholder="IP17-BLK-256"
-                            >
-
-                        </div>
-
-                        <div class="field">
-
-    <label>
-        Price
-    </label>
-
-    <input
-        type="number"
-        id="variantPrice"
-        placeholder="119900"
-    >
-
-</div>
-
-<div class="field">
-
-    <label>
-        Compare Price
-    </label>
-
-    <input
-        type="number"
-        id="variantComparePrice"
-        placeholder="139900"
-    >
-
-</div>
-
-                    </div>
-
-                </div>
-
-                <!-- INVENTORY -->
-
-                <div class="variant-form-group">
-
-                    <h4>
-                        Inventory
-                    </h4>
-
-                    <div class="variant-grid-2">
-
-                        <div class="field">
-
-                            <label>
-                                Stock
-                            </label>
-
-                            <input
-                                type="number"
-                                id="variantStock"
-                                placeholder="120"
-                            >
-
-                        </div>
-
-                        
-
-                    </div>
-
-                </div>
-
-                <!-- IMAGE -->
-
-                <div class="variant-form-group">
-
-                    <h4>
-                        Variant Media
-                    </h4>
-
-                    <label
-                        class="variant-upload-box"
-                    >
-                    
-
-                        <input
-    type="file"
-    hidden
-    id="variantImageInput"
-    accept="image/*"
-    multiple
->
-
-                        <i
-                            data-lucide="upload"
-                            size="28"
-                        ></i>
-
-                        <span>
-                            Upload Variant Image
-                        </span>
-
-                    </label>
-                   <div
-    class="variant-images-wrapper"
->
-
-    <div
-        class="variant-preview-grid"
-        id="variantPreviewGrid"
-    ></div>
-
-</div>
-
-                </div>
-
-            </form>
-
-            <!-- =========================================
-                 PREVIEW PANEL
-            ========================================== -->
-
-            <div class="variant-preview-panel">
-
-               <div class="preview-card">
-
-    <div class="preview-main-image-wrapper">
-
-        <img
-            id="previewImage"
-            src="<%= product.thumbnail %>"
-        >
-
-    </div>
-
-    
-
-    <h3 id="previewName">
-        <%= product.name %>
-    </h3>
-
-    <p id="previewSpecs">
-        Space Black • 256GB • 8GB
-    </p>
-
-    <div
-        class="preview-price"
-        id="previewPrice"
-    >
-
-        ₹1,19,900
-
-    </div>
-
-</div>
-
-                <div class="preview-analytics">
-
+                <!-- HEADER -->
+                <div class="variant-modal-header">
                     <div>
+                        <h2 id="variantModalTitle">Add Variant</h2>
+                        <p>Configure variant inventory and pricing</p>
+                    </div>
+                    <button class="modal-close-btn" id="closeVariantModal">
+                        <i data-lucide="x" size="22"></i>
+                    </button>
+                </div>
 
-                        <span>
-                            Sales
-                        </span>
+                <!-- BODY -->
+                <div class="variant-modal-body">
 
-                        <strong>
-                            482
-                        </strong>
+                    <!-- FORM SECTION -->
+                    <form class="variant-form-section" id="variantForm" novalidate>
+
+                        <input type="hidden" id="variantProductId" value="<%= product._id %>">
+                        <input type="hidden" id="variantMode" value="add">
+                        <input type="hidden" id="editingVariantId">
+
+                        <!-- CONFIG -->
+                        <div class="variant-form-group">
+
+                            <h4>Configuration</h4>
+
+                            <div class="variant-grid-3">
+
+                                <div class="vfield">
+                                    <label>Color</label>
+                                    <input type="text" id="variantColor" placeholder="Space Black">
+                                    <span class="vfield-error" id="err-color"></span>
+                                </div>
+
+                                <div class="vfield">
+                                    <label>Storage</label>
+                                    <input type="text" id="variantStorage" placeholder="256GB">
+                                    <span class="vfield-error" id="err-storage"></span>
+                                </div>
+
+                                <div class="vfield">
+                                    <label>RAM</label>
+                                    <input type="text" id="variantRAM" placeholder="8GB">
+                                    <span class="vfield-error" id="err-ram"></span>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <!-- SKU & PRICING -->
+                        <div class="variant-form-group">
+
+                            <h4>SKU & Pricing</h4>
+
+                            <div class="variant-grid-3">
+
+                                <div class="vfield">
+                                    <label>SKU</label>
+                                    <input type="text" id="variantSKU" placeholder="IP17-BLK-256">
+                                    <span class="vfield-error" id="err-sku"></span>
+                                </div>
+
+                                <div class="vfield">
+                                    <label>Price</label>
+                                    <input type="number" id="variantPrice" placeholder="119900">
+                                    <span class="vfield-error" id="err-price"></span>
+                                </div>
+
+                                <div class="vfield">
+                                    <label>Compare Price</label>
+                                    <input type="number" id="variantComparePrice" placeholder="139900">
+                                    <span class="vfield-error" id="err-compare"></span>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <!-- INVENTORY -->
+                        <div class="variant-form-group">
+
+                            <h4>Inventory</h4>
+
+                            <div class="variant-grid-2">
+
+                                <div class="vfield">
+                                    <label>Stock</label>
+                                    <input type="number" id="variantStock" placeholder="120">
+                                    <span class="vfield-error" id="err-stock"></span>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <!-- IMAGE -->
+                        <div class="variant-form-group">
+
+                            <h4>Variant Media</h4>
+
+                            <label class="variant-upload-box" id="variantUploadBox">
+                                <input
+                                    type="file"
+                                    hidden
+                                    id="variantImageInput"
+                                    accept="image/*"
+                                    multiple
+                                >
+                                <i data-lucide="upload" size="28"></i>
+                                <span>Upload Variant Image</span>
+                            </label>
+
+                            <span class="vfield-error" id="err-images"></span>
+
+                            <div class="variant-images-wrapper">
+                                <div class="variant-preview-grid" id="variantPreviewGrid"></div>
+                            </div>
+
+                        </div>
+
+                    </form>
+
+                    <!-- PREVIEW PANEL -->
+                    <div class="variant-preview-panel">
+
+                        <div class="preview-card">
+                            <div class="preview-main-image-wrapper">
+                                <img id="previewImage" src="<%= product.thumbnail %>">
+                            </div>
+                            <h3 id="previewName"><%= product.name %></h3>
+                            <p id="previewSpecs">Space Black • 256GB • 8GB</p>
+                            <div class="preview-price" id="previewPrice">₹1,19,900</div>
+                        </div>
+
+                        <div class="preview-analytics">
+                            <div><span>Sales</span><strong>482</strong></div>
+                            <div><span>Returns</span><strong>12</strong></div>
+                            <div><span>Health</span><strong>98%</strong></div>
+                        </div>
 
                     </div>
 
-                    <div>
+                </div>
 
-                        <span>
-                            Returns
-                        </span>
-
-                        <strong>
-                            12
-                        </strong>
-
-                    </div>
-
-                    <div>
-
-                        <span>
-                            Health
-                        </span>
-
-                        <strong>
-                            98%
-                        </strong>
-
-                    </div>
-
+                <!-- FOOTER -->
+                <div class="variant-modal-footer">
+                    <button class="btn-detail" id="cancelVariantBtn" type="button">Cancel</button>
+                    <button class="btn-detail btn-edit" id="saveVariantBtn" type="button">Save Variant</button>
                 </div>
 
             </div>
 
         </div>
 
-        <!-- FOOTER -->
 
-        <div class="variant-modal-footer">
+        <!-- =========================================
+             IMAGE CROPPER MODAL
+        ========================================== -->
 
-            <button
-                class="btn-detail"
-                id="cancelVariantBtn"
-                type="button"
-            >
+        <div class="cropper-overlay" id="cropperOverlay">
 
-                Cancel
+            <div class="cropper-modal">
 
-            </button>
+                <div class="cropper-header">
+                    <h3>Crop Image</h3>
+                    <button type="button" id="closeCropperBtn" class="cropper-close-btn">×</button>
+                </div>
 
-            <button
-                class="btn-detail btn-edit"
-                id="saveVariantBtn"
-                type="button"
-            >
+                <div class="cropper-body">
+                    <img id="cropperImage">
+                </div>
 
-                Save Variant
+                <div class="cropper-footer">
+                    <button type="button" id="cancelCropBtn" class="btn-detail">Cancel</button>
+                    <button type="button" id="cropImageBtn" class="btn-detail btn-edit">Crop & Add</button>
+                </div>
 
-            </button>
-
-        </div>
-
-    </div>
-
-</div>
-
-<!-- =========================================
-     IMAGE CROPPER MODAL
-========================================= -->
-
-<div
-    class="cropper-overlay"
-    id="cropperOverlay"
->
-
-    <div class="cropper-modal">
-
-        <div class="cropper-header">
-
-            <h3>
-                Crop Image
-            </h3>
-
-            <button
-                type="button"
-                id="closeCropperBtn"
-                class="cropper-close-btn"
-            >
-                ×
-            </button>
+            </div>
 
         </div>
 
-        <div class="cropper-body">
 
-            <img id="cropperImage">
-
-        </div>
-
-        <div class="cropper-footer">
-
-            <button
-                type="button"
-                id="cancelCropBtn"
-                class="btn-detail"
-            >
-                Cancel
-            </button>
-
-            <button
-                type="button"
-                id="cropImageBtn"
-                class="btn-detail btn-edit"
-            >
-                Crop & Add
-            </button>
-
-        </div>
-
-    </div>
-
-</div>
         <!-- =========================================
              FOOTER
         ========================================== -->
 
         <footer class="site-footer">
-
             © 2026 iStore Admin — Digital Atelier Environment
-
         </footer>
 
     </main>
 
-    <div
-    class="fullscreen-preview"
-    id="fullscreenPreview"
->
+    <div class="fullscreen-preview" id="fullscreenPreview">
+        <img id="fullscreenImage">
+    </div>
 
-    <img id="fullscreenImage">
-
-</div>
 
     <!-- =========================================
          SCRIPTS
@@ -1326,1853 +674,827 @@
            IMAGE SWITCHING
         ========================================== */
 
-        const thumbnails =
-            document.querySelectorAll(".thumbnail-item");
-
-        const mainImage =
-            document.getElementById("mainProductImage");
+        const thumbnails  = document.querySelectorAll(".thumbnail-item");
+        const mainImage   = document.getElementById("mainProductImage");
 
         thumbnails.forEach((thumb) => {
-
             thumb.addEventListener("click", () => {
-
-                thumbnails.forEach((t) => {
-
-                    t.classList.remove("active");
-
-                });
-
+                thumbnails.forEach(t => t.classList.remove("active"));
                 thumb.classList.add("active");
-
-                const img =
-                    thumb.querySelector("img").src;
-
+                const img = thumb.querySelector("img").src;
                 mainImage.style.opacity = "0";
-mainImage.style.transform = "scale(0.98)";
-
-setTimeout(() => {
-
-    mainImage.src = img;
-
-    mainImage.onload = () => {
-
-        mainImage.style.opacity = "1";
-        mainImage.style.transform = "scale(1)";
-
-    };
-
-}, 180);
-
+                mainImage.style.transform = "scale(0.98)";
+                setTimeout(() => {
+                    mainImage.src = img;
+                    mainImage.onload = () => {
+                        mainImage.style.opacity = "1";
+                        mainImage.style.transform = "scale(1)";
+                    };
+                }, 180);
             });
-
         });
 
 
         /* =========================================
-   FULLSCREEN IMAGE VIEWER
-========================================= */
+           FULLSCREEN IMAGE VIEWER
+        ========================================== */
 
-const fullscreenPreview =
-document.getElementById(
-    "fullscreenPreview"
-);
+        const fullscreenPreview = document.getElementById("fullscreenPreview");
+        const fullscreenImage   = document.getElementById("fullscreenImage");
 
-const fullscreenImage =
-document.getElementById(
-    "fullscreenImage"
-);
+        mainImage.addEventListener("click", () => {
+            fullscreenPreview.classList.add("active");
+            fullscreenImage.src = mainImage.src;
+            document.body.style.overflow = "hidden";
+        });
 
-mainImage.addEventListener(
-    "click",
-    () => {
+        fullscreenPreview.addEventListener("click", () => {
+            fullscreenPreview.classList.remove("active");
+            document.body.style.overflow = "";
+        });
 
-        fullscreenPreview.classList.add(
-            "active"
-        );
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape" && fullscreenPreview.classList.contains("active")) {
+                fullscreenPreview.classList.remove("active");
+                document.body.style.overflow = "";
+            }
+        });
 
-        fullscreenImage.src =
-        mainImage.src;
-
-        document.body.style.overflow =
-        "hidden";
-
-    }
-);
-
-fullscreenPreview.addEventListener(
-    "click",
-    () => {
-
-        fullscreenPreview.classList.remove(
-            "active"
-        );
-
-        document.body.style.overflow =
-        "";
-
-    }
-);
-document.addEventListener(
-    "keydown",
-    (e) => {
-
-        if(
-            e.key === "Escape" &&
-            fullscreenPreview.classList.contains(
-                "active"
-            )
-        ) {
-
-            fullscreenPreview.classList.remove(
-                "active"
-            );
-
-            document.body.style.overflow =
-            "";
-
-        }
-
-    }
-);
 
         /* =========================================
            VARIANT SEARCH
         ========================================== */
 
-        const variantSearch =
-        document.getElementById("variantSearch");
+        const variantSearch = document.getElementById("variantSearch");
 
-        if(variantSearch) {
-
+        if (variantSearch) {
             variantSearch.addEventListener("keyup", () => {
-
-                const value =
-                variantSearch.value.toLowerCase();
-
-                document
-                .querySelectorAll(
-                    ".variants-table tbody tr"
-                )
-                .forEach(row => {
-
-                    row.style.display =
-                    row.innerText
-                    .toLowerCase()
-                    .includes(value)
-                        ? ""
-                        : "none";
-
+                const value = variantSearch.value.toLowerCase();
+                document.querySelectorAll(".variants-table tbody tr").forEach(row => {
+                    row.style.display = row.innerText.toLowerCase().includes(value) ? "" : "none";
                 });
-
             });
-
         }
 
-/* =========================================
-   STOCK FILTER
-========================================= */
 
-const stockFilter =
-document.getElementById("stockFilter");
+        /* =========================================
+           STOCK FILTER
+        ========================================== */
 
-if(stockFilter) {
+        const stockFilter = document.getElementById("stockFilter");
 
-    stockFilter.addEventListener("change", () => {
+        if (stockFilter) {
+            stockFilter.addEventListener("change", () => {
+                const rows = document.querySelectorAll(".variants-table tbody tr");
+                rows.forEach(row => {
+                    const stockBadge = row.querySelector(".stock-badge");
+                    if (!stockBadge) return;
+                    const stock     = parseInt(stockBadge.innerText);
+                    const isDeleted = row.dataset.deleted === "true";
 
-        const rows =
-        document.querySelectorAll(
-            ".variants-table tbody tr"
-        );
+                    if      (stockFilter.value === "all")      row.style.display = !isDeleted ? "" : "none";
+                    else if (stockFilter.value === "trash")    row.style.display = isDeleted  ? "" : "none";
+                    else if (stockFilter.value === "critical") row.style.display = !isDeleted && stock <= 10 ? "" : "none";
+                    else if (stockFilter.value === "low")      row.style.display = !isDeleted && stock > 10 && stock <= 50 ? "" : "none";
+                    else if (stockFilter.value === "instock")  row.style.display = !isDeleted && stock > 50 ? "" : "none";
+                });
+            });
 
-        rows.forEach(row => {
+            stockFilter.dispatchEvent(new Event("change"));
+        }
 
-            const stockBadge =
-            row.querySelector(".stock-badge");
 
-            if(!stockBadge) return;
-
-            const stock =
-            parseInt(stockBadge.innerText);
-
-            const isDeleted =
-            row.dataset.deleted === "true";
-
-            /* 
-               ALL
-             */
-
-            if(stockFilter.value === "all") {
-
-                row.style.display =
-                !isDeleted ? "" : "none";
-
-            }
-
-            /* 
-               TRASH
-             */
-
-            else if(
-                stockFilter.value === "trash"
-            ) {
-
-                row.style.display =
-                isDeleted ? "" : "none";
-
-            }
-
-            /* 
-               CRITICAL
-             */
-
-            else if(
-                stockFilter.value === "critical"
-            ) {
-
-                row.style.display =
-                !isDeleted && stock <= 10
-                    ? ""
-                    : "none";
-
-            }
-
-            /* 
-               LOW
-             */
-
-            else if(
-                stockFilter.value === "low"
-            ) {
-
-                row.style.display =
-                !isDeleted &&
-                stock > 10 &&
-                stock <= 50
-                    ? ""
-                    : "none";
-
-            }
-
-            /* 
-               INSTOCK
-             */
-
-            else if(
-                stockFilter.value === "instock"
-            ) {
-
-                row.style.display =
-                !isDeleted && stock > 50
-                    ? ""
-                    : "none";
-
-            }
-
-        });
-
-    });
-
-    /* 
-       INITIAL FILTER
-     */
-
-    stockFilter.dispatchEvent(
-        new Event("change")
-    );
-
-}
         /* =========================================
            SALES CHART
         ========================================== */
 
-        const ctx =
-            document.getElementById("salesChart");
+        const ctx = document.getElementById("salesChart");
 
         new Chart(ctx, {
-
             type: "bar",
-
             data: {
-
-                labels: [
-                    "Mon",
-                    "Tue",
-                    "Wed",
-                    "Thu",
-                    "Fri",
-                    "Sat",
-                    "Sun"
-                ],
-
+                labels: ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],
                 datasets: [{
-
-                    data: [
-                        12,
-                        19,
-                        14,
-                        24,
-                        18,
-                        29,
-                        22
-                    ],
-
+                    data: [12,19,14,24,18,29,22],
                     borderRadius: 10,
-
-                    backgroundColor: [
-                        "#E9DFEA",
-                        "#D8C7DA",
-                        "#C4AEC8",
-                        "#AF92B4",
-                        "#9A78A0",
-                        "#845C8B",
-                        "#6D4475"
-                    ]
-
+                    backgroundColor: ["#E9DFEA","#D8C7DA","#C4AEC8","#AF92B4","#9A78A0","#845C8B","#6D4475"]
                 }]
-
             },
-
             options: {
-
                 responsive: true,
-
                 maintainAspectRatio: false,
-
-                plugins: {
-
-                    legend: {
-
-                        display: false
-
-                    }
-
-                },
-
+                plugins: { legend: { display: false } },
                 scales: {
-
-                    y: {
-
-                        grid: {
-
-                            color:
-                                "rgba(0,0,0,0.04)"
-
-                        },
-
-                        ticks: {
-
-                            color: "#6B6470"
-
-                        }
-
-                    },
-
-                    x: {
-
-                        grid: {
-
-                            display: false
-
-                        },
-
-                        ticks: {
-
-                            color: "#6B6470"
-
-                        }
-
-                    }
-
+                    y: { grid: { color: "rgba(0,0,0,0.04)" }, ticks: { color: "#6B6470" } },
+                    x: { grid: { display: false }, ticks: { color: "#6B6470" } }
                 }
-
             }
-
         });
+
 
         /* =========================================
            PREMIUM TOAST
         ========================================== */
 
-       const Toast = Swal.mixin({
-
+        const Toast = Swal.mixin({
             toast: true,
-
             position: "top",
-
             showConfirmButton: false,
-
             timer: 3000,
-
             timerProgressBar: true,
-
             background: "#FFFFFF",
-
             color: "#2C1421",
-
             iconColor: "#603763",
-
-            customClass: {
-
-                popup: "premium-toast"
-
-            }
-
+            customClass: { popup: "premium-toast" }
         });
+
+
         /* =========================================
            DELETE PRODUCT
         ========================================== */
 
-        document
-        .getElementById("deleteProductBtn")
-        .addEventListener("click", async () => {
-
+        document.getElementById("deleteProductBtn").addEventListener("click", async () => {
             const result = await Swal.fire({
-
                 title: "Delete Product?",
-
                 text: "This action cannot be undone.",
-
                 icon: "warning",
-
                 showCancelButton: true,
-
                 confirmButtonColor: "#603763",
-
                 cancelButtonColor: "#D6CED7",
-
                 confirmButtonText: "Delete",
-
-                background: "#FFFFFF",
-
-                borderRadius: "16px"
-
+                background: "#FFFFFF"
             });
-
-            if(result.isConfirmed) {
-
-    const response =
-    await fetch(
-
-        "/admin/delete-product/<%= product._id %>",
-
-        {
-            method: "PATCH"
-        }
-
-    );
-
-    const data =
-    await response.json();
-
-    if(data.success) {
-
-        Toast.fire({
-
-            icon: "success",
-
-            title: data.message
-
-        });
-
-        setTimeout(() => {
-
-            window.location.href =
-            "/admin/products";
-
-        }, 1000);
-
-    }
-
-    else {
-
-        Toast.fire({
-
-            icon: "error",
-
-            title: "Failed to delete product"
-
-        });
-
-    }
-
-}
-
-        });
-
-/* =========================================
-   DELETE VARIANT
-========================================= */
-document
-.querySelectorAll(".delete-variant-btn")
-.forEach(btn => {
-
-    btn.addEventListener("click", async () => {
-
-        const id =
-        btn.dataset.id;
-
-        const result =
-        await Swal.fire({
-
-            title: "Delete Variant?",
-
-            text:
-                "Variant will be removed.",
-
-            icon: "warning",
-
-            showCancelButton: true,
-
-            confirmButtonColor: "#603763",
-
-            cancelButtonColor: "#D6CED7",
-
-            confirmButtonText: "Delete",
-
-            background: "#FFFFFF",
-
-            borderRadius: "16px"
-
-        });
-
-        if(result.isConfirmed) {
-
-            const response =
-            await fetch(
-
-                `/admin/variants/${id}/delete`,
-
-                {
-                    method: "PATCH"
+            if (result.isConfirmed) {
+                const response = await fetch("/admin/delete-product/<%= product._id %>", { method: "PATCH" });
+                const data     = await response.json();
+                if (data.success) {
+                    Toast.fire({ icon: "success", title: data.message });
+                    setTimeout(() => { window.location.href = "/admin/products"; }, 1000);
+                } else {
+                    Toast.fire({ icon: "error", title: "Failed to delete product" });
                 }
-
-            );
-
-            const data =
-            await response.json();
-
-            if(data.success) {
-
-                Toast.fire({
-
-                    icon: "success",
-
-                    title: data.message
-
-                });
-
-                setTimeout(() => {
-
-                    location.reload();
-
-                }, 1000);
-
             }
-
-            else {
-
-                Toast.fire({
-
-                    icon: "error",
-
-                    title: data.message
-
-                });
-
-            }
-
-        }
-
-    });
-
-});
-
-
-/* =========================================
-   RESTORE VARIANT
-========================================= */
-
-document
-.querySelectorAll(".restore-variant-btn")
-.forEach(btn => {
-
-    btn.addEventListener("click", async () => {
-
-        const id = btn.dataset.id;
-
-        const response =
-        await fetch(
-
-            `/admin/variants/${id}/restore`,
-
-            {
-                method: "PATCH"
-            }
-
-        );
-
-        const data =
-        await response.json();
-
-        if(data.success) {
-
-            Toast.fire({
-
-                icon: "success",
-
-                title: "Variant restored"
-
-            });
-
-            setTimeout(() => {
-
-                location.reload();
-
-            }, 1000);
-
-        }
-
-        else {
-
-            Toast.fire({
-
-                icon: "error",
-
-                title: data.message
-
-            });
-
-        }
-
-    });
-
-});
-
-
-/* =========================================
-   PERMANENT DELETE VARIANT
-========================================= */
-
-document
-.querySelectorAll(".permanent-delete-variant-btn")
-.forEach(btn => {
-
-    btn.addEventListener("click", async () => {
-
-        const id = btn.dataset.id;
-
-        const result =
-        await Swal.fire({
-
-            title: "Delete Permanently?",
-
-            text:
-            "This action cannot be undone.",
-
-            icon: "warning",
-
-            showCancelButton: true,
-
-            confirmButtonColor: "#BA1A1A",
-
-            cancelButtonColor: "#D6CED7",
-
-            confirmButtonText:
-            "Delete Forever",
-
-            background: "#FFFFFF",
-
-            borderRadius: "16px"
-
         });
 
-        if(!result.isConfirmed) return;
 
-        const response =
-        await fetch(
-
-            `/admin/variants/${id}/permanent-delete`,
-
-            {
-                method: "DELETE"
-            }
-
-        );
-
-        const data =
-        await response.json();
-
-        if(data.success) {
-
-            Toast.fire({
-
-                icon: "success",
-
-                title:
-                "Variant permanently deleted"
-
-            });
-
-            setTimeout(() => {
-
-                location.reload();
-
-            }, 1000);
-
-        }
-
-        else {
-
-            Toast.fire({
-
-                icon: "error",
-
-                title: data.message
-
-            });
-
-        }
-
-    });
-
-});
-
-
-const variantModal =
-document.getElementById("variantModal");
-
-/* =========================================
-   OPEN ADD VARIANT MODAL
-========================================= */
-
-document
-.getElementById("openVariantModalBtn")
-.addEventListener("click", () => {
-
-    document.getElementById(
-        "variantModalTitle"
-    ).innerText = "Add Variant";
-
-    document.getElementById(
-        "variantMode"
-    ).value = "add";
-
-    document.getElementById(
-        "editingVariantId"
-    ).value = "";
-
-    document.getElementById(
-        "saveVariantBtn"
-    ).innerText = "Save Variant";
-
-    document.getElementById(
-        "variantForm"
-    ).reset();
-
-    document.getElementById(
-        "previewImage"
-    ).src = "<%= product.thumbnail %>";
-
-    document.getElementById(
-        "previewSpecs"
-    ).innerText =
-    "Space Black • 256GB • 8GB";
-
-    document.getElementById(
-        "previewPrice"
-    ).innerText =
-    "₹1,19,900";
-
-    variantModal.classList.add("active");
-
-});
-
-/* =========================================
-   CLOSE MODAL
-========================================= */
-
-document
-.getElementById("closeVariantModal")
-.addEventListener("click", () => {
-
-    variantModal.classList.remove("active");
-
-});
-
-document
-.getElementById("cancelVariantBtn")
-.addEventListener("click", () => {
-
-    variantModal.classList.remove("active");
-
-});
-
-/* =========================================
-   EDIT VARIANT MODAL
-========================================= */
-
-document
-.querySelectorAll(".edit-variant-btn")
-.forEach((button) => {
-
-    button.addEventListener("click", () => {
-
-        variantModal.classList.add("active");
-
-        document.getElementById(
-            "variantModalTitle"
-        ).innerText = "Edit Variant";
-
-        document.getElementById(
-            "variantMode"
-        ).value = "edit";
-
-        document.getElementById(
-            "editingVariantId"
-        ).value = button.dataset.id;
-
-        document.getElementById(
-            "saveVariantBtn"
-        ).innerText = "Update Variant";
-
-        document.getElementById(
-            "variantSKU"
-        ).value = button.dataset.sku;
-
-        document.getElementById(
-            "variantColor"
-        ).value = button.dataset.color;
-
-        document.getElementById(
-            "variantStorage"
-        ).value = button.dataset.storage;
-
-        document.getElementById(
-            "variantRAM"
-        ).value = button.dataset.ram;
-
-        document.getElementById(
-            "variantPrice"
-        ).value = button.dataset.price;
-
-        document.getElementById(
-            "variantComparePrice"
-        ).value =
-        button.dataset.compareprice || "";
-
-        document.getElementById(
-            "variantStock"
-        ).value = button.dataset.stock;
-
-        document.getElementById(
-            "previewSpecs"
-        ).innerText =
-        `${button.dataset.color} • ${button.dataset.storage} • ${button.dataset.ram}`;
-
-        document.getElementById(
-            "previewPrice"
-        ).innerText =
-        `₹${Number(button.dataset.price).toLocaleString()}`;
-
-        existingImages =
-        JSON.parse(button.dataset.images || "[]");
-
-        selectedFiles = [];
-
-        renderImages();
-
-    });
-
-});
-
-/* =========================================
-   LIVE PREVIEW
-========================================= */
-
-const previewInputs = [
-
-    "variantColor",
-    "variantStorage",
-    "variantRAM",
-    "variantPrice",
-    "variantComparePrice"
-
-];
-
-previewInputs.forEach((id) => {
-
-    document
-    .getElementById(id)
-    .addEventListener("input", () => {
-
-        const color =
-        document.getElementById(
-            "variantColor"
-        ).value || "Space Black";
-
-        const storage =
-        document.getElementById(
-            "variantStorage"
-        ).value || "256GB";
-
-        const ram =
-        document.getElementById(
-            "variantRAM"
-        ).value || "8GB";
-
-        const price =
-        document.getElementById(
-            "variantPrice"
-        ).value || "119900";
-
-        document.getElementById(
-            "previewSpecs"
-        ).innerText =
-        `${color} • ${storage} • ${ram}`;
-
-       const comparePrice =
-document.getElementById(
-    "variantComparePrice"
-).value;
-
-const discount =
-comparePrice > price
-? Math.round(
-    (
-        (comparePrice - price)
-        / comparePrice
-    ) * 100
-)
-: 0;
-
-document.getElementById(
-    "previewPrice"
-).innerHTML = `
-
-    <div class="preview-price-main">
-
-        ₹${Number(price).toLocaleString()}
-
-    </div>
-
-    ${
-        comparePrice > price
-        ? `
-            <div class="preview-compare-price">
-
-                ₹${Number(comparePrice).toLocaleString()}
-
-            </div>
-
-            <div class="discount-badge">
-
-                ${discount}% OFF
-
-            </div>
-        `
-        : ""
-    }
-
-`;
-
-    });
-
-});
-/* =========================================
-   PREMIUM MULTI IMAGE MANAGER
-========================================= */
-
-let selectedFiles = [];
-let existingImages = [];
-
-const imageInput =
-document.getElementById("variantImageInput");
-
-const previewGrid =
-document.getElementById("variantPreviewGrid");
-
-const previewImage =
-document.getElementById("previewImage");
-
-/* =========================================
-   RENDER IMAGES
-========================================= */
-
-function renderImages() {
-
-   previewGrid.innerHTML = "";
-
-const allImages = [
-
-    ...existingImages.map(img => ({
-        type: "existing",
-        url: img
-    })),
-
-    ...selectedFiles.map(file => ({
-        type: "file",
-        file,
-        url: URL.createObjectURL(file)
-    }))
-
-];
-
-/* =========================
-   NO IMAGE
-========================= */
-
-if(!allImages.length) {
-
-    previewImage.src =
-    "<%= product.thumbnail %>";
-
-    return;
-
-}
-
-/* =========================
-   SET MAIN IMAGE
-========================= */
-
-previewImage.src =
-allImages[0].url;
-
-/* =========================
-   RENDER THUMBNAILS
-========================= */
-
-allImages.forEach((imageData) => {
-
-    const previewItem =
-    document.createElement("div");
-
-    previewItem.className =
-    "preview-image-item";
-
-    previewItem.innerHTML = `
-
-        <img src="${imageData.url}">
-
-        <button
-            type="button"
-            class="remove-image-btn"
-        >
-            ×
-        </button>
-
-    `;
-
-    /* =========================
-       CHANGE MAIN IMAGE
-    ========================= */
-
-    previewItem
-    .querySelector("img")
-    .addEventListener(
-        "click",
-        () => {
-
-            previewImage.src =
-            imageData.url;
-
-        }
-    );
-
-    /* =========================
-       DELETE IMAGE
-    ========================= */
-
-    previewItem
-    .querySelector(
-        ".remove-image-btn"
-    )
-    .addEventListener(
-        "click",
-        () => {
-
-            if(imageData.type === "file") {
-
-                selectedFiles =
-                selectedFiles.filter(
-                    f => f !== imageData.file
-                );
-
-            }
-
-            else {
-
-                existingImages =
-                existingImages.filter(
-                    img => img !== imageData.url
-                );
-
-            }
-
-            renderImages();
-
-        }
-    );
-
-    previewGrid.appendChild(
-        previewItem
-    );
-
-});
-
-}
-
-/* =========================================
-   ADD NEW IMAGES
-========================================= */
-/* =========================================
-   CROPPER
-========================================= */
-
-const cropperOverlay =
-document.getElementById(
-    "cropperOverlay"
-);
-
-const cropperImage =
-document.getElementById(
-    "cropperImage"
-);
-
-let cropper;
-
-let pendingFiles = [];
-
-/* =========================================
-   OPEN CROPPER
-========================================= */
-
-imageInput.addEventListener(
-    "change",
-    async (e) => {
-
-        pendingFiles =
-        Array.from(e.target.files);
-
-        if(!pendingFiles.length) {
-            return;
-        }
-
-        openCropper(
-            pendingFiles[0]
-        );
-
-    }
-);
-
-/* =========================================
-   OPEN SINGLE IMAGE
-========================================= */
-function openCropper(file) {
-
-    const reader =
-    new FileReader();
-
-    reader.onload = function(event) {
-
-        cropperOverlay.classList.add(
-            "active"
-        );
-
-        cropperImage.src =
-        event.target.result;
-
-        setTimeout(() => {
-
-            if(cropper) {
-
-                cropper.destroy();
-
-            }
-
-            cropper = new Cropper(
-                cropperImage,
-                {
-
-                    aspectRatio: 4 / 5,
-
-                    viewMode: 1,
-
-                    dragMode: "move",
-
-                    autoCropArea: 0.8,
-
-                    movable: true,
-
-                    zoomable: true,
-
-                    scalable: true,
-
-                    rotatable: false,
-
-                    cropBoxMovable: true,
-
-                    cropBoxResizable: true,
-
-                    background: false
-
-                }
-            );
-
-        }, 100);
-
-    };
-
-    reader.readAsDataURL(file);
-
-}
-
-/* =========================================
-   CROP IMAGE
-========================================= */
-
-document
-.getElementById("cropImageBtn")
-.addEventListener(
-    "click",
-    () => {
-
-        if(!cropper) return;
-
-        const canvas =
-        cropper.getCroppedCanvas({
-
-            width: 1200,
-            height: 1200,
-
-            imageSmoothingEnabled: true,
-            imageSmoothingQuality: "high"
-
-        });
-
-        canvas.toBlob(
-            (blob) => {
-
-                const croppedFile =
-                new File(
-                    [blob],
-                    `variant-${Date.now()}.jpg`,
-                    {
-                        type: "image/jpeg"
+        /* =========================================
+           DELETE VARIANT
+        ========================================== */
+
+        document.querySelectorAll(".delete-variant-btn").forEach(btn => {
+            btn.addEventListener("click", async () => {
+                const id     = btn.dataset.id;
+                const result = await Swal.fire({
+                    title: "Delete Variant?",
+                    text: "Variant will be removed.",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#603763",
+                    cancelButtonColor: "#D6CED7",
+                    confirmButtonText: "Delete",
+                    background: "#FFFFFF"
+                });
+                if (result.isConfirmed) {
+                    const response = await fetch(`/admin/variants/${id}/delete`, { method: "PATCH" });
+                    const data     = await response.json();
+                    if (data.success) {
+                        Toast.fire({ icon: "success", title: data.message });
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        Toast.fire({ icon: "error", title: data.message });
                     }
-                );
+                }
+            });
+        });
 
-                selectedFiles.push(
-                    croppedFile
-                );
 
+        /* =========================================
+           RESTORE VARIANT
+        ========================================== */
+
+        document.querySelectorAll(".restore-variant-btn").forEach(btn => {
+            btn.addEventListener("click", async () => {
+                const id       = btn.dataset.id;
+                const response = await fetch(`/admin/variants/${id}/restore`, { method: "PATCH" });
+                const data     = await response.json();
+                if (data.success) {
+                    Toast.fire({ icon: "success", title: "Variant restored" });
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    Toast.fire({ icon: "error", title: data.message });
+                }
+            });
+        });
+
+
+        /* =========================================
+           PERMANENT DELETE VARIANT
+        ========================================== */
+
+        document.querySelectorAll(".permanent-delete-variant-btn").forEach(btn => {
+            btn.addEventListener("click", async () => {
+                const id     = btn.dataset.id;
+                const result = await Swal.fire({
+                    title: "Delete Permanently?",
+                    text: "This action cannot be undone.",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#BA1A1A",
+                    cancelButtonColor: "#D6CED7",
+                    confirmButtonText: "Delete Forever",
+                    background: "#FFFFFF"
+                });
+                if (!result.isConfirmed) return;
+                const response = await fetch(`/admin/variants/${id}/permanent-delete`, { method: "DELETE" });
+                const data     = await response.json();
+                if (data.success) {
+                    Toast.fire({ icon: "success", title: "Variant permanently deleted" });
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    Toast.fire({ icon: "error", title: data.message });
+                }
+            });
+        });
+
+
+        /* =========================================
+           MODAL OPEN / CLOSE
+        ========================================== */
+
+        const variantModal = document.getElementById("variantModal");
+
+        function openVariantModal() {
+            variantModal.classList.add("active");
+        }
+
+        function closeVariantModal() {
+            variantModal.classList.remove("active");
+            resetValidation();
+        }
+
+        document.getElementById("openVariantModalBtn").addEventListener("click", () => {
+            document.getElementById("variantModalTitle").innerText  = "Add Variant";
+            document.getElementById("variantMode").value            = "add";
+            document.getElementById("editingVariantId").value       = "";
+            document.getElementById("saveVariantBtn").innerText     = "Save Variant";
+            document.getElementById("variantForm").reset();
+            document.getElementById("previewImage").src             = "<%= product.thumbnail %>";
+            document.getElementById("previewSpecs").innerText       = "Space Black • 256GB • 8GB";
+            document.getElementById("previewPrice").innerText       = "₹1,19,900";
+            existingImages = [];
+            selectedFiles  = [];
+            renderImages();
+            resetValidation();
+            openVariantModal();
+        });
+
+        document.getElementById("closeVariantModal").addEventListener("click", closeVariantModal);
+        document.getElementById("cancelVariantBtn").addEventListener("click",  closeVariantModal);
+
+
+        /* =========================================
+           EDIT VARIANT MODAL
+        ========================================== */
+
+        document.querySelectorAll(".edit-variant-btn").forEach((button) => {
+            button.addEventListener("click", () => {
+                document.getElementById("variantModalTitle").innerText = "Edit Variant";
+                document.getElementById("variantMode").value           = "edit";
+                document.getElementById("editingVariantId").value      = button.dataset.id;
+                document.getElementById("saveVariantBtn").innerText    = "Update Variant";
+
+                document.getElementById("variantSKU").value           = button.dataset.sku;
+                document.getElementById("variantColor").value         = button.dataset.color;
+                document.getElementById("variantStorage").value       = button.dataset.storage;
+                document.getElementById("variantRAM").value           = button.dataset.ram;
+                document.getElementById("variantPrice").value         = button.dataset.price;
+                document.getElementById("variantComparePrice").value  = button.dataset.compareprice || "";
+                document.getElementById("variantStock").value         = button.dataset.stock;
+
+                document.getElementById("previewSpecs").innerText =
+                    `${button.dataset.color} • ${button.dataset.storage} • ${button.dataset.ram}`;
+                document.getElementById("previewPrice").innerText =
+                    `₹${Number(button.dataset.price).toLocaleString()}`;
+
+                existingImages = JSON.parse(button.dataset.images || "[]");
+                selectedFiles  = [];
                 renderImages();
-
-                cropperOverlay.classList.remove(
-                    "active"
-                );
-
-                cropper.destroy();
-
-                cropper = null;
-
-                /* NEXT IMAGE */
-
-                pendingFiles.shift();
-
-                if(pendingFiles.length) {
-
-                    openCropper(
-                        pendingFiles[0]
-                    );
-
-                }
-
-            },
-            "image/jpeg",
-            0.9
-        );
-
-    }
-);
-
-/* =========================================
-   CLOSE CROPPER
-========================================= */
-
-function closeCropper() {
-
-    cropperOverlay.classList.remove(
-        "active"
-    );
-
-    if(cropper) {
-
-        cropper.destroy();
-
-        cropper = null;
-
-    }
-
-    imageInput.value = "";
-
-}
-
-
-document
-.getElementById("closeCropperBtn")
-.addEventListener(
-    "click",
-    closeCropper
-);
-
-
-document
-.getElementById("cancelCropBtn")
-.addEventListener(
-    "click",
-    closeCropper
-);
-
-
-
-
-/* =========================================
-   VARIANT SWITCHING
-========================================= */
-
-const variantRows =
-document.querySelectorAll(".variant-row");
-
-const specColor =
-document.getElementById("specColor");
-
-const specStorage =
-document.getElementById("specStorage");
-
-const specRAM =
-document.getElementById("specRAM");
-
-const specSKU =
-document.getElementById("specSKU");
-
-const specStock =
-document.getElementById("specStock");
-
-const galleryContainer =
-document.querySelector(".thumbnail-list");
-
-variantRows.forEach((row) => {
-
-    row.addEventListener("click", () => {
-
-        /* ACTIVE ROW */
-
-        variantRows.forEach(r => {
-
-            r.classList.remove(
-                "active-variant"
-            );
-
+                resetValidation();
+                openVariantModal();
+            });
         });
 
-        row.classList.add(
-            "active-variant"
-        );
 
-        /* DATA */
+        /* =========================================
+           LIVE PREVIEW
+        ========================================== */
 
-        const sku =
-        row.dataset.sku;
+        ["variantColor","variantStorage","variantRAM","variantPrice","variantComparePrice"].forEach((id) => {
+            document.getElementById(id).addEventListener("input", () => {
+                const color   = document.getElementById("variantColor").value         || "Space Black";
+                const storage = document.getElementById("variantStorage").value       || "256GB";
+                const ram     = document.getElementById("variantRAM").value           || "8GB";
+                const price   = document.getElementById("variantPrice").value         || "119900";
+                const cmp     = document.getElementById("variantComparePrice").value;
+                const disc    = cmp > price ? Math.round(((cmp - price) / cmp) * 100) : 0;
 
-        const storage =
-        row.dataset.storage;
+                document.getElementById("previewSpecs").innerText = `${color} • ${storage} • ${ram}`;
+                document.getElementById("previewPrice").innerHTML = `
+                    <div class="preview-price-main">₹${Number(price).toLocaleString()}</div>
+                    ${cmp > price ? `
+                        <div class="preview-compare-price">₹${Number(cmp).toLocaleString()}</div>
+                        <div class="discount-badge">${disc}% OFF</div>
+                    ` : ""}
+                `;
+            });
+        });
 
-        const ram =
-        row.dataset.ram;
 
-        const color =
-        row.dataset.color;
+        /* =========================================
+           MULTI IMAGE MANAGER
+        ========================================== */
 
-        const stock =
-        row.dataset.stock;
+        let selectedFiles  = [];
+        let existingImages = [];
 
-        const price =
-        row.dataset.price;
+        const imageInput  = document.getElementById("variantImageInput");
+        const previewGrid = document.getElementById("variantPreviewGrid");
+        const previewImage = document.getElementById("previewImage");
 
-        const images =
-        JSON.parse(
-            row.dataset.images || "[]"
-        );
+        function renderImages() {
+            previewGrid.innerHTML = "";
 
-        /* UPDATE SPECS */
+            const allImages = [
+                ...existingImages.map(img  => ({ type: "existing", url: img })),
+                ...selectedFiles.map(file  => ({ type: "file", file, url: URL.createObjectURL(file) }))
+            ];
 
-        specColor.innerText =
-        color;
+            if (!allImages.length) {
+                previewImage.src = "<%= product.thumbnail %>";
+                /* Clear image error if images were removed AFTER a failed submit */
+                if (hasAttemptedSubmit) validateImages();
+                return;
+            }
 
-        specStorage.innerText =
-        storage;
+            previewImage.src = allImages[0].url;
 
-        specRAM.innerText =
-        `${ram} RAM`;
+            /* Clear image error once user has added images */
+            if (hasAttemptedSubmit) validateImages();
 
-        specSKU.innerText =
-        sku;
+            allImages.forEach((imageData) => {
+                const previewItem = document.createElement("div");
+                previewItem.className = "preview-image-item";
+                previewItem.innerHTML = `
+                    <img src="${imageData.url}">
+                    <button type="button" class="remove-image-btn">×</button>
+                `;
 
-        specStock.innerText =
-        `${stock} Units`;
+                previewItem.querySelector("img").addEventListener("click", () => {
+                    previewImage.src = imageData.url;
+                });
 
-        /* UPDATE PRICE */
+                previewItem.querySelector(".remove-image-btn").addEventListener("click", () => {
+                    if (imageData.type === "file") {
+                        selectedFiles = selectedFiles.filter(f => f !== imageData.file);
+                    } else {
+                        existingImages = existingImages.filter(img => img !== imageData.url);
+                    }
+                    renderImages();
+                });
 
-       const priceContainer =
-document.querySelector(
-    ".price-showcase"
-);
-
-const comparePrice =
-row.dataset.compareprice;
-
-const discount =
-comparePrice > price
-? Math.round(
-    (
-        (comparePrice - price)
-        / comparePrice
-    ) * 100
-)
-: 0;
-
-priceContainer.innerHTML = `
-
-    <span class="detail-value price">
-
-        ₹${Number(price).toLocaleString()}
-
-    </span>
-
-    ${
-        comparePrice > price
-        ? `
-            <span class="compare-price-large">
-
-                ₹${Number(comparePrice).toLocaleString()}
-
-            </span>
-
-            <span class="discount-badge">
-
-                ${discount}% OFF
-
-            </span>
-        `
-        : ""
-    }
-
-`;
-        /* UPDATE MAIN IMAGE */
-
-        if(images.length){
-
-            mainImage.style.opacity = "0";
-
-            setTimeout(() => {
-
-                mainImage.src =
-                images[0];
-
-                mainImage.style.opacity =
-                "1";
-
-            }, 180);
-
+                previewGrid.appendChild(previewItem);
+            });
         }
 
-        /* REBUILD THUMBNAILS */
 
-        galleryContainer.innerHTML = "";
+        /* =========================================
+           CROPPER
+        ========================================== */
 
-        images.forEach((image, index) => {
+        const cropperOverlay = document.getElementById("cropperOverlay");
+        const cropperImage   = document.getElementById("cropperImage");
 
-            const thumb =
-            document.createElement("div");
+        let cropper;
+        let pendingFiles = [];
 
-            thumb.className =
-            `thumbnail-item ${
-                index === 0
-                ? "active"
-                : ""
-            }`;
+        imageInput.addEventListener("change", async (e) => {
+            pendingFiles = Array.from(e.target.files);
+            if (!pendingFiles.length) return;
+            openCropper(pendingFiles[0]);
+        });
 
-            thumb.innerHTML = `
-
-                <img
-                    src="${image}"
-                    alt="Thumbnail"
-                >
-
-            `;
-
-            thumb.addEventListener(
-                "click",
-                () => {
-
-                    document
-                    .querySelectorAll(
-                        ".thumbnail-item"
-                    )
-                    .forEach(t => {
-
-                        t.classList.remove(
-                            "active"
-                        );
-
+        function openCropper(file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                cropperOverlay.classList.add("active");
+                cropperImage.src = event.target.result;
+                setTimeout(() => {
+                    if (cropper) cropper.destroy();
+                    cropper = new Cropper(cropperImage, {
+                        aspectRatio: 4/5,
+                        viewMode: 1,
+                        dragMode: "move",
+                        autoCropArea: 0.8,
+                        movable: true,
+                        zoomable: true,
+                        scalable: true,
+                        rotatable: false,
+                        cropBoxMovable: true,
+                        cropBoxResizable: true,
+                        background: false
                     });
+                }, 100);
+            };
+            reader.readAsDataURL(file);
+        }
 
-                    thumb.classList.add(
-                        "active"
-                    );
+        document.getElementById("cropImageBtn").addEventListener("click", () => {
+            if (!cropper) return;
+            const canvas = cropper.getCroppedCanvas({ width: 1200, height: 1200, imageSmoothingEnabled: true, imageSmoothingQuality: "high" });
+            canvas.toBlob((blob) => {
+                const croppedFile = new File([blob], `variant-${Date.now()}.jpg`, { type: "image/jpeg" });
+                selectedFiles.push(croppedFile);
+                renderImages();
+                cropperOverlay.classList.remove("active");
+                cropper.destroy();
+                cropper = null;
+                pendingFiles.shift();
+                if (pendingFiles.length) openCropper(pendingFiles[0]);
+            }, "image/jpeg", 0.9);
+        });
 
-                    mainImage.style.opacity =
-                    "0";
+        function closeCropper() {
+            cropperOverlay.classList.remove("active");
+            if (cropper) { cropper.destroy(); cropper = null; }
+            imageInput.value = "";
+        }
 
-                    setTimeout(() => {
+        document.getElementById("closeCropperBtn").addEventListener("click", closeCropper);
+        document.getElementById("cancelCropBtn").addEventListener("click",  closeCropper);
 
-                        mainImage.src =
-                        image;
 
-                        mainImage.style.opacity =
-                        "1";
+        /* =========================================
+           VARIANT ROW CLICK — SWITCH GALLERY
+        ========================================== */
 
-                    }, 150);
+        const variantRows     = document.querySelectorAll(".variant-row");
+        const specColor       = document.getElementById("specColor");
+        const specStorage     = document.getElementById("specStorage");
+        const specRAM         = document.getElementById("specRAM");
+        const specSKU         = document.getElementById("specSKU");
+        const specStock       = document.getElementById("specStock");
+        const galleryContainer = document.querySelector(".thumbnail-list");
 
+        variantRows.forEach((row) => {
+            row.addEventListener("click", () => {
+                variantRows.forEach(r => r.classList.remove("active-variant"));
+                row.classList.add("active-variant");
+
+                const sku          = row.dataset.sku;
+                const storage      = row.dataset.storage;
+                const ram          = row.dataset.ram;
+                const color        = row.dataset.color;
+                const stock        = row.dataset.stock;
+                const price        = row.dataset.price;
+                const comparePrice = row.dataset.compareprice;
+                const images       = JSON.parse(row.dataset.images || "[]");
+                const discount     = comparePrice > price ? Math.round(((comparePrice - price) / comparePrice) * 100) : 0;
+
+                specColor.innerText   = color;
+                specStorage.innerText = storage;
+                specRAM.innerText     = `${ram} RAM`;
+                specSKU.innerText     = sku;
+                specStock.innerText   = `${stock} Units`;
+
+                document.querySelector(".price-showcase").innerHTML = `
+                    <span class="detail-value price">₹${Number(price).toLocaleString()}</span>
+                    ${comparePrice > price ? `
+                        <span class="compare-price-large">₹${Number(comparePrice).toLocaleString()}</span>
+                        <span class="discount-badge">${discount}% OFF</span>
+                    ` : ""}
+                `;
+
+                if (images.length) {
+                    mainImage.style.opacity = "0";
+                    setTimeout(() => { mainImage.src = images[0]; mainImage.style.opacity = "1"; }, 180);
                 }
-            );
 
-            galleryContainer.appendChild(
-                thumb
-            );
-
+                galleryContainer.innerHTML = "";
+                images.forEach((image, index) => {
+                    const thumb = document.createElement("div");
+                    thumb.className = `thumbnail-item ${index === 0 ? "active" : ""}`;
+                    thumb.innerHTML = `<img src="${image}" alt="Thumbnail">`;
+                    thumb.addEventListener("click", () => {
+                        document.querySelectorAll(".thumbnail-item").forEach(t => t.classList.remove("active"));
+                        thumb.classList.add("active");
+                        mainImage.style.opacity = "0";
+                        setTimeout(() => { mainImage.src = image; mainImage.style.opacity = "1"; }, 150);
+                    });
+                    galleryContainer.appendChild(thumb);
+                });
+            });
         });
 
-    });
 
-});
+        /* =========================================
+           ─────────────────────────────────────────
+           FORM VALIDATION
+           ─────────────────────────────────────────
+        ========================================== */
 
+        let hasAttemptedSubmit = false;
 
+        /* ── helpers ── */
 
-/* =========================================
-   SAVE VARIANT
-========================================= */
-
-document
-.getElementById("saveVariantBtn")
-.addEventListener("click", async () => {
-
-    const mode =
-    document.getElementById(
-        "variantMode"
-    ).value;
-
-    const variantId =
-    document.getElementById(
-        "editingVariantId"
-    ).value;
-
-    const formData =
-    new FormData();
-
-    formData.append(
-
-        "productId",
-
-        document.getElementById(
-            "variantProductId"
-        ).value
-
-    );
-
-    formData.append(
-
-        "SKU",
-
-        document.getElementById(
-            "variantSKU"
-        ).value
-
-    );
-
-    formData.append(
-
-        "color",
-
-        document.getElementById(
-            "variantColor"
-        ).value
-
-    );
-
-    formData.append(
-
-        "storage",
-
-        document.getElementById(
-            "variantStorage"
-        ).value
-
-    );
-
-    formData.append(
-
-        "RAM",
-
-        document.getElementById(
-            "variantRAM"
-        ).value
-
-    );
-
-    formData.append(
-
-        "price",
-
-        document.getElementById(
-            "variantPrice"
-        ).value
-
-    );
-
-    formData.append(
-
-        "comparePrice",
-
-        document.getElementById(
-            "variantComparePrice"
-        ).value
-
-    );
-
-    formData.append(
-
-        "stock",
-
-        document.getElementById(
-            "variantStock"
-        ).value
-
-    );
-
-selectedFiles.forEach((file) => {
-
-    formData.append(
-        "variantImages",
-        file
-    );
-
-});
-
-formData.append(
-    "existingImages",
-    JSON.stringify(existingImages)
-);
-    try {
-
-        let url = "";
-        let method = "";
-
-        if(mode === "add") {
-
-            url =
-            `/admin/products/${
-                document.getElementById(
-                    "variantProductId"
-                ).value
-            }/variants/add`;
-
-            method = "POST";
-
+        function vSetError(inputEl, errorId, msg) {
+            inputEl.classList.add("vinput-error");
+            inputEl.classList.remove("vinput-ok");
+            const span = document.getElementById(errorId);
+            if (span) { span.textContent = msg; span.classList.add("visible"); }
         }
 
-        else {
-
-            url =
-            `/admin/variants/${variantId}/edit`;
-
-            method = "POST";
-
+        function vSetOk(inputEl, errorId) {
+            inputEl.classList.remove("vinput-error");
+            inputEl.classList.add("vinput-ok");
+            const span = document.getElementById(errorId);
+            if (span) { span.textContent = ""; span.classList.remove("visible"); }
         }
 
-        const response =
-        await fetch(url, {
+        function vClear(inputEl, errorId) {
+            inputEl.classList.remove("vinput-error", "vinput-ok");
+            const span = document.getElementById(errorId);
+            if (span) { span.textContent = ""; span.classList.remove("visible"); }
+        }
 
-            method,
+        function showImageError(msg) {
+            const span = document.getElementById("err-images");
+            const box  = document.getElementById("variantUploadBox");
+            if (span) { span.textContent = msg; span.classList.add("visible"); }
+            if (box)  box.classList.add("upload-error");
+        }
 
-            body: formData
+        function clearImageError() {
+            const span = document.getElementById("err-images");
+            const box  = document.getElementById("variantUploadBox");
+            if (span) { span.textContent = ""; span.classList.remove("visible"); }
+            if (box)  box.classList.remove("upload-error");
+        }
 
+        /* ── field validators (return error string or null) ── */
+
+        function validateColor() {
+            const el  = document.getElementById("variantColor");
+            const val = el.value.trim();
+            if (!val)              return [el, "Color is required"];
+            if (val.length < 2)   return [el, "Color must be at least 2 characters"];
+            if (val.length > 40)  return [el, "Color cannot exceed 40 characters"];
+            if (!/^[a-zA-Z0-9\s\-\/]+$/.test(val)) return [el, "Only letters, numbers, spaces and hyphens allowed"];
+            return [el, null];
+        }
+
+        function validateStorage() {
+            const el  = document.getElementById("variantStorage");
+            const val = el.value.trim();
+            if (!val)                              return [el, "Storage is required"];
+            if (!/^[0-9]+(GB|TB|MB)$/i.test(val)) return [el, "Format must be like 256GB, 1TB or 512MB"];
+            return [el, null];
+        }
+
+        function validateRAM() {
+            const el  = document.getElementById("variantRAM");
+            const val = el.value.trim();
+            if (!val)                           return [el, "RAM is required"];
+            if (!/^[0-9]+(GB|MB)$/i.test(val)) return [el, "Format must be like 8GB or 16GB"];
+            return [el, null];
+        }
+
+        function validateSKU() {
+            const el  = document.getElementById("variantSKU");
+            const val = el.value.trim();
+            if (!val)                           return [el, "SKU is required"];
+            if (val.length < 3)                 return [el, "SKU must be at least 3 characters"];
+            if (val.length > 50)                return [el, "SKU cannot exceed 50 characters"];
+            if (!/^[A-Z0-9\-]+$/.test(val))    return [el, "Only uppercase letters, numbers and hyphens (e.g. IP17-BLK-256)"];
+            return [el, null];
+        }
+
+        function validatePrice() {
+            const el  = document.getElementById("variantPrice");
+            const val = el.value.trim();
+            if (!val)                    return [el, "Price is required"];
+            if (!Number.isInteger(+val) || +val < 1) return [el, "Price must be a whole number greater than 0"];
+            if (+val > 10000000)         return [el, "Price seems too high"];
+            return [el, null];
+        }
+
+        function validateComparePrice() {
+            const el    = document.getElementById("variantComparePrice");
+            const val   = el.value.trim();
+            const price = +document.getElementById("variantPrice").value;
+            if (!val) return [el, null]; /* optional */
+            if (!Number.isInteger(+val) || +val < 1) return [el, "Compare price must be a whole number greater than 0"];
+            if (+val > 10000000)  return [el, "Compare price seems too high"];
+            if (+val <= price)    return [el, "Compare price must be higher than the sale price"];
+            return [el, null];
+        }
+
+        function validateStock() {
+            const el  = document.getElementById("variantStock");
+            const val = el.value.trim();
+            if (val === "")               return [el, "Stock is required"];
+            if (!Number.isInteger(+val))  return [el, "Stock must be a whole number"];
+            if (+val < 0)                 return [el, "Stock cannot be negative"];
+            if (+val > 999999)            return [el, "Stock value is too high"];
+            return [el, null];
+        }
+
+        function validateImages() {
+            const mode  = document.getElementById("variantMode").value;
+            const total = (existingImages?.length || 0) + (selectedFiles?.length || 0);
+            if (total === 0) {
+                showImageError(
+                    mode === "add"
+                        ? "Please upload at least one variant image"
+                        : "A variant must have at least one image"
+                );
+                return false;
+            }
+            clearImageError();
+            return true;
+        }
+
+        /* ── map each validator to its error span id ── */
+
+        const FIELD_MAP = [
+            { fn: validateColor,        errId: "err-color"   },
+            { fn: validateStorage,      errId: "err-storage" },
+            { fn: validateRAM,          errId: "err-ram"     },
+            { fn: validateSKU,          errId: "err-sku"     },
+            { fn: validatePrice,        errId: "err-price"   },
+            { fn: validateComparePrice, errId: "err-compare" },
+            { fn: validateStock,        errId: "err-stock"   },
+        ];
+
+        /* ── run one field and show/clear its error ── */
+
+        function runField(fn, errId) {
+            const [el, msg] = fn();
+            if (msg) { vSetError(el, errId, msg); return false; }
+            else      { vSetOk(el, errId);         return true;  }
+        }
+
+        /* ── wire blur on each input ── */
+
+        const fieldInputIds = {
+            "variantColor":        { fn: validateColor,        errId: "err-color"   },
+            "variantStorage":      { fn: validateStorage,      errId: "err-storage" },
+            "variantRAM":          { fn: validateRAM,          errId: "err-ram"     },
+            "variantSKU":          { fn: validateSKU,          errId: "err-sku"     },
+            "variantPrice":        { fn: validatePrice,        errId: "err-price"   },
+            "variantComparePrice": { fn: validateComparePrice, errId: "err-compare" },
+            "variantStock":        { fn: validateStock,        errId: "err-stock"   },
+        };
+
+        Object.entries(fieldInputIds).forEach(([id, { fn, errId }]) => {
+            const input = document.getElementById(id);
+            if (!input) return;
+
+            /* Validate on blur */
+            input.addEventListener("blur", () => runField(fn, errId));
+
+            /* Live-correct once the field is in error state */
+            input.addEventListener("input", () => {
+                if (input.classList.contains("vinput-error")) {
+                    runField(fn, errId);
+                }
+            });
         });
 
-        const data =
-        await response.json();
+        /* ── reset all validation states (called when modal opens) ── */
 
-        if(data.success) {
+        function resetValidation() {
+            Object.entries(fieldInputIds).forEach(([id, { errId }]) => {
+                const input = document.getElementById(id);
+                if (input) vClear(input, errId);
+            });
+            clearImageError();
+            hasAttemptedSubmit = false;
+        }
 
-            Toast.fire({
 
-                icon: "success",
+        /* =========================================
+           SAVE VARIANT — VALIDATED
+        ========================================== */
 
-                title: data.message
+        document.getElementById("saveVariantBtn").addEventListener("click", async () => {
 
+            hasAttemptedSubmit = true;
+
+            /* Run all field validators */
+            let allOk = true;
+            FIELD_MAP.forEach(({ fn, errId }) => {
+                if (!runField(fn, errId)) allOk = false;
             });
 
-            variantModal.classList.remove(
-                "active"
-            );
+            /* Validate images */
+            if (!validateImages()) allOk = false;
 
-            setTimeout(() => {
+            /* Scroll to first error and stop */
+            if (!allOk) {
+                const firstError = document.querySelector(
+                    "#variantForm .vinput-error, #variantUploadBox.upload-error"
+                );
+                firstError?.scrollIntoView({ behavior: "smooth", block: "center" });
+                return;
+            }
 
-                location.reload();
+            /* ── Build FormData and send ── */
 
-            }, 1200);
+            const mode      = document.getElementById("variantMode").value;
+            const variantId = document.getElementById("editingVariantId").value;
+            const formData  = new FormData();
 
-        }
+            formData.append("productId",    document.getElementById("variantProductId").value);
+            formData.append("SKU",          document.getElementById("variantSKU").value.trim());
+            formData.append("color",        document.getElementById("variantColor").value.trim());
+            formData.append("storage",      document.getElementById("variantStorage").value.trim());
+            formData.append("RAM",          document.getElementById("variantRAM").value.trim());
+            formData.append("price",        document.getElementById("variantPrice").value);
+            formData.append("comparePrice", document.getElementById("variantComparePrice").value);
+            formData.append("stock",        document.getElementById("variantStock").value);
 
-        else {
+            selectedFiles.forEach(file => formData.append("variantImages", file));
+            formData.append("existingImages", JSON.stringify(existingImages));
 
-            Toast.fire({
+            try {
+                const url    = mode === "add"
+                    ? `/admin/products/${document.getElementById("variantProductId").value}/variants/add`
+                    : `/admin/variants/${variantId}/edit`;
 
-                icon: "error",
+                const saveBtn       = document.getElementById("saveVariantBtn");
+                saveBtn.disabled    = true;
+                saveBtn.style.opacity = "0.7";
 
-                title: data.message
+                const response = await fetch(url, { method: "POST", body: formData });
+                const data     = await response.json();
 
-            });
+                saveBtn.disabled      = false;
+                saveBtn.style.opacity = "";
 
-        }
+                if (data.success) {
+                    Toast.fire({ icon: "success", title: data.message });
+                    closeVariantModal();
+                    setTimeout(() => location.reload(), 1200);
+                } else {
+                    Toast.fire({ icon: "error", title: data.message });
+                }
 
-    }
-
-    catch(error) {
-
-        console.log(error);
-
-        Toast.fire({
-
-            icon: "error",
-
-            title:
-            "Something went wrong"
+            } catch (error) {
+                console.error(error);
+                document.getElementById("saveVariantBtn").disabled = false;
+                document.getElementById("saveVariantBtn").style.opacity = "";
+                Toast.fire({ icon: "error", title: "Something went wrong" });
+            }
 
         });
 
-    }
 
-});
+        /* =========================================
+           PARALLAX EFFECT
+        ========================================== */
+
+        const imageContainer = document.querySelector(".main-image-container");
+
+        imageContainer.addEventListener("mousemove", (e) => {
+            const rect    = imageContainer.getBoundingClientRect();
+            const rotateY = ((e.clientX - rect.left) / rect.width  - 0.5) * 5;
+            const rotateX = ((e.clientY - rect.top)  / rect.height - 0.5) * -5;
+            mainImage.style.transform = `perspective(1200px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.03)`;
+        });
+
+        imageContainer.addEventListener("mouseleave", () => {
+            mainImage.style.transform = `perspective(1200px) rotateX(0) rotateY(0) scale(1)`;
+        });
 
 
-/* =========================================
-   PREMIUM PARALLAX EFFECT
-========================================= */
+        /* =========================================
+           MOBILE SWIPE GALLERY
+        ========================================== */
 
-const imageContainer =
-document.querySelector(
-    ".main-image-container"
-);
+        let currentIndex = 0;
+        const imageItems = [...thumbnails];
+        let touchStartX  = 0;
+        let touchEndX    = 0;
 
-imageContainer.addEventListener(
-    "mousemove",
-    (e) => {
+        mainImage.addEventListener("touchstart", (e) => { touchStartX = e.changedTouches[0].screenX; });
+        mainImage.addEventListener("touchend",   (e) => { touchEndX   = e.changedTouches[0].screenX; handleSwipe(); });
 
-        const rect =
-        imageContainer.getBoundingClientRect();
+        function handleSwipe() {
+            if (touchEndX < touchStartX - 50) currentIndex = (currentIndex + 1) % imageItems.length;
+            if (touchEndX > touchStartX + 50) currentIndex = (currentIndex - 1 + imageItems.length) % imageItems.length;
+            imageItems[currentIndex].click();
+        }
 
-        const x =
-        e.clientX - rect.left;
-
-        const y =
-        e.clientY - rect.top;
-
-        const rotateY =
-        ((x / rect.width) - 0.5) * 5;
-
-        const rotateX =
-        ((y / rect.height) - 0.5) * -5;
-
-        mainImage.style.transform = `
-            perspective(1200px)
-            rotateX(${rotateX}deg)
-            rotateY(${rotateY}deg)
-            scale(1.03)
-        `;
-
-    }
-);
-
-imageContainer.addEventListener(
-    "mouseleave",
-    () => {
-
-        mainImage.style.transform = `
-            perspective(1200px)
-            rotateX(0)
-            rotateY(0)
-            scale(1)
-        `;
-
-    }
-);
-
-/* =========================================
-   MOBILE SWIPE GALLERY
-========================================= */
-
-let currentIndex = 0;
-
-const imageItems =
-[...thumbnails];
-
-let touchStartX = 0;
-let touchEndX = 0;
-
-mainImage.addEventListener(
-    "touchstart",
-    (e) => {
-
-        touchStartX =
-        e.changedTouches[0].screenX;
-
-    }
-);
-
-mainImage.addEventListener(
-    "touchend",
-    (e) => {
-
-        touchEndX =
-        e.changedTouches[0].screenX;
-
-        handleSwipe();
-
-    }
-);
-
-function handleSwipe() {
-
-    if(touchEndX < touchStartX - 50) {
-
-        currentIndex =
-        (currentIndex + 1)
-        % imageItems.length;
-
-    }
-
-    if(touchEndX > touchStartX + 50) {
-
-        currentIndex =
-        (currentIndex - 1 + imageItems.length)
-        % imageItems.length;
-
-    }
-
-    imageItems[currentIndex].click();
-
-}
     </script>
 
 </body>

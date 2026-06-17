@@ -1,59 +1,27 @@
-import {
-  getSalesReportService,
-} from "../../services/admin/salesService.js";
+import { getSalesReportService } from "../../services/admin/salesService.js";
 
-export const loadSalesReport =
-async (req, res) => {
-
+export const loadSalesReport = async (req, res) => {
   try {
-
+    /* Default to weekly so the active chip in the EJS matches */
     const {
-      filter = "daily",
+      filter    = "weekly",
       startDate,
       endDate,
     } = req.query;
 
-    const report =
-    await getSalesReportService(
+    const report = await getSalesReportService(filter, startDate, endDate);
 
+    res.render("admin/sales-report", {
+      page: "sales-report",
+      report,
       filter,
+      /* Use resolved dates from the service so "undefined" never renders */
+      startDate: startDate || report.resolvedStartDate,
+      endDate:   endDate   || report.resolvedEndDate,
+    });
 
-      startDate,
-
-      endDate,
-
-    );
-
-    res.render(
-      "admin/sales-report",
-      {
-
-        page: "reports",
-
-        report,
-
-        filter,
-
-        startDate,
-
-        endDate,
-
-      },
-    );
-
+  } catch (error) {
+    console.log("Sales Report Error:", error);
+    return res.redirect("/admin/dashboard");
   }
-
-  catch (error) {
-
-    console.log(
-      "Sales Report Error:",
-      error,
-    );
-
-    return res.redirect(
-      "/admin/dashboard",
-    );
-
-  }
-
 };

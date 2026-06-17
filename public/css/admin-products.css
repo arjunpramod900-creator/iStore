@@ -1112,6 +1112,45 @@ tbody td {
 }
 
 /* =========================================
+   INLINE FIELD VALIDATION — PRODUCT MODALS
+========================================= */
+
+.field-error {
+  display: none;
+  color: #e74c3c;
+  font-size: 12px;
+  margin-top: 4px;
+  padding-left: 2px;
+  font-weight: 500;
+}
+.field-error.visible {
+  display: block;
+}
+
+.form-input.input-error,
+.form-select.input-error,
+.form-textarea.input-error {
+  border-color: #e74c3c !important;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 248, 248, 0.92) 0%,
+    rgba(255, 240, 240, 0.92) 100%
+  ) !important;
+  box-shadow: 0 0 0 4px rgba(231, 76, 60, 0.08) !important;
+}
+
+.form-input.input-success,
+.form-select.input-success,
+.form-textarea.input-success {
+  border-color: #2ecc71 !important;
+}
+
+.upload-slot.input-error {
+  border-color: #e74c3c !important;
+  background: rgba(255, 248, 248, 0.65) !important;
+}
+
+/* =========================================
    MODAL SHELL
    Wraps the Add/Edit form sections above when
    shown as an overlay on the product-management

@@ -4,6 +4,7 @@ import {
   cancelOrderService,
   cancelOrderItemService,
   returnOrderService,
+  returnOrderItemService,
 } from "../../services/user/orderService.js";
 
 import PDFDocument from "pdfkit";
@@ -273,6 +274,39 @@ async (
   }
 };
 
+
+/* =========================================
+   RETURN SINGLE ITEM
+========================================= */
+
+export const returnOrderItem = async (
+  req,
+  res,
+) => {
+  try {
+    const userId = req.session.userId;
+
+    const { orderId, itemId } = req.params;
+
+    const { reason } = req.body;
+
+    const response = await returnOrderItemService(
+      userId,
+      orderId,
+      itemId,
+      reason,
+    );
+
+    return res.json(response);
+  } catch (error) {
+    console.log("Return Item Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Item return request failed",
+    });
+  }
+};
 
 /* =========================================
 DOWNLOAD INVOICE PDF

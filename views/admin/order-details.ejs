@@ -5,697 +5,803 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Order Details — iStore Admin</title>
     <meta name="description" content="Admin order detail view — manage individual order status, logistics, returns and payment.">
-
-    <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-
-    <!-- CSS -->
     <link rel="stylesheet" href="/css/admin-order-details.css">
     <link rel="stylesheet" href="/css/components/admin-sidebar.css">
     <link rel="stylesheet" href="/css/admin-dashboard.css">
-
-    <!-- Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
-
-    <!-- GSAP -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <style>
+        /* ── Return status indicator badge ── */
+        .aod-return-status-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            border-radius: var(--aod-radius-sm);
+            margin-bottom: 8px;
+        }
+        .aod-return-status-wrap--approved {
+            background: rgba(5, 150, 105, 0.08);
+            border: 1px solid rgba(5, 150, 105, 0.20);
+        }
+        .aod-return-status-wrap--rejected {
+            background: rgba(186, 26, 26, 0.06);
+            border: 1px solid rgba(186, 26, 26, 0.15);
+        }
+        .aod-return-status-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--aod-sub);
+        }
+        .aod-return-status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 14px;
+            border-radius: var(--aod-radius-pill);
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+        }
+        .aod-return-status-badge--approved {
+            background: rgba(5, 150, 105, 0.12);
+            color: #059669;
+        }
+        .aod-return-status-badge--rejected {
+            background: rgba(186, 26, 26, 0.10);
+            color: #BA1A1A;
+        }
+        /* ── Disabled state for locked buttons ── */
+        .aod-update-btn:disabled,
+        .aod-btn-approve:disabled,
+        .aod-btn-reject:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        /* ── Locked status select ── */
+        .aod-status-select:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            background-color: #f4f4f5;
+        }
+        /* ── Return pending warning on status update card ── */
+        .aod-return-pending-notice {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            background: rgba(245, 158, 11, 0.08);
+            border: 1px solid rgba(245, 158, 11, 0.25);
+            border-radius: var(--aod-radius-sm);
+            font-size: 12px;
+            font-weight: 500;
+            color: #92400E;
+        }
+        .aod-return-pending-notice i {
+            flex-shrink: 0;
+            width: 14px;
+            height: 14px;
+            color: #D97706;
+        }
+
+        /* ── Per-item return actions (inside products table) ── */
+        .aod-item-return-actions {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+        }
+        .aod-btn-approve--sm,
+        .aod-btn-reject--sm {
+            padding: 6px 12px;
+            font-size: 11px;
+            border-radius: var(--aod-radius-sm, 8px);
+            border: none;
+            cursor: pointer;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+        .aod-btn-approve--sm {
+            background: rgba(5, 150, 105, 0.12);
+            color: #059669;
+        }
+        .aod-btn-approve--sm:hover {
+            background: rgba(5, 150, 105, 0.2);
+        }
+        .aod-btn-reject--sm {
+            background: rgba(186, 26, 26, 0.10);
+            color: #BA1A1A;
+        }
+        .aod-btn-reject--sm:hover {
+            background: rgba(186, 26, 26, 0.18);
+        }
+        .aod-btn-approve--sm:disabled,
+        .aod-btn-reject--sm:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
 </head>
 
 <body>
 
     <%
-       
-
-     /* ==========================
-        ORDER DATA
-        ========================== */
-
-        const orderId = order.orderId;
-
-        const orderDate =
-        new Date(order.createdAt)
-        .toLocaleDateString(
-        'en-IN',
-        {
-        day:'2-digit',
-        month:'short',
-        year:'numeric'
-        }
-        );
-
-        const orderStatus =
-        order.orderStatus;
-
-        const payStatus =
-        order.paymentStatus;
-
-        const items =
-        order.items || [];
+        const orderId     = order.orderId;
+        const orderDate   = new Date(order.createdAt).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+        const orderStatus = order.orderStatus;
+        const payStatus   = order.paymentStatus;
+        const items       = order.items || [];
 
         const pricing = {
-        subtotal: order.subtotal,
-        shipping: order.deliveryCharge,
-        discount: order.discountAmount,
-        tax: order.taxAmount,
-        total: order.finalAmount
+            subtotal: order.subtotal,
+            shipping: order.deliveryCharge,
+            discount: order.discountAmount,
+            tax:      order.taxAmount,
+            total:    order.finalAmount
         };
 
         const timeline = [
-        {
-        title: "Order Placed",
-        desc: "Order successfully created",
-        time: new Date(order.createdAt).toLocaleString(),
-        done: true
-        },
-        {
-        title: order.orderStatus,
-        desc: `Current Status: ${order.orderStatus}`,
-        time: "Current Stage",
-        done: ["Delivered","Cancelled","Returned"]
-            .includes(order.orderStatus)
-        }
+            {
+                title: "Order Placed",
+                desc:  "Order successfully created",
+                time:  new Date(order.createdAt).toLocaleString(),
+                done:  true
+            },
+            {
+                title: order.orderStatus,
+                desc:  `Current Status: ${order.orderStatus}`,
+                time:  "Current Stage",
+                done:  ["Delivered","Cancelled","Returned"].includes(order.orderStatus)
+            }
         ];
 
+        /* ── FIX 2: ret.exists only when status is actively "Requested" ── */
         const ret = {
-        exists: !!order.returnReason,
-        reason: order.returnReason
+            exists:   order.returnStatus === "Requested",
+            approved: order.returnStatus === "Approved",
+            rejected: order.returnStatus === "Rejected",
+            reason:   order.returnReason,
+            status:   order.returnStatus || "None"
         };
 
-        function fmt(n){
-        return "₹" + Number(n).toLocaleString("en-IN");
-        }
+        /* ── FIX 4: lock status update if return is pending ── */
+        const isLocked = ["Delivered","Cancelled","Returned"].includes(order.orderStatus);
+        const isReturnPending = order.returnStatus === "Requested";
 
-       
+        /* Combine both locks for the select/button */
+        const statusUpdateLocked = isLocked || isReturnPending;
+
+        function fmt(n) { return "₹" + Number(n).toLocaleString("en-IN"); }
+
+        const hasTracking = !!order.trackingNumber;
     %>
 
-    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-  <!-- ══════════════════════════════════
-         SIDE BAR
-    ══════════════════════════════════ -->
-   <%- include('../partials/admin/sidebar') %>
-    <!-- ══════════════════════════════════
-         MAIN CONTENT
-    ══════════════════════════════════ -->
+    <%- include('../partials/admin/sidebar', { page: 'orders' }) %>
+
     <main class="dashboard-main">
 
-            <!-- ── BREADCRUMB + HEADER ── -->
-            <div class="aod-header-row" id="aodHeaderRow">
-                <div class="aod-header-left">
-                    <nav class="aod-breadcrumb" aria-label="Breadcrumb">
-                        <a href="/admin/dashboard" class="aod-bc-crumb" id="bcDashboard">Dashboard</a>
-                        <span class="aod-bc-sep">/</span>
-                        <a href="/admin/orders"    class="aod-bc-crumb" id="bcOrders">Orders</a>
-                        <span class="aod-bc-sep">/</span>
-                        <span class="aod-bc-crumb active">Order Details</span>
-                    </nav>
-                    <h1 class="aod-page-title">Order Details</h1>
-                </div>
-
-                <a href="/admin/orders" class="aod-back-btn" id="btnBackToOrders">
-                    <i data-lucide="plus" size="10" style="transform:rotate(45deg)"></i>
-                    Back to Orders
-                </a>
+        <!-- ── BREADCRUMB + HEADER ── -->
+        <div class="aod-header-row" id="aodHeaderRow">
+            <div class="aod-header-left">
+                <nav class="aod-breadcrumb" aria-label="Breadcrumb">
+                    <a href="/admin/dashboard" class="aod-bc-crumb">Dashboard</a>
+                    <span class="aod-bc-sep">/</span>
+                    <a href="/admin/orders" class="aod-bc-crumb">Orders</a>
+                    <span class="aod-bc-sep">/</span>
+                    <span class="aod-bc-crumb active">Order Details</span>
+                </nav>
+                <h1 class="aod-page-title">Order Details</h1>
             </div>
+            <a href="/admin/orders" class="aod-back-btn">
+                <i data-lucide="plus" size="10" style="transform:rotate(45deg)"></i>
+                Back to Orders
+            </a>
+        </div>
 
-            <!-- ── 4-CARD SUMMARY ROW ── -->
-            <div class="aod-summary-cards" id="aodSummaryCards">
-
-                <!-- Order ID -->
-                <div class="aod-summary-card" id="scOrderId">
-                    <span class="aod-sc-label">Order ID</span>
-                    <span class="aod-sc-value"><%= orderId %></span>
-                </div>
-
-                <!-- Order Date -->
-                <div class="aod-summary-card" id="scOrderDate">
-                    <span class="aod-sc-label">Order Date</span>
-                    <span class="aod-sc-value dark"><%= orderDate %></span>
-                </div>
-
-                <!-- Order Status -->
-                <div class="aod-summary-card" id="scOrderStatus">
-                    <span class="aod-sc-label">Order Status</span>
-                    <div class="aod-sc-status">
-                        <span class="aod-status-dot aod-status-dot--order"></span>
-                        <span class="aod-sc-status-text aod-sc-status-text--order"><%= orderStatus %></span>
-                    </div>
-                </div>
-
-                <!-- Payment Status -->
-                <div class="aod-summary-card" id="scPayStatus">
-                    <span class="aod-sc-label">Payment Status</span>
-                    <div class="aod-sc-status">
-                        <span class="aod-status-dot aod-status-dot--payment"></span>
-                        <span class="aod-sc-status-text aod-sc-status-text--payment"><%= payStatus %></span>
-                    </div>
-                </div>
-
+        <!-- ── 4-CARD SUMMARY ROW ── -->
+        <div class="aod-summary-cards" id="aodSummaryCards">
+            <div class="aod-summary-card">
+                <span class="aod-sc-label">Order ID</span>
+                <span class="aod-sc-value"><%= orderId %></span>
             </div>
+            <div class="aod-summary-card">
+                <span class="aod-sc-label">Order Date</span>
+                <span class="aod-sc-value dark"><%= orderDate %></span>
+            </div>
+            <div class="aod-summary-card">
+                <span class="aod-sc-label">Order Status</span>
+                <div class="aod-sc-status">
+                    <span class="aod-status-dot aod-status-dot--order"></span>
+                    <span class="aod-sc-status-text aod-sc-status-text--order"><%= orderStatus %></span>
+                </div>
+            </div>
+            <div class="aod-summary-card">
+                <span class="aod-sc-label">Payment Status</span>
+                <div class="aod-sc-status">
+                    <span class="aod-status-dot aod-status-dot--payment"></span>
+                    <span class="aod-sc-status-text aod-sc-status-text--payment"><%= payStatus %></span>
+                </div>
+            </div>
+        </div>
 
-            <!-- ══════════════════════════════════
-                 TWO-COLUMN BODY
-            ══════════════════════════════════ -->
-            <div class="aod-body" id="aodBody">
+        <!-- ── TWO-COLUMN BODY ── -->
+        <div class="aod-body" id="aodBody">
 
-                <!-- ════════ LEFT COLUMN ════════ -->
-                <div class="aod-left" id="aodLeft">
+            <!-- ════════ LEFT COLUMN ════════ -->
+            <div class="aod-left" id="aodLeft">
 
-                    <!-- ── Ordered Products ── -->
-                    <div class="aod-card" id="aodProductsCard">
-                        <div class="aod-card-header">
-                            <h2 class="aod-card-title">Ordered Products</h2>
-                        </div>
-                        <table class="aod-products-table">
-                            <thead>
-                                <tr>
-                                    <th>Product</th>
-                                    <th>Variant</th>
-                                    <th class="center">Qty</th>
-                                    <th class="right">Unit Price</th>
-                                    <th class="right">Total</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <% items.forEach((item, idx) => {
-                                    const name = item.productName;
-
-                                    const sku = `Item #${idx + 1}`;
-                                    const color = "";
-
-                                    const specs = item.variantName;
-
-                                    const img =
-                                    item.productImage ||
-                                    "/images/product-placeholder.png";
-                                                                        const qty = item.quantity;
-                                                                        const unitPrice = item.price;
-                                                                        const rowTotal =
-                                    item.price * item.quantity;
-                                %>
-                                <tr id="prodRow<%= idx %>">
-                                    <!-- Product -->
-                                    <td>
-                                        <div class="aod-prod-cell">
-                                            <div class="aod-prod-thumb">
-                                                <img src="<%= img %>" alt="<%= name %>" loading="lazy">
-                                            </div>
-                                            <div class="aod-prod-info">
-                                                <span class="aod-prod-name"><%= name %></span>
-                                                <span class="aod-prod-sku"><%= sku %></span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <!-- Variant -->
-                                    <td>
-                                        <div class="aod-variant-cell">
-                                            <% if (color) { %>
-                                            <div class="aod-variant-color">
-                                                <span class="aod-color-dot"></span>
-                                                <span class="aod-color-name"><%= color %></span>
-                                            </div>
-                                            <% } %>
-                                            <% if (specs) { %><span class="aod-variant-specs"><%= specs %></span><% } %>
-                                        </div>
-                                    </td>
-                                    <!-- Qty -->
-                                    <td class="center"><span class="aod-qty"><%= qty %></span></td>
-                                    <!-- Unit Price -->
-                                    <td class="right"><span class="aod-price"><%= fmt(unitPrice) %></span></td>
-                                    <!-- Total -->
-                                    <td class="right"><span class="aod-total"><%= fmt(rowTotal) %></span></td>
-                                </tr>
-                                <% }) %>
-                            </tbody>
-                        </table>
+                <!-- Ordered Products -->
+                <div class="aod-card" id="aodProductsCard">
+                    <div class="aod-card-header">
+                        <h2 class="aod-card-title">Ordered Products</h2>
                     </div>
+                    <table class="aod-products-table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Variant</th>
+                                <th class="center">Qty</th>
+                                <th class="right">Unit Price</th>
+                                <th class="right">Total</th>
+                                <th class="center">Return</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% items.forEach((item, idx) => {
+                                const img      = item.productImage || "/images/product-placeholder.png";
+                                const rowTotal = item.price * item.quantity;
+                            %>
+                            <tr>
+                                <td>
+                                    <div class="aod-prod-cell">
+                                        <div class="aod-prod-thumb">
+                                            <img src="<%= img %>" alt="<%= item.productName %>" loading="lazy">
+                                        </div>
+                                        <div class="aod-prod-info">
+                                            <span class="aod-prod-name"><%= item.productName %></span>
+                                            <span class="aod-prod-sku">Item #<%= idx + 1 %></span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="aod-variant-cell">
+                                        <% if (item.variantName) { %>
+                                            <span class="aod-variant-specs"><%= item.variantName %></span>
+                                        <% } %>
+                                    </div>
+                                </td>
+                                <td class="center"><span class="aod-qty"><%= item.quantity %></span></td>
+                                <td class="right"><span class="aod-price"><%= fmt(item.price) %></span></td>
+                                <td class="right"><span class="aod-total"><%= fmt(rowTotal) %></span></td>
+                                <td class="center">
 
-                    <!-- ── Order Timeline ── -->
-                    <div class="aod-card aod-timeline-card" id="aodTimelineCard">
-                        <h2 class="aod-card-title">Order Timeline</h2>
+                                    <% if (item.itemReturnStatus === "Requested") { %>
 
-                        <div class="aod-timeline" id="aodTimeline">
-                            <% timeline.forEach((step, idx) => { %>
-                            <div class="aod-step" id="timelineStep<%= idx %>">
+                                        <div class="aod-item-return-actions">
 
-                                <!-- Step icon -->
-                                <div class="aod-step-icon <%= step.done ? 'aod-step-icon--done' : 'aod-step-icon--active' %>">
-                                    <% if (step.done) { %>
-                                        <i data-lucide="check" size="10"></i>
+                                            <button
+                                                class="aod-btn-approve aod-btn-approve--sm"
+                                                data-item-id="<%= item._id %>"
+                                                onclick="handleItemReturn('<%= item._id %>', 'approve', this)"
+                                            >
+                                                Approve
+                                            </button>
+
+                                            <button
+                                                class="aod-btn-reject aod-btn-reject--sm"
+                                                data-item-id="<%= item._id %>"
+                                                onclick="handleItemReturn('<%= item._id %>', 'reject', this)"
+                                            >
+                                                Reject
+                                            </button>
+
+                                        </div>
+
+                                    <% } else if (item.itemReturnStatus === "Approved") { %>
+
+                                        <span class="aod-return-status-badge aod-return-status-badge--approved">
+                                            <i data-lucide="check" size="10"></i> Returned
+                                        </span>
+
+                                    <% } else if (item.itemReturnStatus === "Rejected") { %>
+
+                                        <span class="aod-return-status-badge aod-return-status-badge--rejected">
+                                            <i data-lucide="x" size="10"></i> Rejected
+                                        </span>
+
                                     <% } else { %>
-                                        <i data-lucide="clock" size="10"></i>
+
+                                        <span class="aod-field-value">—</span>
+
                                     <% } %>
-                                </div>
 
-                                <!-- Step body -->
-                                <div class="aod-step-body">
-                                    <span class="aod-step-title"><%= step.title %></span>
-                                    <span class="aod-step-desc"><%= step.desc %></span>
-                                </div>
-
-                                <!-- Time pill -->
-                                <span class="aod-step-time"><%= step.time %></span>
-                            </div>
+                                </td>
+                            </tr>
                             <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Order Timeline -->
+                <div class="aod-card aod-timeline-card" id="aodTimelineCard">
+                    <h2 class="aod-card-title">Order Timeline</h2>
+                    <div class="aod-timeline">
+                        <% timeline.forEach((step, idx) => { %>
+                        <div class="aod-step">
+                            <div class="aod-step-icon <%= step.done ? 'aod-step-icon--done' : 'aod-step-icon--active' %>">
+                                <% if (step.done) { %>
+                                    <i data-lucide="check" size="10"></i>
+                                <% } else { %>
+                                    <i data-lucide="clock" size="10"></i>
+                                <% } %>
+                            </div>
+                            <div class="aod-step-body">
+                                <span class="aod-step-title"><%= step.title %></span>
+                                <span class="aod-step-desc"><%= step.desc %></span>
+                            </div>
+                            <span class="aod-step-time"><%= step.time %></span>
                         </div>
+                        <% }) %>
                     </div>
+                </div>
 
-                    <!-- ── Logistics ── -->
-                    <div class="aod-card" id="aodLogisticsCard">
-                        <div class="aod-logistics-card">
-                            <h2 class="aod-section-title">Logistics</h2>
+                <!-- Logistics -->
+                <div class="aod-card" id="aodLogisticsCard">
+                    <div class="aod-logistics-card">
+                        <h2 class="aod-section-title">Logistics</h2>
 
-                            <!-- Courier -->
-                            <div class="aod-field">
-                                <span class="aod-field-label">Courier Partner</span>
-                                <span class="aod-field-value">
-                                    Not Assigned
-                                </span>
+                        <div class="aod-field">
+                            <span class="aod-field-label">Courier Partner</span>
+                            <span class="aod-field-value">Not Assigned</span>
+                        </div>
+
+                        <!-- FIX 6: hide copy button when no tracking number -->
+                        <div class="aod-field">
+                            <span class="aod-field-label">Tracking Number</span>
+                            <% if (hasTracking) { %>
+                            <div class="aod-tracking-box">
+                                <span class="aod-tracking-num" id="trackingNum"><%= order.trackingNumber %></span>
+                                <button class="aod-copy-btn" onclick="copyTracking()" aria-label="Copy tracking number" title="Copy">
+                                    <i data-lucide="copy" size="14"></i>
+                                </button>
                             </div>
-
-                            <!-- Tracking number -->
-                            <div class="aod-field">
-                                <span class="aod-field-label">Tracking Number</span>
-                                <div class="aod-tracking-box" id="trackingBox">
-                                    <span
-                                    class="aod-tracking-num"
-                                    id="trackingNum"
-                                    >
-                                    —
-                                    </span>
-                                    <button class="aod-copy-btn" id="btnCopyTracking" onclick="copyTracking()" aria-label="Copy tracking number" title="Copy">
-                                        <i data-lucide="copy" size="14"></i>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="aod-field">
-                                <span class="aod-field-label">
-                                    Estimated Delivery
-                                </span>
-
-                                <span class="aod-field-value">
-                                    <%= order.estimatedDelivery
-                                    ? new Date(order.estimatedDelivery)
-                                        .toLocaleDateString("en-IN")
-                                    : "Not Available" %>
-                                </span>
-                            </div>
-                            <% if(order.deliveredDate){ %>
-
-                            <div class="aod-field">
-                                <span class="aod-field-label">
-                                    Delivered On
-                                </span>
-
-                                <span class="aod-field-value">
-                                    <%= new Date(
-                                        order.deliveredDate
-                                    ).toLocaleDateString("en-IN") %>
-                                </span>
-                            </div>
-
+                            <% } else { %>
+                            <span class="aod-field-value">—</span>
                             <% } %>
                         </div>
+
+                        <div class="aod-field">
+                            <span class="aod-field-label">Estimated Delivery</span>
+                            <span class="aod-field-value">
+                                <%= order.estimatedDelivery
+                                    ? new Date(order.estimatedDelivery).toLocaleDateString("en-IN")
+                                    : "Not Available" %>
+                            </span>
+                        </div>
+
+                        <% if (order.deliveredDate) { %>
+                        <div class="aod-field">
+                            <span class="aod-field-label">Delivered On</span>
+                            <span class="aod-field-value">
+                                <%= new Date(order.deliveredDate).toLocaleDateString("en-IN") %>
+                            </span>
+                        </div>
+                        <% } %>
                     </div>
+                </div>
 
-                    <!-- ── Return Request ── -->
-                    <% if (ret && ret.exists) { %>
-                    <div class="aod-card" id="aodReturnCard">
-                        <div class="aod-return-card">
+                <!-- ── Return Section ──
+                     Shows approve/reject only when status === "Requested".
+                     Shows a read-only indicator when Approved or Rejected.
+                     Hidden entirely when returnStatus === "None".
+                ── -->
 
-                            <!-- Heading -->
-                            <div class="aod-return-heading">
-                                <span class="aod-return-heading-icon"><i data-lucide="alert-circle" size="18"></i></span>
-                                <h2 class="aod-return-title">Return Request</h2>
+                <!-- FIX 2 + FIX 3: Active return request — show action buttons -->
+                <% if (ret.exists) { %>
+                <div class="aod-card" id="aodReturnCard">
+                    <div class="aod-return-card">
+                        <div class="aod-return-heading">
+                            <span class="aod-return-heading-icon"><i data-lucide="alert-circle" size="18"></i></span>
+                            <h2 class="aod-return-title">Return Request</h2>
+                        </div>
+                        <div class="aod-return-body">
+                            <div class="aod-return-banner">
+                                <span class="aod-return-banner-label">Return Requested</span>
+                                <span class="aod-return-yes">YES</span>
                             </div>
-
-                            <div class="aod-return-body">
-
-                                <!-- Return requested banner -->
-                                <div class="aod-return-banner">
-                                    <span class="aod-return-banner-label">Return Requested</span>
-                                    <span class="aod-return-yes">YES</span>
+                            <div class="aod-return-grid">
+                                <div class="aod-return-field">
+                                    <span class="aod-return-field-label">Reason</span>
+                                    <span class="aod-return-field-value"><%= ret.reason || '—' %></span>
                                 </div>
-
-                                <!-- Reason / Refund method -->
-                                <div class="aod-return-grid">
-                                    <div class="aod-return-field">
-                                        <span class="aod-return-field-label">Reason</span>
-                                        <span class="aod-return-field-value"><%= ret.reason || '—' %></span>
-                                    </div>
-                                    <div class="aod-return-field">
-                                        <span class="aod-return-field-label">Refund Method</span>
-                                        <span class="aod-return-field-value"><%= order.paymentMethod || '—' %></span>
-                                    </div>
+                                <div class="aod-return-field">
+                                    <span class="aod-return-field-label">Refund Method</span>
+                                    <span class="aod-return-field-value"><%= order.paymentMethod || '—' %></span>
                                 </div>
-
-                                <!-- Action buttons -->
-                                <div class="aod-return-actions">
-                                    <button class="aod-btn-approve" id="btnApproveReturn" onclick="handleReturn('approve')">
-                                        Approve Return
-                                    </button>
-                                    <button class="aod-btn-reject" id="btnRejectReturn" onclick="handleReturn('reject')">
-                                        Reject Return
-                                    </button>
-                                </div>
-
+                            </div>
+                            <div class="aod-return-actions">
+                                <button class="aod-btn-approve" id="btnApproveReturn" onclick="handleReturn('approve')">
+                                    Approve Return
+                                </button>
+                                <button class="aod-btn-reject" id="btnRejectReturn" onclick="handleReturn('reject')">
+                                    Reject Return
+                                </button>
                             </div>
                         </div>
                     </div>
-                    <% } %>
-
                 </div>
-                <!-- /aod-left -->
+                <% } %>
 
-                <!-- ════════ RIGHT COLUMN ════════ -->
-                <div class="aod-right" id="aodRight">
+                <!-- FIX 3: Already handled return — show read-only status indicator -->
+                <% if (ret.approved || ret.rejected) { %>
+                <div class="aod-card" id="aodReturnCard">
+                    <div class="aod-return-card">
+                        <div class="aod-return-heading">
+                            <span class="aod-return-heading-icon">
+                                <% if (ret.approved) { %>
+                                    <i data-lucide="check-circle" size="18" style="color:#059669"></i>
+                                <% } else { %>
+                                    <i data-lucide="x-circle" size="18" style="color:#BA1A1A"></i>
+                                <% } %>
+                            </span>
+                            <h2 class="aod-return-title">Return Request</h2>
+                        </div>
+                        <div class="aod-return-body">
 
-                    <!-- ── Pricing Summary ── -->
-                    <div class="aod-card" id="aodPricingCard">
-                        <div class="aod-pricing-card">
-                            <h2 class="aod-pricing-title">Pricing Summary</h2>
-
-                            <div class="aod-pricing-rows">
-                                <div class="aod-pricing-row">
-                                    <span class="aod-pricing-label">Subtotal</span>
-                                    <span class="aod-pricing-value"><%= fmt(pricing.subtotal || 0) %></span>
-                                </div>
-                                <div class="aod-pricing-row">
-                                    <span class="aod-pricing-label">Shipping</span>
-                                    <% if (!pricing.shipping || pricing.shipping === 0) { %>
-                                        <span class="aod-pricing-value free">FREE</span>
+                            <!-- Status badge -->
+                            <div class="aod-return-status-wrap aod-return-status-wrap--<%= ret.approved ? 'approved' : 'rejected' %>">
+                                <span class="aod-return-status-label">
+                                    Return request has been <%= ret.approved ? 'approved' : 'rejected' %>.
+                                </span>
+                                <span class="aod-return-status-badge aod-return-status-badge--<%= ret.approved ? 'approved' : 'rejected' %>">
+                                    <% if (ret.approved) { %>
+                                        <i data-lucide="check" size="10"></i> Approved
                                     <% } else { %>
-                                        <span class="aod-pricing-value"><%= fmt(pricing.shipping) %></span>
+                                        <i data-lucide="x" size="10"></i> Rejected
                                     <% } %>
+                                </span>
+                            </div>
+
+                            <div class="aod-return-grid">
+                                <div class="aod-return-field">
+                                    <span class="aod-return-field-label">Reason</span>
+                                    <span class="aod-return-field-value"><%= ret.reason || '—' %></span>
                                 </div>
-                                <% if (pricing.discount && pricing.discount > 0) { %>
-                                <div class="aod-pricing-row">
-                                    <span class="aod-pricing-label">Discount</span>
-                                    <span class="aod-pricing-value discount">−<%= fmt(pricing.discount) %></span>
+                                <div class="aod-return-field">
+                                    <span class="aod-return-field-label">Refund Method</span>
+                                    <span class="aod-return-field-value"><%= order.paymentMethod || '—' %></span>
+                                </div>
+                                <% if (ret.approved && order.refundAmount) { %>
+                                <div class="aod-return-field">
+                                    <span class="aod-return-field-label">Refund Amount</span>
+                                    <span class="aod-return-field-value" style="color:#059669"><%= fmt(order.refundAmount) %></span>
                                 </div>
                                 <% } %>
-                                <div class="aod-pricing-row">
-                                    <span class="aod-pricing-label">Tax (GST)</span>
-                                    <span class="aod-pricing-value"><%= fmt(pricing.tax || 0) %></span>
-                                </div>
                             </div>
 
-                            <div class="aod-pricing-total">
-                                <span class="aod-pricing-total-label">Order Total</span>
-                                <span class="aod-pricing-total-value"><%= fmt(pricing.total || 0) %></span>
-                            </div>
                         </div>
                     </div>
+                </div>
+                <% } %>
 
-                    <!-- ── Customer Details ── -->
-                    <div class="aod-card" id="aodCustomerCard">
-                        <div class="aod-customer-card">
-                            <h2 class="aod-customer-title">Customer Details</h2>
+            </div>
+            <!-- /aod-left -->
 
-                            <!-- Profile row -->
-                            <div class="aod-customer-profile">
-                                <div class="aod-cust-avatar">
-                                <%= order.userId?.fullName
-                                ? order.userId.fullName
-                                    .split(" ")
-                                    .map(word => word[0])
-                                    .join("")
-                                    .slice(0, 2)
-                                    .toUpperCase()
-                                : "U" %>
-                                </div>
-                                <div class="aod-cust-info">
-                                    <span class="aod-cust-name"><%= order.userId?.fullName || "Unknown User" %></span>
-                                    <span class="aod-cust-email"><%= order.userId?.email || "" %></span>
-                                </div>
+            <!-- ════════ RIGHT COLUMN ════════ -->
+            <div class="aod-right" id="aodRight">
+
+                <!-- Pricing Summary -->
+                <div class="aod-card" id="aodPricingCard">
+                    <div class="aod-pricing-card">
+                        <h2 class="aod-pricing-title">Pricing Summary</h2>
+                        <div class="aod-pricing-rows">
+                            <div class="aod-pricing-row">
+                                <span class="aod-pricing-label">Subtotal</span>
+                                <span class="aod-pricing-value"><%= fmt(pricing.subtotal || 0) %></span>
                             </div>
+                            <div class="aod-pricing-row">
+                                <span class="aod-pricing-label">Shipping</span>
+                                <% if (!pricing.shipping || pricing.shipping === 0) { %>
+                                    <span class="aod-pricing-value free">FREE</span>
+                                <% } else { %>
+                                    <span class="aod-pricing-value"><%= fmt(pricing.shipping) %></span>
+                                <% } %>
+                            </div>
+                            <% if (pricing.discount && pricing.discount > 0) { %>
+                            <div class="aod-pricing-row">
+                                <span class="aod-pricing-label">Discount</span>
+                                <span class="aod-pricing-value discount">−<%= fmt(pricing.discount) %></span>
+                            </div>
+                            <% } %>
+                            <div class="aod-pricing-row">
+                                <span class="aod-pricing-label">Tax (GST)</span>
+                                <span class="aod-pricing-value"><%= fmt(pricing.tax || 0) %></span>
+                            </div>
+                        </div>
+                        <div class="aod-pricing-total">
+                            <span class="aod-pricing-total-label">Order Total</span>
+                            <span class="aod-pricing-total-value"><%= fmt(pricing.total || 0) %></span>
+                        </div>
+                    </div>
+                </div>
 
-                            <!-- Shipping address -->
-                            <div class="aod-cust-section">
-                                <span class="aod-cust-section-label">Shipping Address</span>
-                                <p class="aod-address-lines">
-                                    <%= [
+                <!-- Customer Details -->
+                <div class="aod-card" id="aodCustomerCard">
+                    <div class="aod-customer-card">
+                        <h2 class="aod-customer-title">Customer Details</h2>
+                        <div class="aod-customer-profile">
+                            <div class="aod-cust-avatar">
+                                <%= order.userId?.fullName
+                                    ? order.userId.fullName.split(" ").map(w => w[0]).join("").slice(0,2).toUpperCase()
+                                    : "U" %>
+                            </div>
+                            <div class="aod-cust-info">
+                                <span class="aod-cust-name"><%= order.userId?.fullName || "Unknown User" %></span>
+                                <span class="aod-cust-email"><%= order.userId?.email || "" %></span>
+                            </div>
+                        </div>
+                        <div class="aod-cust-section">
+                            <span class="aod-cust-section-label">Shipping Address</span>
+                            <p class="aod-address-lines">
+                                <%= [
                                     order.shippingAddress?.addressLine1,
                                     order.shippingAddress?.city,
                                     order.shippingAddress?.state,
                                     order.shippingAddress?.country,
                                     order.shippingAddress?.pincode
-                                    ]
-                                    .filter(Boolean)
-                                    .join(", ") %>
-                                </p>
+                                ].filter(Boolean).join(", ") %>
+                            </p>
+                        </div>
+                        <div class="aod-cust-section">
+                            <span class="aod-cust-section-label">Payment Details</span>
+                            <div class="aod-payment-row">
+                                <span class="aod-payment-row-label">Method</span>
+                                <span class="aod-payment-row-value"><%= order.paymentMethod || '—' %></span>
                             </div>
-
-                            <!-- Payment details -->
-                            <div class="aod-cust-section">
-                                <span class="aod-cust-section-label">Payment Details</span>
-                                <div class="aod-payment-row">
-                                    <span class="aod-payment-row-label">Method</span>
-                                    <span class="aod-payment-row-value"><%= order.paymentMethod || '—' %></span>
-                                </div>
-                                <div class="aod-payment-row" style="margin-top:4px">
-                                    <span class="aod-payment-row-label">Txn ID</span>
-                                    <span class="aod-payment-row-value"><%= order.paymentId || '—' %></span>
-                                </div>
+                            <div class="aod-payment-row" style="margin-top:4px">
+                                <span class="aod-payment-row-label">Txn ID</span>
+                                <span class="aod-payment-row-value"><%= order.paymentId || '—' %></span>
                             </div>
-
                         </div>
                     </div>
+                </div>
 
-                    <!-- ── Update Order Status ── -->
-                    <div class="aod-card" id="aodUpdateCard">
-                        <div class="aod-update-card">
-                            <h2 class="aod-update-title">Update Order Status</h2>
-                            <%
-                            const isLocked =
-                            [
-                            "Delivered",
-                            "Cancelled",
-                            "Returned"
-                            ]
-                            .includes(order.orderStatus);
-                            %>
-                            <select
+                <!-- Update Order Status -->
+                <div class="aod-card" id="aodUpdateCard">
+                    <div class="aod-update-card">
+                        <h2 class="aod-update-title">Update Order Status</h2>
+
+                        <!-- FIX 4: warn admin if return is pending -->
+                        <% if (isReturnPending) { %>
+                        <div class="aod-return-pending-notice">
+                            <i data-lucide="alert-triangle"></i>
+                            <span>A return request is pending. Resolve it before updating the order status.</span>
+                        </div>
+                        <% } %>
+
+                        <select
                             id="orderStatusSelect"
                             class="aod-status-select"
-                            <%= isLocked ? "disabled" : "" %>>
+                            <%= statusUpdateLocked ? "disabled" : "" %>>
+                            <option value="Pending"          <%= orderStatus === "Pending"          ? "selected" : "" %>>Pending</option>
+                            <option value="Processing"       <%= orderStatus === "Processing"       ? "selected" : "" %>>Processing</option>
+                            <option value="Shipped"          <%= orderStatus === "Shipped"          ? "selected" : "" %>>Shipped</option>
+                            <option value="Out for Delivery" <%= orderStatus === "Out for Delivery" ? "selected" : "" %>>Out for Delivery</option>
+                            <option value="Delivered"        <%= orderStatus === "Delivered"        ? "selected" : "" %>>Delivered</option>
+                            <option value="Cancelled"        <%= orderStatus === "Cancelled"        ? "selected" : "" %>>Cancelled</option>
+                            <option value="Returned"         <%= orderStatus === "Returned"         ? "selected" : "" %>>Returned</option>
+                        </select>
 
-                            <option value="Pending"
-                            <%= orderStatus === "Pending" ? "selected" : "" %>>
-                            Pending
-                            </option>
-
-                            <option value="Processing"
-                            <%= orderStatus === "Processing" ? "selected" : "" %>>
-                            Processing
-                            </option>
-
-                            <option value="Shipped"
-                            <%= orderStatus === "Shipped" ? "selected" : "" %>>
-                            Shipped
-                            </option>
-
-                            <option value="Out for Delivery"
-                            <%= orderStatus === "Out for Delivery" ? "selected" : "" %>>
-                            Out for Delivery
-                            </option>
-
-                            <option value="Delivered"
-                            <%= orderStatus === "Delivered" ? "selected" : "" %>>
-                            Delivered
-                            </option>
-
-                            <option value="Cancelled"
-                            <%= orderStatus === "Cancelled" ? "selected" : "" %>>
-                            Cancelled
-                            </option>
-
-                            <option value="Returned"
-                            <%= orderStatus === "Returned" ? "selected" : "" %>>
-                            Returned
-                            </option>
-
-                            </select>
-
-                            <button
+                        <button
                             class="aod-update-btn"
                             id="btnUpdateStatus"
                             onclick="updateStatus()"
-                            <%= isLocked ? "disabled" : "" %>>
-                                Update Status
-                            </button>
-                        </div>
+                            <%= statusUpdateLocked ? "disabled" : "" %>>
+                            Update Status
+                        </button>
                     </div>
-
                 </div>
-                <!-- /aod-right -->
 
             </div>
-            <!-- /aod-body -->
+            <!-- /aod-right -->
 
-        
-            <!-- ── ADMIN FOOTER ── -->
-            <footer class="aod-footer">
-                <div class="aod-footer-left">
-                    <a href="/admin/dashboard" class="aod-footer-logo">iStore Admin</a>
-                    <span>©&nbsp;<%= new Date().getFullYear() %> iStore Admin. All rights reserved.</span>
-                </div>
-                <div class="aod-footer-right">
-                    <a href="#" class="aod-footer-link">Support</a>
-                    <a href="#" class="aod-footer-link">Privacy Policy</a>
-                    <a href="#" class="aod-footer-link">Terms of Service</a>
-                </div>
-            </footer>
+        </div>
+        <!-- /aod-body -->
+
+        <!-- Admin Footer -->
+        <footer class="aod-footer">
+            <div class="aod-footer-left">
+                <a href="/admin/dashboard" class="aod-footer-logo">iStore Admin</a>
+                <span>©&nbsp;<%= new Date().getFullYear() %> iStore Admin. All rights reserved.</span>
+            </div>
+            <div class="aod-footer-right">
+                <a href="#" class="aod-footer-link">Support</a>
+                <a href="#" class="aod-footer-link">Privacy Policy</a>
+                <a href="#" class="aod-footer-link">Terms of Service</a>
+            </div>
+        </footer>
+
     </main>
 
-
     <script>
-        /* ── Init icons ── */
         lucide.createIcons();
 
         /* ── GSAP entrance ── */
-        gsap.from('.aod-navbar',        { y: -20,  opacity: 0, duration: 0.45, ease: 'power2.out' });
-        gsap.from('.aod-header-row',    { y: -12,  opacity: 0, duration: 0.45, ease: 'power2.out', delay: 0.08 });
-        gsap.from('.aod-summary-card',  { y: 16,   opacity: 0, duration: 0.40, stagger: 0.07, ease: 'power2.out', delay: 0.16 });
-        gsap.from('#aodProductsCard',   { y: 24,   opacity: 0, duration: 0.45, ease: 'power2.out', delay: 0.30 });
-        gsap.from('#aodTimelineCard',   { y: 24,   opacity: 0, duration: 0.45, ease: 'power2.out', delay: 0.38 });
-        gsap.from('#aodLogisticsCard',  { y: 24,   opacity: 0, duration: 0.45, ease: 'power2.out', delay: 0.44 });
-        gsap.from('#aodReturnCard',     { y: 24,   opacity: 0, duration: 0.45, ease: 'power2.out', delay: 0.50 });
-        gsap.from('.aod-right > *',     { y: 18,   opacity: 0, duration: 0.40, stagger: 0.10, ease: 'power2.out', delay: 0.28 });
-        gsap.from('.aod-step',          { x: -12,  opacity: 0, duration: 0.35, stagger: 0.10, ease: 'power2.out', delay: 0.50 });
+        gsap.from('.aod-header-row',   { y: -12, opacity: 0, duration: 0.45, ease: 'power2.out', delay: 0.08 });
+        gsap.from('.aod-summary-card', { y: 16,  opacity: 0, duration: 0.40, stagger: 0.07, ease: 'power2.out', delay: 0.16 });
+        gsap.from('#aodProductsCard',  { y: 24,  opacity: 0, duration: 0.45, ease: 'power2.out', delay: 0.30 });
+        gsap.from('#aodTimelineCard',  { y: 24,  opacity: 0, duration: 0.45, ease: 'power2.out', delay: 0.38 });
+        gsap.from('#aodLogisticsCard', { y: 24,  opacity: 0, duration: 0.45, ease: 'power2.out', delay: 0.44 });
+        gsap.from('#aodReturnCard',    { y: 24,  opacity: 0, duration: 0.45, ease: 'power2.out', delay: 0.50 });
+        gsap.from('.aod-right > *',    { y: 18,  opacity: 0, duration: 0.40, stagger: 0.10, ease: 'power2.out', delay: 0.28 });
+        gsap.from('.aod-step',         { x: -12, opacity: 0, duration: 0.35, stagger: 0.10, ease: 'power2.out', delay: 0.50 });
 
-        /* ── Copy tracking number ── */
+        /* ── FIX 6: Copy tracking number ── */
         function copyTracking() {
             const num = document.getElementById('trackingNum')?.textContent?.trim();
             if (!num || num === '—') return;
             navigator.clipboard.writeText(num).then(() => {
-                Swal.fire({
-                    toast: true, position: 'top-end', showConfirmButton: false, timer: 2000,
-                    icon: 'success', title: 'Tracking number copied!'
-                });
+                Swal.fire({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2000, icon: 'success', title: 'Tracking number copied!' });
             });
         }
 
-        /* ── Update order status ── */
+        /* ── FIX 5: Update order status with loading state ── */
         function updateStatus() {
-            const sel    = document.getElementById('orderStatusSelect');
-             /* LOCKED ORDER CHECK */
+            const sel = document.getElementById('orderStatusSelect');
+            const btn = document.getElementById('btnUpdateStatus');
+            if (sel.disabled || btn.disabled) return;
 
-            if (sel.disabled) {
-
-                return;
-
-            }
             const status = sel?.value;
             if (!status) return;
 
             Swal.fire({
-                title: `Update status to "${status.charAt(0).toUpperCase() + status.slice(1)}"?`,
+                title: `Update status to "${status}"?`,
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonColor: '#7A4E7C',
                 cancelButtonColor:  '#6B7280',
-                confirmButtonText: 'Yes, Update',
-                cancelButtonText:  'Cancel',
+                confirmButtonText:  'Yes, Update',
+                cancelButtonText:   'Cancel',
             }).then(result => {
-                if (result.isConfirmed) {
-                   fetch(
-    "/admin/orders/<%= order._id %>/status",
-    {
-        method: "PATCH",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            status
-        })
-    }
-)
-.then(res => res.json())
-.then(data => {
+                if (!result.isConfirmed) return;
 
-    if (data.success) {
+                /* Loading state */
+                btn.disabled    = true;
+                btn.textContent = 'Updating…';
 
-        Swal.fire({
-            icon: "success",
-            title: "Status Updated",
-            text: data.message,
-            confirmButtonColor: "#7A4E7C"
-        }).then(() => {
-            location.reload();
-        });
-
-    } else {
-
-        Swal.fire({
-            icon: "error",
-            title: "Update Failed",
-            text: data.message
-        });
-
-    }
-
-});
-                }
+                fetch("/admin/orders/<%= order._id %>/status", {
+                    method:  "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body:    JSON.stringify({ status })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({ icon: "success", title: "Status Updated", text: data.message, confirmButtonColor: "#7A4E7C" })
+                            .then(() => location.reload());
+                    } else {
+                        btn.disabled    = false;
+                        btn.textContent = 'Update Status';
+                        Swal.fire({ icon: "error", title: "Update Failed", text: data.message });
+                    }
+                })
+                .catch(() => {
+                    btn.disabled    = false;
+                    btn.textContent = 'Update Status';
+                    Swal.fire({ icon: "error", title: "Network Error", text: "Could not reach the server." });
+                });
             });
         }
 
-        /* ── Return actions ── */
+        /* ── FIX 2 + FIX 5: Return actions with loading state + instant hide ── */
         function handleReturn(action) {
             const isApprove = action === 'approve';
+
             Swal.fire({
                 title: isApprove ? 'Approve this return?' : 'Reject this return?',
                 text:  isApprove
-                    ? 'The customer will be notified and refund will be initiated.'
-                    : 'The return request will be rejected and the customer notified.',
+                    ? 'The customer will be refunded to their wallet.'
+                    : 'The return request will be rejected.',
                 icon:  isApprove ? 'question' : 'warning',
-                showCancelButton: true,
+                showCancelButton:   true,
                 confirmButtonColor: isApprove ? '#7A4E7C' : '#BA1A1A',
                 cancelButtonColor:  '#6B7280',
-                confirmButtonText: isApprove ? 'Yes, Approve' : 'Yes, Reject',
-                cancelButtonText:  'Cancel',
+                confirmButtonText:  isApprove ? 'Yes, Approve' : 'Yes, Reject',
+                cancelButtonText:   'Cancel',
             }).then(result => {
-                if (result.isConfirmed) {
-                   fetch(
-                    "/admin/orders/<%= order._id %>/return",
-                    {
-                    method: "PATCH",
+                if (!result.isConfirmed) return;
 
-                    headers: {
-                    "Content-Type":
-                    "application/json"
-                    },
+                /* Disable both buttons immediately */
+                const approveBtn = document.getElementById('btnApproveReturn');
+                const rejectBtn  = document.getElementById('btnRejectReturn');
+                if (approveBtn) { approveBtn.disabled = true; approveBtn.textContent = isApprove ? 'Approving…' : 'Approve Return'; }
+                if (rejectBtn)  { rejectBtn.disabled  = true; rejectBtn.textContent  = !isApprove ? 'Rejecting…' : 'Reject Return'; }
 
-                    body: JSON.stringify({
-                    action
-                    })
+                fetch("/admin/orders/<%= order._id %>/return", {
+                    method:  "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body:    JSON.stringify({ action })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        /* Animate card out immediately */
+                        const card = document.getElementById('aodReturnCard');
+                        if (card) {
+                            gsap.to(card, {
+                                opacity: 0, y: -12, height: 0,
+                                marginBottom: 0, padding: 0,
+                                duration: 0.4, ease: 'power2.in',
+                                onComplete: () => card.remove()
+                            });
+                        }
+                        Swal.fire({ icon: 'success', title: data.message, confirmButtonColor: '#7A4E7C' })
+                            .then(() => location.reload());
+                    } else {
+                        /* Re-enable on failure */
+                        if (approveBtn) { approveBtn.disabled = false; approveBtn.textContent = 'Approve Return'; }
+                        if (rejectBtn)  { rejectBtn.disabled  = false; rejectBtn.textContent  = 'Reject Return'; }
+                        Swal.fire({ icon: 'error', title: 'Failed', text: data.message });
                     }
-                    )
-                    .then(res => res.json())
-                    .then(data => {
+                })
+                .catch(() => {
+                    if (approveBtn) { approveBtn.disabled = false; approveBtn.textContent = 'Approve Return'; }
+                    if (rejectBtn)  { rejectBtn.disabled  = false; rejectBtn.textContent  = 'Reject Return'; }
+                    Swal.fire({ icon: 'error', title: 'Network Error', text: 'Could not reach the server.' });
+                });
+            });
+        }
 
-                    if(data.success){
+        /* ── Per-item return approve/reject ── */
+        function handleItemReturn(itemId, action, btnEl) {
+            const isApprove = action === 'approve';
 
-                    Swal.fire({
-                    icon:"success",
-                    title:data.message
-                    })
-                    .then(()=>{
-                    location.reload();
-                    });
+            Swal.fire({
+                title: isApprove ? 'Approve this item return?' : 'Reject this item return?',
+                text:  isApprove
+                    ? 'Stock will be restored and the customer refunded to their wallet.'
+                    : 'The return request for this item will be rejected.',
+                icon:  isApprove ? 'question' : 'warning',
+                showCancelButton:   true,
+                confirmButtonColor: isApprove ? '#7A4E7C' : '#BA1A1A',
+                cancelButtonColor:  '#6B7280',
+                confirmButtonText:  isApprove ? 'Yes, Approve' : 'Yes, Reject',
+                cancelButtonText:   'Cancel',
+            }).then(result => {
+                if (!result.isConfirmed) return;
 
-                    }else{
+                const row = btnEl.closest('tr');
+                const buttons = row.querySelectorAll('.aod-btn-approve--sm, .aod-btn-reject--sm');
+                buttons.forEach(b => b.disabled = true);
+                btnEl.textContent = isApprove ? 'Approving…' : 'Rejecting…';
 
-                    Swal.fire({
-                    icon:"error",
-                    title:data.message
-                    });
-
+                fetch(`/admin/orders/<%= order._id %>/item/${itemId}/return`, {
+                    method:  "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body:    JSON.stringify({ action })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({ icon: 'success', title: data.message, confirmButtonColor: '#7A4E7C' })
+                            .then(() => location.reload());
+                    } else {
+                        buttons.forEach(b => b.disabled = false);
+                        btnEl.textContent = isApprove ? 'Approve' : 'Reject';
+                        Swal.fire({ icon: 'error', title: 'Failed', text: data.message });
                     }
-
-                    });
-                }
+                })
+                .catch(() => {
+                    buttons.forEach(b => b.disabled = false);
+                    btnEl.textContent = isApprove ? 'Approve' : 'Reject';
+                    Swal.fire({ icon: 'error', title: 'Network Error', text: 'Could not reach the server.' });
+                });
             });
         }
     </script>

@@ -629,3 +629,77 @@ async (
   "Return request sent successfully"
   };
 };
+
+
+/* =========================================
+   RETURN SINGLE ITEM (request)
+========================================= */
+
+export const returnOrderItemService = async (
+  userId,
+  orderId,
+  itemId,
+  reason,
+) => {
+
+  const order = await Order.findOne({
+    userId,
+    orderId,
+  });
+
+  if (!order) {
+    return {
+      success: false,
+      message: "Order not found",
+    };
+  }
+
+  const item = order.items.id(itemId);
+
+  if (!item) {
+    return {
+      success: false,
+      message: "Item not found",
+    };
+  }
+
+  /* ITEM MUST BE DELIVERED */
+
+  if (item.itemStatus !== "Delivered") {
+    return {
+      success: false,
+      message: "Only delivered items can be returned",
+    };
+  }
+
+  /* NO DUPLICATE / CONFLICTING REQUESTS */
+
+  if (
+    ["Requested", "Approved"].includes(item.itemReturnStatus)
+  ) {
+    return {
+      success: false,
+      message:
+        item.itemReturnStatus === "Requested"
+          ? "Return request already submitted for this item"
+          : "This item has already been returned",
+    };
+  }
+
+  if (!reason) {
+    return {
+      success: false,
+      message: "Return reason required",
+    };
+  }
+
+  item.itemReturnStatus = "Requested";
+  item.itemReturnReason = reason;
+
+  await order.save();
+
+  return {
+    success: true,
+    message: "Return request sent successfully",
+  };
+};

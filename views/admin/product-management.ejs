@@ -1,1117 +1,1108 @@
-<!-- product-management.ejs -->
-
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
-<meta charset="UTF-8">
-
-<meta
-name="viewport"
-content="width=device-width, initial-scale=1.0"
->
-
-<title>
-Product Management - Admin | iStore
-</title>
-
-<link rel="stylesheet" href="/css/components/admin-sidebar.css">
-
-<link
-rel="stylesheet"
-href="/css/admin-dashboard.css"
->
-
-<link
-rel="stylesheet"
-href="/css/admin-products.css"
->
-
-
-<link
-rel="stylesheet"
-href="/css/admin-product-modal.css"
->
-
-<link
-href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
-rel="stylesheet"
->
-
-<link
-rel="stylesheet"
-href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
-/>
-
-<script src="https://unpkg.com/lucide@latest"></script>
-
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Management - Admin | iStore</title>
+  <link rel="stylesheet" href="/css/components/admin-sidebar.css">
+  <link rel="stylesheet" href="/css/admin-dashboard.css">
+  <link rel="stylesheet" href="/css/admin-products.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
-
 <body>
 
- <!-- Sidebar Navbar -->
-   <%- include('../partials/admin/sidebar') %>
-
-<main class="dashboard-main">
-
-<!-- PAGE HEADER -->
-
-<header class="page-header">
-
-<div class="header-left">
-
-<nav class="breadcrumb">
-
-<a href="/admin/dashboard">
-DASHBOARD
-</a>
-
-<i data-lucide="chevron-right" size="12"></i>
-
-<span class="current">PRODUCTS</span>
-
-</nav>
-
-<h1 class="page-title">Product Management</h1>
-
-<p class="page-subtitle">Manage all store products efficiently.</p>
-
-</div>
-
-</header>
-
-<!-- STATS -->
-
-<section class="stats-grid">
-
-<div class="stat-card">
-<div class="stat-header">
-<span class="stat-label">TOTAL PRODUCTS</span>
-<i data-lucide="package" size="20"></i>
-</div>
-<span class="stat-value"><%= stats.total %></span>
-<div class="stat-sub">
-<i data-lucide="trending-up" size="14"></i>
-Inventory products
-</div>
-</div>
-
-<div class="stat-card">
-<div class="stat-header">
-<span class="stat-label">ACTIVE PRODUCTS</span>
-<div class="status-dot-small dot-pink"></div>
-</div>
-<span class="stat-value"><%= stats.active %></span>
-<div class="stat-sub">Currently visible in store</div>
-</div>
-
-<div class="stat-card">
-<div class="stat-header">
-<span class="stat-label">INACTIVE PRODUCTS</span>
-<div class="status-dot-small dot-gray"></div>
-</div>
-<span class="stat-value"><%= stats.inactive %></span>
-<div class="stat-sub">Hidden from storefront</div>
-</div>
-
-</section>
-
-<!-- ACTION BAR -->
-
-<form method="GET" action="/admin/products">
-
-<section class="action-bar">
-
-<div class="filters-left">
-
-<div class="search-wrapper">
-<i data-lucide="search" size="16" class="search-icon-inline"></i>
-<input
-type="text"
-name="search"
-class="search-input-field"
-placeholder="Search products..."
-value="<%= search %>"
->
-</div>
-
-<select name="category" class="filter-select">
-<option value="">All Categories</option>
-<% categories.forEach(categoryItem => { %>
-<option
-value="<%= categoryItem._id %>"
-<%= categoryItem._id.toString() === category ? "selected" : "" %>
->
-<%= categoryItem.name %>
-</option>
-<% }) %>
-</select>
-
-<select name="status" class="filter-select">
-<option value="all" <%= status === "all" ? "selected" : "" %>>All Status</option>
-<option value="active" <%= status === "active" ? "selected" : "" %>>Active</option>
-<option value="inactive" <%= status === "inactive" ? "selected" : "" %>>Inactive</option>
-<option value="trash" <%= status === "trash" ? "selected" : "" %>>Trash</option>
-</select>
-
-<button type="submit" class="btn-add">
-<i data-lucide="filter"></i>
-Apply
-</button>
-
-</div>
-
-<button type="button" id="openAddModalBtn" class="btn-add">
-<i data-lucide="plus"></i>
-Add Product
-</button>
-
-</section>
-
-</form>
-
-<!-- TABLE -->
-
-<div class="table-card">
-
-<div class="table-header-row">
-<h2 class="table-title">All Products</h2>
-<a href="#" class="btn-export">Export CSV</a>
-</div>
-
-<div class="table-wrapper">
-
-<table>
-
-<thead>
-<tr>
-<th>PRODUCT</th>
-<th>CATEGORY</th>
-<th>VARIANTS</th>
-<th>PRICE</th>
-<th style="text-align:right;">STOCK</th>
-<th>STATUS</th>
-<th style="text-align:right;">ACTIONS</th>
-</tr>
-</thead>
-
-<tbody>
-
-<% if(products.length > 0) { %>
-
-<% products.forEach(product => { %>
-
-<tr>
-
-<td>
-<div class="product-info-cell">
-<img
-src="<%= product.thumbnail || '/images/default-product.png' %>"
-class="product-thumb"
-alt="<%= product.name %>"
->
-<div class="product-details">
-<span class="product-name"><%= product.name %></span>
-<span class="product-sku">SKU: <%= product.defaultSKU %></span>
-<% if(product.productOffer) { %>
-<div class="offer-badge offer-product">
-<%= product.productOffer.discountValue %>% OFF (Product Offer)
-</div>
-<% } else if(product.categoryOffer) { %>
-<div class="offer-badge offer-category">
-<%= product.categoryOffer.discountValue %>% OFF (Category Offer)
-</div>
-<% } %>
-</div>
-</div>
-</td>
-
-<td><%= product.categoryId?.name || "N/A" %></td>
-
-<td><%= product.variantCount %> Variants</td>
-
-<td class="price-text">₹<%= product.defaultPrice.toLocaleString() %></td>
-
-<td style="text-align:right;"><%= product.totalStock %></td>
-
-<td>
-<div class="status-badge">
-<div class="status-dot-small <%= product.isActive ? 'dot-pink' : 'dot-gray' %>"></div>
-<%= product.isActive ? "Active" : "Inactive" %>
-</div>
-</td>
-
-<td>
-<div class="action-btns">
-
-<% if(!product.isDeleted) { %>
-
-<a href="/admin/products/<%= product._id %>" class="btn-icon-action">
-<i data-lucide="eye"></i>
-</a>
-
-<button
-type="button"
-class="btn-icon-action edit-btn"
-data-id="<%= product._id %>"
->
-<i data-lucide="edit-2"></i>
-</button>
-
-<button type="button" class="btn-icon-action delete-btn" data-id="<%= product._id %>">
-<i data-lucide="trash-2"></i>
-</button>
-
-<% } else { %>
-
-<button type="button" class="btn-icon-action restore-btn" data-id="<%= product._id %>">
-<i data-lucide="rotate-ccw"></i>
-</button>
-
-<button type="button" class="btn-icon-action permanent-delete-btn" data-id="<%= product._id %>">
-<i data-lucide="x-circle"></i>
-</button>
-
-<% } %>
-
-</div>
-</td>
-
-</tr>
-
-<% }) %>
-
-<% } else { %>
-
-<tr>
-<td colspan="7" class="empty-table">No products found</td>
-</tr>
-
-<% } %>
-
-</tbody>
-
-</table>
-
-</div>
-
-<!-- PAGINATION -->
-
-<div class="pagination-container">
-
-<span class="pagination-info">
-Showing
-<%= ((currentPage - 1) * limit) + 1 %>
-to
-<%= Math.min(currentPage * limit, totalProducts) %>
-of
-<%= totalProducts %>
-entries
-</span>
-
-<div class="pagination-controls">
-
-<% if(currentPage > 1) { %>
-<a href="?page=<%= currentPage - 1 %>&search=<%= search %>&category=<%= category %>&status=<%= status %>" class="page-nav">
-<i data-lucide="chevron-left"></i>
-</a>
-<% } %>
-
-<% for(let i = 1; i <= totalPages; i++) { %>
-<a
-href="?page=<%= i %>&search=<%= search %>&category=<%= category %>&status=<%= status %>"
-class="page-num <%= currentPage === i ? 'active' : '' %>"
->
-<%= i %>
-</a>
-<% } %>
-
-<% if(currentPage < totalPages) { %>
-<a href="?page=<%= currentPage + 1 %>&search=<%= search %>&category=<%= category %>&status=<%= status %>" class="page-nav">
-<i data-lucide="chevron-right"></i>
-</a>
-<% } %>
-
-</div>
-
-</div>
-
-</div>
-
-<footer class="page-footer">
-<span class="footer-text">© 2026 iStore Admin</span>
-</footer>
-
-</main>
-
-<!-- =========================================
-     ADD PRODUCT MODAL
-========================================= -->
-
-<div class="modal-overlay" id="addProductModal" style="display:none;">
-
-<div class="modal-box">
-
-<div class="modal-header">
-<h2>Add New Product</h2>
-<button type="button" class="modal-close-btn" id="closeAddModalBtn">
-<i data-lucide="x"></i>
-</button>
-</div>
-
-<div class="modal-body">
-
-<div class="error-alert" id="addProductError" style="display:none;"></div>
-
-<form
-id="addProductForm"
-class="bento-form-grid"
-enctype="multipart/form-data"
->
-
-<div class="column">
-
-<section class="section-card">
-<div class="section-header">
-<i data-lucide="package" size="20"></i>
-<h2>Product Basic Details</h2>
-</div>
-
-<div class="form-group">
-<label class="form-label">Product Name</label>
-<input type="text" name="name" class="form-input" placeholder="e.g., iPhone 17 Pro Max" required>
-</div>
-
-<div class="form-row">
-
-<div class="form-group">
-<label class="form-label">Category</label>
-<select name="categoryId" class="form-select" required>
-<option value="">Select Category</option>
-<% categories.forEach(category => { %>
-<option value="<%= category._id %>"><%= category.name %></option>
-<% }) %>
-</select>
-</div>
-
-<div class="form-group">
-<label class="form-label">Product Status</label>
-<select name="isActive" class="form-select">
-<option value="true">Active</option>
-<option value="false">Inactive</option>
-</select>
-</div>
-
-</div>
-
-<div class="form-group">
-<label class="form-label">Description</label>
-<textarea name="description" class="form-textarea" placeholder="Write premium product description..." required></textarea>
-</div>
-
-</section>
-
-<section class="section-card">
-<div class="section-header">
-<i data-lucide="image" size="18"></i>
-<h2>Product Images</h2>
-</div>
-
-<div class="image-grid">
-
-<label class="upload-slot">
-<input type="file" name="thumbnail" id="addThumbnailInput" accept="image/*" hidden required>
-<i data-lucide="plus-circle" size="24"></i>
-<span>Upload Image</span>
-</label>
-
-<div class="image-preview" id="addThumbnailPreview" style="display:none;">
-<img src="" id="addPreviewImage" alt="Preview">
-<button type="button" class="remove-img-btn" id="addRemoveImageBtn">
-<i data-lucide="x" size="14"></i>
-</button>
-</div>
-
-</div>
-
-<p class="image-note">Recommended size: 2000×2000px</p>
-
-<div class="variant-images-wrapper">
-<label class="form-label">Variant Gallery Images</label>
-<input type="file" name="variantImages" id="addVariantImages" accept="image/*" multiple required>
-<p class="image-note">Upload minimum 3 images</p>
-<div class="variant-preview-grid" id="addVariantPreviewGrid"></div>
-</div>
-
-</section>
-
-</div>
-
-<div class="column">
-
-<section class="section-card">
-<div class="section-header">
-<i data-lucide="banknote" size="20"></i>
-<h2>Pricing & Stock</h2>
-</div>
-
-<div class="form-group">
-<label class="form-label">Price</label>
-<div class="price-input-wrapper">
-<span class="price-symbol">₹</span>
-<input type="number" name="price" class="form-input" placeholder="129900" required>
-</div>
-</div>
-
-<div class="form-group">
-<label class="form-label">Compare Price</label>
-<div class="price-input-wrapper">
-<span class="price-symbol">₹</span>
-<input type="number" name="comparePrice" class="form-input" placeholder="139900">
-</div>
-</div>
-
-<div class="form-row">
-
-<div class="form-group">
-<label class="form-label">Stock</label>
-<input type="number" name="stock" class="form-input" placeholder="100" required>
-</div>
-
-<div class="form-group">
-<label class="form-label">SKU</label>
-<input type="text" name="SKU" class="form-input sku-input" placeholder="APL-IP17-512" required>
-</div>
-
-</div>
-
-</section>
-
-<section class="section-card">
-<div class="section-header">
-<i data-lucide="cpu" size="18"></i>
-<h2>Technical Specs</h2>
-</div>
-
-<div class="form-group">
-<label class="form-label">Storage</label>
-<input type="text" name="storage" class="form-input" placeholder="256GB">
-</div>
-
-<div class="form-group">
-<label class="form-label">RAM</label>
-<input type="text" name="RAM" class="form-input" placeholder="8GB">
-</div>
-
-<div class="form-group">
-<label class="form-label">Color</label>
-<input type="text" name="color" class="form-input" placeholder="Titanium">
-</div>
-
-</section>
-
-<section class="section-card">
-<div class="section-header">
-<i data-lucide="eye" size="18"></i>
-<h2>Visibility</h2>
-</div>
-
-<div class="status-row">
-<span class="form-label">Featured Product</span>
-<label class="switch">
-<input type="checkbox" name="isFeatured" value="true">
-<span class="slider"></span>
-</label>
-</div>
-
-<div class="status-row">
-<span class="form-label">Best Seller</span>
-<label class="switch">
-<input type="checkbox" name="isBestSeller" value="true">
-<span class="slider"></span>
-</label>
-</div>
-
-<div class="status-row">
-<span class="form-label">Deal Product</span>
-<label class="switch">
-<input type="checkbox" name="isDeal" value="true">
-<span class="slider"></span>
-</label>
-</div>
-
-</section>
-
-</div>
-
-<div class="footer-actions" style="grid-column:1/-1;">
-<span class="draft-note">iStore Premium Inventory System</span>
-<button type="button" class="btn-cancel" id="cancelAddModalBtn">Cancel</button>
-<button type="submit" class="btn-save" id="addProductSubmitBtn">Save Product</button>
-</div>
-
-</form>
-
-</div>
-
-</div>
-
-</div>
-
-<!-- =========================================
-     EDIT PRODUCT MODAL
-========================================= -->
-
-<div class="modal-overlay" id="editProductModal" style="display:none;">
-
-<div class="modal-box">
-
-<div class="modal-header">
-<h2>Edit Product</h2>
-<button type="button" class="modal-close-btn" id="closeEditModalBtn">
-<i data-lucide="x"></i>
-</button>
-</div>
-
-<div class="modal-body">
-
-<div class="error-alert" id="editProductError" style="display:none;"></div>
-
-<form
-id="editProductForm"
-class="bento-form-grid"
-enctype="multipart/form-data"
->
-
-<input type="hidden" name="productId" id="editProductId">
-<input type="hidden" name="variantId" id="editVariantId">
-
-<div class="column">
-
-<section class="section-card">
-<div class="section-header">
-<i data-lucide="package" size="20"></i>
-<h2>Product Basic Details</h2>
-</div>
-
-<div class="form-group">
-<label class="form-label">Product Name</label>
-<input type="text" name="name" id="editName" class="form-input" required>
-</div>
-
-<div class="form-row">
-
-<div class="form-group">
-<label class="form-label">Category</label>
-<select name="categoryId" id="editCategoryId" class="form-select" required>
-<% categories.forEach(category => { %>
-<option value="<%= category._id %>"><%= category.name %></option>
-<% }) %>
-</select>
-</div>
-
-<div class="form-group">
-<label class="form-label">Product Status</label>
-<select name="isActive" id="editIsActive" class="form-select">
-<option value="true">Active</option>
-<option value="false">Inactive</option>
-</select>
-</div>
-
-</div>
-
-<div class="form-group">
-<label class="form-label">Description</label>
-<textarea name="description" id="editDescription" class="form-textarea" required></textarea>
-</div>
-
-</section>
-
-<section class="section-card">
-<div class="section-header">
-<i data-lucide="image" size="18"></i>
-<h2>Product Images</h2>
-</div>
-
-<div class="image-grid">
-
-<label class="upload-slot">
-<input type="file" name="thumbnail" id="editThumbnailInput" accept="image/*" hidden>
-<i data-lucide="plus-circle" size="24"></i>
-<span>Replace Image</span>
-</label>
-
-<div class="image-preview" id="editThumbnailPreview">
-<img src="" id="editPreviewImage" alt="Preview">
-<button type="button" class="remove-img-btn" id="editRemoveImageBtn">
-<i data-lucide="x" size="14"></i>
-</button>
-</div>
-
-</div>
-
-<p class="image-note">Upload a new image only if needed.</p>
-
-</section>
-
-</div>
-
-<div class="column">
-
-<section class="section-card">
-<div class="section-header">
-<i data-lucide="banknote" size="20"></i>
-<h2>Pricing & Stock</h2>
-</div>
-
-<div class="form-group">
-<label class="form-label">Price</label>
-<div class="price-input-wrapper">
-<span class="price-symbol">₹</span>
-<input type="number" name="price" id="editPrice" class="form-input" required>
-</div>
-</div>
-
-<div class="form-group">
-<label class="form-label">Compare Price</label>
-<div class="price-input-wrapper">
-<span class="price-symbol">₹</span>
-<input type="number" name="comparePrice" id="editComparePrice" class="form-input">
-</div>
-</div>
-
-<div class="form-row">
-
-<div class="form-group">
-<label class="form-label">Stock</label>
-<input type="number" name="stock" id="editStock" class="form-input" required>
-</div>
-
-<div class="form-group">
-<label class="form-label">SKU</label>
-<input type="text" name="SKU" id="editSKU" class="form-input sku-input" required>
-</div>
-
-</div>
-
-</section>
-
-<section class="section-card">
-<div class="section-header">
-<i data-lucide="cpu" size="18"></i>
-<h2>Technical Specs</h2>
-</div>
-
-<div class="form-group">
-<label class="form-label">Storage</label>
-<input type="text" name="storage" id="editStorage" class="form-input">
-</div>
-
-<div class="form-group">
-<label class="form-label">RAM</label>
-<input type="text" name="RAM" id="editRAM" class="form-input">
-</div>
-
-<div class="form-group">
-<label class="form-label">Color</label>
-<input type="text" name="color" id="editColor" class="form-input">
-</div>
-
-</section>
-
-<section class="section-card">
-<div class="section-header">
-<i data-lucide="eye" size="18"></i>
-<h2>Visibility</h2>
-</div>
-
-<div class="status-row">
-<span class="form-label">Featured Product</span>
-<label class="switch">
-<input type="checkbox" name="isFeatured" id="editIsFeatured" value="true">
-<span class="slider"></span>
-</label>
-</div>
-
-<div class="status-row">
-<span class="form-label">Best Seller</span>
-<label class="switch">
-<input type="checkbox" name="isBestSeller" id="editIsBestSeller" value="true">
-<span class="slider"></span>
-</label>
-</div>
-
-<div class="status-row">
-<span class="form-label">Deal Product</span>
-<label class="switch">
-<input type="checkbox" name="isDeal" id="editIsDeal" value="true">
-<span class="slider"></span>
-</label>
-</div>
-
-</section>
-
-</div>
-
-<div class="footer-actions" style="grid-column:1/-1;">
-<span class="draft-note">iStore Premium Inventory System</span>
-<button type="button" class="btn-cancel" id="cancelEditModalBtn">Cancel</button>
-<button type="submit" class="btn-save" id="editProductSubmitBtn">Update Product</button>
-</div>
-
-</form>
-
-</div>
-
-</div>
-
-</div>
-
-<script>
-
-lucide.createIcons()
-
-/* =========================================
-   MODAL OPEN / CLOSE HELPERS
-========================================= */
-
-const addModal = document.getElementById("addProductModal")
-const editModal = document.getElementById("editProductModal")
-
-function openModal(modal) {
-  modal.style.display = "flex"
-  document.body.style.overflow = "hidden"
-}
-
-function closeModal(modal) {
-  modal.style.display = "none"
-  document.body.style.overflow = ""
-}
-
-document.getElementById("openAddModalBtn").addEventListener("click", () => {
-  document.getElementById("addProductForm").reset()
-  document.getElementById("addThumbnailPreview").style.display = "none"
-  document.getElementById("addVariantPreviewGrid").innerHTML = ""
-  document.getElementById("addProductError").style.display = "none"
-  openModal(addModal)
-  lucide.createIcons()
-})
-
-document.getElementById("closeAddModalBtn").addEventListener("click", () => closeModal(addModal))
-document.getElementById("cancelAddModalBtn").addEventListener("click", () => closeModal(addModal))
-
-document.getElementById("closeEditModalBtn").addEventListener("click", () => closeModal(editModal))
-document.getElementById("cancelEditModalBtn").addEventListener("click", () => closeModal(editModal))
-
-addModal.addEventListener("click", (e) => { if (e.target === addModal) closeModal(addModal) })
-editModal.addEventListener("click", (e) => { if (e.target === editModal) closeModal(editModal) })
-
-/* =========================================
-   ADD PRODUCT — IMAGE PREVIEWS
-========================================= */
-
-const addThumbnailInput = document.getElementById("addThumbnailInput")
-const addThumbnailPreview = document.getElementById("addThumbnailPreview")
-const addPreviewImage = document.getElementById("addPreviewImage")
-const addRemoveImageBtn = document.getElementById("addRemoveImageBtn")
-
-addThumbnailInput.addEventListener("change", function () {
-  const file = this.files[0]
-  if (!file) return
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    addPreviewImage.src = e.target.result
-    addThumbnailPreview.style.display = "block"
-  }
-  reader.readAsDataURL(file)
-})
-
-addRemoveImageBtn.addEventListener("click", () => {
-  addThumbnailInput.value = ""
-  addPreviewImage.src = ""
-  addThumbnailPreview.style.display = "none"
-})
-
-const addVariantImages = document.getElementById("addVariantImages")
-const addVariantPreviewGrid = document.getElementById("addVariantPreviewGrid")
-
-addVariantImages.addEventListener("change", function () {
-  addVariantPreviewGrid.innerHTML = ""
-  Array.from(this.files).forEach(file => {
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      addVariantPreviewGrid.innerHTML += `
-        <div class="variant-preview-item">
-          <img src="${e.target.result}" alt="Variant">
+  <%- include('../partials/admin/sidebar') %>
+
+  <main class="dashboard-main">
+
+    <!-- PAGE HEADER -->
+    <header class="page-header">
+      <div class="header-left">
+        <nav class="breadcrumb">
+          <a href="/admin/dashboard">DASHBOARD</a>
+          <i data-lucide="chevron-right" size="12"></i>
+          <span class="current">PRODUCTS</span>
+        </nav>
+        <h1 class="page-title">Product Management</h1>
+        <p class="page-subtitle">Manage all store products efficiently.</p>
+      </div>
+    </header>
+
+    <!-- STATS -->
+    <section class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-header">
+          <span class="stat-label">TOTAL PRODUCTS</span>
+          <i data-lucide="package" size="20"></i>
         </div>
-      `
+        <span class="stat-value"><%= stats.total %></span>
+        <div class="stat-sub"><i data-lucide="trending-up" size="14"></i> Inventory products</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-header">
+          <span class="stat-label">ACTIVE PRODUCTS</span>
+          <div class="status-dot-small dot-pink"></div>
+        </div>
+        <span class="stat-value"><%= stats.active %></span>
+        <div class="stat-sub">Currently visible in store</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-header">
+          <span class="stat-label">INACTIVE PRODUCTS</span>
+          <div class="status-dot-small dot-gray"></div>
+        </div>
+        <span class="stat-value"><%= stats.inactive %></span>
+        <div class="stat-sub">Hidden from storefront</div>
+      </div>
+    </section>
+
+    <!-- ACTION BAR -->
+    <form method="GET" action="/admin/products">
+      <section class="action-bar">
+        <div class="filters-left">
+          <div class="search-wrapper">
+            <i data-lucide="search" size="16" class="search-icon-inline"></i>
+            <input type="text" name="search" class="search-input-field"
+              placeholder="Search products..." value="<%= search %>">
+          </div>
+          <select name="category" class="filter-select">
+            <option value="">All Categories</option>
+            <% categories.forEach(categoryItem => { %>
+              <option value="<%= categoryItem._id %>"
+                <%= categoryItem._id.toString() === category ? "selected" : "" %>>
+                <%= categoryItem.name %>
+              </option>
+            <% }) %>
+          </select>
+          <select name="status" class="filter-select">
+            <option value="all"      <%= status === "all"      ? "selected" : "" %>>All Status</option>
+            <option value="active"   <%= status === "active"   ? "selected" : "" %>>Active</option>
+            <option value="inactive" <%= status === "inactive" ? "selected" : "" %>>Inactive</option>
+            <option value="trash"    <%= status === "trash"    ? "selected" : "" %>>Trash</option>
+          </select>
+          <button type="submit" class="btn-add">
+            <i data-lucide="filter"></i> Apply
+          </button>
+        </div>
+        <button type="button" id="openAddModalBtn" class="btn-add">
+          <i data-lucide="plus"></i> Add Product
+        </button>
+      </section>
+    </form>
+
+    <!-- TABLE -->
+    <div class="table-card">
+      <div class="table-header-row">
+        <h2 class="table-title">All Products</h2>
+        <a href="#" class="btn-export">Export CSV</a>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>PRODUCT</th>
+              <th>CATEGORY</th>
+              <th>VARIANTS</th>
+              <th>PRICE</th>
+              <th style="text-align:right;">STOCK</th>
+              <th>STATUS</th>
+              <th style="text-align:right;">ACTIONS</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (products.length > 0) { %>
+              <% products.forEach(product => { %>
+                <tr>
+                  <td>
+                    <div class="product-info-cell">
+                      <img src="<%= product.thumbnail || '/images/default-product.png' %>"
+                        class="product-thumb" alt="<%= product.name %>">
+                      <div class="product-details">
+                        <span class="product-name"><%= product.name %></span>
+                        <span class="product-sku">SKU: <%= product.defaultSKU %></span>
+                        <% if (product.productOffer) { %>
+                          <div class="offer-badge offer-product"><%= product.productOffer.discountValue %>% OFF (Product Offer)</div>
+                        <% } else if (product.categoryOffer) { %>
+                          <div class="offer-badge offer-category"><%= product.categoryOffer.discountValue %>% OFF (Category Offer)</div>
+                        <% } %>
+                      </div>
+                    </div>
+                  </td>
+                  <td><%= product.categoryId?.name || "N/A" %></td>
+                  <td><%= product.variantCount %> Variants</td>
+                  <td class="price-text">₹<%= product.defaultPrice.toLocaleString() %></td>
+                  <td style="text-align:right;"><%= product.totalStock %></td>
+                  <td>
+                    <div class="status-badge">
+                      <div class="status-dot-small <%= product.isActive ? 'dot-pink' : 'dot-gray' %>"></div>
+                      <%= product.isActive ? "Active" : "Inactive" %>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="action-btns">
+                      <% if (!product.isDeleted) { %>
+                        <a href="/admin/products/<%= product._id %>" class="btn-icon-action">
+                          <i data-lucide="eye"></i>
+                        </a>
+                        <button type="button" class="btn-icon-action edit-btn" data-id="<%= product._id %>">
+                          <i data-lucide="edit-2"></i>
+                        </button>
+                        <button type="button" class="btn-icon-action delete-btn" data-id="<%= product._id %>">
+                          <i data-lucide="trash-2"></i>
+                        </button>
+                      <% } else { %>
+                        <button type="button" class="btn-icon-action restore-btn" data-id="<%= product._id %>">
+                          <i data-lucide="rotate-ccw"></i>
+                        </button>
+                        <button type="button" class="btn-icon-action permanent-delete-btn" data-id="<%= product._id %>">
+                          <i data-lucide="x-circle"></i>
+                        </button>
+                      <% } %>
+                    </div>
+                  </td>
+                </tr>
+              <% }) %>
+            <% } else { %>
+              <tr><td colspan="7" class="empty-table">No products found</td></tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- PAGINATION -->
+      <div class="pagination-container">
+        <span class="pagination-info">
+          Showing <%= ((currentPage - 1) * limit) + 1 %> to
+          <%= Math.min(currentPage * limit, totalProducts) %> of <%= totalProducts %> entries
+        </span>
+        <div class="pagination-controls">
+          <% if (currentPage > 1) { %>
+            <a href="?page=<%= currentPage-1 %>&search=<%= search %>&category=<%= category %>&status=<%= status %>" class="page-nav">
+              <i data-lucide="chevron-left"></i>
+            </a>
+          <% } %>
+          <% for (let i = 1; i <= totalPages; i++) { %>
+            <a href="?page=<%= i %>&search=<%= search %>&category=<%= category %>&status=<%= status %>"
+              class="page-num <%= currentPage === i ? 'active' : '' %>"><%= i %></a>
+          <% } %>
+          <% if (currentPage < totalPages) { %>
+            <a href="?page=<%= currentPage+1 %>&search=<%= search %>&category=<%= category %>&status=<%= status %>" class="page-nav">
+              <i data-lucide="chevron-right"></i>
+            </a>
+          <% } %>
+        </div>
+      </div>
+    </div>
+
+    <footer class="page-footer">
+      <span class="footer-text">© 2026 iStore Admin</span>
+    </footer>
+  </main>
+
+
+  <!-- =========================================
+       ADD PRODUCT MODAL
+  ========================================= -->
+  <div class="modal-overlay" id="addProductModal" style="display:none;">
+    <div class="modal-box">
+
+      <div class="modal-header">
+        <h2>Add New Product</h2>
+        <button type="button" class="modal-close-btn" id="closeAddModalBtn">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="error-alert" id="addProductError" style="display:none;"></div>
+
+        <form id="addProductForm" class="bento-form-grid" enctype="multipart/form-data" novalidate>
+
+          <div class="column">
+
+            <!-- Basic Details -->
+            <section class="section-card">
+              <div class="section-header">
+                <i data-lucide="package" size="20"></i>
+                <h2>Product Basic Details</h2>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Product Name</label>
+                <input type="text" name="name" id="add-name" class="form-input"
+                  placeholder="e.g., iPhone 17 Pro Max">
+                <span class="field-error" id="add-name-error"></span>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Category</label>
+                  <select name="categoryId" id="add-category" class="form-select">
+                    <option value="">Select Category</option>
+                    <% categories.forEach(category => { %>
+                      <option value="<%= category._id %>"><%= category.name %></option>
+                    <% }) %>
+                  </select>
+                  <span class="field-error" id="add-category-error"></span>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Product Status</label>
+                  <select name="isActive" class="form-select">
+                    <option value="true">Active</option>
+                    <option value="false">Inactive</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Description</label>
+                <textarea name="description" id="add-description" class="form-textarea"
+                  placeholder="Write premium product description..."></textarea>
+                <span class="field-error" id="add-description-error"></span>
+              </div>
+            </section>
+
+            <!-- Images -->
+            <section class="section-card">
+              <div class="section-header">
+                <i data-lucide="image" size="18"></i>
+                <h2>Product Images</h2>
+              </div>
+
+              <div class="image-grid">
+                <label class="upload-slot" id="add-thumbnail-slot">
+                  <input type="file" name="thumbnail" id="addThumbnailInput" accept="image/*" hidden>
+                  <i data-lucide="plus-circle" size="24"></i>
+                  <span>Upload Image</span>
+                </label>
+                <div class="image-preview" id="addThumbnailPreview" style="display:none;">
+                  <img src="" id="addPreviewImage" alt="Preview">
+                  <button type="button" class="remove-img-btn" id="addRemoveImageBtn">
+                    <i data-lucide="x" size="14"></i>
+                  </button>
+                </div>
+              </div>
+              <span class="field-error" id="add-thumbnail-error"></span>
+              <p class="image-note">Recommended size: 2000×2000px</p>
+
+              <div class="variant-images-wrapper">
+                <label class="form-label">Variant Gallery Images</label>
+                <input type="file" name="variantImages" id="addVariantImages"
+                  accept="image/*" multiple>
+                <span class="field-error" id="add-variant-images-error"></span>
+                <p class="image-note">Upload minimum 3 images</p>
+                <div class="variant-preview-grid" id="addVariantPreviewGrid"></div>
+              </div>
+            </section>
+
+          </div>
+
+          <div class="column">
+
+            <!-- Pricing & Stock -->
+            <section class="section-card">
+              <div class="section-header">
+                <i data-lucide="banknote" size="20"></i>
+                <h2>Pricing & Stock</h2>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Price</label>
+                <div class="price-input-wrapper">
+                  <span class="price-symbol">₹</span>
+                  <input type="number" name="price" id="add-price" class="form-input" placeholder="129900">
+                </div>
+                <span class="field-error" id="add-price-error"></span>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Compare Price <span style="font-weight:400;text-transform:none;letter-spacing:0;">(Optional)</span></label>
+                <div class="price-input-wrapper">
+                  <span class="price-symbol">₹</span>
+                  <input type="number" name="comparePrice" id="add-compare-price" class="form-input" placeholder="139900">
+                </div>
+                <span class="field-error" id="add-compare-price-error"></span>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Stock</label>
+                  <input type="number" name="stock" id="add-stock" class="form-input" placeholder="100">
+                  <span class="field-error" id="add-stock-error"></span>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">SKU</label>
+                  <input type="text" name="SKU" id="add-sku" class="form-input sku-input" placeholder="APL-IP17-512">
+                  <span class="field-error" id="add-sku-error"></span>
+                </div>
+              </div>
+            </section>
+
+            <!-- Technical Specs -->
+            <section class="section-card">
+              <div class="section-header">
+                <i data-lucide="cpu" size="18"></i>
+                <h2>Technical Specs</h2>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Storage</label>
+                <input type="text" name="storage" id="add-storage" class="form-input" placeholder="256GB">
+                <span class="field-error" id="add-storage-error"></span>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">RAM</label>
+                <input type="text" name="RAM" id="add-ram" class="form-input" placeholder="8GB">
+                <span class="field-error" id="add-ram-error"></span>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Color</label>
+                <input type="text" name="color" id="add-color" class="form-input" placeholder="Titanium">
+                <span class="field-error" id="add-color-error"></span>
+              </div>
+            </section>
+
+            <!-- Visibility -->
+            <section class="section-card">
+              <div class="section-header">
+                <i data-lucide="eye" size="18"></i>
+                <h2>Visibility</h2>
+              </div>
+              <div class="status-row">
+                <span class="form-label">Featured Product</span>
+                <label class="switch"><input type="checkbox" name="isFeatured" value="true"><span class="slider"></span></label>
+              </div>
+              <div class="status-row">
+                <span class="form-label">Best Seller</span>
+                <label class="switch"><input type="checkbox" name="isBestSeller" value="true"><span class="slider"></span></label>
+              </div>
+              <div class="status-row">
+                <span class="form-label">Deal Product</span>
+                <label class="switch"><input type="checkbox" name="isDeal" value="true"><span class="slider"></span></label>
+              </div>
+            </section>
+
+          </div>
+
+          <div class="footer-actions" style="grid-column:1/-1;">
+            <span class="draft-note">iStore Premium Inventory System</span>
+            <button type="button" class="btn-cancel" id="cancelAddModalBtn">Cancel</button>
+            <button type="submit" class="btn-save" id="addProductSubmitBtn">Save Product</button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- =========================================
+       EDIT PRODUCT MODAL
+  ========================================= -->
+  <div class="modal-overlay" id="editProductModal" style="display:none;">
+    <div class="modal-box">
+
+      <div class="modal-header">
+        <h2>Edit Product</h2>
+        <button type="button" class="modal-close-btn" id="closeEditModalBtn">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="error-alert" id="editProductError" style="display:none;"></div>
+
+        <form id="editProductForm" class="bento-form-grid" enctype="multipart/form-data" novalidate>
+
+          <input type="hidden" name="productId" id="editProductId">
+          <input type="hidden" name="variantId" id="editVariantId">
+
+          <div class="column">
+
+            <!-- Basic Details -->
+            <section class="section-card">
+              <div class="section-header">
+                <i data-lucide="package" size="20"></i>
+                <h2>Product Basic Details</h2>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Product Name</label>
+                <input type="text" name="name" id="editName" class="form-input">
+                <span class="field-error" id="edit-name-error"></span>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Category</label>
+                  <select name="categoryId" id="editCategoryId" class="form-select">
+                    <% categories.forEach(category => { %>
+                      <option value="<%= category._id %>"><%= category.name %></option>
+                    <% }) %>
+                  </select>
+                  <span class="field-error" id="edit-category-error"></span>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Product Status</label>
+                  <select name="isActive" id="editIsActive" class="form-select">
+                    <option value="true">Active</option>
+                    <option value="false">Inactive</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Description</label>
+                <textarea name="description" id="editDescription" class="form-textarea"></textarea>
+                <span class="field-error" id="edit-description-error"></span>
+              </div>
+            </section>
+
+            <!-- Images -->
+            <section class="section-card">
+              <div class="section-header">
+                <i data-lucide="image" size="18"></i>
+                <h2>Product Images</h2>
+              </div>
+              <div class="image-grid">
+                <label class="upload-slot">
+                  <input type="file" name="thumbnail" id="editThumbnailInput" accept="image/*" hidden>
+                  <i data-lucide="plus-circle" size="24"></i>
+                  <span>Replace Image</span>
+                </label>
+                <div class="image-preview" id="editThumbnailPreview">
+                  <img src="" id="editPreviewImage" alt="Preview">
+                  <button type="button" class="remove-img-btn" id="editRemoveImageBtn">
+                    <i data-lucide="x" size="14"></i>
+                  </button>
+                </div>
+              </div>
+              <p class="image-note">Upload a new image only if needed.</p>
+            </section>
+
+          </div>
+
+          <div class="column">
+
+            <!-- Pricing & Stock -->
+            <section class="section-card">
+              <div class="section-header">
+                <i data-lucide="banknote" size="20"></i>
+                <h2>Pricing & Stock</h2>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Price</label>
+                <div class="price-input-wrapper">
+                  <span class="price-symbol">₹</span>
+                  <input type="number" name="price" id="editPrice" class="form-input">
+                </div>
+                <span class="field-error" id="edit-price-error"></span>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Compare Price <span style="font-weight:400;text-transform:none;letter-spacing:0;">(Optional)</span></label>
+                <div class="price-input-wrapper">
+                  <span class="price-symbol">₹</span>
+                  <input type="number" name="comparePrice" id="editComparePrice" class="form-input">
+                </div>
+                <span class="field-error" id="edit-compare-price-error"></span>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Stock</label>
+                  <input type="number" name="stock" id="editStock" class="form-input">
+                  <span class="field-error" id="edit-stock-error"></span>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">SKU</label>
+                  <input type="text" name="SKU" id="editSKU" class="form-input sku-input">
+                  <span class="field-error" id="edit-sku-error"></span>
+                </div>
+              </div>
+            </section>
+
+            <!-- Technical Specs -->
+            <section class="section-card">
+              <div class="section-header">
+                <i data-lucide="cpu" size="18"></i>
+                <h2>Technical Specs</h2>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Storage</label>
+                <input type="text" name="storage" id="editStorage" class="form-input">
+                <span class="field-error" id="edit-storage-error"></span>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">RAM</label>
+                <input type="text" name="RAM" id="editRAM" class="form-input">
+                <span class="field-error" id="edit-ram-error"></span>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Color</label>
+                <input type="text" name="color" id="editColor" class="form-input">
+                <span class="field-error" id="edit-color-error"></span>
+              </div>
+            </section>
+
+            <!-- Visibility -->
+            <section class="section-card">
+              <div class="section-header">
+                <i data-lucide="eye" size="18"></i>
+                <h2>Visibility</h2>
+              </div>
+              <div class="status-row">
+                <span class="form-label">Featured Product</span>
+                <label class="switch"><input type="checkbox" name="isFeatured" id="editIsFeatured" value="true"><span class="slider"></span></label>
+              </div>
+              <div class="status-row">
+                <span class="form-label">Best Seller</span>
+                <label class="switch"><input type="checkbox" name="isBestSeller" id="editIsBestSeller" value="true"><span class="slider"></span></label>
+              </div>
+              <div class="status-row">
+                <span class="form-label">Deal Product</span>
+                <label class="switch"><input type="checkbox" name="isDeal" id="editIsDeal" value="true"><span class="slider"></span></label>
+              </div>
+            </section>
+
+          </div>
+
+          <div class="footer-actions" style="grid-column:1/-1;">
+            <span class="draft-note">iStore Premium Inventory System</span>
+            <button type="button" class="btn-cancel" id="cancelEditModalBtn">Cancel</button>
+            <button type="submit" class="btn-save" id="editProductSubmitBtn">Update Product</button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+
+
+  <script>
+    lucide.createIcons();
+
+    /* ================================================
+       MODAL OPEN / CLOSE
+    ================================================ */
+
+    const addModal  = document.getElementById("addProductModal");
+    const editModal = document.getElementById("editProductModal");
+
+    function openModal(modal)  { modal.style.display = "flex"; document.body.style.overflow = "hidden"; }
+    function closeModal(modal) { modal.style.display = "none"; document.body.style.overflow = "";       }
+
+    document.getElementById("openAddModalBtn").addEventListener("click", () => {
+      document.getElementById("addProductForm").reset();
+      document.getElementById("addThumbnailPreview").style.display = "none";
+      document.getElementById("addVariantPreviewGrid").innerHTML   = "";
+      document.getElementById("addProductError").style.display     = "none";
+      clearAllErrors("add");
+      openModal(addModal);
+      lucide.createIcons();
+    });
+
+    document.getElementById("closeAddModalBtn").addEventListener("click",  () => closeModal(addModal));
+    document.getElementById("cancelAddModalBtn").addEventListener("click", () => closeModal(addModal));
+    document.getElementById("closeEditModalBtn").addEventListener("click",  () => closeModal(editModal));
+    document.getElementById("cancelEditModalBtn").addEventListener("click", () => closeModal(editModal));
+
+    addModal.addEventListener("click",  e => { if (e.target === addModal)  closeModal(addModal);  });
+    editModal.addEventListener("click", e => { if (e.target === editModal) closeModal(editModal); });
+
+    /* ================================================
+       INLINE VALIDATION HELPERS
+    ================================================ */
+
+    function setError(inputEl, errorId, msg) {
+      if (!inputEl) return;
+      inputEl.classList.add("input-error");
+      inputEl.classList.remove("input-success");
+      const s = document.getElementById(errorId);
+      if (s) { s.textContent = msg; s.classList.add("visible"); }
     }
-    reader.readAsDataURL(file)
-  })
-})
 
-/* =========================================
-   ADD PRODUCT — SUBMIT
-========================================= */
-
-document.getElementById("addProductForm").addEventListener("submit", async (e) => {
-  e.preventDefault()
-
-  const form = e.target
-  const errorBox = document.getElementById("addProductError")
-  const submitBtn = document.getElementById("addProductSubmitBtn")
-
-  errorBox.style.display = "none"
-  submitBtn.disabled = true
-  submitBtn.textContent = "Saving..."
-
-  try {
-    const response = await fetch("/admin/products/add", {
-      method: "POST",
-      body: new FormData(form),
-    })
-
-    const data = await response.json()
-
-    if (!data.success) {
-      errorBox.textContent = data.message || "Failed to add product"
-      errorBox.style.display = "block"
-      return
+    function setSuccess(inputEl, errorId) {
+      if (!inputEl) return;
+      inputEl.classList.remove("input-error");
+      inputEl.classList.add("input-success");
+      const s = document.getElementById(errorId);
+      if (s) { s.textContent = ""; s.classList.remove("visible"); }
     }
 
-    closeModal(addModal)
-
-    await Swal.fire({
-      toast: true,
-      position: "top",
-      icon: "success",
-      title: "Product added successfully",
-      showConfirmButton: false,
-      timer: 2000,
-      timerProgressBar: true,
-    })
-
-    window.location.reload()
-
-  } catch (error) {
-    errorBox.textContent = "Something went wrong. Please try again."
-    errorBox.style.display = "block"
-  } finally {
-    submitBtn.disabled = false
-    submitBtn.textContent = "Save Product"
-  }
-})
-
-/* =========================================
-   EDIT PRODUCT — OPEN + POPULATE
-========================================= */
-
-document.addEventListener("click", async (e) => {
-  const btn = e.target.closest(".edit-btn")
-  if (!btn) return
-
-  const productId = btn.dataset.id
-
-  try {
-    const response = await fetch(`/admin/products/${productId}/json`)
-    const data = await response.json()
-
-    if (!data.success) {
-      Swal.fire({ icon: "error", title: "Failed to load product" })
-      return
+    function clearField(inputEl, errorId) {
+      if (!inputEl) return;
+      inputEl.classList.remove("input-error", "input-success");
+      const s = document.getElementById(errorId);
+      if (s) { s.textContent = ""; s.classList.remove("visible"); }
     }
 
-    const product = data.product
-    const variant = data.variant || {}
+    /* ---- field validators (prefix = "add" | "edit") ---- */
 
-    document.getElementById("editProductId").value = product._id
-    document.getElementById("editVariantId").value = variant._id || ""
-    document.getElementById("editName").value = product.name || ""
-    document.getElementById("editCategoryId").value = product.categoryId?._id || product.categoryId || ""
-    document.getElementById("editIsActive").value = String(product.isActive)
-    document.getElementById("editDescription").value = product.description || ""
-
-    document.getElementById("editPreviewImage").src = product.thumbnail || "/images/default-product.png"
-    document.getElementById("editThumbnailInput").value = ""
-
-    document.getElementById("editPrice").value = variant.price || ""
-    document.getElementById("editComparePrice").value = variant.comparePrice || ""
-    document.getElementById("editStock").value = variant.stock || ""
-    document.getElementById("editSKU").value = variant.SKU || ""
-    document.getElementById("editStorage").value = variant.storage || ""
-    document.getElementById("editRAM").value = variant.RAM || ""
-    document.getElementById("editColor").value = variant.color || ""
-
-    document.getElementById("editIsFeatured").checked = !!product.isFeatured
-    document.getElementById("editIsBestSeller").checked = !!product.isBestSeller
-    document.getElementById("editIsDeal").checked = !!product.isDeal
-
-    document.getElementById("editProductError").style.display = "none"
-
-    openModal(editModal)
-    lucide.createIcons()
-
-  } catch (error) {
-    Swal.fire({ icon: "error", title: "Failed to load product" })
-  }
-})
-
-/* =========================================
-   EDIT PRODUCT — IMAGE PREVIEW
-========================================= */
-
-document.getElementById("editThumbnailInput").addEventListener("change", function () {
-  const file = this.files[0]
-  if (!file) return
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    document.getElementById("editPreviewImage").src = e.target.result
-  }
-  reader.readAsDataURL(file)
-})
-
-/* =========================================
-   EDIT PRODUCT — SUBMIT
-========================================= */
-
-document.getElementById("editProductForm").addEventListener("submit", async (e) => {
-  e.preventDefault()
-
-  const form = e.target
-  const productId = document.getElementById("editProductId").value
-  const errorBox = document.getElementById("editProductError")
-  const submitBtn = document.getElementById("editProductSubmitBtn")
-
-  errorBox.style.display = "none"
-  submitBtn.disabled = true
-  submitBtn.textContent = "Updating..."
-
-  try {
-    const response = await fetch(`/admin/products/edit/${productId}`, {
-      method: "POST",
-      body: new FormData(form),
-    })
-
-    const data = await response.json()
-
-    if (!data.success) {
-      errorBox.textContent = data.message || "Failed to update product"
-      errorBox.style.display = "block"
-      return
+    function validateName(prefix) {
+      const el  = document.getElementById(prefix === "add" ? "add-name" : "editName");
+      const val = el.value.trim();
+      const err = prefix + "-name-error";
+      if (!val)             { setError(el, err, "Product name is required");                   return false; }
+      if (val.length < 3)   { setError(el, err, "Name must be at least 3 characters");         return false; }
+      if (val.length > 100) { setError(el, err, "Name cannot exceed 100 characters");          return false; }
+      setSuccess(el, err); return true;
     }
 
-    closeModal(editModal)
-
-    await Swal.fire({
-      toast: true,
-      position: "top",
-      icon: "success",
-      title: "Product updated successfully",
-      showConfirmButton: false,
-      timer: 2000,
-      timerProgressBar: true,
-    })
-
-    window.location.reload()
-
-  } catch (error) {
-    errorBox.textContent = "Something went wrong. Please try again."
-    errorBox.style.display = "block"
-  } finally {
-    submitBtn.disabled = false
-    submitBtn.textContent = "Update Product"
-  }
-})
-
-/* =========================================
-   DELETE / RESTORE / PERMANENT DELETE
-   (unchanged from before)
-========================================= */
-
-document.addEventListener("click", async (e) => {
-  const btn = e.target.closest(".delete-btn")
-  if (!btn) return
-  const productId = btn.dataset.id
-
-  const result = await Swal.fire({
-    title: "Delete Product?",
-    text: "This product will be hidden from the store.",
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonColor: "#603763",
-    cancelButtonColor: "#E5E7EB",
-    confirmButtonText: "Delete"
-  })
-
-  if (!result.isConfirmed) return
-
-  try {
-    const response = await fetch(`/admin/delete-product/${productId}`, { method: "PATCH" })
-    const data = await response.json()
-
-    if (data.success) {
-      await Swal.fire({ icon: "success", title: "Deleted Successfully", timer: 1200, showConfirmButton: false })
-      window.location.reload()
-    } else {
-      throw new Error()
+    function validateCategory(prefix) {
+      const el  = document.getElementById(prefix === "add" ? "add-category" : "editCategoryId");
+      const err = prefix + "-category-error";
+      if (!el.value) { setError(el, err, "Please select a category"); return false; }
+      setSuccess(el, err); return true;
     }
-  } catch (error) {
-    Swal.fire({ icon: "error", title: "Failed to delete product" })
-  }
-})
 
-document.addEventListener("click", async (e) => {
-  const btn = e.target.closest(".restore-btn")
-  if (!btn) return
-  const productId = btn.dataset.id
-
-  try {
-    const response = await fetch(`/admin/restore-product/${productId}`, { method: "PATCH" })
-    const data = await response.json()
-
-    if (data.success) {
-      await Swal.fire({ icon: "success", title: "Product restored", timer: 1200, showConfirmButton: false })
-      window.location.reload()
+    function validateDescription(prefix) {
+      const el  = document.getElementById(prefix === "add" ? "add-description" : "editDescription");
+      const val = el.value.trim();
+      const err = prefix + "-description-error";
+      if (!val)            { setError(el, err, "Description is required");                      return false; }
+      if (val.length < 10) { setError(el, err, "Description must be at least 10 characters");  return false; }
+      setSuccess(el, err); return true;
     }
-  } catch (error) {
-    Swal.fire({ icon: "error", title: "Restore failed" })
-  }
-})
 
-document.addEventListener("click", async (e) => {
-  const btn = e.target.closest(".permanent-delete-btn")
-  if (!btn) return
-  const productId = btn.dataset.id
-
-  const result = await Swal.fire({
-    title: "Delete Permanently?",
-    text: "This action cannot be undone.",
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonColor: "#BA1A1A",
-    confirmButtonText: "Delete Forever"
-  })
-
-  if (!result.isConfirmed) return
-
-  try {
-    const response = await fetch(`/admin/permanent-delete-product/${productId}`, { method: "DELETE" })
-    const data = await response.json()
-
-    if (data.success) {
-      await Swal.fire({ icon: "success", title: "Product permanently deleted", timer: 1200, showConfirmButton: false })
-      window.location.reload()
+    function validatePrice(prefix) {
+      const el  = document.getElementById(prefix === "add" ? "add-price" : "editPrice");
+      const err = prefix + "-price-error";
+      if (!el.value)                               { setError(el, err, "Price is required");                return false; }
+      if (isNaN(parseFloat(el.value)) || +el.value <= 0) { setError(el, err, "Enter a valid price");       return false; }
+      if (+el.value > 10000000)                    { setError(el, err, "Price seems too high");             return false; }
+      setSuccess(el, err); return true;
     }
-  } catch (error) {
-    Swal.fire({ icon: "error", title: "Delete failed" })
-  }
-})
 
-</script>
+    function validateComparePrice(prefix) {
+      const priceEl   = document.getElementById(prefix === "add" ? "add-price"         : "editPrice");
+      const compareEl = document.getElementById(prefix === "add" ? "add-compare-price" : "editComparePrice");
+      const err       = prefix + "-compare-price-error";
+      if (!compareEl.value) { setSuccess(compareEl, err); return true; } /* optional */
+      const p = parseFloat(priceEl.value);
+      const c = parseFloat(compareEl.value);
+      if (isNaN(c) || c <= 0) { setError(compareEl, err, "Enter a valid compare price"); return false; }
+      if (c <= p)              { setError(compareEl, err, "Compare price must be higher than the selling price"); return false; }
+      setSuccess(compareEl, err); return true;
+    }
+
+    function validateStock(prefix) {
+      const el  = document.getElementById(prefix === "add" ? "add-stock" : "editStock");
+      const err = prefix + "-stock-error";
+      if (el.value === "" || el.value === null) { setError(el, err, "Stock is required");           return false; }
+      const n = parseInt(el.value);
+      if (isNaN(n) || n < 0)  { setError(el, err, "Stock cannot be negative");                     return false; }
+      if (n > 100000)          { setError(el, err, "Stock value seems too high");                   return false; }
+      setSuccess(el, err); return true;
+    }
+
+    function validateSKU(prefix) {
+      const el  = document.getElementById(prefix === "add" ? "add-sku" : "editSKU");
+      const val = el.value.trim();
+      const err = prefix + "-sku-error";
+      if (!val)            { setError(el, err, "SKU is required");                                           return false; }
+      if (val.length < 3)  { setError(el, err, "SKU must be at least 3 characters");                        return false; }
+      if (val.length > 40) { setError(el, err, "SKU cannot exceed 40 characters");                          return false; }
+      if (!/^[A-Za-z0-9\-_]+$/.test(val)) { setError(el, err, "SKU can only contain letters, numbers, - and _"); return false; }
+      setSuccess(el, err); return true;
+    }
+
+    function validateStorage(prefix) {
+      const el  = document.getElementById(prefix === "add" ? "add-storage" : "editStorage");
+      const val = el.value.trim();
+      const err = prefix + "-storage-error";
+      if (!val)                         { setError(el, err, "Storage is required");       return false; }
+      if (!/^\d+(GB|TB)$/i.test(val))   { setError(el, err, "e.g. 256GB or 1TB");        return false; }
+      setSuccess(el, err); return true;
+    }
+
+    function validateRAM(prefix) {
+      const el  = document.getElementById(prefix === "add" ? "add-ram" : "editRAM");
+      const val = el.value.trim();
+      const err = prefix + "-ram-error";
+      if (!val)                       { setError(el, err, "RAM is required");        return false; }
+      if (!/^\d+GB$/i.test(val))      { setError(el, err, "e.g. 8GB or 16GB");      return false; }
+      setSuccess(el, err); return true;
+    }
+
+    function validateColor(prefix) {
+      const el  = document.getElementById(prefix === "add" ? "add-color" : "editColor");
+      const val = el.value.trim();
+      const err = prefix + "-color-error";
+      if (!val)            { setError(el, err, "Color is required");              return false; }
+      if (val.length < 2)  { setError(el, err, "Enter a valid color name");      return false; }
+      if (val.length > 30) { setError(el, err, "Color name is too long");        return false; }
+      setSuccess(el, err); return true;
+    }
+
+    function validateThumbnail(prefix, fileInput) {
+      const err  = prefix + "-thumbnail-error";
+      const slot = document.getElementById(prefix === "add" ? "add-thumbnail-slot" : null);
+      const s    = document.getElementById(err);
+
+      if (!fileInput.files || !fileInput.files[0]) {
+        /* Edit mode: thumbnail already exists, so skip */
+        if (prefix === "edit") { if (s) { s.textContent = ""; s.classList.remove("visible"); } return true; }
+        if (slot) slot.classList.add("input-error");
+        if (s)    { s.textContent = "Please upload a product thumbnail"; s.classList.add("visible"); }
+        return false;
+      }
+      const file    = fileInput.files[0];
+      const allowed = ["image/jpeg","image/png","image/jpg","image/webp"];
+      if (!allowed.includes(file.type)) {
+        if (s) { s.textContent = "Only JPG, PNG or WEBP allowed"; s.classList.add("visible"); }
+        return false;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        if (s) { s.textContent = "Image must be under 5MB"; s.classList.add("visible"); }
+        return false;
+      }
+      if (slot) slot.classList.remove("input-error");
+      if (s)    { s.textContent = ""; s.classList.remove("visible"); }
+      return true;
+    }
+
+    function validateVariantImages(fileInput) {
+      const s = document.getElementById("add-variant-images-error");
+      if (!fileInput.files || fileInput.files.length < 3) {
+        if (s) { s.textContent = "Please upload at least 3 variant images"; s.classList.add("visible"); }
+        return false;
+      }
+      if (s) { s.textContent = ""; s.classList.remove("visible"); }
+      return true;
+    }
+
+    /* ---- clear all errors when modal opens ---- */
+
+    function clearAllErrors(prefix) {
+      const suffixes = [
+        "name","category","description","price","compare-price",
+        "stock","sku","storage","ram","color","thumbnail"
+      ];
+      suffixes.forEach(s => {
+        const errSpan = document.getElementById(`${prefix}-${s}-error`);
+        if (errSpan) { errSpan.textContent = ""; errSpan.classList.remove("visible"); }
+      });
+      /* clear input states */
+      document.querySelectorAll(`#${prefix === "add" ? "addProductForm" : "editProductForm"} .input-error, 
+                                  #${prefix === "add" ? "addProductForm" : "editProductForm"} .input-success`)
+        .forEach(el => el.classList.remove("input-error","input-success"));
+    }
+
+    /* ---- real-time: validate on blur, clear error while fixing ---- */
+
+    function attachBlur(inputId, validator) {
+      const el = document.getElementById(inputId);
+      if (!el) return;
+      el.addEventListener("blur", validator);
+      el.addEventListener("input", function () {
+        if (this.classList.contains("input-error")) validator();
+      });
+    }
+
+    /* ADD form */
+    attachBlur("add-name",          () => validateName("add"));
+    attachBlur("add-category",      () => validateCategory("add"));
+    attachBlur("add-description",   () => validateDescription("add"));
+    attachBlur("add-price",         () => { validatePrice("add"); validateComparePrice("add"); });
+    attachBlur("add-compare-price", () => validateComparePrice("add"));
+    attachBlur("add-stock",         () => validateStock("add"));
+    attachBlur("add-sku",           () => validateSKU("add"));
+    attachBlur("add-storage",       () => validateStorage("add"));
+    attachBlur("add-ram",           () => validateRAM("add"));
+    attachBlur("add-color",         () => validateColor("add"));
+
+    /* EDIT form */
+    attachBlur("editName",         () => validateName("edit"));
+    attachBlur("editCategoryId",   () => validateCategory("edit"));
+    attachBlur("editDescription",  () => validateDescription("edit"));
+    attachBlur("editPrice",        () => { validatePrice("edit"); validateComparePrice("edit"); });
+    attachBlur("editComparePrice", () => validateComparePrice("edit"));
+    attachBlur("editStock",        () => validateStock("edit"));
+    attachBlur("editSKU",          () => validateSKU("edit"));
+    attachBlur("editStorage",      () => validateStorage("edit"));
+    attachBlur("editRAM",          () => validateRAM("edit"));
+    attachBlur("editColor",        () => validateColor("edit"));
+
+    /* ================================================
+       ADD PRODUCT — IMAGE PREVIEWS
+    ================================================ */
+
+    const addThumbnailInput   = document.getElementById("addThumbnailInput");
+    const addThumbnailPreview = document.getElementById("addThumbnailPreview");
+    const addPreviewImage     = document.getElementById("addPreviewImage");
+
+    addThumbnailInput.addEventListener("change", function () {
+      const file = this.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => { addPreviewImage.src = e.target.result; addThumbnailPreview.style.display = "block"; };
+      reader.readAsDataURL(file);
+      /* clear thumbnail error as soon as file chosen */
+      const s = document.getElementById("add-thumbnail-error");
+      if (s) { s.textContent = ""; s.classList.remove("visible"); }
+      const slot = document.getElementById("add-thumbnail-slot");
+      if (slot) slot.classList.remove("input-error");
+    });
+
+    document.getElementById("addRemoveImageBtn").addEventListener("click", () => {
+      addThumbnailInput.value = "";
+      addPreviewImage.src     = "";
+      addThumbnailPreview.style.display = "none";
+    });
+
+    const addVariantImages      = document.getElementById("addVariantImages");
+    const addVariantPreviewGrid = document.getElementById("addVariantPreviewGrid");
+
+    addVariantImages.addEventListener("change", function () {
+      addVariantPreviewGrid.innerHTML = "";
+      Array.from(this.files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = e => {
+          addVariantPreviewGrid.innerHTML += `
+            <div class="variant-preview-item"><img src="${e.target.result}" alt="Variant"></div>`;
+        };
+        reader.readAsDataURL(file);
+      });
+      /* clear variant images error */
+      const s = document.getElementById("add-variant-images-error");
+      if (s && this.files.length >= 3) { s.textContent = ""; s.classList.remove("visible"); }
+    });
+
+    /* ================================================
+       ADD PRODUCT — SUBMIT
+    ================================================ */
+
+    document.getElementById("addProductForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      /* Run all validators */
+      const nameOk         = validateName("add");
+      const categoryOk     = validateCategory("add");
+      const descriptionOk  = validateDescription("add");
+      const priceOk        = validatePrice("add");
+      const comparePriceOk = validateComparePrice("add");
+      const stockOk        = validateStock("add");
+      const skuOk          = validateSKU("add");
+      const storageOk      = validateStorage("add");
+      const ramOk          = validateRAM("add");
+      const colorOk        = validateColor("add");
+      const thumbnailOk    = validateThumbnail("add", addThumbnailInput);
+      const variantImgOk   = validateVariantImages(addVariantImages);
+
+      if (!nameOk || !categoryOk || !descriptionOk || !priceOk || !comparePriceOk ||
+          !stockOk || !skuOk || !storageOk || !ramOk || !colorOk || !thumbnailOk || !variantImgOk) {
+        /* Scroll to first error */
+        const firstError = document.querySelector("#addProductForm .input-error, #addProductForm .upload-slot.input-error");
+        if (firstError) firstError.scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+      }
+
+      const errorBox  = document.getElementById("addProductError");
+      const submitBtn = document.getElementById("addProductSubmitBtn");
+      errorBox.style.display = "none";
+      submitBtn.disabled     = true;
+      submitBtn.textContent  = "Saving...";
+
+      try {
+        const response = await fetch("/admin/products/add", {
+          method: "POST",
+          body: new FormData(e.target),
+        });
+        const data = await response.json();
+        if (!data.success) {
+          errorBox.textContent = data.message || "Failed to add product";
+          errorBox.style.display = "block";
+          return;
+        }
+        closeModal(addModal);
+        await Swal.fire({ toast: true, position: "top", icon: "success",
+          title: "Product added successfully", showConfirmButton: false, timer: 2000, timerProgressBar: true });
+        window.location.reload();
+      } catch {
+        errorBox.textContent   = "Something went wrong. Please try again.";
+        errorBox.style.display = "block";
+      } finally {
+        submitBtn.disabled    = false;
+        submitBtn.textContent = "Save Product";
+      }
+    });
+
+    /* ================================================
+       EDIT PRODUCT — OPEN + POPULATE
+    ================================================ */
+
+    document.addEventListener("click", async (e) => {
+      const btn = e.target.closest(".edit-btn");
+      if (!btn) return;
+
+      const productId = btn.dataset.id;
+      try {
+        const response = await fetch(`/admin/products/${productId}/json`);
+        const data     = await response.json();
+        if (!data.success) { Swal.fire({ icon: "error", title: "Failed to load product" }); return; }
+
+        const product = data.product;
+        const variant = data.variant || {};
+
+        document.getElementById("editProductId").value    = product._id;
+        document.getElementById("editVariantId").value    = variant._id || "";
+        document.getElementById("editName").value         = product.name || "";
+        document.getElementById("editCategoryId").value   = product.categoryId?._id || product.categoryId || "";
+        document.getElementById("editIsActive").value     = String(product.isActive);
+        document.getElementById("editDescription").value  = product.description || "";
+        document.getElementById("editPreviewImage").src   = product.thumbnail || "/images/default-product.png";
+        document.getElementById("editThumbnailInput").value = "";
+        document.getElementById("editPrice").value        = variant.price || "";
+        document.getElementById("editComparePrice").value = variant.comparePrice || "";
+        document.getElementById("editStock").value        = variant.stock || "";
+        document.getElementById("editSKU").value          = variant.SKU || "";
+        document.getElementById("editStorage").value      = variant.storage || "";
+        document.getElementById("editRAM").value          = variant.RAM || "";
+        document.getElementById("editColor").value        = variant.color || "";
+        document.getElementById("editIsFeatured").checked  = !!product.isFeatured;
+        document.getElementById("editIsBestSeller").checked = !!product.isBestSeller;
+        document.getElementById("editIsDeal").checked      = !!product.isDeal;
+
+        document.getElementById("editProductError").style.display = "none";
+        clearAllErrors("edit");
+        openModal(editModal);
+        lucide.createIcons();
+      } catch {
+        Swal.fire({ icon: "error", title: "Failed to load product" });
+      }
+    });
+
+    document.getElementById("editThumbnailInput").addEventListener("change", function () {
+      const file = this.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => { document.getElementById("editPreviewImage").src = e.target.result; };
+      reader.readAsDataURL(file);
+    });
+
+    /* ================================================
+       EDIT PRODUCT — SUBMIT
+    ================================================ */
+
+    document.getElementById("editProductForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const nameOk         = validateName("edit");
+      const categoryOk     = validateCategory("edit");
+      const descriptionOk  = validateDescription("edit");
+      const priceOk        = validatePrice("edit");
+      const comparePriceOk = validateComparePrice("edit");
+      const stockOk        = validateStock("edit");
+      const skuOk          = validateSKU("edit");
+      const storageOk      = validateStorage("edit");
+      const ramOk          = validateRAM("edit");
+      const colorOk        = validateColor("edit");
+      const thumbnailOk    = validateThumbnail("edit", document.getElementById("editThumbnailInput"));
+
+      if (!nameOk || !categoryOk || !descriptionOk || !priceOk || !comparePriceOk ||
+          !stockOk || !skuOk || !storageOk || !ramOk || !colorOk || !thumbnailOk) {
+        const firstError = document.querySelector("#editProductForm .input-error");
+        if (firstError) firstError.scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+      }
+
+      const productId = document.getElementById("editProductId").value;
+      const errorBox  = document.getElementById("editProductError");
+      const submitBtn = document.getElementById("editProductSubmitBtn");
+      errorBox.style.display = "none";
+      submitBtn.disabled     = true;
+      submitBtn.textContent  = "Updating...";
+
+      try {
+        const response = await fetch(`/admin/products/edit/${productId}`, {
+          method: "POST",
+          body: new FormData(e.target),
+        });
+        const data = await response.json();
+        if (!data.success) {
+          errorBox.textContent   = data.message || "Failed to update product";
+          errorBox.style.display = "block";
+          return;
+        }
+        closeModal(editModal);
+        await Swal.fire({ toast: true, position: "top", icon: "success",
+          title: "Product updated successfully", showConfirmButton: false, timer: 2000, timerProgressBar: true });
+        window.location.reload();
+      } catch {
+        errorBox.textContent   = "Something went wrong. Please try again.";
+        errorBox.style.display = "block";
+      } finally {
+        submitBtn.disabled    = false;
+        submitBtn.textContent = "Update Product";
+      }
+    });
+
+    /* ================================================
+       DELETE / RESTORE / PERMANENT DELETE
+    ================================================ */
+
+    document.addEventListener("click", async (e) => {
+      const btn = e.target.closest(".delete-btn");
+      if (!btn) return;
+      const result = await Swal.fire({
+        title: "Delete Product?", text: "This product will be hidden from the store.",
+        icon: "warning", showCancelButton: true,
+        confirmButtonColor: "#603763", cancelButtonColor: "#E5E7EB", confirmButtonText: "Delete"
+      });
+      if (!result.isConfirmed) return;
+      try {
+        const res  = await fetch(`/admin/delete-product/${btn.dataset.id}`, { method: "PATCH" });
+        const data = await res.json();
+        if (data.success) {
+          await Swal.fire({ icon: "success", title: "Deleted Successfully", timer: 1200, showConfirmButton: false });
+          window.location.reload();
+        } else throw new Error();
+      } catch { Swal.fire({ icon: "error", title: "Failed to delete product" }); }
+    });
+
+    document.addEventListener("click", async (e) => {
+      const btn = e.target.closest(".restore-btn");
+      if (!btn) return;
+      try {
+        const res  = await fetch(`/admin/restore-product/${btn.dataset.id}`, { method: "PATCH" });
+        const data = await res.json();
+        if (data.success) {
+          await Swal.fire({ icon: "success", title: "Product restored", timer: 1200, showConfirmButton: false });
+          window.location.reload();
+        }
+      } catch { Swal.fire({ icon: "error", title: "Restore failed" }); }
+    });
+
+    document.addEventListener("click", async (e) => {
+      const btn = e.target.closest(".permanent-delete-btn");
+      if (!btn) return;
+      const result = await Swal.fire({
+        title: "Delete Permanently?", text: "This action cannot be undone.",
+        icon: "warning", showCancelButton: true,
+        confirmButtonColor: "#BA1A1A", confirmButtonText: "Delete Forever"
+      });
+      if (!result.isConfirmed) return;
+      try {
+        const res  = await fetch(`/admin/permanent-delete-product/${btn.dataset.id}`, { method: "DELETE" });
+        const data = await res.json();
+        if (data.success) {
+          await Swal.fire({ icon: "success", title: "Product permanently deleted", timer: 1200, showConfirmButton: false });
+          window.location.reload();
+        }
+      } catch { Swal.fire({ icon: "error", title: "Delete failed" }); }
+    });
+
+  </script>
 
 </body>
-
 </html>

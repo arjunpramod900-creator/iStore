@@ -85,6 +85,26 @@ const orderItemSchema = new mongoose.Schema({
 
   default: "Pending",
 },
+
+  itemReturnStatus: {
+    type: String,
+ 
+    enum: [
+      "None",
+      "Requested",
+      "Approved",
+      "Rejected",
+    ],
+ 
+    default: "None",
+  },
+ 
+  itemReturnReason: {
+    type: String,
+ 
+    default: null,
+  },
+
 });
 
 const shippingAddressSchema = new mongoose.Schema({
@@ -256,7 +276,7 @@ const orderSchema = new mongoose.Schema(
       default: "None",
 
     },
-    
+
     returnApprovedAt: {
 
       type: Date,

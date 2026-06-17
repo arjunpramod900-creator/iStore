@@ -1,79 +1,60 @@
-<!-- sales-report.ejs -->
-
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Sales Analytics - Admin | iStore</title>
-
-<!-- Same CSS stack as category-management.ejs -->
-<link rel="stylesheet" href="/css/components/admin-sidebar.css">
-<link rel="stylesheet" href="/css/admin-sales-report.css">
-
-<link
-  href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
-  rel="stylesheet"
->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
-
-<script src="https://unpkg.com/lucide@latest"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sales Analytics - Admin | iStore</title>
+  <link rel="stylesheet" href="/css/components/admin-sidebar.css">
+  <link rel="stylesheet" href="/css/admin-sales-report.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-
 <body>
 
 <%- include('../partials/admin/sidebar') %>
 
 <%
-  /* ── Safe data layer ── */
   const safeReport = report || {};
 
-  const chartLabels = safeReport.chartLabels || ['01 Oct','07 Oct','14 Oct','21 Oct','28 Oct','31 Oct'];
-  const chartData   = safeReport.chartData   || [12000, 15000, 35000, 40000, 38000, 48000];
-
-const categoriesData = safeReport.topCategories || [];
-
-
-
- const paymentsData =
-safeReport.paymentMethods || {
-  cod: 0,
-  razorpay: 0,
-  wallet: 0
-};
-
-const topProducts = safeReport.topProducts || [];
-
-const recentOrders = safeReport.recentOrders || [];
-
-
+  const chartLabels    = safeReport.chartLabels    || [];
+  const chartData      = safeReport.chartData      || [];
+  const categoriesData = safeReport.topCategories  || [];
+  const paymentsData   = safeReport.paymentMethods || { cod: 0, razorpay: 0, wallet: 0 };
+  const topProducts    = safeReport.topProducts    || [];
+  const recentOrders   = safeReport.recentOrders   || [];
 
   const totalRevenue = safeReport.totalOrderAmount || 0;
-  const totalCount = safeReport.totalSalesCount || 0;
+  const totalCount   = safeReport.totalSalesCount  || 0;
   const aov          = totalCount > 0 ? Math.round(totalRevenue / totalCount) : 0;
+
+  /* Friendly chart title per filter */
+  const chartTitles = {
+    daily:   "Today — Hourly Revenue",
+    weekly:  "Last 7 Days — Daily Revenue",
+    monthly: "This Month — Daily Revenue",
+    yearly:  "This Year — Monthly Revenue",
+    custom:  "Custom Range — Revenue",
+  };
+  const chartTitle = chartTitles[filter] || "Revenue Trends";
 
   function badgeClass(s) {
     const map = {
-      DELIVERED:'badge-delivered',
-      PROCESSING:'badge-processing',
-      PENDING:'badge-pending',
-      CANCELLED:'badge-cancelled'
+      DELIVERED:   "badge-delivered",
+      PROCESSING:  "badge-processing",
+      PENDING:     "badge-pending",
+      CANCELLED:   "badge-cancelled",
+      RETURNED:    "badge-returned",
     };
-    return map[s] || 'badge-pending';
+    return map[(s || "").toUpperCase()] || "badge-pending";
   }
 %>
 
 <main class="admin-main dashboard-main">
 
-  <!-- ── PAGE HEADER (same structure as category-management.ejs) ── -->
-
+  <!-- PAGE HEADER -->
   <header class="page-header">
-
     <div class="header-left">
       <nav class="breadcrumb">
         <a href="/admin/dashboard">DASHBOARD</a>
@@ -84,287 +65,143 @@ const recentOrders = safeReport.recentOrders || [];
       <p class="page-subtitle">Deep dive into your revenue performance and customer growth.</p>
     </div>
 
-<div style="display:flex;gap:12px;">
-
-<a
-href="/admin/sales-report/pdf?filter=<%= filter %>&startDate=<%= startDate || '' %>&endDate=<%= endDate || '' %>"
-class="btn-add"
->
-PDF Report
-</a>
-
-<a
-href="/admin/sales-report/excel?filter=<%= filter %>&startDate=<%= startDate || '' %>&endDate=<%= endDate || '' %>"
-class="btn-add"
->
-Excel Report
-</a>
-
-</div>
-
+    <div style="display:flex;gap:12px;">
+      <a href="/admin/sales-report/pdf?filter=<%= filter %>&startDate=<%= startDate || '' %>&endDate=<%= endDate || '' %>"
+        class="btn-add">PDF Report</a>
+      <a href="/admin/sales-report/excel?filter=<%= filter %>&startDate=<%= startDate || '' %>&endDate=<%= endDate || '' %>"
+        class="btn-add">Excel Report</a>
+    </div>
   </header>
 
-  <!-- ── STATS GRID (same structure as category-management.ejs) ── -->
-
+  <!-- STATS GRID -->
   <section class="stats-grid">
+
     <div class="stat-card">
-
-    <div class="stat-header">
-
-        <span class="stat-label">
-
-            TOTAL ORDERS
-
-        </span>
-
+      <div class="stat-header"><span class="stat-label">TOTAL ORDERS</span></div>
+      <span class="stat-value"><%= totalCount %></span>
+      <div class="stat-sub">Total Delivered Orders</div>
     </div>
 
-    <span class="stat-value">
-
-        <%= report.totalSalesCount || 0 %>
-
-    </span>
-
-<div class="stat-sub">
-
-    Total Delivered Orders
-
-</div>
-
-</div>
     <div class="stat-card">
-      <div class="stat-header">
-        <span class="stat-label">TOTAL SALES REVENUE</span>
-  
-      </div>
-      <span class="stat-value">₹<%= totalRevenue.toLocaleString('en-IN') %></span>
+      <div class="stat-header"><span class="stat-label">TOTAL SALES REVENUE</span></div>
+      <span class="stat-value">₹<%= totalRevenue.toLocaleString("en-IN") %></span>
       <div class="stat-sub">Gross revenue across all categories</div>
     </div>
-    <div class="stat-card">
-
-    <div class="stat-header">
-
-        <span class="stat-label">
-
-            TOTAL DISCOUNT
-
-        </span>
-
-    </div>
-
-    <span class="stat-value">
-
-        ₹<%= (report.totalDiscount || 0).toLocaleString("en-IN") %>
-
-    </span>
-
-    <div class="stat-sub">
-
-        Discounts Given
-
-    </div>
-
-</div>
-<div class="stat-card">
-
-    <div class="stat-header">
-
-        <span class="stat-label">
-
-            COUPON DEDUCTION
-
-        </span>
-
-    </div>
-
-    <span class="stat-value">
-
-        ₹<%= (report.totalCouponDeduction || 0).toLocaleString("en-IN") %>
-
-    </span>
-
-    <div class="stat-sub">
-
-        Coupon Savings
-
-    </div>
-
-</div>
 
     <div class="stat-card">
-      <div class="stat-header">
-        <span class="stat-label">AVG ORDER VALUE (AOV)</span>
- 
-      </div>
-      <span class="stat-value">₹<%= aov.toLocaleString('en-IN') %></span>
+      <div class="stat-header"><span class="stat-label">TOTAL DISCOUNT</span></div>
+      <span class="stat-value">₹<%= (safeReport.totalDiscount || 0).toLocaleString("en-IN") %></span>
+      <div class="stat-sub">Discounts Given</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-header"><span class="stat-label">COUPON DEDUCTION</span></div>
+      <span class="stat-value">₹<%= (safeReport.totalCouponDeduction || 0).toLocaleString("en-IN") %></span>
+      <div class="stat-sub">Coupon Savings</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-header"><span class="stat-label">AVG ORDER VALUE (AOV)</span></div>
+      <span class="stat-value">₹<%= aov.toLocaleString("en-IN") %></span>
       <div class="stat-sub">Average cart value per transaction</div>
     </div>
 
     <div class="stat-card">
-      <div class="stat-header">
-        <span class="stat-label">RETURN RATE</span>
-
-      </div>
-      <span class="stat-value">
-  <%= report.returnRate || 0 %>%
-</span>
+      <div class="stat-header"><span class="stat-label">RETURN RATE</span></div>
+      <span class="stat-value"><%= safeReport.returnRate || 0 %>%</span>
       <div class="stat-sub">Percentage of orders returned</div>
     </div>
 
   </section>
 
-  <!-- ── FILTER BAR (mirrors category-management filter-bar) ── -->
-
+  <!-- FILTER BAR -->
   <div class="filter-bar">
-
     <div class="filter-chip-group">
       <a href="/admin/sales-report?filter=daily"
-         class="filter-chip <%= (filter||'') === 'daily'  ? 'active' : '' %>">Today</a>
+        class="filter-chip <%= filter === 'daily'   ? 'active' : '' %>">Today</a>
       <a href="/admin/sales-report?filter=weekly"
-         class="filter-chip <%= (filter||'weekly') === 'weekly' ? 'active' : '' %>">Last 7 Days</a>
-         <a
-href="/admin/sales-report?filter=monthly"
-class="filter-chip <%= (filter||'') === 'monthly' ? 'active' : '' %>"
->
-This Month
-</a>
+        class="filter-chip <%= filter === 'weekly'  ? 'active' : '' %>">Last 7 Days</a>
+      <a href="/admin/sales-report?filter=monthly"
+        class="filter-chip <%= filter === 'monthly' ? 'active' : '' %>">This Month</a>
       <a href="/admin/sales-report?filter=yearly"
-         class="filter-chip <%= (filter||'') === 'yearly' ? 'active' : '' %>">This Year</a>
+        class="filter-chip <%= filter === 'yearly'  ? 'active' : '' %>">This Year</a>
       <a href="#" id="customFilterBtn"
-         class="filter-chip <%= (filter||'') === 'custom' ? 'active' : '' %>">Custom</a>
+        class="filter-chip <%= filter === 'custom'  ? 'active' : '' %>">Custom</a>
     </div>
-
   </div>
 
+  <!-- REPORT PERIOD -->
   <div class="report-period">
+    <strong>Report Period:</strong>
+    <%= startDate %> — <%= endDate %>
+  </div>
 
-    <strong>
-
-        Report Period:
-
-    </strong>
-
-    <%= startDate || "Beginning" %>
-
-    -
-
-    <%= endDate || "Today" %>
-
-</div>
-
-  <!-- ── REVENUE TRENDS CHART ── -->
-
+  <!-- REVENUE CHART -->
   <div class="chart-card">
-
     <div class="chart-card-header">
-      <h2 class="chart-card-title">Revenue Trends</h2>
+      <h2 class="chart-card-title"><%= chartTitle %></h2>
       <div class="chart-legend">
         <div class="legend-item">
           <div class="legend-dot current"></div>
-          <span>Current Period</span>
+          <span>Revenue (₹)</span>
         </div>
       </div>
     </div>
-
     <div class="chart-canvas-wrapper">
       <canvas id="revenueChart"></canvas>
     </div>
-
   </div>
 
-  <!-- ── PERFORMANCE GRID (3 cards, auto-fit responsive) ── -->
-
+  <!-- PERFORMANCE GRID -->
   <div class="perf-grid">
 
     <!-- Sales by Category -->
     <div class="perf-card">
       <h3 class="perf-card-title">Sales by Category</h3>
       <div class="progress-list">
-        <% categoriesData.forEach(cat => { %>
-          <div class="progress-item">
-            <div class="progress-info">
-              <span><%= cat._id %></span>
-              <span>₹<%= cat.revenue.toLocaleString('en-IN') %></span>
+        <% if (categoriesData.length > 0) { %>
+          <% categoriesData.forEach(cat => { %>
+            <div class="progress-item">
+              <div class="progress-info">
+                <span><%= cat._id %></span>
+                <span>₹<%= cat.revenue.toLocaleString("en-IN") %></span>
+              </div>
+              <div class="progress-bar-bg">
+                <div class="progress-bar-fill fill-purple-gradient" style="width:<%= cat.percentage %>%"></div>
+              </div>
             </div>
-            <div class="progress-bar-bg">
-              <div
-  class="progress-bar-fill fill-purple-gradient"
-  style="width:<%= cat.percentage %>%"
-></div>
-            </div>
-          </div>
-        <% }) %>
+          <% }) %>
+        <% } else { %>
+          <p style="color:var(--text-muted);font-size:13px;">No category data for this period.</p>
+        <% } %>
       </div>
     </div>
 
-
-
     <!-- Payment Methods -->
-<div class="perf-card">
-
-  <h3 class="perf-card-title">
-    Payment Methods
-  </h3>
-
-  <div class="payment-grid">
-
-    <div class="pay-card">
-
-      <i
-        data-lucide="banknote"
-        class="pay-icon"
-      ></i>
-
-      <span class="pay-label">
-        COD
-      </span>
-
-      <span class="pay-value">
-        <%= paymentsData.cod %>%
-      </span>
-
-    </div>
-
-    <div class="pay-card">
-
-      <i
-        data-lucide="credit-card"
-        class="pay-icon"
-      ></i>
-
-      <span class="pay-label">
-        Razorpay
-      </span>
-
-      <span class="pay-value">
-        <%= paymentsData.razorpay %>%
-      </span>
-
-    </div>
-
-    <div class="pay-card wide">
-
-      <span class="pay-label">
-        Wallet
-      </span>
-
-      <span class="pay-value">
-        <%= paymentsData.wallet %>%
-      </span>
-
+    <div class="perf-card">
+      <h3 class="perf-card-title">Payment Methods</h3>
+      <div class="payment-grid">
+        <div class="pay-card">
+          <i data-lucide="banknote" class="pay-icon"></i>
+          <span class="pay-label">COD</span>
+          <span class="pay-value"><%= paymentsData.cod %>%</span>
+        </div>
+        <div class="pay-card">
+          <i data-lucide="credit-card" class="pay-icon"></i>
+          <span class="pay-label">Razorpay</span>
+          <span class="pay-value"><%= paymentsData.razorpay %>%</span>
+        </div>
+        <div class="pay-card wide">
+          <span class="pay-label">Wallet</span>
+          <span class="pay-value"><%= paymentsData.wallet %>%</span>
+        </div>
+      </div>
     </div>
 
   </div>
 
-</div>
-
-  </div>
-
-  <!-- ── BOTTOM GRID: Sales by Product + Customer Base ── -->
-
+  <!-- BOTTOM GRID: Sales by Product -->
   <div class="bottom-grid">
-
-    <!-- Sales by Product -->
     <div class="table-card">
       <div class="table-header">
         <h2>Sales by Product</h2>
@@ -379,92 +216,47 @@ This Month
               <th class="td-right">Revenue</th>
             </tr>
           </thead>
-<tbody>
-
-<% if(topProducts.length > 0){ %>
-
-  <% topProducts.forEach(product => { %>
-
-    <tr>
-
-      <td>
-
-        <div class="prod-cell">
-
-          <div class="prod-icon">
-
-            <i
-              data-lucide="package"
-              size="18"
-            ></i>
-
-          </div>
-
-          <span class="prod-name">
-            <%= product.name %>
-          </span>
-
-        </div>
-
-      </td>
-
-      <td class="td-center">
-
-        <%= product.units %>
-
-      </td>
-
-      <td class="td-right">
-
-        ₹<%= product.revenue.toLocaleString("en-IN") %>
-
-      </td>
-
-    </tr>
-
-  <% }) %>
-
-<% } else { %>
-
-  <tr>
-
-    <td colspan="3">
-
-      No sales data found
-
-    </td>
-
-  </tr>
-
-<% } %>
-
-</tbody>
+          <tbody>
+            <% if (topProducts.length > 0) { %>
+              <% topProducts.forEach(product => { %>
+                <tr>
+                  <td>
+                    <div class="prod-cell">
+                      <div class="prod-icon"><i data-lucide="package" size="18"></i></div>
+                      <span class="prod-name"><%= product.name %></span>
+                    </div>
+                  </td>
+                  <td class="td-center"><%= product.units %></td>
+                  <td class="td-right">₹<%= product.revenue.toLocaleString("en-IN") %></td>
+                </tr>
+              <% }) %>
+            <% } else { %>
+              <tr><td colspan="3" style="color:var(--text-muted);padding:24px;">No product sales for this period.</td></tr>
+            <% } %>
+          </tbody>
         </table>
       </div>
     </div>
-
   </div>
 
-  <!-- ── RECENT SALES TABLE ── -->
-
+  <!-- RECENT SALES TABLE -->
   <div class="table-card">
-
     <div class="table-header">
-      <h2>Recent Sales</h2>
+      <h2>Recent Orders</h2>
       <div class="table-header-right">
         <div class="search-wrapper">
           <i data-lucide="search" size="15" class="search-icon"></i>
           <input type="text" class="search-input" placeholder="Search orders..." id="orderSearch">
         </div>
-        <button class="btn-export" type="button">
-          <i data-lucide="download" size="15"></i>
-          Export
-        </button>
+        <a href="/admin/sales-report/excel?filter=<%= filter %>&startDate=<%= startDate || '' %>&endDate=<%= endDate || '' %>"
+          class="btn-export">
+          <i data-lucide="download" size="15"></i> Export
+        </a>
       </div>
     </div>
 
     <div class="table-responsive">
-      <table class="stbl">
+      <table class="stbl" id="ordersTable">
         <thead>
           <tr>
             <th>#</th>
@@ -475,126 +267,49 @@ This Month
             <th class="hide-mobile">Date</th>
           </tr>
         </thead>
-<tbody>
-
-<% if (recentOrders.length > 0) { %>
-
-    <% recentOrders.forEach((order,index) => { %>
-
-        <tr>
-            <td>
-
-    <%= index + 1 %>
-
-</td>
-            <td
-                style="
-                    font-weight:700;
-                    color:#603763;
-                "
-            >
-                <%= order.orderId %>
-            </td>
-
-            <td>
-
-                <div class="prod-cell">
-
-                    <div
-                        class="prod-icon round"
-                    >
-                        <i
-                            data-lucide="user"
-                            size="15"
-                        ></i>
-                    </div>
-
-                    <span class="prod-name">
-
-                        <%= order.shippingAddress?.fullName || "Customer" %>
-
-                    </span>
-
-                </div>
-
-            </td>
-
-            <td
-                class="td-right"
-                style="font-weight:700;"
-            >
-
-                ₹<%= order.finalAmount.toLocaleString("en-IN") %>
-
-            </td>
-
-            <td>
-
-            <span
-            class="
-                badge
-                <%= badgeClass(order.orderStatus.toUpperCase()) %>
-            "
-            >
-            <%= order.orderStatus %>
-            </span>
-
-            </td>
-
-            <td
-                class="hide-mobile"
-                style="
-                    color:var(--text-muted);
-                    font-size:12px;
-                "
-            >
-
-                <%= new Date(order.createdAt)
-                .toLocaleDateString("en-IN") %>
-
-            </td>
-
-        </tr>
-
-    <% }) %>
-
-<% } else { %>
-
-    <tr>
-
-        <td colspan="6">
-
-            No sales found
-
-        </td>
-
-    </tr>
-
-<% } %>
-
-</tbody>
+        <tbody>
+          <% if (recentOrders.length > 0) { %>
+            <% recentOrders.forEach((order, index) => { %>
+              <tr>
+                <td><%= index + 1 %></td>
+                <td style="font-weight:700;color:#603763;"><%= order.orderId %></td>
+                <td>
+                  <div class="prod-cell">
+                    <div class="prod-icon round"><i data-lucide="user" size="15"></i></div>
+                    <span class="prod-name"><%= order.shippingAddress?.fullName || "Customer" %></span>
+                  </div>
+                </td>
+                <td class="td-right" style="font-weight:700;">
+                  ₹<%= order.finalAmount.toLocaleString("en-IN") %>
+                </td>
+                <td>
+                  <span class="badge <%= badgeClass(order.orderStatus) %>">
+                    <%= order.orderStatus %>
+                  </span>
+                </td>
+                <td class="hide-mobile" style="color:var(--text-muted);font-size:12px;">
+                  <%= new Date(order.createdAt).toLocaleDateString("en-IN") %>
+                </td>
+              </tr>
+            <% }) %>
+          <% } else { %>
+            <tr><td colspan="6" style="color:var(--text-muted);padding:24px;">No orders found for this period.</td></tr>
+          <% } %>
+        </tbody>
       </table>
     </div>
 
-    <!-- Pagination (exact structure as category-management.ejs) -->
     <div class="pagination-footer">
       <span class="pagination-info">
         Showing <%= recentOrders.length %> of <%= totalCount.toLocaleString() %> orders
       </span>
       <div class="pagination-controls">
-        <button class="page-btn" type="button">
-          <i data-lucide="chevron-left" size="14"></i>
-        </button>
+        <button class="page-btn" type="button"><i data-lucide="chevron-left" size="14"></i></button>
         <a href="#" class="page-btn active">1</a>
-        <button class="page-btn" type="button">
-          <i data-lucide="chevron-right" size="14"></i>
-        </button>
+        <button class="page-btn" type="button"><i data-lucide="chevron-right" size="14"></i></button>
       </div>
     </div>
-
   </div>
-
-  <!-- ── FOOTER (same as category-management.ejs) ── -->
 
   <footer class="page-footer">
     <span class="footer-text">© 2026 iStore Admin</span>
@@ -602,18 +317,22 @@ This Month
 
 </main>
 
-<!-- ── Custom Date Range Modal ── -->
+<!-- Custom Date Range Modal -->
 <dialog id="customDateModal" style="padding:28px;border:none;border-radius:16px;margin:auto;box-shadow:0 8px 48px rgba(46,15,47,0.16);min-width:320px;max-width:400px;width:90%;">
   <form method="GET" action="/admin/sales-report" style="display:flex;flex-direction:column;gap:16px;">
     <input type="hidden" name="filter" value="custom">
     <h3 style="margin:0;color:#2C1421;font-size:18px;font-weight:700;letter-spacing:-0.3px;">Custom Date Range</h3>
     <div style="display:flex;flex-direction:column;gap:6px;">
       <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:#4d444c;">Start Date</label>
-      <input type="date" name="startDate" required style="padding:10px 14px;border:1px solid rgba(208,195,204,0.3);border-radius:10px;font-family:inherit;font-size:14px;color:#2c1421;outline:none;">
+      <input type="date" name="startDate" id="modalStartDate" required
+        style="padding:10px 14px;border:1px solid rgba(208,195,204,0.3);border-radius:10px;font-family:inherit;font-size:14px;color:#2c1421;outline:none;">
+      <span id="startDateError" style="display:none;color:#e74c3c;font-size:12px;font-weight:500;"></span>
     </div>
     <div style="display:flex;flex-direction:column;gap:6px;">
       <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:#4d444c;">End Date</label>
-      <input type="date" name="endDate" required style="padding:10px 14px;border:1px solid rgba(208,195,204,0.3);border-radius:10px;font-family:inherit;font-size:14px;color:#2c1421;outline:none;">
+      <input type="date" name="endDate" id="modalEndDate" required
+        style="padding:10px 14px;border:1px solid rgba(208,195,204,0.3);border-radius:10px;font-family:inherit;font-size:14px;color:#2c1421;outline:none;">
+      <span id="endDateError" style="display:none;color:#e74c3c;font-size:12px;font-weight:500;"></span>
     </div>
     <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:4px;">
       <button type="button"
@@ -621,7 +340,7 @@ This Month
         style="padding:10px 20px;border:none;background:#f4f4f5;border-radius:10px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;">
         Cancel
       </button>
-      <button type="submit"
+      <button type="button" id="applyCustomDate"
         style="padding:10px 20px;border:none;background:linear-gradient(135deg,#603763,#7a4e7c);color:#fff;border-radius:10px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;">
         Apply
       </button>
@@ -630,46 +349,111 @@ This Month
 </dialog>
 
 <script>
-
   lucide.createIcons();
 
-  /* Custom date modal */
-  document.getElementById('customFilterBtn').addEventListener('click', e => {
+  /* ── Custom date modal ── */
+  document.getElementById("customFilterBtn").addEventListener("click", e => {
     e.preventDefault();
-    document.getElementById('customDateModal').showModal();
+    document.getElementById("customDateModal").showModal();
   });
 
-  /* Server data → JS */
+  /* Validate custom date range before submitting */
+  document.getElementById("applyCustomDate").addEventListener("click", () => {
+    const startInput = document.getElementById("modalStartDate");
+    const endInput   = document.getElementById("modalEndDate");
+    const startErr   = document.getElementById("startDateError");
+    const endErr     = document.getElementById("endDateError");
+
+    let valid = true;
+    startErr.style.display = "none";
+    endErr.style.display   = "none";
+
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+
+    if (!startInput.value) {
+      startErr.textContent   = "Start date is required";
+      startErr.style.display = "block";
+      valid = false;
+    }
+
+    if (!endInput.value) {
+      endErr.textContent   = "End date is required";
+      endErr.style.display = "block";
+      valid = false;
+    }
+
+    if (startInput.value && endInput.value) {
+      const start = new Date(startInput.value);
+      const end   = new Date(endInput.value);
+
+      if (start > today) {
+        startErr.textContent   = "Start date cannot be in the future";
+        startErr.style.display = "block";
+        valid = false;
+      }
+
+      if (end > today) {
+        endErr.textContent   = "End date cannot be in the future";
+        endErr.style.display = "block";
+        valid = false;
+      }
+
+      if (start > end) {
+        endErr.textContent   = "End date must be after start date";
+        endErr.style.display = "block";
+        valid = false;
+      }
+    }
+
+    if (valid) {
+      /* Submit the parent form */
+      startInput.closest("form").submit();
+    }
+  });
+
+  /* ── Order search ── */
+  document.getElementById("orderSearch").addEventListener("input", function () {
+    const q = this.value.toLowerCase();
+    document.querySelectorAll("#ordersTable tbody tr").forEach(row => {
+      row.style.display = row.innerText.toLowerCase().includes(q) ? "" : "none";
+    });
+  });
+
+  /* ── Revenue Chart ── */
   const serverLabels = <%- JSON.stringify(chartLabels) %>;
   const serverData   = <%- JSON.stringify(chartData) %>;
+  const filterType   = "<%= filter %>";
 
-  document.addEventListener('DOMContentLoaded', function () {
+  document.addEventListener("DOMContentLoaded", function () {
 
-    /* ── Revenue Line Chart ── */
-    const ctxRevenue = document.getElementById('revenueChart').getContext('2d');
+    const ctx  = document.getElementById("revenueChart").getContext("2d");
+    const grad = ctx.createLinearGradient(0, 0, 0, 280);
+    grad.addColorStop(0, "rgba(96,55,99,0.22)");
+    grad.addColorStop(1, "rgba(96,55,99,0)");
 
-    const grad = ctxRevenue.createLinearGradient(0, 0, 0, 260);
-    grad.addColorStop(0, 'rgba(96,55,99,0.18)');
-    grad.addColorStop(1, 'rgba(96,55,99,0)');
+    /* Choose bar chart for daily (hourly), line for everything else */
+    const useBar = (filterType === "daily");
 
-    new Chart(ctxRevenue, {
-      type: 'line',
+    new Chart(ctx, {
+      type: useBar ? "bar" : "line",
       data: {
         labels: serverLabels,
         datasets: [{
-          label: 'Current Period',
-          data: serverData,
-          borderColor: '#603763',
-          borderWidth: 2.5,
-          backgroundColor: grad,
-          fill: true,
-          tension: 0.4,
-          pointBackgroundColor: '#FFFFFF',
-          pointBorderColor: '#603763',
-          pointBorderWidth: 2,
-          pointRadius: 4,
-          pointHoverRadius: 6
-        }]
+          label: "Revenue (₹)",
+          data:  serverData,
+          borderColor:          "#603763",
+          borderWidth:          useBar ? 0 : 2.5,
+          backgroundColor:      useBar ? "rgba(96,55,99,0.55)" : grad,
+          fill:                 !useBar,
+          tension:              0.4,
+          borderRadius:         useBar ? 8 : 0,
+          pointBackgroundColor: "#FFFFFF",
+          pointBorderColor:     "#603763",
+          pointBorderWidth:     2,
+          pointRadius:          useBar ? 0 : 4,
+          pointHoverRadius:     useBar ? 0 : 6,
+        }],
       },
       options: {
         responsive: true,
@@ -678,50 +462,46 @@ This Month
         plugins: {
           legend: { display: false },
           tooltip: {
-            mode: 'index',
+            mode: "index",
             intersect: false,
-            backgroundColor: '#2C1421',
-            titleColor: '#FFFFFF',
-            bodyColor: '#FFFFFF',
-            padding: 12,
+            backgroundColor: "#2C1421",
+            titleColor: "#FFFFFF",
+            bodyColor:  "#FFFFFF",
+            padding:    12,
             cornerRadius: 10,
             callbacks: {
               label: ctx => {
                 const v = ctx.parsed.y;
-                return ' ' + (ctx.dataset.label||'') + ': ₹' +
-                  new Intl.NumberFormat('en-IN').format(v);
-              }
-            }
-          }
+                return " Revenue: ₹" + new Intl.NumberFormat("en-IN").format(v);
+              },
+            },
+          },
         },
         scales: {
           x: {
             grid: { display: false, drawBorder: false },
             ticks: {
-              color: '#4D444C',
-              font: { family:'Inter', size:11, weight:'600' },
-              padding: 8
-            }
+              color:  "#4D444C",
+              font:   { family: "Inter", size: 11, weight: "600" },
+              padding: 8,
+              /* For daily (24 hours), show every 2nd label to avoid crowding */
+              maxTicksLimit: filterType === "daily" ? 12 : undefined,
+            },
           },
           y: {
-            display: false,
-            beginAtZero: false,
-           suggestedMax:
-
-serverData.length > 0
-
-? Math.max(...serverData) * 1.25
-
-: 1000
-          }
+            beginAtZero: true,
+            grid:  { color: "rgba(208,195,204,0.2)", drawBorder: false },
+            ticks: {
+              color: "#4D444C",
+              font:  { family: "Inter", size: 11 },
+              callback: v => "₹" + new Intl.NumberFormat("en-IN").format(v),
+            },
+          },
         },
-        interaction: { mode: 'nearest', axis: 'x', intersect: false }
-      }
+        interaction: { mode: "nearest", axis: "x", intersect: false },
+      },
     });
-
-
   });
-
 </script>
 
 </body>

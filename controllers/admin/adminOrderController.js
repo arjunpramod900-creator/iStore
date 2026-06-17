@@ -3,6 +3,7 @@ import {
   getOrderDetailsService,
   updateOrderStatusService,
   handleReturnRequestService,
+  handleItemReturnRequestService,
 } from "../../services/admin/orderService.js";
 
 /* ============================
@@ -140,6 +141,45 @@ async (
 
       message:
       error.message,
+
+    });
+
+  }
+
+};
+
+
+/* ============================
+   ITEM RETURN REQUEST
+============================ */
+
+export const handleItemReturnRequest = async (
+  req,
+  res,
+) => {
+
+  try {
+
+    const response =
+      await handleItemReturnRequestService(
+
+        req.params.id,
+
+        req.params.itemId,
+
+        req.body.action,
+
+      );
+
+    res.json(response);
+
+  } catch (error) {
+
+    res.json({
+
+      success: false,
+
+      message: error.message,
 
     });
 

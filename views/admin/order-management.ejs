@@ -161,66 +161,32 @@
                     </div>
 
                     <!-- Order status -->
-                    <div class="adm-filter-group">
-                        <label class="adm-filter-label" for="filterStatus">Order Status</label>
-                        <select name="status" class="adm-filter-select">
-                            <option
-                            value=""
-                            <%= status === ""
-                            ? "selected"
-                            : "" %>>
-                            All Statuses
-                            </option>
+<!-- ── ORDER STATUS FILTER — replace your existing <select name="status"> block ── -->
 
-                            <option
-                            value="Pending"
-                            <%= status === "Pending"
-                            ? "selected"
-                            : "" %>>
-                            Pending
-                            </option>
+<div class="adm-filter-group">
+    <label class="adm-filter-label" for="filterStatus">Order Status</label>
+    <select name="status" class="adm-filter-select">
 
-                            <option
-                            value="Processing"
-                            <%= status === "Processing"
-                            ? "selected"
-                            : "" %>>
-                            Processing
-                            </option>
+        <option value=""                <%= status === ""                 ? "selected" : "" %>>All Statuses</option>
 
-                            <option
-                            value="Shipped"
-                            <%= status === "Shipped"
-                            ? "selected"
-                            : "" %>>
-                            Shipped
-                            </option>
+        <!-- ── Standard order statuses ── -->
+        <option value="Pending"         <%= status === "Pending"          ? "selected" : "" %>>Pending</option>
+        <option value="Processing"      <%= status === "Processing"       ? "selected" : "" %>>Processing</option>
+        <option value="Shipped"         <%= status === "Shipped"          ? "selected" : "" %>>Shipped</option>
+        <option value="Out for Delivery"<%= status === "Out for Delivery" ? "selected" : "" %>>Out for Delivery</option>
+        <option value="Delivered"       <%= status === "Delivered"        ? "selected" : "" %>>Delivered</option>
+        <option value="Cancelled"       <%= status === "Cancelled"        ? "selected" : "" %>>Cancelled</option>
+        <option value="Returned"        <%= status === "Returned"         ? "selected" : "" %>>Returned</option>
 
-                            <option
-                            value="Delivered"
-                            <%= status === "Delivered"
-                            ? "selected"
-                            : "" %>>
-                            Delivered
-                            </option>
+        <!-- ── Return request statuses ── -->
+        <option disabled>──────────────</option>
+        <option value="Return Requested"<%= status === "Return Requested" ? "selected" : "" %>>↩ Return Requested</option>
+        <option value="Return Approved" <%= status === "Return Approved"  ? "selected" : "" %>>✓ Return Approved</option>
+        <option value="Return Rejected" <%= status === "Return Rejected"  ? "selected" : "" %>>✗ Return Rejected</option>
 
-                            <option
-                            value="Cancelled"
-                            <%= status === "Cancelled"
-                            ? "selected"
-                            : "" %>>
-                            Cancelled
-                            </option>
+    </select>
+</div>
 
-                            <option
-                            value="Returned"
-                            <%= status === "Returned"
-                            ? "selected"
-                            : "" %>>
-                            Returned
-                            </option>
-                        </select>
-                    </div>
                         <!-- Sort by -->
                     <div class="adm-filter-group">
 

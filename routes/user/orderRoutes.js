@@ -12,6 +12,7 @@ import {
   cancelOrder,
   cancelOrderItem,
   returnOrder,
+  returnOrderItem,
   downloadInvoice,
 } from "../../controllers/user/orderController.js";
 
@@ -67,6 +68,15 @@ router.post(
 router.post(
   "/orders/:orderId/return",
   returnOrder,
+);
+
+/* =========================================
+   RETURN SINGLE ITEM
+========================================= */
+ 
+router.post(
+  "/orders/:orderId/item/:itemId/return",
+  returnOrderItem,
 );
 
 /* =========================================
