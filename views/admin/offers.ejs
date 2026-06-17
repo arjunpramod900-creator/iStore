@@ -91,8 +91,8 @@
                     <div class="stat-icon"><i data-lucide="tag" size="20"></i></div>
                 </div>
                 <div class="stat-sub">
-                    <i data-lucide="trending-up" size="12" style="color:#16a34a;"></i>
-                    <span class="stat-sub-text" style="color:#16a34a;">+12% from last month</span>
+                    <i data-lucide="tag" size="12" style="color:#7a4e7c;"></i>
+                    <span class="stat-sub-text">All promotional campaigns</span>
                 </div>
             </div>
 
@@ -223,7 +223,11 @@
                             <!-- Discount -->
                             <td>
                                 <span class="discount-value">
-                                    <%= offer.discountValue %>% OFF
+                                    <% if (offer.discountType === 'FIXED') { %>
+                                        ₹<%= offer.discountValue %> OFF
+                                    <% } else { %>
+                                        <%= offer.discountValue %>% OFF
+                                    <% } %>
                                 </span>
                             </td>
 
@@ -256,6 +260,7 @@
                                         data-name="<%= offer.offerName %>"
                                         data-applyto="<%= offer.applyTo %>"
                                         data-target="<%= offer.targetId ? offer.targetId._id : '' %>"
+                                        data-discounttype="<%= offer.discountType || 'PERCENTAGE' %>"
                                         data-discount="<%= offer.discountValue %>"
                                         data-maxdiscount="<%= offer.maxDiscount || 0 %>"
                                         data-minpurchase="<%= offer.minPurchase || 0 %>"
@@ -355,13 +360,13 @@
                             <!-- Target selection -->
                             <div class="m-form-group">
                                 <label class="m-label" for="add-targetId" id="add-target-label">Target Selection *</label>
-                                <select id="add-targetId" name="targetId" class="m-select" required>
+                                <select id="add-targetId" name="targetId" class="m-select" required onchange="updatePricePreview('add')">
                                     <option value="">Select a product...</option>
                                     <% products.forEach(p => { %>
-                                    <option value="<%= p._id %>" data-type="PRODUCT"><%= p.name %></option>
+                                    <option value="<%= p._id %>" data-type="PRODUCT" data-price="<%= p.lowestPrice || 0 %>"><%= p.name %></option>
                                     <% }) %>
                                     <% categories.forEach(c => { %>
-                                    <option value="<%= c._id %>" data-type="CATEGORY" style="display:none;"><%= c.name %></option>
+                                    <option value="<%= c._id %>" data-type="CATEGORY" data-price="<%= c.lowestPrice || 0 %>" style="display:none;"><%= c.name %></option>
                                     <% }) %>
                                 </select>
                             </div>
@@ -390,7 +395,7 @@
 
                             <div class="form-row-2">
                                 <div class="m-form-group">
-                                    <label class="m-label" for="add-discountValue">Min Discount *</label>
+                                    <label class="m-label" for="add-discountValue">Discount Value *</label>
                                     <div class="suffix-wrap">
                                         <input type="number" id="add-discountValue" name="discountValue"
                                             class="m-input" placeholder="10" min="1" max="100" required
@@ -399,13 +404,14 @@
                                     </div>
                                 </div>
                                 <div class="m-form-group">
-                                    <label class="m-label" for="add-maxDiscount">Max Discount</label>
+                                    <label class="m-label" for="add-maxDiscount">Max Discount (₹ cap)</label>
                                     <div class="suffix-wrap">
                                         <input type="number" id="add-maxDiscount" name="maxDiscount"
-                                            class="m-input" placeholder="40" min="0" value="0"
+                                            class="m-input" placeholder="2000" min="0" value="0"
                                             oninput="updatePricePreview('add')">
-                                        <span class="input-suffix" id="add-max-suffix">%</span>
+                                        <span class="input-suffix" id="add-max-suffix">₹</span>
                                     </div>
+                                    <p class="m-hint"><i data-lucide="info" size="11"></i> The discount will never exceed this rupee amount, regardless of discount type.</p>
                                 </div>
                             </div>
                         </div>
@@ -466,7 +472,7 @@
                             <div class="price-preview">
                                 <div class="price-row">
                                     <span class="price-row-label">Original Price</span>
-                                    <span class="price-row-value">₹1,29,900</span>
+                                    <span class="price-row-value" id="add-original-price">—</span>
                                 </div>
                                 <div class="price-row">
                                     <span class="price-row-label">Applied Discount <span id="add-pct-label">(—%)</span></span>
@@ -546,13 +552,13 @@
 
                             <div class="m-form-group">
                                 <label class="m-label" for="edit-targetId">Target Selection *</label>
-                                <select id="edit-targetId" name="targetId" class="m-select" required>
+                                <select id="edit-targetId" name="targetId" class="m-select" required onchange="updatePricePreview('edit')">
                                     <option value="">Select...</option>
                                     <% products.forEach(p => { %>
-                                    <option value="<%= p._id %>" data-type="PRODUCT"><%= p.name %></option>
+                                    <option value="<%= p._id %>" data-type="PRODUCT" data-price="<%= p.lowestPrice || 0 %>"><%= p.name %></option>
                                     <% }) %>
                                     <% categories.forEach(c => { %>
-                                    <option value="<%= c._id %>" data-type="CATEGORY"><%= c.name %></option>
+                                    <option value="<%= c._id %>" data-type="CATEGORY" data-price="<%= c.lowestPrice || 0 %>"><%= c.name %></option>
                                     <% }) %>
                                 </select>
                             </div>
@@ -573,20 +579,20 @@
                             <input type="hidden" id="edit-discountType" name="discountType" value="PERCENTAGE">
                             <div class="form-row-2">
                                 <div class="m-form-group">
-                                    <label class="m-label" for="edit-discountValue">Min Discount (%)</label>
+                                    <label class="m-label" for="edit-discountValue">Discount Value *</label>
                                     <div class="suffix-wrap">
                                         <input type="number" id="edit-discountValue" name="discountValue"
-                                            class="m-input" min="1" max="100" required
+                                            class="m-input" min="1" required
                                             oninput="updatePricePreview('edit')">
                                         <span class="input-suffix" id="edit-disc-suffix">%</span>
                                     </div>
                                 </div>
                                 <div class="m-form-group">
-                                    <label class="m-label" for="edit-maxDiscount">Max Discount (%)</label>
+                                    <label class="m-label" for="edit-maxDiscount">Max Discount (₹ cap)</label>
                                     <div class="suffix-wrap">
                                         <input type="number" id="edit-maxDiscount" name="maxDiscount"
                                             class="m-input" min="0" oninput="updatePricePreview('edit')">
-                                        <span class="input-suffix" id="edit-max-suffix">%</span>
+                                        <span class="input-suffix" id="edit-max-suffix">₹</span>
                                     </div>
                                 </div>
                             </div>
@@ -649,7 +655,7 @@
                             <div class="price-preview">
                                 <div class="price-row">
                                     <span class="price-row-label">Original Price</span>
-                                    <span class="price-row-value">₹1,29,900</span>
+                                    <span class="price-row-value" id="edit-original-price">—</span>
                                 </div>
                                 <div class="price-row">
                                     <span class="price-row-label">Applied Discount <span id="edit-pct-label">(—%)</span></span>
@@ -685,7 +691,17 @@
 <script>
 'use strict';
 
-const SAMPLE_PRICE = 129900; /* ₹1,29,900 demo price */
+const FALLBACK_PRICE = 129900; /* used only if a target has no price data at all */
+
+function getSelectedPrice(prefix) {
+  const sel = document.getElementById(prefix + '-targetId');
+  const opt = sel && sel.selectedOptions[0];
+  const price = opt ? Number(opt.dataset.price) : 0;
+  /* price is stored in whole rupees on the option; convert to
+     paise here so the rest of the math (which works in paise)
+     doesn't need to change */
+  return (price > 0 ? price : FALLBACK_PRICE / 100) * 100;
+}
 
 /* ── MODAL HELPERS ── */
 function openModal(id) {
@@ -748,9 +764,17 @@ function setOfferType(prefix, type) {
   /* Update label if it exists */
   const lbl = document.getElementById(prefix + '-target-label');
   if (lbl) lbl.textContent = (type === 'PRODUCT' ? 'Select Product *' : 'Select Category *');
+
+  /* Target was just cleared above — refresh preview so it
+     doesn't keep showing the previously selected item's price */
+  updatePricePreview(prefix);
 }
 
-/* ── DISCOUNT TYPE CHIPS ── */
+/* ── DISCOUNT TYPE CHIPS ──
+   Only the discount-value suffix/limits change with type.
+   maxDiscount is ALWAYS a rupee cap — its suffix never
+   changes, regardless of whether the offer itself is a
+   percentage or fixed-amount discount. */
 function setDiscType(prefix, type) {
   document.getElementById(prefix + '-discountType').value = type;
 
@@ -759,8 +783,18 @@ function setDiscType(prefix, type) {
 
   const suffix = type === 'PERCENTAGE' ? '%' : '₹';
   document.getElementById(prefix + '-disc-suffix').textContent = suffix;
-  if (document.getElementById(prefix + '-max-suffix'))
-    document.getElementById(prefix + '-max-suffix').textContent = suffix;
+
+  /* Discount value's max attribute only makes sense for
+     percentage (capped at 100). Fixed amounts have no
+     natural ceiling here, so remove the constraint. */
+  const discInput = document.getElementById(prefix + '-discountValue');
+  if (type === 'PERCENTAGE') {
+    discInput.setAttribute('max', '100');
+    discInput.placeholder = '10';
+  } else {
+    discInput.removeAttribute('max');
+    discInput.placeholder = '2000';
+  }
 
   updatePricePreview(prefix);
 }
@@ -769,13 +803,11 @@ function setDiscType(prefix, type) {
 function updateBanner(p) {
   const name  = document.getElementById(p + '-offerName').value.trim().toUpperCase() || 'NEW OFFER';
   const disc  = document.getElementById(p + '-discountValue').value;
-  const maxD  = document.getElementById(p + '-maxDiscount').value;
+  const type  = document.getElementById(p + '-discountType').value;
   const end   = document.getElementById(p + '-endDate').value;
 
   const display = disc
-    ? (maxD && Number(maxD) > Number(disc))
-      ? `Up to ${maxD}% OFF`
-      : `Up to ${disc}% OFF`
+    ? (type === 'FIXED' ? `₹${disc} OFF` : `Up to ${disc}% OFF`)
     : 'Up to —% OFF';
 
   let daysLabel = '— DAYS LEFT';
@@ -789,28 +821,43 @@ function updateBanner(p) {
   document.getElementById(p + '-banner-days').textContent  = daysLabel;
 }
 
-/* ── LIVE PRICE PREVIEW ── */
+/* ── LIVE PRICE PREVIEW ──
+   discAmt is always tracked in paise internally so fmt()
+   can divide by 100 consistently across both branches.
+   maxD is entered in whole rupees by the admin, so it's
+   converted to paise (`maxD * 100`) before being compared
+   against discAmt, which is already in paise either way. */
 function updatePricePreview(p) {
   const disc  = Number(document.getElementById(p + '-discountValue').value) || 0;
   const type  = document.getElementById(p + '-discountType').value;
   const maxD  = Number(document.getElementById(p + '-maxDiscount').value) || 0;
 
-  let discAmt = 0;
-  if (type === 'PERCENTAGE') {
-    discAmt = Math.round(SAMPLE_PRICE * disc / 100);
-    if (maxD > 0) discAmt = Math.min(discAmt, maxD * 100);
-  } else {
-    discAmt = disc * 100;
-  }
-
-  const final = Math.max(0, SAMPLE_PRICE - discAmt);
-  const label = type === 'PERCENTAGE' ? `(${disc}%)` : '';
+  const samplePrice = getSelectedPrice(p);
 
   const fmt = n => '₹' + (n / 100).toLocaleString('en-IN');
 
+  document.getElementById(p + '-original-price').textContent = fmt(samplePrice);
+
+  let discAmt = 0;
+  if (type === 'PERCENTAGE') {
+    discAmt = Math.round(samplePrice * disc / 100);
+  } else {
+    /* FIXED — disc is a whole-rupee amount, convert to paise */
+    discAmt = disc * 100;
+  }
+
+  /* maxDiscount is always a rupee cap, applies to both types */
+  if (maxD > 0) discAmt = Math.min(discAmt, maxD * 100);
+
+  /* never exceed the item's own price */
+  discAmt = Math.min(discAmt, samplePrice);
+
+  const final = Math.max(0, samplePrice - discAmt);
+  const label = type === 'PERCENTAGE' ? `(${disc}%)` : '(Fixed)';
+
   document.getElementById(p + '-pct-label').textContent    = label;
   document.getElementById(p + '-discount-amt').textContent = disc ? `-${fmt(discAmt)}` : '—';
-  document.getElementById(p + '-final-price').textContent  = fmt(final * 100);
+  document.getElementById(p + '-final-price').textContent  = fmt(final);
 
   updateBanner(p);
 }
@@ -829,10 +876,13 @@ function openEditModal(data) {
   f('isActive').checked     = data.isActive;
 
   setOfferType('edit', data.applyTo);
+  setDiscType('edit', data.discountType || 'PERCENTAGE');
 
-  /* Wait a tick for options to re-filter */
+  /* Wait a tick for options to re-filter, then set the
+     target and refresh the preview using its real price */
   setTimeout(() => {
     f('targetId').value = data.targetId || '';
+    updatePricePreview('edit');
   }, 10);
 
   /* Status indicator */
@@ -845,7 +895,6 @@ function openEditModal(data) {
   document.getElementById('edit-si-dot').style.background = dotColors[stat] || '#94a3b8';
   document.getElementById('edit-si-value').textContent    = stat;
 
-  updatePricePreview('edit');
   openModal('editModal');
 }
 
@@ -983,6 +1032,9 @@ document
 
             targetId:
             btn.dataset.target,
+
+            discountType:
+            btn.dataset.discounttype,
 
             discountValue:
             btn.dataset.discount,

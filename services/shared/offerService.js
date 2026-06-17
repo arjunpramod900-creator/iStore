@@ -1,5 +1,63 @@
 import Offer from "../../models/Offer.js";
 
+
+
+const computeDiscount = (offer, unitPrice) => {
+
+  if (!offer) return 0;
+
+  let discount = 0;
+
+  if (offer.discountType === "FIXED") {
+
+    discount = offer.discountValue;
+
+  } else {
+
+    /* PERCENTAGE (default) */
+
+    discount = (unitPrice * offer.discountValue) / 100;
+  }
+
+  /* maxDiscount is always a rupee cap, regardless
+     of discountType */
+
+  if (offer.maxDiscount > 0) {
+    discount = Math.min(discount, offer.maxDiscount);
+  }
+
+  /* never let a discount exceed the item's own price */
+
+  return Math.min(discount, unitPrice);
+};
+
+
+
+const buildBadgeLabel = (offer, discountAmount, unitPrice) => {
+
+  if (!offer || discountAmount <= 0 || unitPrice <= 0) {
+    return null;
+  }
+
+  if (offer.discountType === "FIXED") {
+    return `₹${Math.round(discountAmount).toLocaleString("en-IN")} OFF`;
+  }
+
+ 
+
+  const effectivePercent = (discountAmount / unitPrice) * 100;
+
+
+
+  const rounded = Math.round(effectivePercent);
+
+  const display = rounded > 0
+    ? rounded
+    : Math.round(effectivePercent * 10) / 10;
+
+  return `${display}% OFF`;
+};
+
 /* =========================================
    CALCULATE BEST OFFER FOR ITEM
 ========================================= */
@@ -63,61 +121,9 @@ async (
 
   }).lean();
 
-  let productDiscount = 0;
+  const productDiscount = computeDiscount(productOffer, variant.price);
 
-  let categoryDiscount = 0;
-
-  /* =========================================
-     PRODUCT OFFER DISCOUNT
-  ========================================= */
-
-  if (productOffer) {
-
-    productDiscount =
-    (
-      variant.price *
-      productOffer.discountValue
-    ) / 100;
-
-    if (
-      productOffer.maxDiscount > 0
-    ) {
-
-      productDiscount =
-      Math.min(
-        productDiscount,
-        productOffer.maxDiscount
-      );
-
-    }
-
-  }
-
-  /* =========================================
-     CATEGORY OFFER DISCOUNT
-  ========================================= */
-
-  if (categoryOffer) {
-
-    categoryDiscount =
-    (
-      variant.price *
-      categoryOffer.discountValue
-    ) / 100;
-
-    if (
-      categoryOffer.maxDiscount > 0
-    ) {
-
-      categoryDiscount =
-      Math.min(
-        categoryDiscount,
-        categoryOffer.maxDiscount
-      );
-
-    }
-
-  }
+  const categoryDiscount = computeDiscount(categoryOffer, variant.price);
 
   /* =========================================
      BEST OFFER WINS
@@ -150,6 +156,20 @@ async (
   }
 
   /* =========================================
+     BADGE LABEL
+     Computed once here from the real numbers so
+     no caller has to re-derive percentage/fixed
+     display logic (and risk echoing the raw,
+     possibly-capped discountValue instead).
+  ========================================= */
+
+  const badgeLabel = buildBadgeLabel(
+    appliedOffer,
+    bestDiscount,
+    variant.price,
+  );
+
+  /* =========================================
      FINAL PRICE
   ========================================= */
 
@@ -176,6 +196,8 @@ async (
     offerType,
 
     appliedOffer,
+
+    badgeLabel,
 
   };
 

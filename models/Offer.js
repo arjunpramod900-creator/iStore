@@ -36,6 +36,7 @@ const offerSchema = new mongoose.Schema(
         type: String,
         enum: [
             "PERCENTAGE",
+            "FIXED",
         ],
         default: "PERCENTAGE",
     },

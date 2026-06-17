@@ -2,1391 +2,630 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Details — iStore</title>
+    <meta name="description" content="View full details of your iStore order including items, shipping address, and order summary.">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <link rel="stylesheet" href="/css/components/header.css">
+    <link rel="stylesheet" href="/css/components/footer.css">
+    <link rel="stylesheet" href="/css/components/toast.css">
+    <link rel="stylesheet" href="/css/components/alert.css">
+    <link rel="stylesheet" href="/css/order-details.css">
 
-    <title>
-        Order Details — iStore
-    </title>
-
-    <meta
-        name="description"
-        content="View full details of your iStore order including items, shipping address, and order summary."
-    >
-
-    <!-- CSS -->
-
-    <link
-        rel="stylesheet"
-        href="/css/components/header.css"
-    >
-
-    <link
-        rel="stylesheet"
-        href="/css/components/footer.css"
-    >
-
-    <link
-        rel="stylesheet"
-        href="/css/components/toast.css"
-    />
-
-    <link
-        rel="stylesheet"
-        href="/css/components/alert.css"
-    />
-
-    <link
-        rel="stylesheet"
-        href="/css/order-details.css"
-    >
-
-    <!-- Fonts -->
-
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
-        rel="stylesheet"
-    >
-
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
 
-    <!-- Icons -->
-
     <script src="https://unpkg.com/lucide@latest"></script>
-
-    <!-- GSAP -->
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 
+    <style>
+        /* ── Per-item return button ── */
+        .od-item-return-btn {
+            border: none;
+            background: rgba(76, 0, 128, 0.08);
+            color: #4C0080;
+            padding: 10px 14px;
+            border-radius: 14px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all .2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .od-item-return-btn:hover {
+            background: rgba(76, 0, 128, 0.14);
+            transform: translateY(-1px);
+        }
+
+        /* ── Per-item return status badge ── */
+        .od-item-return-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 7px 12px;
+            border-radius: 9999px;
+        }
+        .od-item-return-badge--requested {
+            background: rgba(234, 179, 8, 0.12);
+            color: #B45309;
+        }
+        .od-item-return-badge--approved {
+            background: rgba(5, 150, 105, 0.12);
+            color: #059669;
+        }
+        .od-item-return-badge--rejected {
+            background: rgba(186, 26, 26, 0.10);
+            color: #BA1A1A;
+        }
+    </style>
 </head>
 
 <body>
 
-    <%- include(
-        "../partials/user/header",
-        { page: "orders" }
-    ) %>
+    <%- include("../partials/user/header", { page: "orders" }) %>
 
     <%
-        const orderId =
-            order.orderId;
+        const orderId     = order.orderId;
+        const status      = (order.orderStatus || "Processing").toLowerCase();
+        const statusLabel = order.orderStatus || "Processing";
+        const orderDate   = new Date(order.createdAt).toLocaleDateString("en-IN", {
+            day: "numeric", month: "short", year: "numeric"
+        });
 
-        const status =
-            (
-                order.orderStatus ||
-                "Processing"
-            )
-            .toLowerCase();
+        const items          = order.items || [];
+        const addr           = order.shippingAddress || {};
+        const subtotal       = order.subtotal || 0;
+        const discount       = order.discountAmount || 0;
+        const tax            = order.taxAmount || 0;
+        const delivery       = order.deliveryCharge || 0;
+        const total          = order.finalAmount || 0;
+        const paymentMethod  = order.paymentMethod || "COD";
+        const paymentStatus  = order.paymentStatus || "Pending";
 
-        const statusLabel =
-            order.orderStatus ||
-            "Processing";
+        const cancelledItems = items.filter(i => i.itemStatus === "Cancelled");
+        const refundAmount   = cancelledItems.reduce((t, i) => t + (i.price * i.quantity), 0);
+        const updatedTotal   = order.finalAmount;
 
-        const orderDate =
-            new Date(order.createdAt)
-            .toLocaleDateString(
-                "en-IN",
-                {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                }
+        /* ── Return logic ──
+           Full-order return button hides if:
+           - returnStatus is already Requested or Approved
+           - OR every delivered item already has an item-level return request
+        */
+        const deliveredItems = items.filter(i => i.itemStatus === "Delivered");
+        const allItemsReturnRequested = deliveredItems.length > 0 &&
+            deliveredItems.every(i =>
+                ["Requested", "Approved"].includes(i.itemReturnStatus)
             );
 
-        const items =
-            order.items || [];
-
-        const addr =
-            order.shippingAddress || {};
-
-        const subtotal =
-            order.subtotal || 0;
-
-        const discount =
-            order.discountAmount || 0;
-
-        const tax =
-            order.taxAmount || 0;
-
-        const delivery =
-            order.deliveryCharge || 0;
-
-        const total =
-            order.finalAmount || 0;
-            const cancelledItems =
-            items.filter(
-            item =>
-            item.itemStatus === "Cancelled"
-            )
-
-            const refundAmount =
-            cancelledItems.reduce(
-
-            (total,item)=>{
-
-            return total + (
-            item.price *
-            item.quantity
-            )
-
-            },
-
-            0
-
-            )
-           const updatedTotal =
-            order.finalAmount;
-
-        const paymentMethod =
-            order.paymentMethod || "COD";
-
-        const paymentStatus =
-            order.paymentStatus || "Pending";
-
-        function fmt(n) {
-
-            return (
-                "₹" +
-                Number(n)
-                .toLocaleString("en-IN")
-            );
-
-        }
+        function fmt(n) { return "₹" + Number(n).toLocaleString("en-IN"); }
     %>
-
-    <!-- SweetAlert2 -->
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <main
-        class="od-page"
-        id="odPage"
-    >
-
+    <main class="od-page" id="odPage">
         <div class="od-container">
 
             <!-- BREADCRUMB -->
-
-            <nav
-                class="od-breadcrumbs"
-                aria-label="Breadcrumb"
-            >
-
-                <a
-                    href="/"
-                    class="od-bc-crumb"
-                >
-                    Home
-                </a>
-
-                <span class="od-bc-sep">
-                    <i
-                        data-lucide="chevron-right"
-                        size="12"
-                    ></i>
-                </span>
-
-                <a
-                    href="/orders"
-                    class="od-bc-crumb"
-                >
-                    Orders
-                </a>
-
-                <span class="od-bc-sep">
-                    <i
-                        data-lucide="chevron-right"
-                        size="12"
-                    ></i>
-                </span>
-
-                <span
-                    class="od-bc-crumb active"
-                >
-                    Order Details
-                </span>
-
+            <nav class="od-breadcrumbs" aria-label="Breadcrumb">
+                <a href="/" class="od-bc-crumb">Home</a>
+                <span class="od-bc-sep"><i data-lucide="chevron-right" size="12"></i></span>
+                <a href="/orders" class="od-bc-crumb">Orders</a>
+                <span class="od-bc-sep"><i data-lucide="chevron-right" size="12"></i></span>
+                <span class="od-bc-crumb active">Order Details</span>
             </nav>
 
-            <!-- ORDER HEADER -->
+            <!-- ORDER HEADER CARD -->
+            <div class="od-header-card" id="odHeaderCard">
 
-            <div
-                class="od-header-card"
-                id="odHeaderCard"
-            >
+                <!-- TIMELINE -->
+                <section class="od-timeline-card">
+                    <%
+                    const steps = ["Pending","Processing","Shipped","Out for Delivery","Delivered"];
+                    const currentIndex = steps.indexOf(order.orderStatus);
+                    %>
 
-            <!-- ORDER TIMELINE -->
-
-                    <section class="od-timeline-card">
-
-                       <%
-
-                        const steps = [
-                            "Pending",
-                            "Processing",
-                            "Shipped",
-                            "Out for Delivery",
-                            "Delivered"
-                        ]
-
-                        const currentIndex =
-                        steps.indexOf(order.orderStatus)
-
-                        %>
-
-                        <% if(order.orderStatus !== "Cancelled"){ %>
-
-                            <div class="od-timeline">
-
-                                <% steps.forEach((step,index)=>{ %>
-
-                                    <div class="od-step">
-
-                                        <div
-                                        class="
-                                        od-step-circle
-
-                                        <%= index <= currentIndex
-                                        ? 'active'
-                                        : ''
-                                        %>
-                                        ">
-
-                                            <% if(index < currentIndex){ %>
-
-                                                <i
-                                                data-lucide="check"
-                                                size="14"
-                                                ></i>
-
-                                            <% } %>
-
-                                        </div>
-
-                                        <span
-                                        class="
-                                        od-step-label
-
-                                        <%= index <= currentIndex
-                                        ? 'active'
-                                        : ''
-                                        %>
-                                        ">
-
-                                            <%= step %>
-
-                                        </span>
-
-                                    </div>
-
-                                    <% if(index !== steps.length - 1){ %>
-
-                                        <div
-                                        class="
-                                        od-step-line
-
-                                        <%= index < currentIndex
-                                        ? 'active'
-                                        : ''
-                                        %>
-                                        ">
-
-                                        </div>
-
-                                    <% } %>
-
-                                <% }) %>
-
+                    <% if (order.orderStatus !== "Cancelled") { %>
+                    <div class="od-timeline">
+                        <% steps.forEach((step, index) => { %>
+                        <div class="od-step">
+                            <div class="od-step-circle <%= index <= currentIndex ? 'active' : '' %>">
+                                <% if (index < currentIndex) { %>
+                                    <i data-lucide="check" size="14"></i>
+                                <% } %>
                             </div>
-
-                        <% } else { %>
-
-                            <div class="od-cancelled-banner">
-
-                                <i
-                                data-lucide="x-circle"
-                                size="18"
-                                ></i>
-
-                                This order was cancelled
-
-                            </div>
-
+                            <span class="od-step-label <%= index <= currentIndex ? 'active' : '' %>">
+                                <%= step %>
+                            </span>
+                        </div>
+                        <% if (index !== steps.length - 1) { %>
+                            <div class="od-step-line <%= index < currentIndex ? 'active' : '' %>"></div>
                         <% } %>
+                        <% }) %>
+                    </div>
+                    <% } else { %>
+                    <div class="od-cancelled-banner">
+                        <i data-lucide="x-circle" size="18"></i>
+                        This order was cancelled
+                    </div>
+                    <% } %>
+                </section>
 
-                    </section>
-
-                <!-- LEFT -->
-
+                <!-- ID block -->
                 <div class="od-header-id-block">
-
-                    <span class="od-header-status-label">
-                        Order Status
-                    </span>
-
-                    <span class="od-header-order-id">
-
-                        Order ID :
-                        <%= orderId %>
-
-                    </span>
-
+                    <span class="od-header-status-label">Order Status</span>
+                    <span class="od-header-order-id">Order ID : <%= orderId %></span>
                 </div>
 
-                <!-- CENTER -->
-
-                <a
-                    href="/orders/<%= orderId %>/invoice"
-                    class="od-invoice-btn"
-                >
-
-                    <i
-                        data-lucide="file-down"
-                        size="18"
-                    ></i>
-
+                <!-- Invoice -->
+                <a href="/orders/<%= orderId %>/invoice" class="od-invoice-btn">
+                    <i data-lucide="file-down" size="18"></i>
                     Download Invoice
-
                 </a>
 
-                <!-- RIGHT -->
-
+                <!-- Status + date -->
                 <div class="od-header-right">
-
-                    <span
-                        class="
-                        od-status-pill
-                        od-status-pill--<%= status %>
-                        "
-                    >
-
+                    <span class="od-status-pill od-status-pill--<%= status %>">
                         <%= statusLabel %>
-
                     </span>
-
                     <div class="od-header-date-block">
-
-                        <span class="od-date-label">
-                            Order Date
-                        </span>
-
-                        <span class="od-date-value">
-                            <%= orderDate %>
-                        </span>
-
+                        <span class="od-date-label">Order Date</span>
+                        <span class="od-date-value"><%= orderDate %></span>
                     </div>
-
                 </div>
 
             </div>
 
             <!-- BODY -->
-
-            <div
-                class="od-body"
-                id="odBody"
-            >
+            <div class="od-body" id="odBody">
 
                 <!-- LEFT -->
-
-                <div
-                    class="od-left"
-                    id="odLeft"
-                >
+                <div class="od-left" id="odLeft">
 
                     <!-- ITEMS -->
-
-                    <section
-                        class="od-items-card"
-                        id="odItemsCard"
-                    >
-
+                    <section class="od-items-card" id="odItemsCard">
                         <div class="od-items-header">
-
-                            <h2 class="od-items-title">
-                                Items
-                            </h2>
-
+                            <h2 class="od-items-title">Items</h2>
                             <span class="od-items-count">
-
-                                <%= items.length %>
-                                product<%= items.length !== 1 ? "s" : "" %>
-
+                                <%= items.length %> product<%= items.length !== 1 ? "s" : "" %>
                             </span>
-
                         </div>
 
                         <div class="od-items-list">
-
                             <% items.forEach((item, idx) => {
+                                const price = item.price * item.quantity;
 
-                                const name =
-                                    item.productName;
-
-                                const variant =
-                                    item.variantName;
-
-                                const price =
-                                    item.price *
-                                    item.quantity;
-
-                                const qty =
-                                    item.quantity;
-
-                                const img =
-                                    item.productImage;
-
+                                /* Return status for this item */
+                                const itemReturnStatus = item.itemReturnStatus || "None";
+                                const canReturnItem =
+                                    item.itemStatus === "Delivered" &&
+                                    !["Requested","Approved"].includes(itemReturnStatus);
                             %>
 
-                                <% if(idx > 0){ %>
+                            <% if (idx > 0) { %><div class="od-item-divider"></div><% } %>
 
-                                    <div class="od-item-divider"></div>
+                            <div class="od-item-row <%= item.itemStatus === 'Cancelled' ? 'cancelled' : '' %>" id="odItem<%= idx %>">
 
-                                <% } %>
-
-                                <div
-                                    class="
-                                        od-item-row
-                                        <%= item.itemStatus === 'Cancelled'
-                                            ? 'cancelled'
-                                            : ''
-                                        %>
-                                    "
-
-                                    id="odItem<%= idx %>"
-                                >
-
-                                    <!-- IMAGE -->
-
-                                    <div class="od-item-thumb">
-
-                                        <img
-                                            src="<%= img %>"
-                                            alt="<%= name %>"
-                                            loading="lazy"
-                                        >
-
-                                    </div>
-
-                                    <!-- INFO -->
-
-                                    <div class="od-item-info">
-
-                                        <p class="od-item-name">
-
-                                            <%= name %>
-
-                                            <% if(qty > 1){ %>
-
-                                                × <%= qty %>
-
-                                            <% } %>
-
-                                        </p>
-
-                                        <p class="od-item-variant">
-
-                                            <%= variant %>
-
-                                        </p>
-
-                                            <span
-                                                class="
-                                                od-item-stock
-                                                od-item-stock--<%= (
-                                                item.itemStatus || 'Active'
-                                                ).toLowerCase() %>
-                                                "
-                                                >
-
-                                                    <i
-
-                                                    data-lucide="<%=
-
-                                                    item.itemStatus === 'Cancelled'
-                                                    ? 'x-circle'
-
-                                                    : item.itemStatus === 'Returned'
-                                                    ? 'rotate-ccw'
-
-                                                    : 'check-circle'
-
-                                                    %>"
-
-                                                    size="12"
-
-                                                    ></i>
-
-                                                    <%= item.itemStatus || "Active" %>
-
-                                            </span>
-
-                                    </div>
-
-                                    <!-- RIGHT SIDE -->
-
-                                    <div class="od-item-right">
-
-                                        <span class="od-item-price">
-
-                                            <%= fmt(price) %>
-
-                                        </span>
-
-                                        <% if(
-                                            [
-                                                "Pending",
-                                                "Processing"
-                                            ].includes(order.orderStatus)
-                                            &&
-                                            item.itemStatus !== "Cancelled"
-                                        ){ %>
-
-                                            <button
-                                                class="od-item-cancel-btn"
-                                                data-order-id="<%= orderId %>"
-                                                data-item-id="<%= item._id %>"
-                                            >
-
-                                                Cancel Item
-
-                                            </button>
-
-                                        <% } %>
-
-                                        <% if(item.itemStatus === "Cancelled"){ %>
-
-                                            <span class="od-item-cancelled-label">
-
-                                                Cancelled
-
-                                            </span>
-
-                                        <% } %>
-
-                                    </div>
-
+                                <!-- IMAGE -->
+                                <div class="od-item-thumb">
+                                    <img src="<%= item.productImage %>" alt="<%= item.productName %>" loading="lazy">
                                 </div>
 
+                                <!-- INFO -->
+                                <div class="od-item-info">
+                                    <p class="od-item-name">
+                                        <%= item.productName %>
+                                        <% if (item.quantity > 1) { %> × <%= item.quantity %><% } %>
+                                    </p>
+                                    <p class="od-item-variant"><%= item.variantName %></p>
+
+                                    <!-- Item status badge -->
+                                    <span class="od-item-stock od-item-stock--<%= (item.itemStatus || 'Active').toLowerCase() %>">
+                                        <i data-lucide="<%=
+                                            item.itemStatus === 'Cancelled' ? 'x-circle' :
+                                            item.itemStatus === 'Returned'  ? 'rotate-ccw' :
+                                            'check-circle'
+                                        %>" size="12"></i>
+                                        <%= item.itemStatus || "Active" %>
+                                    </span>
+
+                                    <!-- ── Per-item return status badge ── -->
+                                    <% if (itemReturnStatus === "Requested") { %>
+                                    <span class="od-item-return-badge od-item-return-badge--requested">
+                                        <i data-lucide="clock" size="11"></i>
+                                        Return Pending Approval
+                                    </span>
+                                    <% } else if (itemReturnStatus === "Approved") { %>
+                                    <span class="od-item-return-badge od-item-return-badge--approved">
+                                        <i data-lucide="check-circle" size="11"></i>
+                                        Return Approved
+                                    </span>
+                                    <% } else if (itemReturnStatus === "Rejected") { %>
+                                    <span class="od-item-return-badge od-item-return-badge--rejected">
+                                        <i data-lucide="x-circle" size="11"></i>
+                                        Return Rejected
+                                    </span>
+                                    <% } %>
+                                </div>
+
+                                <!-- RIGHT -->
+                                <div class="od-item-right">
+                                    <span class="od-item-price"><%= fmt(price) %></span>
+
+                                    <!-- Cancel item button -->
+                                    <% if (
+                                        ["Pending","Processing"].includes(order.orderStatus) &&
+                                        item.itemStatus !== "Cancelled"
+                                    ) { %>
+                                    <button
+                                        class="od-item-cancel-btn"
+                                        data-order-id="<%= orderId %>"
+                                        data-item-id="<%= item._id %>">
+                                        Cancel Item
+                                    </button>
+                                    <% } %>
+
+                                    <!-- ── Per-item return button ── -->
+                                    <% if (canReturnItem) { %>
+                                    <button
+                                        class="od-item-return-btn"
+                                        data-order-id="<%= orderId %>"
+                                        data-item-id="<%= item._id %>"
+                                        data-item-name="<%= item.productName %>">
+                                        <i data-lucide="package-open" size="13"></i>
+                                        Return Item
+                                    </button>
+                                    <% } %>
+
+                                    <!-- Cancelled label -->
+                                    <% if (item.itemStatus === "Cancelled") { %>
+                                    <span class="od-item-cancelled-label">Cancelled</span>
+                                    <% } %>
+                                </div>
+
+                            </div>
+
                             <% }) %>
-
                         </div>
-
                     </section>
 
                     <!-- ADDRESS -->
-
-                    <section
-                        class="od-address-card"
-                        id="odAddressCard"
-                    >
-
-                        <h2 class="od-address-title">
-                            Shipping Address
-                        </h2>
-
+                    <section class="od-address-card" id="odAddressCard">
+                        <h2 class="od-address-title">Shipping Address</h2>
                         <div class="od-address-body">
-
                             <div class="od-address-icon-wrap">
-
-                                <i
-                                    data-lucide="map-pin"
-                                    size="20"
-                                ></i>
-
+                                <i data-lucide="map-pin" size="20"></i>
                             </div>
-
                             <div class="od-address-info">
-
-                                <span class="od-address-name">
-
-                                    <%= addr.fullName %>
-
-                                </span>
-
+                                <span class="od-address-name"><%= addr.fullName %></span>
                                 <span class="od-address-line">
-
-                                    <%= addr.addressLine1 %>,
-                                    <%= addr.city %>
-
-                                    <br>
-
-                                    <%= addr.state %> -
-                                    <%= addr.pincode %>
-
+                                    <%= addr.addressLine1 %>, <%= addr.city %><br>
+                                    <%= addr.state %> - <%= addr.pincode %>
                                 </span>
-
-                                <span class="od-address-phone">
-
-                                    Ph:
-                                    <%= addr.phoneNumber %>
-
-                                </span>
-
+                                <span class="od-address-phone">Ph: <%= addr.phoneNumber %></span>
                             </div>
-
                         </div>
-
                     </section>
 
                 </div>
+                <!-- /od-left -->
 
                 <!-- RIGHT -->
+                <div class="od-right" id="odRight">
 
-                <div
-                    class="od-right"
-                    id="odRight"
-                >
-
-                    <!-- SUMMARY -->
-
-                    <section
-                        class="od-summary-card"
-                        id="odSummaryCard"
-                    >
-
-                        <h2 class="od-summary-title">
-                            Order Summary
-                        </h2>
-
+                    <!-- ORDER SUMMARY -->
+                    <section class="od-summary-card" id="odSummaryCard">
+                        <h2 class="od-summary-title">Order Summary</h2>
                         <div class="od-summary-rows">
-
                             <div class="od-summary-row">
-
-                                <span class="od-summary-row-label">
-                                    Subtotal
-                                </span>
-
-                                <span class="od-summary-row-value">
-                                    <%= fmt(subtotal) %>
-                                </span>
-
+                                <span class="od-summary-row-label">Subtotal</span>
+                                <span class="od-summary-row-value"><%= fmt(subtotal) %></span>
                             </div>
-
                             <div class="od-summary-row">
-
-                                <span class="od-summary-row-label">
-                                    Discount
-                                </span>
-
-                                <span class="od-summary-row-value discount">
-
-                                    −<%= fmt(discount) %>
-
-                                </span>
-
+                                <span class="od-summary-row-label">Discount</span>
+                                <span class="od-summary-row-value discount">−<%= fmt(discount) %></span>
                             </div>
-
                             <div class="od-summary-row">
-
-                                <span class="od-summary-row-label">
-                                    Tax
-                                </span>
-
-                                <span class="od-summary-row-value">
-
-                                    <%= fmt(tax) %>
-
-                                </span>
-
+                                <span class="od-summary-row-label">Tax</span>
+                                <span class="od-summary-row-value"><%= fmt(tax) %></span>
                             </div>
-
                             <div class="od-summary-row">
-
-                                <span class="od-summary-row-label">
-                                    Delivery
-                                </span>
-
-                                <% if(delivery === 0){ %>
-
-                                    <span class="od-summary-row-value free">
-                                        Free
-                                    </span>
-
+                                <span class="od-summary-row-label">Delivery</span>
+                                <% if (delivery === 0) { %>
+                                    <span class="od-summary-row-value free">Free</span>
                                 <% } else { %>
-
-                                    <span class="od-summary-row-value">
-                                        <%= fmt(delivery) %>
-                                    </span>
-
+                                    <span class="od-summary-row-value"><%= fmt(delivery) %></span>
                                 <% } %>
-
                             </div>
-
                         </div>
-
-                        <!-- TOTAL -->
-
                         <div class="od-summary-total">
-
-                            <span class="od-summary-total-label">
-                                Total
-                            </span>
-
-                            <span class="od-summary-total-value">
-
-                                <%= fmt(total) %>
-
-                            </span>
-
+                            <span class="od-summary-total-label">Total</span>
+                            <span class="od-summary-total-value"><%= fmt(total) %></span>
                         </div>
-
                     </section>
 
-                    <!-- PAYMENT ADJUSTMENT -->
-
-                        <% if(refundAmount > 0){ %>
-
-                        <section class="od-refund-card">
-
-                            <div class="od-refund-header">
-
-                                <i
-                                data-lucide="badge-indian-rupee"
-                                size="18"
-                                ></i>
-
-                                <%= paymentMethod === "COD"
-                                ? "Payment Adjustment"
-                                : "Refund Summary"
-                                %>
-
-                            </div>
-
-                            <div class="od-refund-row">
-
-                                <span>
-
-                                    <%= paymentMethod === "COD"
-                                    ? "Cancelled Items Value"
-                                    : "Refund Amount"
-                                    %>
-
-                                </span>
-
-                                <strong>
-
-                                    <%= fmt(refundAmount) %>
-
-                                </strong>
-
-                            </div>
-
-                            <div class="od-refund-row total">
-
-                                <span>
-
-                                    <%= paymentMethod === "COD"
-                                    ? "Updated Payable Amount"
-                                    : "Updated Order Total"
-                                    %>
-
-                                </span>
-
-                                <strong>
-
-                                    <%= fmt(updatedTotal) %>
-
-                                </strong>
-
-                            </div>
-
-                        </section>
-
-                        <% } %>
+                    <!-- REFUND SUMMARY -->
+                    <% if (refundAmount > 0) { %>
+                    <section class="od-refund-card">
+                        <div class="od-refund-header">
+                            <i data-lucide="badge-indian-rupee" size="18"></i>
+                            <%= paymentMethod === "COD" ? "Payment Adjustment" : "Refund Summary" %>
+                        </div>
+                        <div class="od-refund-row">
+                            <span><%= paymentMethod === "COD" ? "Cancelled Items Value" : "Refund Amount" %></span>
+                            <strong><%= fmt(refundAmount) %></strong>
+                        </div>
+                        <div class="od-refund-row total">
+                            <span><%= paymentMethod === "COD" ? "Updated Payable Amount" : "Updated Order Total" %></span>
+                            <strong><%= fmt(updatedTotal) %></strong>
+                        </div>
+                    </section>
+                    <% } %>
 
                     <!-- PAYMENT -->
-
-                    <div
-                        class="od-info-card"
-                        id="odPaymentCard"
-                    >
-
+                    <div class="od-info-card" id="odPaymentCard">
                         <div class="od-info-card-text">
-
-                            <span class="od-payment-label">
-
-                                Payment Information
-
-                            </span>
-
+                            <span class="od-payment-label">Payment Information</span>
                             <div class="od-payment-method">
-
-                                <i
-                                data-lucide="wallet"
-                                size="18"
-                                ></i>
-
-                                <%= paymentMethod === "COD"
-                                ? "Cash on Delivery"
-                                : paymentMethod
-                                %>
-
+                                <i data-lucide="wallet" size="18"></i>
+                                <%= paymentMethod === "COD" ? "Cash on Delivery" : paymentMethod %>
                             </div>
-
                             <div class="od-payment-sub">
-
-                                <%= paymentMethod === "COD"
-                                ? "Pay when your order arrives"
-                                : "Payment completed successfully"
-                                %>
-
+                                <%= paymentMethod === "COD" ? "Pay when your order arrives" : "Payment completed successfully" %>
                             </div>
-
-                            <div
-                            class="
-                            od-payment-status
-                            od-payment-status--<%= paymentStatus.toLowerCase() %>
-                            "
-                            >
-
+                            <div class="od-payment-status od-payment-status--<%= paymentStatus.toLowerCase() %>">
                                 <%= paymentStatus %>
-
                             </div>
-
                         </div>
-
                     </div>
 
+                    <!-- FULL ORDER RETURN STATUS -->
+                    <% if (order.returnStatus === "Requested") { %>
+                    <div class="od-info-card">
+                        <div class="od-info-card-text">
+                            <span class="od-item-return-badge od-item-return-badge--requested" style="font-size:13px;padding:8px 14px;">
+                                <i data-lucide="clock" size="13"></i>
+                                Return Request Pending Approval
+                            </span>
+                        </div>
+                    </div>
+                    <% } %>
+
+                    <% if (order.returnStatus === "Approved") { %>
+                    <div class="od-info-card">
+                        <div class="od-info-card-text">
+                            <span class="od-item-return-badge od-item-return-badge--approved" style="font-size:13px;padding:8px 14px;">
+                                <i data-lucide="check-circle" size="13"></i>
+                                Return Approved — Refund Credited (<%= fmt(order.refundAmount || 0) %>)
+                            </span>
+                        </div>
+                    </div>
+                    <% } %>
+
+                    <% if (order.returnStatus === "Rejected") { %>
+                    <div class="od-info-card">
+                        <div class="od-info-card-text">
+                            <span class="od-item-return-badge od-item-return-badge--rejected" style="font-size:13px;padding:8px 14px;">
+                                <i data-lucide="x-circle" size="13"></i>
+                                Return Request Rejected
+                            </span>
+                        </div>
+                    </div>
+                    <% } %>
+
                     <!-- ACTIONS -->
-<% if(order.returnStatus === "Requested"){ %>
+                    <div class="od-actions" id="odActions">
 
-<div class="od-info-card">
-
-    <div class="od-info-card-text">
-
-        Return Request:
-        Pending Approval
-
-    </div>
-
-</div>
-
-<% } %>
-
-<% if(order.returnStatus === "Approved"){ %>
-
-<div class="od-info-card">
-
-    <div class="od-info-card-text">
-
-        Return Approved
-
-        <br>
-
-        Refund Credited To Wallet
-
-        (<%= fmt(order.refundAmount || 0) %>)
-
-    </div>
-
-</div>
-
-<% } %>
-
-<% if(order.returnStatus === "Rejected"){ %>
-
-<div class="od-info-card">
-
-    <div class="od-info-card-text">
-
-        Return Request Rejected
-
-    </div>
-
-</div>
-
-<% } %>
-                    <div
-                        class="od-actions"
-                        id="odActions"
-                    >
-
-                        <% if(
-                            [
-                                "pending",
-                                "processing",
-                                "shipped"
-                            ].includes(status)
-                        ){ %>
-
-                            <a
-                                href="/orders/<%= orderId %>/track"
-                                class="od-btn-track"
-                            >
-
-                                <i
-                                    data-lucide="package-search"
-                                    size="18"
-                                ></i>
-
-                                Track Order
-
-                            </a>
-
+                        <!-- Track -->
+                        <% if (["pending","processing","shipped"].includes(status)) { %>
+                        <a href="/orders/<%= orderId %>/track" class="od-btn-track">
+                            <i data-lucide="package-search" size="18"></i>
+                            Track Order
+                        </a>
                         <% } %>
 
-                        <% if(
-    status === "delivered" &&
-    !["Requested", "Approved"].includes(order.returnStatus)
-){ %>
+                        <!-- Full order Return — hide if already requested/approved OR all items already have item-level returns -->
+                        <% if (
+                            status === "delivered" &&
+                            !["Requested","Approved"].includes(order.returnStatus) &&
+                            !allItemsReturnRequested
+                        ) { %>
+                        <button class="od-btn-return" id="btnReturnOrder">
+                            <i data-lucide="package-open" size="18"></i>
+                            Return Order
+                        </button>
+                        <% } %>
 
-                            <button
-                                class="od-btn-return"
-                                id="btnReturnOrder"
-                            >
-
-                                <i
-                                    data-lucide="package-open"
-                                    size="18"
-                                ></i>
-
-                                Return Order
-
+                        <!-- Cancel -->
+                        <% if (["pending","processing"].includes(status)) { %>
+                        <div class="od-btn-cancel-wrap">
+                            <button class="od-btn-cancel" id="btnCancelOrder" data-id="<%= orderId %>">
+                                Cancel Order
                             </button>
-
-                        <% } %>
-
-                        <% if(
-                            [
-                                "pending",
-                                "processing"
-
-                            ].includes(status)
-                        ){ %>
-
-                            <div class="od-btn-cancel-wrap">
-
-                                <button
-                                    class="od-btn-cancel"
-                                    id="btnCancelOrder"
-                                    data-id="<%= orderId %>"
-                                >
-
-                                    Cancel Order
-
-                                </button>
-
-                            </div>
-
+                        </div>
                         <% } %>
 
                     </div>
 
                 </div>
+                <!-- /od-right -->
 
             </div>
 
         </div>
-
     </main>
 
-    <%- include(
-        "../partials/user/footer"
-    ) %>
-
-    
-<script src="/js/toast.js"></script>
-
-<script src="/js/alertConfig.js"></script>
-
-   <script>
-
-lucide.createIcons()
-
-/* =========================================
-   GSAP ANIMATIONS
-========================================= */
-
-gsap.from(
-
-"#odHeaderCard",
-
-{
-y: -16,
-opacity: 0,
-duration: 0.5,
-ease: "power2.out",
-delay: 0.05,
-}
-
-)
-
-gsap.from(
-
-"#odItemsCard",
-
-{
-y: 24,
-opacity: 0,
-duration: 0.5,
-ease: "power2.out",
-delay: 0.15,
-}
-
-)
-
-gsap.from(
-
-"#odAddressCard",
-
-{
-y: 24,
-opacity: 0,
-duration: 0.5,
-ease: "power2.out",
-delay: 0.25,
-}
-
-)
-
-gsap.from(
-
-"#odRight > *",
-
-{
-y: 20,
-opacity: 0,
-duration: 0.45,
-stagger: 0.10,
-ease: "power2.out",
-delay: 0.20,
-}
-
-)
-
-/* =========================================
-   CANCEL FULL ORDER
-========================================= */
-
-document
-.getElementById(
-"btnCancelOrder"
-)
-?.addEventListener(
-
-"click",
-
-async function () {
-
-const id =
-this.dataset.id
-
-const { value: reason } =
-await showCancelReasonAlert({
-
-title:
-"Cancel this order?",
-
-confirmText:
-"Confirm Cancellation",
-
-placeholder:
-"Optional cancellation reason",
-
-})
-
-if(reason === undefined)
-return
-
-try {
-
-showLoadingAlert()
-
-const response =
-await fetch(
-
-`/orders/${id}/cancel`,
-
-{
-
-method: "POST",
-
-headers: {
-
-"Content-Type":
-"application/json",
-
-},
-
-body: JSON.stringify({
-
-reason:
-reason || null,
-
-}),
-
-}
-
-)
-
-const data =
-await response.json()
-
-Swal.close()
-
-if(data.success){
-
-showToast(
-"success",
-data.message
-)
-
-setTimeout(() => {
-
-location.reload()
-
-}, 900)
-
-}
-
-else{
-
-showToast(
-"error",
-data.message
-)
-
-}
-
-}
-
-catch(error){
-
-Swal.close()
-
-showToast(
-"error",
-"Something went wrong"
-)
-
-}
-
-}
-
-)
-
-/* =========================================
-   CANCEL INDIVIDUAL ITEM
-========================================= */
-
-document
-.querySelectorAll(
-".od-item-cancel-btn"
-)
-
-.forEach(btn => {
-
-btn.addEventListener(
-
-"click",
-
-async function () {
-
-const orderId =
-this.dataset.orderId
-
-const itemId =
-this.dataset.itemId
-
-const result =
-await showConfirmAlert({
-
-title:
-"Cancel this item?",
-
-text:
-"This product will be cancelled from your order.",
-
-confirmText:
-"Yes, Cancel Item",
-
-cancelText:
-"Keep Item",
-
-icon:
-"warning",
-
-})
-
-if(!result.isConfirmed)
-return
-
-try {
-
-showLoadingAlert()
-
-const response =
-await fetch(
-
-`/orders/${orderId}/item/${itemId}/cancel`,
-
-{
-
-method:"POST",
-
-headers:{
-"Content-Type":
-"application/json"
-},
-
-body:JSON.stringify({
-
-reason:
-"Cancelled by user"
-
-})
-
-}
-
-)
-
-const data =
-await response.json()
-
-Swal.close()
-
-if(data.success){
-
-showToast(
-"success",
-data.message
-)
-
-setTimeout(() => {
-
-location.reload()
-
-}, 900)
-
-}
-
-else{
-
-showToast(
-"error",
-data.message
-)
-
-}
-
-}
-
-catch(error){
-
-showToast(
-"error",
-"Something went wrong"
-)
-
-}
-
-}
-
-)
-
-})
-
-/* =========================================
-   RETURN ORDER
-========================================= */
-
-document
-.getElementById(
-"btnReturnOrder"
-)
-?.addEventListener(
-
-"click",
-
-async () => {
-
-const { value: formValues } =
-await showReturnReasonAlert()
-
-if(!formValues)
-return
-
-try {
-
-showLoadingAlert()
-
-const response =
-await fetch(
-
-`/orders/<%= orderId %>/return`,
-
-{
-
-method:"POST",
-
-headers:{
-"Content-Type":
-"application/json"
-},
-
-body:JSON.stringify({
-
-reason:
-formValues.reason
-
-})
-
-}
-
-)
-
-const data =
-await response.json()
-
-Swal.close()
-
-if(data.success){
-
-showToast(
-"success",
-data.message
-)
-
-setTimeout(() => {
-
-location.reload()
-
-}, 900)
-
-}
-
-else{
-
-showToast(
-"error",
-data.message
-)
-
-}
-
-}
-
-catch(error){
-
-Swal.close()
-
-showToast(
-"error",
-"Something went wrong"
-)
-
-}
-
-}
-
-)
-
-</script>
-
+    <%- include("../partials/user/footer") %>
+
+    <script src="/js/toast.js"></script>
+    <script src="/js/alertConfig.js"></script>
+
+    <script>
+        lucide.createIcons();
+
+        /* ── GSAP ── */
+        gsap.from("#odHeaderCard", { y: -16, opacity: 0, duration: 0.5, ease: "power2.out", delay: 0.05 });
+        gsap.from("#odItemsCard",  { y: 24,  opacity: 0, duration: 0.5, ease: "power2.out", delay: 0.15 });
+        gsap.from("#odAddressCard",{ y: 24,  opacity: 0, duration: 0.5, ease: "power2.out", delay: 0.25 });
+        gsap.from("#odRight > *",  { y: 20,  opacity: 0, duration: 0.45, stagger: 0.10, ease: "power2.out", delay: 0.20 });
+
+        /* ================================================
+           CANCEL FULL ORDER
+        ================================================ */
+        document.getElementById("btnCancelOrder")?.addEventListener("click", async function () {
+            const id = this.dataset.id;
+
+            const { value: reason } = await showCancelReasonAlert({
+                title:       "Cancel this order?",
+                confirmText: "Confirm Cancellation",
+                placeholder: "Optional cancellation reason",
+            });
+
+            if (reason === undefined) return;
+
+            try {
+                showLoadingAlert();
+                const response = await fetch(`/orders/${id}/cancel`, {
+                    method:  "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body:    JSON.stringify({ reason: reason || null }),
+                });
+                const data = await response.json();
+                Swal.close();
+
+                if (data.success) {
+                    showToast("success", data.message);
+                    setTimeout(() => location.reload(), 900);
+                } else {
+                    showToast("error", data.message);
+                }
+            } catch {
+                Swal.close();
+                showToast("error", "Something went wrong");
+            }
+        });
+
+        /* ================================================
+           CANCEL INDIVIDUAL ITEM
+        ================================================ */
+        document.querySelectorAll(".od-item-cancel-btn").forEach(btn => {
+            btn.addEventListener("click", async function () {
+                const orderId = this.dataset.orderId;
+                const itemId  = this.dataset.itemId;
+
+                const result = await showConfirmAlert({
+                    title:       "Cancel this item?",
+                    text:        "This product will be cancelled from your order.",
+                    confirmText: "Yes, Cancel Item",
+                    cancelText:  "Keep Item",
+                    icon:        "warning",
+                });
+
+                if (!result.isConfirmed) return;
+
+                try {
+                    showLoadingAlert();
+                    const response = await fetch(`/orders/${orderId}/item/${itemId}/cancel`, {
+                        method:  "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body:    JSON.stringify({ reason: "Cancelled by user" }),
+                    });
+                    const data = await response.json();
+                    Swal.close();
+
+                    if (data.success) {
+                        showToast("success", data.message);
+                        setTimeout(() => location.reload(), 900);
+                    } else {
+                        showToast("error", data.message);
+                    }
+                } catch {
+                    showToast("error", "Something went wrong");
+                }
+            });
+        });
+
+        /* ================================================
+           RETURN INDIVIDUAL ITEM
+        ================================================ */
+        document.querySelectorAll(".od-item-return-btn").forEach(btn => {
+            btn.addEventListener("click", async function () {
+                const orderId  = this.dataset.orderId;
+                const itemId   = this.dataset.itemId;
+                const itemName = this.dataset.itemName;
+
+                const { value: formValues } = await showReturnReasonAlert({
+                    title: `Return "${itemName}"?`,
+                });
+
+                if (!formValues) return;
+
+                /* Disable button immediately to prevent double-click */
+                this.disabled    = true;
+                this.textContent = "Submitting…";
+
+                try {
+                    showLoadingAlert();
+                    const response = await fetch(`/orders/${orderId}/item/${itemId}/return`, {
+                        method:  "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body:    JSON.stringify({ reason: formValues.reason }),
+                    });
+                    const data = await response.json();
+                    Swal.close();
+
+                    if (data.success) {
+                        showToast("success", data.message);
+                        setTimeout(() => location.reload(), 900);
+                    } else {
+                        showToast("error", data.message);
+                        this.disabled    = false;
+                        this.innerHTML   = '<i data-lucide="package-open" size="13"></i> Return Item';
+                        lucide.createIcons();
+                    }
+                } catch {
+                    Swal.close();
+                    showToast("error", "Something went wrong");
+                    this.disabled  = false;
+                    this.innerHTML = '<i data-lucide="package-open" size="13"></i> Return Item';
+                    lucide.createIcons();
+                }
+            });
+        });
+
+        /* ================================================
+           RETURN FULL ORDER
+        ================================================ */
+        document.getElementById("btnReturnOrder")?.addEventListener("click", async () => {
+            const { value: formValues } = await showReturnReasonAlert();
+            if (!formValues) return;
+
+            try {
+                showLoadingAlert();
+                const response = await fetch(`/orders/<%= orderId %>/return`, {
+                    method:  "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body:    JSON.stringify({ reason: formValues.reason }),
+                });
+                const data = await response.json();
+                Swal.close();
+
+                if (data.success) {
+                    showToast("success", data.message);
+                    setTimeout(() => location.reload(), 900);
+                } else {
+                    showToast("error", data.message);
+                }
+            } catch {
+                Swal.close();
+                showToast("error", "Something went wrong");
+            }
+        });
+
+    </script>
 
 </body>
 </html>

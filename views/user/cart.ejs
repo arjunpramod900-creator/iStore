@@ -519,8 +519,7 @@
 
                             <button
                                 class="checkout-btn"
-
-                                onclick="window.location.href='/checkout'"
+                                id="proceedToCheckoutBtn"
 
                                 <%= cart.items.length === 0
                                     ? "disabled"
@@ -718,6 +717,7 @@
     </script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="/js/toast.js"></script>
+    <script src="/js/alertConfig.js"></script>
     <script src="/js/cart.js"></script>
 
 </body>

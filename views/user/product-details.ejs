@@ -65,12 +65,21 @@
                     <h1 class="product-title"><%= product.name %></h1>
                     
                     <div class="rating-row">
-                        <div class="stars">
-                            <% for(let i=0; i<5; i++) { %>
-                                <i data-lucide="star" fill="<%= i < Math.floor(product.rating || 4.5) ? '#EAB308' : 'none' %>" size="20"></i>
-                            <% } %>
-                        </div>
-                        <span class="rating-text"><%= product.rating || 4.5 %> stars (<%= product.reviewCount || '1,240' %> reviews)</span>
+                        <% if(product.reviewCount > 0) { %>
+                            <div class="stars">
+                                <% for(let i=0; i<5; i++) { %>
+                                    <i data-lucide="star" fill="<%= i < Math.floor(product.rating) ? '#EAB308' : 'none' %>" size="20"></i>
+                                <% } %>
+                            </div>
+                            <span class="rating-text"><%= product.rating %> stars (<%= product.reviewCount %> reviews)</span>
+                        <% } else { %>
+                            <div class="stars">
+                                <% for(let i=0; i<5; i++) { %>
+                                    <i data-lucide="star" fill="none" size="20"></i>
+                                <% } %>
+                            </div>
+                            <span class="rating-text">No ratings yet</span>
+                        <% } %>
                     </div>
 
 <!-- =========================================
@@ -136,7 +145,7 @@
             id="discountBadge"
         >
 
-            <%= product.offerData.appliedOffer.discountValue %>% OFF
+            <%= product.offerData.badgeLabel %>
 
         </span>
 
@@ -192,7 +201,7 @@
             id="emiText"
         >
             EMI starting from ₹
-            <%= Math.round(product.variant.price / 12).toLocaleString() %>/month
+            <%= Math.round((product.offerData?.finalPrice || product.variant.price) / 12).toLocaleString() %>/month
         </p>
 
     </div>
@@ -449,46 +458,6 @@ data-variant-id="<%= product.variant?._id %>"
                 </div>
             </section>
 
-            <!-- Bento Section: Description & Specs -->
-            <section class="bento-section">
-                <!-- Features Card -->
-                <div class="features-card">
-                    <h2 class="bento-title">Product Description</h2>
-                    <div class="features-grid">
-                        <% (product.features || [
-                            { title: 'Titanium Strength', desc: 'Crafted with aerospace-grade titanium that’s strong yet remarkably light. The refined brushed texture feels incredibly premium in hand.' },
-                            { title: 'A19 Bionic Chip', desc: 'Our fastest chip ever. Incredible efficiency for all-day battery life and desktop-class gaming performance on the go.' },
-                            { title: 'Pro Camera System', desc: '48MP main camera with advanced computational photography. Capture stunning low-light photos and cinematic 4K video.' },
-                            { title: 'OLED ProMotion', desc: 'Super Retina XDR display with adaptive 120Hz refresh rate. Colors are more vivid and motion is smoother than ever before.' }
-                        ]).forEach(feature => { %>
-                            <div class="feature-item">
-                                <h3><%= feature.title %></h3>
-                                <p><%= feature.desc %></p>
-                            </div>
-                        <% }) %>
-                    </div>
-                </div>
-
-                <!-- Specifications Card -->
-                <div class="specs-card">
-                    <h2 class="bento-title" style="font-size: 20px; margin-bottom: 0;">Specifications</h2>
-                    <div class="specs-table">
-                        <% Object.entries(product.specs || {
-                            'Display': '6.7-inch OLED',
-                            'Processor': 'Apple A19',
-                            'Camera': '48MP Triple',
-                            'Battery': '4500mAh',
-                            'Storage': 'Up to 512GB'
-                        }).forEach(([label, value]) => { %>
-                            <div class="spec-row">
-                                <span class="spec-label"><%= label %></span>
-                                <span class="spec-value"><%= value %></span>
-                            </div>
-                        <% }) %>
-                    </div>
-                </div>
-            </section>
-
             <!-- Related Products -->
             <section class="related-section">
                 <div class="related-header">
@@ -685,17 +654,6 @@ data-variant-id="<%= product.variant?._id %>"
         });
 
         // Scroll Reveal Animations
-        gsap.from(".bento-section", {
-            scrollTrigger: {
-                trigger: ".bento-section",
-                start: "top 80%"
-            },
-            y: 50,
-            opacity: 0,
-            duration: 1,
-            ease: "power2.out"
-        });
-
         gsap.from(".related-section", {
             scrollTrigger: {
                 trigger: ".related-section",
@@ -1046,7 +1004,7 @@ if(
     "inline-flex"
 
     discountBadge.innerText =
-    `${variant.offerData.appliedOffer.discountValue}% OFF`
+    variant.offerData.badgeLabel
 
     discountBadge.style.display =
     "inline-flex"
@@ -1137,12 +1095,23 @@ else{
 
     }
 
-    /* EMI */
+    /* EMI — use the offer-adjusted final price when an
+       offer is active on this variant, otherwise the
+       variant's own price */
+
+    const emiBasePrice =
+
+    (
+        variant.offerData &&
+        variant.offerData.offerDiscount > 0
+    )
+    ? variant.offerData.finalPrice
+    : variant.price
 
     emiText.innerText =
 
     `EMI starting from ₹${Math.round(
-        variant.price / 12
+        emiBasePrice / 12
     ).toLocaleString()}/month`
 
     /* DATASETS */

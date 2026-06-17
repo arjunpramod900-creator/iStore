@@ -483,3 +483,117 @@ removeButtons.forEach((button) => {
     },
   );
 });
+
+/* =========================================
+   PROCEED TO CHECKOUT — ITEM VALIDATION
+
+========================================= */
+
+const checkoutBtn = document.getElementById("proceedToCheckoutBtn");
+
+if (checkoutBtn) {
+  checkoutBtn.addEventListener("click", async () => {
+    checkoutBtn.disabled = true;
+
+    try {
+      const response = await fetch("/cart/check-validity");
+
+      const data = await parseResponse(response);
+
+      if (!data.success) {
+        showToast("info", data.message || "Your cart is empty");
+        return;
+      }
+
+      /* NOTHING BLOCKED — proceed normally */
+
+      if (data.blockedCount === 0) {
+        window.location.href = "/checkout";
+        return;
+      }
+
+      /* BUILD THE LIST OF BLOCKED ITEMS FOR THE ALERT */
+
+      const blockedListHtml = data.blockedItems
+        .map(
+          (item) =>
+            `<li><strong>${item.productName}</strong> — ${item.reason}</li>`,
+        )
+        .join("");
+
+      /* ALL ITEMS BLOCKED — cannot proceed at all */
+
+      if (data.validCount === 0) {
+        await Swal.fire({
+          icon: "error",
+          title: "Item Unavailable",
+          html: `
+            <p style="margin-bottom:10px;">
+              This item is no longer available and cannot be checked out.
+            </p>
+            <ul style="text-align:left;padding-left:18px;margin:0;">
+              ${blockedListHtml}
+            </ul>
+          `,
+          confirmButtonText: "Shop More",
+          showCancelButton: false,
+          background: "#FFFFFF",
+          color: "#111111",
+          customClass: {
+            popup: "cart-swal-popup",
+            confirmButton: "cart-swal-confirm",
+          },
+        });
+
+        window.location.href = "/products";
+
+        return;
+      }
+
+      /* SOME BLOCKED, SOME VALID — let the user choose */
+
+      const result = await Swal.fire({
+        icon: "warning",
+        title: "Some Items Are Unavailable",
+        html: `
+          <p style="margin-bottom:10px;">
+            The following ${data.blockedCount > 1 ? "items are" : "item is"}
+            no longer available and will be excluded from your order:
+          </p>
+          <ul style="text-align:left;padding-left:18px;margin:0 0 10px;">
+            ${blockedListHtml}
+          </ul>
+          <p>
+            You can continue to checkout with the remaining
+            ${data.validCount} item${data.validCount > 1 ? "s" : ""}, or
+            keep shopping.
+          </p>
+        `,
+        showCancelButton: true,
+        confirmButtonText: "Proceed to Checkout",
+        cancelButtonText: "Shop More",
+        reverseButtons: true,
+        background: "#FFFFFF",
+        color: "#111111",
+        customClass: {
+          popup: "cart-swal-popup",
+          confirmButton: "cart-swal-confirm",
+          cancelButton: "cart-swal-cancel",
+        },
+      });
+
+      if (result.isConfirmed) {
+        window.location.href = "/checkout";
+      } else {
+        window.location.href = "/products";
+      }
+
+    } catch (error) {
+      console.log(error);
+
+      showToast("error", "Something went wrong");
+    } finally {
+      checkoutBtn.disabled = false;
+    }
+  });
+}

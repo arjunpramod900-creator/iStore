@@ -12,211 +12,164 @@ export const getAllOffersService = async () => {
 
 };
 
-export const createOfferService = async (offerData) => {
+/* =========================================
+   SHARED VALIDATION
+   (used by both create and update — keeps the
+   two functions from drifting out of sync, which
+   was already a small risk before this patch)
+========================================= */
 
-const {
+const validateOfferFields = ({
     offerName,
     targetId,
     applyTo,
+    discountType,
     discountValue,
     maxDiscount,
     minPurchase,
     startDate,
     endDate,
-} = offerData;
+}) => {
 
-    if (
-        !offerName ||
-        !targetId ||
-        !applyTo
-    ) {
-
-        return {
-            success: false,
-            message: "All required fields must be filled",
-        };
-
+    if (!offerName || !targetId || !applyTo) {
+        return "All required fields must be filled";
     }
 
-    if (
-        Number(discountValue) <= 0 ||
-        Number(discountValue) > 90
-    ) {
-
-        return {
-            success: false,
-            message: "Discount must be between 1% and 90%",
-        };
-
-    }
-
-    if (
-        new Date(startDate) >=
-        new Date(endDate)
-    ) {
-
-        return {
-            success: false,
-            message: "End date must be after start date",
-        };
-
-    }
     /* =========================
-   PAST DATE VALIDATION
-========================= */
+       DISCOUNT VALIDATION
+       Percentage: bounded 1-90 (unchanged).
+       Fixed: must be a positive rupee value. No
+       upper bound is enforced here since a fixed
+       discount is meaningless to cap at "90" —
+       it's compared against the actual item price
+       at calculation time instead.
+    ========================= */
 
-const today = new Date();
+    if (discountType === "FIXED") {
 
-today.setHours(
-    0,
-    0,
-    0,
-    0
-);
+        if (Number(discountValue) <= 0) {
+            return "Discount amount must be greater than 0";
+        }
 
-if (
-    new Date(endDate) < today
-) {
+    } else {
 
-    return {
-
-        success: false,
-
-        message:
-        "Offer cannot end in the past",
-
-    };
-
-}
-
-/* =========================
-   MAX DISCOUNT VALIDATION
-========================= */
-
-if (
-    Number(maxDiscount) < 0
-) {
-
-    return {
-
-        success: false,
-
-        message:
-        "Maximum discount cannot be negative",
-
-    };
-
-}
-
-/* =========================
-   MIN PURCHASE VALIDATION
-========================= */
-
-if (
-    Number(minPurchase) < 0
-) {
-
-    return {
-
-        success: false,
-
-        message:
-        "Minimum purchase cannot be negative",
-
-    };
-
-}
-/* 
-   TARGET VALIDATION
- */
-
-if (applyTo === "PRODUCT") {
-
-    const product =
-    await Product.findOne({
-
-        _id: targetId,
-
-        isDeleted: false,
-
-    });
-
-    if (!product) {
-
-        return {
-
-            success: false,
-
-            message:
-            "Selected product does not exist",
-
-        };
-
+        if (
+            Number(discountValue) <= 0 ||
+            Number(discountValue) > 90
+        ) {
+            return "Discount must be between 1% and 90%";
+        }
     }
 
-}
+    /* =========================
+       DATE VALIDATION
+    ========================= */
 
-if (applyTo === "CATEGORY") {
-
-    const category =
-    await Category.findOne({
-
-        _id: targetId,
-
-        isDeleted: false,
-
-    });
-
-    if (!category) {
-
-        return {
-
-            success: false,
-
-            message:
-            "Selected category does not exist",
-
-        };
-
+    if (new Date(startDate) >= new Date(endDate)) {
+        return "End date must be after start date";
     }
 
-}
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-    const existingOffer =
-    await Offer.findOne({
+    if (new Date(endDate) < today) {
+        return "Offer cannot end in the past";
+    }
 
+    /* =========================
+       MAX DISCOUNT VALIDATION
+       maxDiscount is always a rupee cap, regardless
+       of discountType (see calculateItemOffer).
+    ========================= */
+
+    if (Number(maxDiscount) < 0) {
+        return "Maximum discount cannot be negative";
+    }
+
+    /* =========================
+       MIN PURCHASE VALIDATION
+    ========================= */
+
+    if (Number(minPurchase) < 0) {
+        return "Minimum purchase cannot be negative";
+    }
+
+    return null;
+};
+
+const validateTarget = async (applyTo, targetId) => {
+
+    if (applyTo === "PRODUCT") {
+
+        const product = await Product.findOne({
+            _id: targetId,
+            isDeleted: false,
+        });
+
+        if (!product) {
+            return "Selected product does not exist";
+        }
+    }
+
+    if (applyTo === "CATEGORY") {
+
+        const category = await Category.findOne({
+            _id: targetId,
+            isDeleted: false,
+        });
+
+        if (!category) {
+            return "Selected category does not exist";
+        }
+    }
+
+    return null;
+};
+
+export const createOfferService = async (offerData) => {
+
+    const {
         targetId,
-
         applyTo,
+    } = offerData;
 
+    const fieldError = validateOfferFields(offerData);
+
+    if (fieldError) {
+        return {
+            success: false,
+            message: fieldError,
+        };
+    }
+
+    const targetError = await validateTarget(applyTo, targetId);
+
+    if (targetError) {
+        return {
+            success: false,
+            message: targetError,
+        };
+    }
+
+    const existingOffer = await Offer.findOne({
+        targetId,
+        applyTo,
         isDeleted: false,
-
     });
 
     if (existingOffer) {
-
         return {
-
             success: false,
-
-            message:
-            "An offer already exists for this target",
-
+            message: "An offer already exists for this target",
         };
-
     }
 
-    const offer =
-    await Offer.create(offerData);
+    const offer = await Offer.create(offerData);
 
     return {
-
         success: true,
-
         offer,
-
     };
-
 };
 
 export const updateOfferService = async (
@@ -224,293 +177,81 @@ export const updateOfferService = async (
     updateData
 ) => {
 
-    const offer =
-    await Offer.findById(
-        offerId
-    );
+    const offer = await Offer.findById(offerId);
 
     if (!offer) {
-
         return {
             success: false,
-            message: "Offer not found"
+            message: "Offer not found",
         };
-
     }
 
-const {
-    offerName,
-    targetId,
-    applyTo,
-    discountValue,
-    maxDiscount,
-    minPurchase,
-    startDate,
-    endDate,
-} = updateData;
+    const {
+        targetId,
+        applyTo,
+    } = updateData;
 
-    /* =========================
-       REQUIRED VALIDATION
-    ========================= */
+    const fieldError = validateOfferFields(updateData);
 
-    if (
-
-        !offerName ||
-
-        !targetId ||
-
-        !applyTo
-
-    ) {
-
+    if (fieldError) {
         return {
-
             success: false,
-
-            message:
-            "All required fields are mandatory"
-
+            message: fieldError,
         };
-
     }
 
-    /* =========================
-       DISCOUNT VALIDATION
-    ========================= */
+    const targetError = await validateTarget(applyTo, targetId);
 
-    if (
-
-        Number(discountValue) <= 0 ||
-
-        Number(discountValue) > 90
-
-    ) {
-
+    if (targetError) {
         return {
-
             success: false,
-
-            message:
-            "Discount must be between 1% and 90%"
-
+            message: targetError,
         };
-
     }
-
-    /* =========================
-       DATE VALIDATION
-    ========================= */
-
-    if (
-
-        new Date(startDate) >=
-
-        new Date(endDate)
-
-    ) {
-
-        return {
-
-            success: false,
-
-            message:
-            "End date must be after start date"
-
-        };
-
-    }
-
-    /* =========================
-   PAST DATE VALIDATION
-========================= */
-
-const today = new Date();
-
-today.setHours(
-    0,
-    0,
-    0,
-    0
-);
-
-if (
-    new Date(endDate) < today
-) {
-
-    return {
-
-        success: false,
-
-        message:
-        "Offer cannot end in the past"
-
-    };
-
-}
-
-/* =========================
-   MAX DISCOUNT VALIDATION
-========================= */
-
-if (
-    Number(maxDiscount) < 0
-) {
-
-    return {
-
-        success: false,
-
-        message:
-        "Maximum discount cannot be negative"
-
-    };
-
-}
-
-/* =========================
-   MIN PURCHASE VALIDATION
-========================= */
-
-if (
-    Number(minPurchase) < 0
-) {
-
-    return {
-
-        success: false,
-
-        message:
-        "Minimum purchase cannot be negative"
-
-    };
-
-}
-
-/* =========================
-   TARGET VALIDATION
-========================= */
-
-if (applyTo === "PRODUCT") {
-
-    const product =
-    await Product.findOne({
-
-        _id: targetId,
-
-        isDeleted: false,
-
-    });
-
-    if (!product) {
-
-        return {
-
-            success: false,
-
-            message:
-            "Selected product does not exist"
-
-        };
-
-    }
-
-}
-
-if (applyTo === "CATEGORY") {
-
-    const category =
-    await Category.findOne({
-
-        _id: targetId,
-
-        isDeleted: false,
-
-    });
-
-    if (!category) {
-
-        return {
-
-            success: false,
-
-            message:
-            "Selected category does not exist"
-
-        };
-
-    }
-
-}
 
     /* =========================
        DUPLICATE VALIDATION
     ========================= */
 
-    const existingOffer =
-    await Offer.findOne({
-
-        _id: {
-            $ne: offerId
-        },
-
+    const existingOffer = await Offer.findOne({
+        _id: { $ne: offerId },
         targetId,
-
         applyTo,
-
         isDeleted: false,
-
     });
 
     if (existingOffer) {
-
         return {
-
             success: false,
-
-            message:
-            "Another offer already exists for this target"
-
+            message: "Another offer already exists for this target",
         };
-
     }
 
     /* =========================
        UPDATE
     ========================= */
 
-    Object.assign(
-        offer,
-        updateData
-    );
+    Object.assign(offer, updateData);
 
     await offer.save();
 
     return {
-
         success: true,
-
-        offer
-
+        offer,
     };
-
 };
 
 export const deleteOfferService = async (
     offerId
 ) => {
 
-    const offer =
-    await Offer.findById(
-        offerId
-    );
+    const offer = await Offer.findById(offerId);
 
     if (!offer) {
-
         return {
             success: false,
-            message: "Offer not found"
+            message: "Offer not found",
         };
-
     }
 
     offer.isDeleted = true;
@@ -518,7 +259,6 @@ export const deleteOfferService = async (
     await offer.save();
 
     return {
-        success: true
+        success: true,
     };
-
 };

@@ -3,6 +3,7 @@ import {
   loadCartService,
   updateCartQuantityService,
   removeCartItemService,
+  checkCartValidityService,
 } from "../../services/user/cartService.js";
 
 /* =========================================
@@ -168,6 +169,29 @@ export const removeCartItem = async (req, res) => {
     return res.status(500).json({
       success: false,
 
+      message: "Something went wrong",
+    });
+  }
+};
+
+
+
+/* =========================================
+   CHECK CART VALIDITY (pre-checkout)
+========================================= */
+
+export const checkCartValidity = async (req, res) => {
+  try {
+    const userId = req.session.userId;
+
+    const response = await checkCartValidityService(userId);
+
+    return res.status(200).json(response);
+  } catch (error) {
+    console.log("Check Cart Validity Error:", error);
+
+    return res.status(500).json({
+      success: false,
       message: "Something went wrong",
     });
   }

@@ -308,6 +308,7 @@ export const returnOrderItem = async (
   }
 };
 
+
 /* =========================================
 DOWNLOAD INVOICE PDF
 ========================================= */
@@ -324,17 +325,25 @@ export const downloadInvoice = async (req, res) => {
     }
 
     /* =========================================
+       FILTER OUT CANCELLED ITEMS
+    ========================================= */
+
+    const activeItems = order.items.filter(
+      (item) => item.itemStatus !== "Cancelled"
+    );
+
+    /* =========================================
        PRE-CALCULATE TOTAL PAGE HEIGHT
     ========================================= */
 
     const MARGIN = 50;
     const headerH = 130;
-    const infoCardsH = 110;       // Customer + Order cards
-    const shippingH = 150;        // Shipping address card
-    const itemsHeaderH = 70;      // "Order Items" title + table header
+    const infoCardsH = 110;
+    const shippingH = 150;
+    const itemsHeaderH = 70;
     const itemRowH = 40;
-    const itemsH = order.items.length * itemRowH + 20; // rows + bottom padding
-    const summaryCardsH = 175;    // Payment summary + payment info cards (145 height + padding)
+    const itemsH = activeItems.length * itemRowH + 20; // <-- uses activeItems count
+    const summaryCardsH = 175;
     const footerH = 80;
 
     const totalHeight =
@@ -351,7 +360,7 @@ export const downloadInvoice = async (req, res) => {
     /* PDF INIT — dynamic height */
     const doc = new PDFDocument({
       margin: 0,
-      size: [612, totalHeight],   // <-- key fix: page height matches content
+      size: [612, totalHeight],
       autoFirstPage: true,
       bufferPages: true,
     });
@@ -363,7 +372,7 @@ export const downloadInvoice = async (req, res) => {
     );
 
     doc.pipe(res);
-    doc.addPage = () => {};       // prevent PDFKit from auto-adding pages
+    doc.addPage = () => {};
 
     /* =========================================
        HEADER
@@ -527,15 +536,16 @@ export const downloadInvoice = async (req, res) => {
     doc.text("Price", 360, tableTop + 8);
     doc.text("Total", 450, tableTop + 8);
 
-    /* TABLE BORDER — drawn after we know row count */
+    /* TABLE BORDER — uses activeItems count */
     doc
-      .rect(50, tableTop, 510, order.items.length * 40 + 20)
+      .rect(50, tableTop, 510, activeItems.length * 40 + 20)
       .strokeColor("#E6D7EC")
       .stroke();
 
     let y = tableTop + 35;
 
-    order.items.forEach((item, index) => {
+    /* Loop over activeItems only — cancelled items simply don't appear */
+    activeItems.forEach((item, index) => {
       const total = item.price * item.quantity;
 
       if (index % 2 === 0) {
@@ -558,10 +568,9 @@ export const downloadInvoice = async (req, res) => {
 
     /* =========================================
        PAYMENT SUMMARY + PAYMENT INFO CARDS
-       Both anchored to itemsTableEndY — dynamic
     ========================================= */
 
-    const summaryY = y + 30;   // <-- flows naturally below last item row
+    const summaryY = y + 30;
 
     /* PAYMENT SUMMARY CARD */
     doc

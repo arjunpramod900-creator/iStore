@@ -583,3 +583,73 @@ export const removeCartItemService = async ({
     restoredToWishlist: removedItem && removedItem.movedFromWishlist,
   };
 };
+
+
+
+/* =========================================
+   CHECK CART VALIDITY (pre-checkout)
+
+========================================= */
+
+export const checkCartValidityService = async (userId) => {
+
+  const cart = await Cart.findOne({
+    userId,
+  })
+    .populate({
+      path: "items.productId",
+    })
+    .populate({
+      path: "items.variantId",
+    })
+    .lean();
+
+  if (!cart || cart.items.length === 0) {
+    return {
+      success: false,
+      message: "Cart is empty",
+    };
+  }
+
+  const blockedItems = [];
+
+  const validItems = [];
+
+  for (const item of cart.items) {
+
+    const isProductInvalid =
+      !item.productId ||
+      !item.productId.isActive ||
+      item.productId.isDeleted;
+
+    const isVariantInvalid =
+      !item.variantId ||
+      !item.variantId.isActive ||
+      item.variantId.isDeleted;
+
+    const isOutOfStock =
+      !isVariantInvalid && item.variantId.stock <= 0;
+
+    if (isProductInvalid || isVariantInvalid || isOutOfStock) {
+
+      blockedItems.push({
+        productName: item.productId?.name || "A product",
+        reason: isOutOfStock
+          ? "Out of stock"
+          : "No longer available",
+      });
+
+    } else {
+
+      validItems.push(item);
+    }
+  }
+
+  return {
+    success: true,
+    totalCount: cart.items.length,
+    validCount: validItems.length,
+    blockedCount: blockedItems.length,
+    blockedItems,
+  };
+};

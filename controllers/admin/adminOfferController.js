@@ -1,5 +1,6 @@
 import Product from "../../models/Product.js";
 import Category from "../../models/Category.js";
+import Variant from "../../models/Variant.js";
 
 import {
     getAllOffersService,
@@ -35,7 +36,8 @@ async (
         })
         .sort({
             name: 1
-        });
+        })
+        .lean();
 
         const categories =
         await Category.find({
@@ -47,7 +49,82 @@ async (
         })
         .sort({
             name: 1
-        });
+        })
+        .lean();
+
+        /* =========================================
+           ATTACH REAL PRICES
+           Products: price of their lowest-priced
+           active, non-deleted variant. Categories:
+           lowest price among all products in that
+           category ("starting from"). Both default
+           to 0 when no priced variant/product exists,
+           so the EJS can fall back to the simulated
+           sample price for that one option only.
+        ========================================= */
+
+        for (const product of products) {
+
+            const cheapestVariant =
+            await Variant.findOne({
+
+                productId: product._id,
+
+                isDeleted: false,
+
+            })
+            .sort({
+                price: 1
+            })
+            .lean();
+
+            product.lowestPrice =
+                cheapestVariant?.price || 0;
+        }
+
+        for (const category of categories) {
+
+            const categoryProducts =
+            await Product.find({
+
+                categoryId: category._id,
+
+                isActive: true,
+
+                isDeleted: false,
+
+            })
+            .select("_id")
+            .lean();
+
+            const productIds =
+                categoryProducts.map(p => p._id);
+
+            let lowestPrice = 0;
+
+            if (productIds.length > 0) {
+
+                const cheapestVariant =
+                await Variant.findOne({
+
+                    productId: {
+                        $in: productIds
+                    },
+
+                    isDeleted: false,
+
+                })
+                .sort({
+                    price: 1
+                })
+                .lean();
+
+                lowestPrice =
+                    cheapestVariant?.price || 0;
+            }
+
+            category.lowestPrice = lowestPrice;
+        }
 
         return res.render(
             "admin/offers",
@@ -97,6 +174,8 @@ async (
 
             applyTo,
 
+            discountType,
+
             discountValue,
 
             maxDiscount,
@@ -124,6 +203,11 @@ async (
             applyTo === "PRODUCT"
             ? "Product"
             : "Category",
+
+            discountType:
+            discountType === "FIXED"
+            ? "FIXED"
+            : "PERCENTAGE",
 
             discountValue,
 
@@ -191,6 +275,8 @@ async (
 
             applyTo,
 
+            discountType,
+
             discountValue,
 
             maxDiscount,
@@ -222,6 +308,11 @@ async (
                 applyTo === "PRODUCT"
                 ? "Product"
                 : "Category",
+
+                discountType:
+                discountType === "FIXED"
+                ? "FIXED"
+                : "PERCENTAGE",
 
                 discountValue,
 

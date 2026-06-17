@@ -11,6 +11,7 @@ import {
   loadCart,
   updateCartQuantity,
   removeCartItem,
+  checkCartValidity,
 } from "../../controllers/user/cartController.js";
 
 /* =========================================
@@ -57,6 +58,16 @@ router.delete(
   "/remove-item/:variantId",
 
   removeCartItem,
+);
+
+/* =========================================
+   CHECK CART VALIDITY (pre-checkout)
+========================================= */
+
+router.get(
+  "/check-validity",
+
+  checkCartValidity,
 );
 
 export default router;

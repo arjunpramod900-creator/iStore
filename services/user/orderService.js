@@ -1,705 +1,289 @@
 import Order from "../../models/Order.js";
-
 import Variant from "../../models/Variant.js";
-
+import { creditWallet } from "../shared/walletService.js";
 import {
-  creditWallet,
-} from "../shared/walletService.js";
+    calculateItemRefund,
+    calculateFullOrderRefund,
+    recalculateOrderTotals,
+} from "../shared/refundCalculator.js";
 
 /* =========================================
    LOAD ORDERS
 ========================================= */
-
 export const loadOrdersService = async ({
-  userId,
-  search = "",
-  status = "",
-  sort = "newest",
-  page = 1,
-  limit = 5,
-}) => {
-
-  const query = {
     userId,
-  };
+    search = "",
+    status = "",
+    sort = "newest",
+    page = 1,
+    limit = 5,
+}) => {
+    const query = { userId };
 
-  /* 
-     SEARCH
-   */
+    if (search.trim()) {
+        query.$or = [
+            { orderId:             { $regex: search.trim(), $options: "i" } },
+            { "items.productName": { $regex: search.trim(), $options: "i" } },
+        ];
+    }
 
-  if (search.trim()) {
+    if (status.trim()) {
+        query.orderStatus = { $regex: `^${status}$`, $options: "i" };
+    }
 
-    query.$or = [
+    let sortOption = { createdAt: -1 };
+    switch (sort) {
+        case "oldest":      sortOption = { createdAt: 1 };   break;
+        case "amount_high": sortOption = { finalAmount: -1 }; break;
+        case "amount_low":  sortOption = { finalAmount: 1 };  break;
+        default:            sortOption = { createdAt: -1 };
+    }
 
-      {
-        orderId: {
-          $regex: search.trim(),
-          $options: "i",
+    const currentPage = Math.max(Number(page) || 1, 1);
+    const skip        = (currentPage - 1) * limit;
+    const totalOrders = await Order.countDocuments(query);
+    const totalPages  = Math.max(Math.ceil(totalOrders / limit), 1);
+
+    const orders = await Order.find(query)
+        .sort(sortOption)
+        .skip(skip)
+        .limit(limit)
+        .lean();
+
+    return {
+        success: true,
+        orders,
+        pagination: {
+            currentPage,
+            totalPages,
+            totalOrders,
+            hasNextPage: currentPage < totalPages,
+            hasPrevPage: currentPage > 1,
         },
-      },
-
-      {
-        "items.productName": {
-          $regex: search.trim(),
-          $options: "i",
-        },
-      },
-
-    ];
-  }
-
-  /* 
-     STATUS FILTER
-   */
-
-  if (status.trim()) {
-
-    query.orderStatus = {
-      $regex: `^${status}$`,
-      $options: "i",
     };
-  }
-
-  /* 
-     SORTING
-   */
-
-  let sortOption = {
-    createdAt: -1,
-  };
-
-  switch (sort) {
-
-    case "oldest":
-
-      sortOption = {
-        createdAt: 1,
-      };
-
-      break;
-
-    case "amount_high":
-
-      sortOption = {
-        finalAmount: -1,
-      };
-
-      break;
-
-    case "amount_low":
-
-      sortOption = {
-        finalAmount: 1,
-      };
-
-      break;
-
-    default:
-
-      sortOption = {
-        createdAt: -1,
-      };
-  }
-
-  /* 
-     PAGINATION
-   */
-
-  const currentPage =
-  Math.max(
-    Number(page) || 1,
-    1
-  );
-
-  const skip =
-    (currentPage - 1) * limit;
-
-  const totalOrders =
-    await Order.countDocuments(query);
-
-  const totalPages =
-  Math.max(
-    Math.ceil(totalOrders / limit),
-    1
-  );
-
-  const orders =
-    await Order.find(query)
-
-      .sort(sortOption)
-
-      .skip(skip)
-
-      .limit(limit)
-
-      .lean();
-
-  return {
-
-    success: true,
-
-    orders,
-
-    pagination: {
-
-      currentPage,
-
-      totalPages,
-
-      totalOrders,
-
-      hasNextPage:
-        currentPage < totalPages,
-
-      hasPrevPage:
-        currentPage > 1,
-
-    },
-
-  };
-
 };
+
 /* =========================================
    LOAD ORDER DETAILS
 ========================================= */
+export const loadOrderDetailsService = async (userId, orderId) => {
+    const order = await Order.findOne({ userId, orderId }).lean();
 
-export const loadOrderDetailsService =
-async (
-  userId,
-  orderId,
-) => {
+    if (!order) {
+        return { success: false, message: "Order not found" };
+    }
 
-  const order =
-    await Order.findOne({
-      userId,
-      orderId,
-    }).lean();
-
-  if (!order) {
-    return {
-      success: false,
-      message:
-        "Order not found",
-    };
-  }
-
-  return {
-    success: true,
-    order,
-  };
+    return { success: true, order };
 };
 
 /* =========================================
    CANCEL FULL ORDER
 ========================================= */
+export const cancelOrderService = async (userId, orderId, reason) => {
 
-export const cancelOrderService =
-async (
-  userId,
-  orderId,
-  reason,
-) => {
+    const order = await Order.findOne({ userId, orderId });
 
-  const order =
-    await Order.findOne({
-      userId,
-      orderId,
-    });
-
-  if (!order) {
-    return {
-      success: false,
-      message:
-        "Order not found",
-    };
-  }
-
-  if (
-    ![
-    "Pending",
-    "Processing",
-    ].includes(
-    order.orderStatus
-    )
-    )
-    {
-    return {
-        success:false,
-        message:
-        "Order can no longer be cancelled",
-    };
-    } 
-
-  /* UPDATE STOCK */
-
-  for (const item of order.items) {
-
-    const variant =
-      await Variant.findById(
-        item.variantId,
-      );
-
-
-  if (
-
-    item.itemStatus === "Cancelled"
-
-  ) {
-
-    continue;
-
-  }
-    if (variant) {
-
-      variant.stock +=
-        item.quantity;
-
-      await variant.save();
+    if (!order) {
+        return { success: false, message: "Order not found" };
     }
 
-    item.itemStatus =
-      "Cancelled";
-  }
+    if (!["Pending", "Processing"].includes(order.orderStatus)) {
+        return { success: false, message: "Order can no longer be cancelled" };
+    }
 
-/* =========================================
-   WALLET REFUND
-========================================= */
+    /* RESTORE STOCK for all non-cancelled items */
+    for (const item of order.items) {
+        if (item.itemStatus === "Cancelled") continue;
 
-if (
-  ["RAZORPAY", "WALLET"]
-  .includes(order.paymentMethod)
-  &&
-  !order.isRefundProcessed
-) {
+        const variant = await Variant.findById(item.variantId);
+        if (variant) {
+            variant.stock += item.quantity;
+            await variant.save();
+        }
+        item.itemStatus = "Cancelled";
+    }
 
-  await creditWallet({
+    /* REFUND — full order: refund exactly what they paid */
+    if (
+        ["RAZORPAY", "WALLET"].includes(order.paymentMethod) &&
+        !order.isRefundProcessed
+    ) {
+        const { refundAmount } = calculateFullOrderRefund(order);
 
-    userId,
+        await creditWallet({
+            userId,
+            amount:          refundAmount,
+            transactionType: "CancellationRefund",
+            description:     `Refund for cancelled order ${order.orderId}`,
+            orderId:         order._id,
+        });
 
-    amount:
-      order.finalAmount,
+        order.refundAmount       = refundAmount;
+        order.isRefundProcessed  = true;
+        order.paymentStatus      = "Refunded";
+    }
 
-    transactionType:
-      "CancellationRefund",
+    order.orderStatus = "Cancelled";
+    order.cancelReason = reason || null;
+    await order.save();
 
-    description:
-      `Refund for cancelled order ${order.orderId}`,
-
-    orderId:
-      order._id,
-
-  });
-
-  order.refundAmount = order.finalAmount;
-
-  order.isRefundProcessed = true;
-
-}
-
-/* UPDATE ORDER */
-
-order.orderStatus =
-  "Cancelled";
-
-order.cancelReason =
-  reason || null;
-
-await order.save();
-
-  return {
-    success: true,
-    message:
-            order.paymentMethod === "COD"
+    return {
+        success: true,
+        message: order.paymentMethod === "COD"
             ? "Order cancelled successfully"
-            : "Order cancelled and refund added to wallet"
-  };
+            : "Order cancelled and refund added to wallet",
+    };
 };
 
 /* =========================================
    CANCEL SINGLE ITEM
 ========================================= */
+export const cancelOrderItemService = async (userId, orderId, itemId, reason) => {
 
-export const cancelOrderItemService =
-async (
-  userId,
-  orderId,
-  itemId,
-  reason,
-) => {
+    const order = await Order.findOne({ userId, orderId });
 
-  const order =
-    await Order.findOne({
-      userId,
-      orderId,
-    });
-    
+    if (!order) {
+        return { success: false, message: "Order not found" };
+    }
 
-  if (!order) {
-    return {
-      success: false,
-      message:
-        "Order not found",
-    };
-  }
+    const item = order.items.id(itemId);
 
-  /* FIND ITEM */
+    if (!item) {
+        return { success: false, message: "Item not found" };
+    }
 
-  const item =
-    order.items.id(itemId);
-   
+    if (["Cancelled", "Returned"].includes(item.itemStatus)) {
+        return { success: false, message: "Item already cancelled or returned" };
+    }
 
-  if (!item) {
-    return {
-      success: false,
-      message:
-        "Item not found",
-    };
-  }
+    if (!["Pending", "Processing"].includes(order.orderStatus)) {
+        return { success: false, message: "Item can no longer be cancelled" };
+    }
 
-  /* VALIDATIONS */
+    /* RESTORE STOCK */
+    const variant = await Variant.findById(item.variantId);
+    if (variant) {
+        variant.stock += item.quantity;
+        await variant.save();
+    }
 
-  if (
-    [
-      "Cancelled",
-      "Returned",
-    ].includes(item.itemStatus)
-  ) {
-    return {
-      success: false,
-      message:
-        "Item already cancelled or returned",
-    };
-  }
+    /* REFUND — proportional item refund using shared calculator */
+    if (["RAZORPAY", "WALLET"].includes(order.paymentMethod)) {
+        const { refundAmount } = calculateItemRefund(order, item);
 
-  if (
-![
-  "Pending",
-  "Processing",
-].includes(
-  order.orderStatus
-)
-)
-{
-  return {
-    success:false,
-    message:
-    "Item can no longer be cancelled",
-  };
-} 
+        await creditWallet({
+            userId,
+            amount:          refundAmount,
+            transactionType: "CancellationRefund",
+            description:     `Refund for cancelled item "${item.productName}" in order ${order.orderId}`,
+            orderId:         order._id,
+        });
+    }
 
-  /* RESTORE STOCK */
+    /* UPDATE ITEM */
+    item.itemStatus  = "Cancelled";
+    item.cancelReason = reason || null;
 
-  const variant =
-    await Variant.findById(
-      item.variantId,
+    /* RECALCULATE ORDER TOTALS using shared calculator */
+    const activeItems = order.items.filter(
+        i => !["Cancelled", "Returned"].includes(i.itemStatus)
     );
 
-  if (variant) {
+    const updatedTotals = recalculateOrderTotals(order, activeItems);
+    order.subtotal        = updatedTotals.subtotal;
+    order.taxAmount       = updatedTotals.taxAmount;
+    order.deliveryCharge  = updatedTotals.deliveryCharge;
+    order.couponDiscount  = updatedTotals.couponDiscount;
+    order.discountAmount  = updatedTotals.discountAmount;
+    order.finalAmount     = updatedTotals.finalAmount;
 
-    variant.stock +=
-      item.quantity;
+    /* If all items are now cancelled, cancel the whole order */
+    if (activeItems.length === 0) {
+        order.orderStatus = "Cancelled";
+    }
 
-    await variant.save();
-  }
+    order.cancelReason = reason || null;
+    await order.save();
 
-  /* UPDATE ITEM */
-
-  item.itemStatus =
-    "Cancelled";
-
-    /* =========================================
-   REFUND CALCULATION
-========================================= */
-
-const itemTotal =
-(
-  item.price *
-  item.quantity
-);
-
-/* 
-   PROPORTIONAL REFUND CALCULATION
- */
-
-if (
-  ["RAZORPAY", "WALLET"]
-  .includes(order.paymentMethod)
-) {
-
-  const refundRatio =
-    itemTotal / order.subtotal;
-
-  const proportionalDiscount =
-    Math.round(
-      (order.discountAmount || 0) *
-      refundRatio
-    );
-
-  const refundAmount =
-    itemTotal -
-    proportionalDiscount;
-
-  await creditWallet({
-
-    userId,
-
-    amount: refundAmount,
-
-    transactionType:
-      "CancellationRefund",
-
-    description:
-      `Refund for cancelled item in order ${order.orderId}`,
-
-    orderId:
-      order._id,
-
-  });
-
-}
-
-    /* =========================================
-   RECALCULATE ORDER TOTALS
-========================================= */
-  const activeItems =
-order.items.filter(
- item =>
- ![
-   "Cancelled",
-   "Returned"
- ].includes(
-   item.itemStatus
- )
-);
-
-const newSubtotal =
-  activeItems.reduce(
-    (total, item) =>
-      total +
-      (
-        item.price *
-        item.quantity
-      ),
-    0
-  );
-
-/* OPTIONAL TAX RECALCULATION */
-
-const taxAmount =
-  Math.round(
-    newSubtotal * 0.02
-  );
-
-/* DELIVERY */
-
-const deliveryCharge =
-  newSubtotal > 5000
-    ? 0
-    : 99;
-
-/* DISCOUNT */
-
-const discountAmount =
-  order.discountAmount || 0;
-
-/* FINAL */
-
-const finalAmount =
-  (
-    newSubtotal +
-    taxAmount +
-    deliveryCharge
-  ) - discountAmount;
-
-/* UPDATE ORDER */
-
-order.subtotal =
-  newSubtotal;
-
-order.taxAmount =
-  taxAmount;
-
-order.deliveryCharge =
-  deliveryCharge;
-
-order.finalAmount =
-  finalAmount;
-
-  /* CHECK ORDER STATUS */
-
- if (
-activeItems.length === 0
-) {
-
-order.orderStatus =
-"Cancelled";
-}
-
-  order.cancelReason =
-    reason || null;
-
-  await order.save();
-
-  return {
-  success: true,
-
-  message:
-    order.paymentMethod === "COD"
-    ? "Product cancelled successfully"
-    : "Product cancelled and refund added to wallet",
-};
+    return {
+        success: true,
+        message: order.paymentMethod === "COD"
+            ? "Product cancelled successfully"
+            : "Product cancelled and refund added to wallet",
+    };
 };
 
 /* =========================================
-   RETURN ORDER
+   RETURN FULL ORDER (request only — admin approves)
 ========================================= */
+export const returnOrderService = async (userId, orderId, reason) => {
 
-export const returnOrderService =
-async (
-  userId,
-  orderId,
-  reason,
-) => {
+    const order = await Order.findOne({ userId, orderId });
 
-  const order =
-    await Order.findOne({
-      userId,
-      orderId,
-    });
+    if (!order) {
+        return { success: false, message: "Order not found" };
+    }
 
-  if (!order) {
-    return {
-      success: false,
-      message:
-        "Order not found",
-    };
-  }
+    if (order.orderStatus !== "Delivered") {
+        return { success: false, message: "Only delivered orders can be returned" };
+    }
 
-  if (
-    order.orderStatus !==
-    "Delivered"
-  ) {
-    return {
-      success: false,
-      message:
-        "Only delivered orders can be returned",
-    };
-  }
-  if (
-    order.returnStatus ===
-    "Requested"
-  ) {
-    return {
-      success: false,
-      message:
-        "Return request already submitted",
-    };
-  }
+    if (order.returnStatus === "Requested") {
+        return { success: false, message: "Return request already submitted" };
+    }
 
-  if (
-    order.returnStatus ===
-    "Approved"
-  ) {
-    return {
-      success: false,
-      message:
-        "Order already returned",
-    };
-  }
+    if (order.returnStatus === "Approved") {
+        return { success: false, message: "Order already returned" };
+    }
 
-  if (!reason) {
-    return {
-      success: false,
-      message:
-        "Return reason required",
-    };
-  }
+    if (!reason) {
+        return { success: false, message: "Return reason required" };
+    }
 
-  order.returnStatus =
-  "Requested";
+    order.returnStatus = "Requested";
+    order.returnReason = reason;
+    await order.save();
 
-  order.returnReason =
-  reason;
-
-  await order.save();
-
-  return {
-    success: true,
-    message:
-  "Return request sent successfully"
-  };
+    return { success: true, message: "Return request sent successfully" };
 };
 
-
 /* =========================================
-   RETURN SINGLE ITEM (request)
+   RETURN SINGLE ITEM (request only — admin approves)
 ========================================= */
+export const returnOrderItemService = async (userId, orderId, itemId, reason) => {
 
-export const returnOrderItemService = async (
-  userId,
-  orderId,
-  itemId,
-  reason,
-) => {
+    const order = await Order.findOne({ userId, orderId });
 
-  const order = await Order.findOne({
-    userId,
-    orderId,
-  });
+    if (!order) {
+        return { success: false, message: "Order not found" };
+    }
 
-  if (!order) {
-    return {
-      success: false,
-      message: "Order not found",
-    };
-  }
+    const item = order.items.id(itemId);
 
-  const item = order.items.id(itemId);
+    if (!item) {
+        return { success: false, message: "Item not found" };
+    }
 
-  if (!item) {
-    return {
-      success: false,
-      message: "Item not found",
-    };
-  }
+    if (item.itemStatus !== "Delivered") {
+        return { success: false, message: "Only delivered items can be returned" };
+    }
 
-  /* ITEM MUST BE DELIVERED */
+    if (["Requested", "Approved"].includes(item.itemReturnStatus)) {
+        return {
+            success: false,
+            message: item.itemReturnStatus === "Requested"
+                ? "Return request already submitted for this item"
+                : "This item has already been returned",
+        };
+    }
 
-  if (item.itemStatus !== "Delivered") {
-    return {
-      success: false,
-      message: "Only delivered items can be returned",
-    };
-  }
+    if (!reason) {
+        return { success: false, message: "Return reason required" };
+    }
 
-  /* NO DUPLICATE / CONFLICTING REQUESTS */
+    item.itemReturnStatus = "Requested";
+    item.itemReturnReason = reason;
+    await order.save();
 
-  if (
-    ["Requested", "Approved"].includes(item.itemReturnStatus)
-  ) {
-    return {
-      success: false,
-      message:
-        item.itemReturnStatus === "Requested"
-          ? "Return request already submitted for this item"
-          : "This item has already been returned",
-    };
-  }
-
-  if (!reason) {
-    return {
-      success: false,
-      message: "Return reason required",
-    };
-  }
-
-  item.itemReturnStatus = "Requested";
-  item.itemReturnReason = reason;
-
-  await order.save();
-
-  return {
-    success: true,
-    message: "Return request sent successfully",
-  };
+    return { success: true, message: "Return request sent successfully" };
 };
