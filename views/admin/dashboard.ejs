@@ -1,742 +1,461 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Overview - Admin | iStore</title>
-    <link rel="stylesheet" href="/css/components/admin-sidebar.css">
-    <link rel="stylesheet" href="/css/admin-dashboard.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Admin | iStore</title>
+  <link rel="stylesheet" href="/css/components/admin-sidebar.css">
+  <link rel="stylesheet" href="/css/admin-dashboard.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
-     <!-- Sidebar Navbar -->
-   <%- include('../partials/admin/sidebar') %>
-   <% const data = dashboardData || {};%>
-    <%
-    const chartLabels =
-    data.revenueChart?.map(
-    item => item._id
-    ) || [];
-
-    const chartRevenue =
-    data.revenueChart?.map(
-    item => item.revenue
-    ) || [];
-    %>
-
-    <main class="dashboard-main">
-        
-        <!-- Header -->
-        <header class="dashboard-header">
-            <div class="header-title">
-                <span class="subtitle">OVERVIEW</span>
-                <h1>Dashboard Overview</h1>
-            </div>
-            <div class="header-actions">
-                <div class="date-filter">
-
-                    <a
-                        href="/admin/dashboard?filter=daily"
-                        class="<%= filter === 'daily' ? 'active-filter' : '' %>"
-                    >
-                        Daily
-                    </a>
-                        <a
-
-                        href="/admin/dashboard?filter=weekly"
-
-                        class="<%= filter === 'weekly' ? 'active-filter' : '' %>"
-
-                    >
-
-                        Weekly
-
-                    </a>
-
-                    <a
-                        href="/admin/dashboard?filter=monthly"
-                        class="<%= filter === 'monthly' ? 'active-filter' : '' %>"
-                    >
-                        Monthly
-                    </a>
-
-                    <a
-                        href="/admin/dashboard?filter=yearly"
-                        class="<%= filter === 'yearly' ? 'active-filter' : '' %>"
-                    >
-                        Yearly
-                    </a>
-
-                </div>
-            </div>
-        </header>
-
-        <!-- KPI Grid -->
-        <section class="kpi-grid">
-            <!-- Revenue -->
-            <div class="kpi-card">
-                <div class="kpi-top">
-                    <div class="kpi-icon revenue">
-                        <i data-lucide="banknote" size="20"></i>
-                    </div>
-                    <div class="kpi-trend positive">
-                        <i data-lucide="trending-up" size="12"></i>
-                        <span>+12%</span>
-                    </div>
-                </div>
-                <div class="kpi-info">
-                    <span class="kpi-label">TOTAL REVENUE</span>
-                    <span class="kpi-value">
-                    ₹<%= (data.totalRevenue || 0).toLocaleString("en-IN") %>
-                    </span>
-                </div>
-            </div>
-
-            <!-- Orders -->
-            <div class="kpi-card">
-                <div class="kpi-top">
-                    <div class="kpi-icon orders">
-                        <i data-lucide="shopping-bag" size="20"></i>
-                    </div>
-                    <div class="kpi-trend positive">
-                        <i data-lucide="trending-up" size="12"></i>
-                        <span>+8%</span>
-                    </div>
-                </div>
-                <div class="kpi-info">
-                    <span class="kpi-label">TOTAL ORDERS</span>
-                    <span class="kpi-value">
-                    <%= (data.totalOrders || 0).toLocaleString("en-IN") %>
-                    </span>
-                </div>
-            </div>
-
-            <!-- Customers -->
-            <div class="kpi-card">
-                <div class="kpi-top">
-                    <div class="kpi-icon customers">
-                        <i data-lucide="users" size="20"></i>
-                    </div>
-                    <div class="kpi-trend positive">
-                        <i data-lucide="trending-up" size="12"></i>
-                        <span>+18%</span>
-                    </div>
-                </div>
-                <div class="kpi-info">
-                    <span class="kpi-label">TOTAL CUSTOMERS</span>
-                    <span class="kpi-value">
-                    <%= (data.totalCustomers || 0).toLocaleString("en-IN") %>
-                    </span>
-                </div>
-            </div>
-
-            <!-- Products -->
-            <div class="kpi-card">
-                <div class="kpi-top">
-                    <div class="kpi-icon products">
-                        <i data-lucide="package" size="20"></i>
-                    </div>
-                    <div class="kpi-trend neutral">
-                        <span>Stable</span>
-                    </div>
-                </div>
-                <div class="kpi-info">
-                    <span class="kpi-label">TOTAL PRODUCTS</span>
-                    <span class="kpi-value">
-                    <%= (data.totalProducts || 0).toLocaleString("en-IN") %>
-                    </span>
-                </div>
-            </div>
-
-            <!-- Returns -->
-            <div class="kpi-card">
-                <div class="kpi-top">
-                    <div class="kpi-icon returns">
-                        <i data-lucide="corner-down-left" size="20"></i>
-                    </div>
-                    <div class="kpi-trend negative">
-                        <i data-lucide="trending-up" size="12"></i>
-                        <span>+2%</span>
-                    </div>
-                </div>
-                <div class="kpi-info">
-                    <span class="kpi-label">TOTAL RETURNS</span>
-                    <span class="kpi-value">0</span>
-                </div>
-            </div>
-        </section>
-
-        <!-- Chart Section -->
-        <section class="chart-section">
-            <div class="chart-header">
-                <div class="chart-title">
-                    <h2>
-
-                    Revenue Trends
-
-                    <small>
-
-                    (
-
-                    <%= filter || "weekly" %>
-
-                    )
-
-                    </small>
-
-                    </h2>
-                    <p>Daily sales performance tracking</p>
-                </div>
-                <div class="chart-legend">
-                    <div class="legend-item">
-                        <div class="legend-dot current"></div>
-                        <span>Current Period</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-dot previous"></div>
-                        <span>Previous Period</span>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="chart-container">
-                <!-- SVG Chart Mockup -->
-                <div
-                style="
-                height:300px;
-                width:100%;
-                "
-                >
-                    <canvas
-                    id="revenueChart"
-                    ></canvas>
-                </div>
-
-
-            </div>
-        </section>
-
-        <!-- Main Content Grid -->
-        <div class="content-grid">
-            
-            <!-- Left Column: Tables -->
-            <div class="main-column">
-                
-                <!-- Recent Orders -->
-                <div class="dashboard-card">
-                    <div class="card-header-inner">
-                        <h3>Recent Orders</h3>
-                            <a
-                            href="/admin/orders"
-                            class="card-link"
-                            >
-                            View All
-                            </a>
-                    </div>
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>ORDER ID</th>
-                                    <th>CUSTOMER</th>
-                                    <th>AMOUNT</th>
-                                    <th>STATUS</th>
-                                    <th>DATE</th>
-                                </tr>
-                            </thead>
-                                <tbody>
-
-                                <% if (data.recentOrders?.length > 0) { %>
-
-                                    <% data.recentOrders.forEach(order => { %>
-
-                                        <tr>
-
-                                            <td class="td-order-id">
-
-                                                <%= order.orderId %>
-
-                                            </td>
-
-                                            <td class="td-customer">
-
-                                                <div
-                                                    class="customer-avatar"
-                                                    style="background:#A7F3D0;"
-                                                >
-                                                    <i
-                                                        data-lucide="user"
-                                                        size="20"
-                                                        style="
-                                                            margin:6px;
-                                                            color:#065F46;
-                                                        "
-                                                    ></i>
-                                                </div>
-
-                                                <span class="customer-name">
-
-                                                    <%= order.userId?.fullName || "Customer" %>
-
-                                                </span>
-
-                                            </td>
-
-                                            <td class="td-amount">
-
-                                                ₹<%= order.finalAmount.toLocaleString("en-IN") %>
-
-                                            </td>
-
-                                            <td>
-
-                                                <div
-                                                    class="
-                                                    status-badge
-                                                    <%= order.orderStatus?.toLowerCase() %>
-                                                    "
-                                                >
-
-                                                    <div class="status-dot"></div>
-
-                                                    <%= order.orderStatus %>
-
-                                                </div>
-
-                                            </td>
-
-                                            <td class="td-date">
-
-                                                <%= new Date(order.createdAt)
-                                                .toLocaleDateString("en-IN") %>
-
-                                            </td>
-
-                                        </tr>
-
-                                    <% }) %>
-
-                                <% } else { %>
-
-                                <tr>
-
-                                <td colspan="5">
-
-                                No orders found
-
-                                </td>
-
-                                </tr>
-
-                                <% } %>
-
-                                </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Top Products -->
-                <div class="dashboard-card">
-                    <div class="card-header-inner">
-                        <h3>Top Products</h3>
-                    </div>
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>PRODUCT NAME</th>
-                                    <th>UNITS SOLD</th>
-                                    <th>SALES</th>
-                                    <th>STOCK</th>
-                                </tr>
-                            </thead>
-                                <tbody>
-
-                                <% if (data.topProducts?.length > 0) { %>
-
-                                    <% data.topProducts.forEach(product => { %>
-
-                                        <tr>
-
-                                            <td>
-
-                                                <div class="td-customer">
-
-                                                    <div class="product-icon">
-
-                                                        <i
-                                                        data-lucide="package"
-                                                        color="#603763"
-                                                        ></i>
-
-                                                    </div>
-
-                                                    <span class="td-product-name">
-
-                                                        <%= product.productName %>
-
-                                                    </span>
-
-                                                </div>
-
-                                            </td>
-
-                                            <td class="td-units">
-
-                                                <%= product.unitsSold %>
-
-                                            </td>
-
-                                            <td class="td-amount">
-
-                                                ₹<%= product.revenue.toLocaleString("en-IN") %>
-
-                                            </td>
-
-                                            <td>
-
-                                                <div
-                                                class="stock-bar-container"
-                                                >
-
-                                                    <div
-                                                    class="stock-bar-fill good"
-                                                    style="width:100%;"
-                                                    ></div>
-
-                                                </div>
-
-                                            </td>
-
-                                        </tr>
-
-                                    <% }) %>
-
-                                <% } else { %>
-
-                                <tr>
-
-                                    <td colspan="4">
-
-                                        No sales data available
-
-                                    </td>
-
-                                </tr>
-
-                                <% } %>
-
-                                </tbody>
-                        </table>
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- Right Column: Alerts & Categories -->
-            <aside class="side-column">
-                
-                <!-- Stock Alerts -->
-                <div class="dashboard-card alert-card">
-                    <div class="alert-header">
-                        <div class="alert-title">
-                            <i data-lucide="alert-triangle" color="#7B1E5A" size="20"></i>
-                            Stock Alerts
+  <%- include('../partials/admin/sidebar') %>
+
+  <%
+    const d           = dashboardData || {};
+    const chartLabels = d.chartLabels || [];
+    const chartData   = d.chartData   || [];
+    const chartTitle  = d.chartTitle  || "Revenue Trends";
+    const rangeLabel  = d.rangeLabel  || "";
+
+    /* status badge helper */
+    function statusClass(s) {
+      const m = {
+        delivered:        "badge-delivered",
+        processing:       "badge-processing",
+        pending:          "badge-pending",
+        cancelled:        "badge-cancelled",
+        returned:         "badge-returned",
+        shipped:          "badge-shipped",
+        "out for delivery": "badge-shipped",
+      };
+      return m[(s||"").toLowerCase()] || "badge-pending";
+    }
+  %>
+
+  <main class="dashboard-main">
+
+    <!-- ── HEADER ── -->
+    <header class="dashboard-header">
+      <div class="header-title">
+        <span class="subtitle">OVERVIEW</span>
+        <h1>Dashboard</h1>
+        <p class="range-label"><%= rangeLabel %></p>
+      </div>
+
+      <nav class="date-filter">
+        <a href="/admin/dashboard?filter=daily"
+          class="filter-link <%= filter === 'daily'   ? 'active-filter' : '' %>">Daily</a>
+        <a href="/admin/dashboard?filter=weekly"
+          class="filter-link <%= filter === 'weekly'  ? 'active-filter' : '' %>">Weekly</a>
+        <a href="/admin/dashboard?filter=monthly"
+          class="filter-link <%= filter === 'monthly' ? 'active-filter' : '' %>">Monthly</a>
+        <a href="/admin/dashboard?filter=yearly"
+          class="filter-link <%= filter === 'yearly'  ? 'active-filter' : '' %>">Yearly</a>
+      </nav>
+    </header>
+
+    <!-- ── KPI GRID ── -->
+    <section class="kpi-grid">
+
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <div class="kpi-icon revenue"><i data-lucide="banknote" size="20"></i></div>
+          <span class="kpi-chip kpi-chip-purple">Revenue</span>
+        </div>
+        <div class="kpi-info">
+          <span class="kpi-label">TOTAL REVENUE</span>
+          <span class="kpi-value">₹<%= (d.totalRevenue || 0).toLocaleString("en-IN") %></span>
+          <span class="kpi-sub">Delivered orders</span>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <div class="kpi-icon orders"><i data-lucide="shopping-bag" size="20"></i></div>
+          <span class="kpi-chip kpi-chip-blue">Orders</span>
+        </div>
+        <div class="kpi-info">
+          <span class="kpi-label">TOTAL ORDERS</span>
+          <span class="kpi-value"><%= (d.totalOrders || 0).toLocaleString("en-IN") %></span>
+          <span class="kpi-sub">All statuses in range</span>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <div class="kpi-icon customers"><i data-lucide="users" size="20"></i></div>
+          <span class="kpi-chip kpi-chip-green">Customers</span>
+        </div>
+        <div class="kpi-info">
+          <span class="kpi-label">TOTAL CUSTOMERS</span>
+          <span class="kpi-value"><%= (d.totalCustomers || 0).toLocaleString("en-IN") %></span>
+          <span class="kpi-sub">Active users</span>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <div class="kpi-icon products"><i data-lucide="package" size="20"></i></div>
+          <span class="kpi-chip kpi-chip-gray">Products</span>
+        </div>
+        <div class="kpi-info">
+          <span class="kpi-label">TOTAL PRODUCTS</span>
+          <span class="kpi-value"><%= (d.totalProducts || 0).toLocaleString("en-IN") %></span>
+          <span class="kpi-sub">In inventory</span>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <div class="kpi-icon returns"><i data-lucide="corner-down-left" size="20"></i></div>
+          <span class="kpi-chip kpi-chip-red">Returns</span>
+        </div>
+        <div class="kpi-info">
+          <span class="kpi-label">TOTAL RETURNS</span>
+          <span class="kpi-value"><%= (d.totalReturns || 0).toLocaleString("en-IN") %></span>
+          <span class="kpi-sub"><%= d.returnRate || 0 %>% return rate</span>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <div class="kpi-icon pending"><i data-lucide="clock" size="20"></i></div>
+          <span class="kpi-chip kpi-chip-orange">Pending</span>
+        </div>
+        <div class="kpi-info">
+          <span class="kpi-label">PENDING ORDERS</span>
+          <span class="kpi-value"><%= (d.totalPending || 0).toLocaleString("en-IN") %></span>
+          <span class="kpi-sub">Awaiting processing</span>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ── CHART ── -->
+    <section class="chart-section">
+      <div class="chart-header">
+        <div class="chart-title">
+          <h2><%= chartTitle %></h2>
+          <p class="chart-subtitle"><%= rangeLabel %></p>
+        </div>
+        <div class="chart-legend">
+          <div class="legend-item">
+            <div class="legend-dot current"></div>
+            <span>Revenue (₹)</span>
+          </div>
+        </div>
+      </div>
+
+      <% if (chartData.length === 0 || chartData.every(v => v === 0)) { %>
+        <div class="chart-empty">
+          <i data-lucide="bar-chart-2" size="40"></i>
+          <p>No revenue data for this period</p>
+        </div>
+      <% } else { %>
+        <div class="chart-container">
+          <canvas id="revenueChart"></canvas>
+        </div>
+      <% } %>
+    </section>
+
+    <!-- ── MAIN CONTENT GRID ── -->
+    <div class="content-grid">
+
+      <!-- LEFT COLUMN -->
+      <div class="main-column">
+
+        <!-- Recent Orders -->
+        <div class="dashboard-card">
+          <div class="card-header-inner">
+            <h3>Recent Orders</h3>
+            <a href="/admin/orders" class="card-link">View All →</a>
+          </div>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>ORDER ID</th>
+                  <th>CUSTOMER</th>
+                  <th>AMOUNT</th>
+                  <th>STATUS</th>
+                  <th>DATE</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if (d.recentOrders?.length > 0) { %>
+                  <% d.recentOrders.forEach(order => { %>
+                    <tr>
+                      <td class="td-order-id"><%= order.orderId %></td>
+                      <td>
+                        <div class="td-customer">
+                          <div class="customer-avatar">
+                            <i data-lucide="user" size="16" style="margin:6px;color:#603763;"></i>
+                          </div>
+                          <span class="customer-name"><%= order.userId?.fullName || "Customer" %></span>
                         </div>
-                        <span class="urgent-badge">
-
-                        <%= data.stockAlerts?.length || 0 %>
-
-                        Urgent
-
+                      </td>
+                      <td class="td-amount">₹<%= order.finalAmount.toLocaleString("en-IN") %></td>
+                      <td>
+                        <span class="order-badge <%= statusClass(order.orderStatus) %>">
+                          <%= order.orderStatus %>
                         </span>
-                    </div>
-                    
-                    <div class="alert-list">
-
-                    <% if (data.stockAlerts?.length > 0) { %>
-
-                        <% data.stockAlerts.forEach(item => { %>
-
-                            <div class="alert-item">
-
-                                <div class="alert-item-info">
-
-                                    <div class="alert-item-icon">
-
-                                        <i
-                                        data-lucide="package"
-                                        size="16"
-                                        color="#A1A1AA"
-                                        ></i>
-
-                                    </div>
-
-                                    <div class="alert-item-text">
-
-                                        <span class="alert-item-name">
-
-                                            <%= item.productId?.name || "Product" %>
-
-                                        </span>
-
-                                        <span class="alert-item-stock">
-
-                                            <%= item.stock %> items left
-
-                                        </span>
-
-                                    </div>
-
-                                </div>
-
-                                <button class="alert-item-action">
-
-                                    <i
-                                    data-lucide="shopping-cart"
-                                    size="16"
-                                    ></i>
-
-                                </button>
-
-                            </div>
-
-                        <% }) %>
-
-                    <% } else { %>
-
-                        <div class="alert-item">
-
-                            <div class="alert-item-text">
-
-                                No low stock alerts
-
-                            </div>
-
-                        </div>
-
-                    <% } %>
-
-                    </div>
-                </div>
-
-                <!-- Top Categories -->
-                <div class="dashboard-card categories-card">
-                    <div class="categories-header">
-                        <h3>Top Categories</h3>
-                    </div>
-                    
-                        <div class="category-list">
-
-                        <% if (data.topCategories?.length > 0) { %>
-
-                            <% data.topCategories.forEach(category => { %>
-
-                                <div class="category-item">
-
-                                    <div class="category-info">
-
-                                        <span class="category-name">
-
-                                            <%= category._id %>
-
-                                        </span>
-
-                                        <span class="category-stats">
-
-                                            ₹<%= category.revenue.toLocaleString("en-IN") %>
-
-                                            •
-
-                                            <%= category.percentage %>%
-
-                                        </span>
-
-                                    </div>
-
-                                    <div class="category-bar-container">
-
-                                        <div
-                                            class="category-bar-fill c-purple-1"
-                                            style="
-                                                width:
-                                                <%= category.percentage %>%;
-                                            "
-                                        ></div>
-
-                                    </div>
-
-                                </div>
-
-                            <% }) %>
-
-                        <% } else { %>
-
-                            <div class="category-item">
-
-                                No category data available
-
-                            </div>
-
-                        <% } %>
-
-                        </div>
-
-                        <a
-                        href="/admin/sales-report"
-                        class="btn-report"
-                        >
-                        DETAILED REPORT
-                        </a>
-                </div>
-
-            </aside>
-
+                      </td>
+                      <td class="td-date"><%= new Date(order.createdAt).toLocaleDateString("en-IN") %></td>
+                    </tr>
+                  <% }) %>
+                <% } else { %>
+                  <tr><td colspan="5" class="empty-cell">No orders in this period</td></tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
         </div>
 
-        <footer class="dashboard-footer">
-            <p>© 2026 iStore Admin. Crafted for Excellence.</p>
-        </footer>
+        <!-- Top Products -->
+        <div class="dashboard-card">
+          <div class="card-header-inner">
+            <h3>Top Products</h3>
+            <a href="/admin/products" class="card-link">View All →</a>
+          </div>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>PRODUCT NAME</th>
+                  <th>UNITS SOLD</th>
+                  <th>REVENUE</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if (d.topProducts?.length > 0) { %>
+                  <% d.topProducts.forEach(product => { %>
+                    <tr>
+                      <td>
+                        <div class="td-customer">
+                          <div class="product-icon">
+                            <i data-lucide="package" size="16" color="#603763"></i>
+                          </div>
+                          <span class="td-product-name"><%= product.productName %></span>
+                        </div>
+                      </td>
+                      <td class="td-units"><%= product.unitsSold %></td>
+                      <td class="td-amount">₹<%= product.revenue.toLocaleString("en-IN") %></td>
+                    </tr>
+                  <% }) %>
+                <% } else { %>
+                  <tr><td colspan="3" class="empty-cell">No sales data in this period</td></tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+        </div>
 
-    </main>
+      </div>
 
-    <script>
-        // Initialize Lucide icons
-        lucide.createIcons();
+      <!-- RIGHT COLUMN -->
+      <aside class="side-column">
 
-const chartLabels =
-<%- JSON.stringify(chartLabels) %>;
+        <!-- Stock Alerts -->
+        <div class="dashboard-card alert-card">
+          <div class="alert-header">
+            <div class="alert-title">
+              <i data-lucide="alert-triangle" color="#7B1E5A" size="18"></i>
+              Stock Alerts
+            </div>
+            <span class="urgent-badge"><%= d.stockAlerts?.length || 0 %> Urgent</span>
+          </div>
+          <div class="alert-list">
+            <% if (d.stockAlerts?.length > 0) { %>
+              <% d.stockAlerts.forEach(item => { %>
+                <div class="alert-item">
+                  <div class="alert-item-info">
+                    <div class="alert-item-icon">
+                      <i data-lucide="package" size="14" color="#A1A1AA"></i>
+                    </div>
+                    <div class="alert-item-text">
+                      <span class="alert-item-name"><%= item.productId?.name || "Product" %></span>
+                      <span class="alert-item-stock
+                        <%= item.stock <= 5 ? 'stock-critical' : 'stock-low' %>">
+                        <%= item.stock %> units left
+                      </span>
+                    </div>
+                  </div>
+                  <a href="/admin/products" class="alert-item-action" title="Restock">
+                    <i data-lucide="plus-circle" size="16"></i>
+                  </a>
+                </div>
+              <% }) %>
+            <% } else { %>
+              <div class="alert-empty">
+                <i data-lucide="check-circle" size="20" color="#10b981"></i>
+                <span>All products well-stocked</span>
+              </div>
+            <% } %>
+          </div>
+        </div>
 
-const chartRevenue =
-<%- JSON.stringify(chartRevenue) %>;
+        <!-- Top Categories -->
+        <div class="dashboard-card categories-card">
+          <div class="card-header-inner">
+            <h3>Top Categories</h3>
+            <a href="/admin/categories" class="card-link">Manage →</a>
+          </div>
+          <div class="category-list">
+            <% if (d.topCategories?.length > 0) { %>
+              <% d.topCategories.forEach((cat, idx) => { %>
+                <div class="category-item">
+                  <div class="category-info">
+                    <span class="category-name"><%= cat._id %></span>
+                    <span class="category-stats">
+                      ₹<%= cat.revenue.toLocaleString("en-IN") %> &bull; <%= cat.percentage %>%
+                    </span>
+                  </div>
+                  <div class="category-bar-container">
+                    <div class="category-bar-fill c-purple-<%= (idx % 3) + 1 %>"
+                      style="width:<%= cat.percentage %>%;"></div>
+                  </div>
+                </div>
+              <% }) %>
+            <% } else { %>
+              <div class="empty-cell" style="padding:16px;">No category data in this period</div>
+            <% } %>
+          </div>
+          <a href="/admin/sales-report" class="btn-report">DETAILED REPORT</a>
+        </div>
 
-const ctx =
-document
-.getElementById(
-"revenueChart"
-);
+        <!-- Quick Stats -->
+        <div class="dashboard-card quick-stats-card">
+          <div class="card-header-inner">
+            <h3>Order Summary</h3>
+          </div>
+          <div class="quick-stats-list">
+            <div class="quick-stat-item">
+              <span class="quick-stat-label">Pending</span>
+              <span class="quick-stat-value qs-pending"><%= d.totalPending || 0 %></span>
+            </div>
+            <div class="quick-stat-item">
+              <span class="quick-stat-label">Cancelled</span>
+              <span class="quick-stat-value qs-cancelled"><%= d.totalCancelled || 0 %></span>
+            </div>
+            <div class="quick-stat-item">
+              <span class="quick-stat-label">Returned</span>
+              <span class="quick-stat-value qs-returned"><%= d.totalReturns || 0 %></span>
+            </div>
+            <div class="quick-stat-item">
+              <span class="quick-stat-label">Return Rate</span>
+              <span class="quick-stat-value qs-rate"><%= d.returnRate || 0 %>%</span>
+            </div>
+          </div>
+        </div>
 
-if (
-ctx &&
-chartRevenue.length > 0
-){
+      </aside>
+    </div>
 
-new Chart(ctx, {
+    <footer class="dashboard-footer">
+      <p>© 2026 iStore Admin &mdash; All data reflects the selected period: <strong><%= rangeLabel %></strong></p>
+    </footer>
 
-type: "line",
+  </main>
 
-data: {
+  <script>
+    lucide.createIcons();
 
-labels: chartLabels,
+    /* ── Chart ── */
+    const chartLabels  = <%- JSON.stringify(chartLabels) %>;
+    const chartRevenue = <%- JSON.stringify(chartData) %>;
+    const filterType   = "<%= filter %>";
 
-datasets: [
+    const ctx = document.getElementById("revenueChart");
 
-{
+    if (ctx && chartRevenue.length > 0) {
 
-label: "Revenue",
+      const gradient = ctx.getContext("2d").createLinearGradient(0, 0, 0, 300);
+      gradient.addColorStop(0, "rgba(96,55,99,0.22)");
+      gradient.addColorStop(1, "rgba(96,55,99,0)");
 
-data: chartRevenue,
+      const useBar = filterType === "daily";
 
-borderColor: "#603763",
+      new Chart(ctx, {
+        type: useBar ? "bar" : "line",
+        data: {
+          labels: chartLabels,
+          datasets: [{
+            label: "Revenue (₹)",
+            data:  chartRevenue,
+            borderColor:          "#603763",
+            borderWidth:          useBar ? 0 : 2.5,
+            backgroundColor:      useBar ? "rgba(96,55,99,0.55)" : gradient,
+            fill:                 !useBar,
+            tension:              0.4,
+            borderRadius:         useBar ? 8 : 0,
+            pointBackgroundColor: "#FFFFFF",
+            pointBorderColor:     "#603763",
+            pointBorderWidth:     2,
+            pointRadius:          useBar ? 0 : 4,
+            pointHoverRadius:     useBar ? 0 : 7,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          layout: { padding: { top: 8, right: 8 } },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              mode: "index",
+              intersect: false,
+              backgroundColor: "#2C1421",
+              titleColor: "#fff",
+              bodyColor:  "#fff",
+              padding: 12,
+              cornerRadius: 10,
+              callbacks: {
+                label: ctx => " ₹" + new Intl.NumberFormat("en-IN").format(ctx.parsed.y),
+              },
+            },
+          },
+          scales: {
+            x: {
+              grid: { display: false, drawBorder: false },
+              ticks: {
+                color: "#4D444C",
+                font: { family: "Inter", size: 11, weight: "600" },
+                maxTicksLimit: filterType === "daily" ? 12 : undefined,
+              },
+            },
+            y: {
+              beginAtZero: true,
+              grid: { color: "rgba(208,195,204,0.18)", drawBorder: false },
+              ticks: {
+                color: "#4D444C",
+                font: { family: "Inter", size: 11 },
+                callback: v => "₹" + new Intl.NumberFormat("en-IN").format(v),
+              },
+            },
+          },
+          interaction: { mode: "nearest", axis: "x", intersect: false },
+        },
+      });
+    }
 
-backgroundColor:
-"rgba(96,55,99,0.1)",
+    /* ── Safari back button fix ── */
+    window.addEventListener("pageshow", e => {
+      if (e.persisted) window.location.reload();
+    });
 
-fill: true,
+    /* ── Admin session polling every 30s ── */
+    setInterval(async () => {
+      try {
+        const res  = await fetch("/admin/check-session");
+        const data = await res.json();
+        if (!data.active) window.location.href = "/admin/login";
+      } catch {}
+    }, 30000);
+  </script>
 
-tension: 0.4,
-
-borderWidth: 3,
-
-},
-
-],
-
-},
-
-options: {
-
-responsive: true,
-
-plugins: {
-
-legend: {
-
-display: false,
-
-},
-
-},
-
-},
-
-});
-
-}
-else {
-
-console.log(
-"No revenue data available"
-);
-
-}
-
-        
-
-/* Prevent Back Button Cache (Safari Fix) */
-
-window.addEventListener(
-"pageshow",
-function (event) {
-
-if (event.persisted) {
-
-window.location.reload()
-
-}
-
-}
-)
-
-
-
-/* Check Admin Session Every 5 Seconds */
-
-setInterval(async () => {
-
-try {
-
-const response =
-await fetch(
-"/admin/check-session"
-)
-
-const data =
-await response.json()
-
-if (!data.active) {
-
-window.location.href =
-"/admin/login"
-
-}
-
-}
-
-catch (error) {
-
-console.log(
-"Admin session check failed"
-)
-
-}
-
-}, 5000)
-
-
-    </script>
 </body>
 </html>

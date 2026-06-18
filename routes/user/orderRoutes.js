@@ -3,7 +3,6 @@ import express from "express";
 const router = express.Router();
 
 import { isLoggedIn } from "../../middleware/authMiddleware.js";
-
 import userBlockCheckMiddleware from "../../middleware/userBlockCheckMiddleware.js";
 
 import {
@@ -14,78 +13,28 @@ import {
   returnOrder,
   returnOrderItem,
   downloadInvoice,
+  retryPayment,
 } from "../../controllers/user/orderController.js";
 
 /* =========================================
    PROTECTED ORDER ROUTES
 ========================================= */
 
-router.use(
-  isLoggedIn,
-  userBlockCheckMiddleware,
-);
+router.use(isLoggedIn, userBlockCheckMiddleware);
+
+router.get("/orders",          loadOrdersPage);
+router.get("/orders/:orderId", loadOrderDetailsPage);
+
+router.post("/orders/:orderId/cancel",              cancelOrder);
+router.post("/orders/:orderId/item/:itemId/cancel", cancelOrderItem);
+router.post("/orders/:orderId/return",              returnOrder);
+router.post("/orders/:orderId/item/:itemId/return", returnOrderItem);
 
 /* =========================================
-   ORDER LIST PAGE
+   RETRY RAZORPAY PAYMENT
 ========================================= */
+router.post("/orders/:orderId/retry-payment", retryPayment);
 
-router.get(
-  "/orders",
-  loadOrdersPage,
-);
-
-/* =========================================
-   ORDER DETAILS PAGE
-========================================= */
-
-router.get(
-  "/orders/:orderId",
-  loadOrderDetailsPage,
-);
-
-/* =========================================
-   CANCEL FULL ORDER
-========================================= */
-
-router.post(
-  "/orders/:orderId/cancel",
-  cancelOrder,
-);
-
-/* =========================================
-   CANCEL SINGLE ITEM
-========================================= */
-
-router.post(
-  "/orders/:orderId/item/:itemId/cancel",
-  cancelOrderItem,
-);
-
-/* =========================================
-   RETURN ORDER
-========================================= */
-
-router.post(
-  "/orders/:orderId/return",
-  returnOrder,
-);
-
-/* =========================================
-   RETURN SINGLE ITEM
-========================================= */
- 
-router.post(
-  "/orders/:orderId/item/:itemId/return",
-  returnOrderItem,
-);
-
-/* =========================================
-DOWNLOAD INVOICE
-========================================= */
-
-router.get(
-"/orders/:orderId/invoice",
-downloadInvoice,
-);
+router.get("/orders/:orderId/invoice", downloadInvoice);
 
 export default router;

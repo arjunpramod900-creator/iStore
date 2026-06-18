@@ -29,7 +29,6 @@ export const loadOrdersService = async (query) => {
     const sort   = query.sort   || "newest";
 
     let filter = {};
-
     if (status === "Return Requested")     filter.returnStatus = "Requested";
     else if (status === "Return Approved") filter.returnStatus = "Approved";
     else if (status === "Return Rejected") filter.returnStatus = "Rejected";
@@ -109,9 +108,9 @@ export const getOrderDetailsService = async (orderId) => {
 export const updateOrderStatusService = async (orderId, status) => {
 
     const order = await Order.findById(orderId);
-    if (!order)                              throw new Error("Order not found");
-    if (!allowedStatuses.includes(status))   throw new Error("Invalid status");
-    if (order.orderStatus === status)        throw new Error(`Order already marked as ${status}`);
+    if (!order)                            throw new Error("Order not found");
+    if (!allowedStatuses.includes(status)) throw new Error("Invalid status");
+    if (order.orderStatus === status)      throw new Error(`Order already marked as ${status}`);
 
     const transitions = {
         Pending:            ["Processing", "Cancelled"],
@@ -127,17 +126,17 @@ export const updateOrderStatusService = async (orderId, status) => {
         throw new Error(`Cannot move from ${order.orderStatus} to ${status}`);
     }
 
-    /* CANCEL from admin — restore stock + refund */
+    /* ADMIN CANCEL — restore stock + refund */
     if (status === "Cancelled") {
         for (const item of order.items) {
-            if (["Cancelled","Returned"].includes(item.itemStatus)) continue;
+            if (["Cancelled", "Returned"].includes(item.itemStatus)) continue;
             if (item.variantId) {
                 await Variant.findByIdAndUpdate(item.variantId, { $inc: { stock: item.quantity } });
             }
         }
 
         if (
-            ["RAZORPAY","WALLET"].includes(order.paymentMethod) &&
+            ["RAZORPAY", "WALLET"].includes(order.paymentMethod) &&
             !order.isRefundProcessed
         ) {
             const { refundAmount } = calculateFullOrderRefund(order);
@@ -159,13 +158,12 @@ export const updateOrderStatusService = async (orderId, status) => {
     order.orderStatus = status;
 
     for (const item of order.items) {
-        if (!["Cancelled","Returned"].includes(item.itemStatus)) {
+        if (!["Cancelled", "Returned"].includes(item.itemStatus)) {
             item.itemStatus = status;
         }
     }
 
     if (status === "Delivered") order.deliveredDate = new Date();
-
     await order.save();
 };
 
@@ -175,10 +173,10 @@ export const updateOrderStatusService = async (orderId, status) => {
 export const handleReturnRequestService = async (orderId, action) => {
 
     const order = await Order.findById(orderId);
-    if (!order)                          throw new Error("Order not found");
-    if (order.returnStatus !== "Requested") throw new Error("No pending return request");
+    if (!order)                               throw new Error("Order not found");
+    if (order.returnStatus !== "Requested")   throw new Error("No pending return request");
 
-    /* ── APPROVE ── */
+    /* APPROVE */
     if (action === "approve") {
 
         order.returnStatus     = "Approved";
@@ -186,7 +184,6 @@ export const handleReturnRequestService = async (orderId, action) => {
         order.orderStatus      = "Returned";
         order.paymentStatus    = "Refunded";
 
-        /* REFUND — full order: refund exactly what they paid */
         if (!order.isRefundProcessed) {
             const { refundAmount } = calculateFullOrderRefund(order);
 
@@ -210,8 +207,8 @@ export const handleReturnRequestService = async (orderId, action) => {
             item.itemStatus = "Returned";
         }
 
-        /* RECALCULATE TOTALS (all items now returned — will result in 0) */
-        const activeItems   = order.items.filter(i => !["Cancelled","Returned"].includes(i.itemStatus));
+        /* RECALCULATE TOTALS */
+        const activeItems   = order.items.filter(i => !["Cancelled", "Returned"].includes(i.itemStatus));
         const updatedTotals = recalculateOrderTotals(order, activeItems);
         order.subtotal       = updatedTotals.subtotal;
         order.taxAmount      = updatedTotals.taxAmount;
@@ -224,7 +221,7 @@ export const handleReturnRequestService = async (orderId, action) => {
         return { success: true, message: "Return approved and refund credited to wallet" };
     }
 
-    /* ── REJECT ── */
+    /* REJECT */
     if (action === "reject") {
         order.returnStatus = "Rejected";
         order.returnReason = null;
@@ -237,6 +234,8 @@ export const handleReturnRequestService = async (orderId, action) => {
 
 /* ============================
    SINGLE ITEM RETURN — approve / reject
+   FIX: isRefundProcessed guard per item
+   to prevent double refund on retries
 ============================ */
 export const handleItemReturnRequestService = async (orderId, itemId, action) => {
 
@@ -250,35 +249,37 @@ export const handleItemReturnRequestService = async (orderId, itemId, action) =>
         throw new Error("No pending return request for this item");
     }
 
-    /* ── APPROVE ── */
+    /* APPROVE */
     if (action === "approve") {
+
+        /* FIX: guard against double approval */
+        if (item.itemStatus === "Returned") {
+            throw new Error("Item has already been returned");
+        }
 
         /* RESTORE STOCK */
         const variant = await Variant.findById(item.variantId);
-        if (variant) {
-            variant.stock += item.quantity;
-            await variant.save();
-        }
+        if (variant) { variant.stock += item.quantity; await variant.save(); }
 
-        /* REFUND — proportional item refund using shared calculator */
-        if (["RAZORPAY","WALLET"].includes(order.paymentMethod)) {
+        /* REFUND — proportional, with per-item dedup via transactionId */
+        if (["RAZORPAY", "WALLET"].includes(order.paymentMethod)) {
             const { refundAmount } = calculateItemRefund(order, item);
 
             await creditWallet({
                 userId:          order.userId,
                 amount:          refundAmount,
                 transactionType: "ReturnRefund",
-                description:     `Refund for returned item "${item.productName}" in order ${order.orderId}`,
+                description:     `Refund for returned item [${item._id}] "${item.productName}" in order ${order.orderId}`,
                 orderId:         order._id,
+                transactionId:   String(item._id),
             });
         }
 
-        /* UPDATE ITEM */
         item.itemStatus       = "Returned";
         item.itemReturnStatus = "Approved";
 
         /* RECALCULATE ORDER TOTALS */
-        const activeItems   = order.items.filter(i => !["Cancelled","Returned"].includes(i.itemStatus));
+        const activeItems   = order.items.filter(i => !["Cancelled", "Returned"].includes(i.itemStatus));
         const updatedTotals = recalculateOrderTotals(order, activeItems);
         order.subtotal       = updatedTotals.subtotal;
         order.taxAmount      = updatedTotals.taxAmount;
@@ -287,8 +288,8 @@ export const handleItemReturnRequestService = async (orderId, itemId, action) =>
         order.discountAmount = updatedTotals.discountAmount;
         order.finalAmount    = updatedTotals.finalAmount;
 
-        /* If every item is now resolved, mark whole order as Returned */
-        const allResolved = order.items.every(i => ["Cancelled","Returned"].includes(i.itemStatus));
+        /* Mark whole order returned if all items resolved */
+        const allResolved = order.items.every(i => ["Cancelled", "Returned"].includes(i.itemStatus));
         if (allResolved) {
             order.orderStatus      = "Returned";
             order.returnStatus     = "Approved";
@@ -300,7 +301,7 @@ export const handleItemReturnRequestService = async (orderId, itemId, action) =>
         return { success: true, message: "Item return approved and refund credited to wallet" };
     }
 
-    /* ── REJECT ── */
+    /* REJECT */
     if (action === "reject") {
         item.itemReturnStatus = "Rejected";
         await order.save();

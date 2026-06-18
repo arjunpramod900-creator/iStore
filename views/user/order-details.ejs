@@ -17,6 +17,7 @@
 
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
     <style>
         /* ── Per-item return button ── */
@@ -61,6 +62,68 @@
             background: rgba(186, 26, 26, 0.10);
             color: #BA1A1A;
         }
+
+        /* ── Retry payment button ── */
+        .od-btn-retry {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            height: 56px;
+            padding: 16px 0;
+            background: linear-gradient(135deg, #BA1A1A 0%, #D32F2F 100%);
+            color: #fff;
+            font-size: 16px;
+            font-weight: 700;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            text-decoration: none;
+            box-shadow: 0 10px 24px rgba(186, 26, 26, 0.28);
+            transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .od-btn-retry:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 16px 32px rgba(186, 26, 26, 0.36);
+        }
+        .od-btn-retry:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* ── Failed payment banner ── */
+        .od-payment-failed-banner {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 18px 20px;
+            background: rgba(186, 26, 26, 0.06);
+            border: 1px solid rgba(186, 26, 26, 0.18);
+            border-radius: 16px;
+            margin-bottom: 4px;
+        }
+        .od-payment-failed-banner svg {
+            color: #BA1A1A;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        .od-payment-failed-banner-text {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .od-payment-failed-banner-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #BA1A1A;
+        }
+        .od-payment-failed-banner-sub {
+            font-size: 13px;
+            color: #6B7280;
+            line-height: 1.5;
+        }
     </style>
 </head>
 
@@ -69,37 +132,33 @@
     <%- include("../partials/user/header", { page: "orders" }) %>
 
     <%
-        const orderId     = order.orderId;
-        const status      = (order.orderStatus || "Processing").toLowerCase();
-        const statusLabel = order.orderStatus || "Processing";
-        const orderDate   = new Date(order.createdAt).toLocaleDateString("en-IN", {
+        const orderId      = order.orderId;
+        const status       = (order.orderStatus || "Processing").toLowerCase();
+        const statusLabel  = order.orderStatus || "Processing";
+        const orderDate    = new Date(order.createdAt).toLocaleDateString("en-IN", {
             day: "numeric", month: "short", year: "numeric"
         });
 
-        const items          = order.items || [];
-        const addr           = order.shippingAddress || {};
-        const subtotal       = order.subtotal || 0;
-        const discount       = order.discountAmount || 0;
-        const tax            = order.taxAmount || 0;
-        const delivery       = order.deliveryCharge || 0;
-        const total          = order.finalAmount || 0;
-        const paymentMethod  = order.paymentMethod || "COD";
-        const paymentStatus  = order.paymentStatus || "Pending";
+        const items         = order.items || [];
+        const addr          = order.shippingAddress || {};
+        const subtotal      = order.subtotal || 0;
+        const discount      = order.discountAmount || 0;
+        const tax           = order.taxAmount || 0;
+        const delivery      = order.deliveryCharge || 0;
+        const total         = order.finalAmount || 0;
+        const paymentMethod = order.paymentMethod || "COD";
+        const paymentStatus = order.paymentStatus || "Pending";
+
+        /* Is this a failed Razorpay payment that can be retried? */
+        const isPaymentFailed = paymentMethod === "RAZORPAY" && paymentStatus === "Failed";
 
         const cancelledItems = items.filter(i => i.itemStatus === "Cancelled");
         const refundAmount   = cancelledItems.reduce((t, i) => t + (i.price * i.quantity), 0);
         const updatedTotal   = order.finalAmount;
 
-        /* ── Return logic ──
-           Full-order return button hides if:
-           - returnStatus is already Requested or Approved
-           - OR every delivered item already has an item-level return request
-        */
         const deliveredItems = items.filter(i => i.itemStatus === "Delivered");
         const allItemsReturnRequested = deliveredItems.length > 0 &&
-            deliveredItems.every(i =>
-                ["Requested", "Approved"].includes(i.itemReturnStatus)
-            );
+            deliveredItems.every(i => ["Requested","Approved"].includes(i.itemReturnStatus));
 
         function fmt(n) { return "₹" + Number(n).toLocaleString("en-IN"); }
     %>
@@ -128,29 +187,34 @@
                     const currentIndex = steps.indexOf(order.orderStatus);
                     %>
 
-                    <% if (order.orderStatus !== "Cancelled") { %>
-                    <div class="od-timeline">
-                        <% steps.forEach((step, index) => { %>
-                        <div class="od-step">
-                            <div class="od-step-circle <%= index <= currentIndex ? 'active' : '' %>">
-                                <% if (index < currentIndex) { %>
-                                    <i data-lucide="check" size="14"></i>
-                                <% } %>
-                            </div>
-                            <span class="od-step-label <%= index <= currentIndex ? 'active' : '' %>">
-                                <%= step %>
-                            </span>
+                    <% if (order.orderStatus === "Cancelled") { %>
+                        <div class="od-cancelled-banner">
+                            <i data-lucide="x-circle" size="18"></i>
+                            This order was cancelled
                         </div>
-                        <% if (index !== steps.length - 1) { %>
-                            <div class="od-step-line <%= index < currentIndex ? 'active' : '' %>"></div>
-                        <% } %>
-                        <% }) %>
-                    </div>
+                    <% } else if (isPaymentFailed) { %>
+                        <div class="od-cancelled-banner" style="background:#FEF2F2; color:#BA1A1A; border-color:#FECACA;">
+                            <i data-lucide="alert-circle" size="18"></i>
+                            Payment failed — please retry to confirm your order
+                        </div>
                     <% } else { %>
-                    <div class="od-cancelled-banner">
-                        <i data-lucide="x-circle" size="18"></i>
-                        This order was cancelled
-                    </div>
+                        <div class="od-timeline">
+                            <% steps.forEach((step, index) => { %>
+                            <div class="od-step">
+                                <div class="od-step-circle <%= index <= currentIndex ? 'active' : '' %>">
+                                    <% if (index < currentIndex) { %>
+                                        <i data-lucide="check" size="14"></i>
+                                    <% } %>
+                                </div>
+                                <span class="od-step-label <%= index <= currentIndex ? 'active' : '' %>">
+                                    <%= step %>
+                                </span>
+                            </div>
+                            <% if (index !== steps.length - 1) { %>
+                                <div class="od-step-line <%= index < currentIndex ? 'active' : '' %>"></div>
+                            <% } %>
+                            <% }) %>
+                        </div>
                     <% } %>
                 </section>
 
@@ -160,11 +224,13 @@
                     <span class="od-header-order-id">Order ID : <%= orderId %></span>
                 </div>
 
-                <!-- Invoice -->
+                <!-- Invoice — only show when payment is not failed -->
+                <% if (!isPaymentFailed) { %>
                 <a href="/orders/<%= orderId %>/invoice" class="od-invoice-btn">
                     <i data-lucide="file-down" size="18"></i>
                     Download Invoice
                 </a>
+                <% } %>
 
                 <!-- Status + date -->
                 <div class="od-header-right">
@@ -197,8 +263,6 @@
                         <div class="od-items-list">
                             <% items.forEach((item, idx) => {
                                 const price = item.price * item.quantity;
-
-                                /* Return status for this item */
                                 const itemReturnStatus = item.itemReturnStatus || "None";
                                 const canReturnItem =
                                     item.itemStatus === "Delivered" &&
@@ -209,12 +273,10 @@
 
                             <div class="od-item-row <%= item.itemStatus === 'Cancelled' ? 'cancelled' : '' %>" id="odItem<%= idx %>">
 
-                                <!-- IMAGE -->
                                 <div class="od-item-thumb">
                                     <img src="<%= item.productImage %>" alt="<%= item.productName %>" loading="lazy">
                                 </div>
 
-                                <!-- INFO -->
                                 <div class="od-item-info">
                                     <p class="od-item-name">
                                         <%= item.productName %>
@@ -222,7 +284,6 @@
                                     </p>
                                     <p class="od-item-variant"><%= item.variantName %></p>
 
-                                    <!-- Item status badge -->
                                     <span class="od-item-stock od-item-stock--<%= (item.itemStatus || 'Active').toLowerCase() %>">
                                         <i data-lucide="<%=
                                             item.itemStatus === 'Cancelled' ? 'x-circle' :
@@ -232,7 +293,6 @@
                                         <%= item.itemStatus || "Active" %>
                                     </span>
 
-                                    <!-- ── Per-item return status badge ── -->
                                     <% if (itemReturnStatus === "Requested") { %>
                                     <span class="od-item-return-badge od-item-return-badge--requested">
                                         <i data-lucide="clock" size="11"></i>
@@ -251,12 +311,16 @@
                                     <% } %>
                                 </div>
 
-                                <!-- RIGHT -->
                                 <div class="od-item-right">
                                     <span class="od-item-price"><%= fmt(price) %></span>
 
-                                    <!-- Cancel item button -->
+                                    <%
+                                      /* Hide cancel/return buttons when payment is failed
+                                         — order isn't confirmed yet */
+                                    %>
+
                                     <% if (
+                                        !isPaymentFailed &&
                                         ["Pending","Processing"].includes(order.orderStatus) &&
                                         item.itemStatus !== "Cancelled"
                                     ) { %>
@@ -268,8 +332,7 @@
                                     </button>
                                     <% } %>
 
-                                    <!-- ── Per-item return button ── -->
-                                    <% if (canReturnItem) { %>
+                                    <% if (!isPaymentFailed && canReturnItem) { %>
                                     <button
                                         class="od-item-return-btn"
                                         data-order-id="<%= orderId %>"
@@ -280,7 +343,6 @@
                                     </button>
                                     <% } %>
 
-                                    <!-- Cancelled label -->
                                     <% if (item.itemStatus === "Cancelled") { %>
                                     <span class="od-item-cancelled-label">Cancelled</span>
                                     <% } %>
@@ -311,7 +373,6 @@
                     </section>
 
                 </div>
-                <!-- /od-left -->
 
                 <!-- RIGHT -->
                 <div class="od-right" id="odRight">
@@ -347,8 +408,8 @@
                         </div>
                     </section>
 
-                    <!-- REFUND SUMMARY -->
-                    <% if (refundAmount > 0) { %>
+                    <!-- REFUND SUMMARY — only for paid orders with cancellations -->
+                    <% if (refundAmount > 0 && !isPaymentFailed) { %>
                     <section class="od-refund-card">
                         <div class="od-refund-header">
                             <i data-lucide="badge-indian-rupee" size="18"></i>
@@ -365,16 +426,22 @@
                     </section>
                     <% } %>
 
-                    <!-- PAYMENT -->
+                    <!-- PAYMENT INFO -->
                     <div class="od-info-card" id="odPaymentCard">
                         <div class="od-info-card-text">
                             <span class="od-payment-label">Payment Information</span>
                             <div class="od-payment-method">
-                                <i data-lucide="wallet" size="18"></i>
+                                <i data-lucide="<%= paymentMethod === 'COD' ? 'banknote' : 'credit-card' %>" size="18"></i>
                                 <%= paymentMethod === "COD" ? "Cash on Delivery" : paymentMethod %>
                             </div>
                             <div class="od-payment-sub">
-                                <%= paymentMethod === "COD" ? "Pay when your order arrives" : "Payment completed successfully" %>
+                                <% if (isPaymentFailed) { %>
+                                    Payment was not completed
+                                <% } else if (paymentMethod === "COD") { %>
+                                    Pay when your order arrives
+                                <% } else { %>
+                                    Payment completed successfully
+                                <% } %>
                             </div>
                             <div class="od-payment-status od-payment-status--<%= paymentStatus.toLowerCase() %>">
                                 <%= paymentStatus %>
@@ -382,7 +449,7 @@
                         </div>
                     </div>
 
-                    <!-- FULL ORDER RETURN STATUS -->
+                    <!-- RETURN STATUS BADGES -->
                     <% if (order.returnStatus === "Requested") { %>
                     <div class="od-info-card">
                         <div class="od-info-card-text">
@@ -419,16 +486,38 @@
                     <!-- ACTIONS -->
                     <div class="od-actions" id="odActions">
 
+                        <!-- ── RETRY PAYMENT (shown only when payment failed) ── -->
+                        <% if (isPaymentFailed) { %>
+                        <div class="od-payment-failed-banner">
+                            <i data-lucide="alert-triangle" size="18"></i>
+                            <div class="od-payment-failed-banner-text">
+                                <span class="od-payment-failed-banner-title">Payment Incomplete</span>
+                                <span class="od-payment-failed-banner-sub">
+                                    Your order is reserved. Complete payment now to confirm it.
+                                </span>
+                            </div>
+                        </div>
+                        <button
+                            class="od-btn-retry"
+                            id="btnRetryPayment"
+                            data-order-id="<%= orderId %>"
+                        >
+                            <i data-lucide="refresh-cw" size="18"></i>
+                            Retry Payment — <%= fmt(total) %>
+                        </button>
+                        <% } %>
+
                         <!-- Track -->
-                        <% if (["pending","processing","shipped"].includes(status)) { %>
+                        <% if (!isPaymentFailed && ["pending","processing","shipped"].includes(status)) { %>
                         <a href="/orders/<%= orderId %>/track" class="od-btn-track">
                             <i data-lucide="package-search" size="18"></i>
                             Track Order
                         </a>
                         <% } %>
 
-                        <!-- Full order Return — hide if already requested/approved OR all items already have item-level returns -->
+                        <!-- Return full order -->
                         <% if (
+                            !isPaymentFailed &&
                             status === "delivered" &&
                             !["Requested","Approved"].includes(order.returnStatus) &&
                             !allItemsReturnRequested
@@ -439,8 +528,8 @@
                         </button>
                         <% } %>
 
-                        <!-- Cancel -->
-                        <% if (["pending","processing"].includes(status)) { %>
+                        <!-- Cancel order — hidden for failed payments (use retry instead) -->
+                        <% if (!isPaymentFailed && ["pending","processing"].includes(status)) { %>
                         <div class="od-btn-cancel-wrap">
                             <button class="od-btn-cancel" id="btnCancelOrder" data-id="<%= orderId %>">
                                 Cancel Order
@@ -451,7 +540,6 @@
                     </div>
 
                 </div>
-                <!-- /od-right -->
 
             </div>
 
@@ -466,11 +554,112 @@
     <script>
         lucide.createIcons();
 
-        /* ── GSAP ── */
-        gsap.from("#odHeaderCard", { y: -16, opacity: 0, duration: 0.5, ease: "power2.out", delay: 0.05 });
-        gsap.from("#odItemsCard",  { y: 24,  opacity: 0, duration: 0.5, ease: "power2.out", delay: 0.15 });
-        gsap.from("#odAddressCard",{ y: 24,  opacity: 0, duration: 0.5, ease: "power2.out", delay: 0.25 });
-        gsap.from("#odRight > *",  { y: 20,  opacity: 0, duration: 0.45, stagger: 0.10, ease: "power2.out", delay: 0.20 });
+        /* GSAP entrance */
+        gsap.from("#odHeaderCard",  { y: -16, opacity: 0, duration: 0.5, ease: "power2.out", delay: 0.05 });
+        gsap.from("#odItemsCard",   { y: 24,  opacity: 0, duration: 0.5, ease: "power2.out", delay: 0.15 });
+        gsap.from("#odAddressCard", { y: 24,  opacity: 0, duration: 0.5, ease: "power2.out", delay: 0.25 });
+        gsap.from("#odRight > *",   { y: 20,  opacity: 0, duration: 0.45, stagger: 0.10, ease: "power2.out", delay: 0.20 });
+
+        /* ================================================
+           RETRY PAYMENT
+           Opens a fresh Razorpay modal for the same order.
+           On success → redirects to order-success page.
+           On failure → shows error, keeps button active.
+        ================================================ */
+        document.getElementById("btnRetryPayment")?.addEventListener("click", async function () {
+            const btn     = this;
+            const orderId = btn.dataset.orderId;
+
+            btn.disabled   = true;
+            btn.innerHTML  = '<i data-lucide="loader" size="18"></i> Opening Payment…';
+            lucide.createIcons();
+
+            try {
+                /* Ask server for a fresh Razorpay order */
+                const res  = await fetch(`/orders/${orderId}/retry-payment`, { method: "POST" });
+                const data = await res.json();
+
+                if (!data.success) {
+                    showToast("error", data.message || "Could not initiate payment");
+                    btn.disabled  = false;
+                    btn.innerHTML = '<i data-lucide="refresh-cw" size="18"></i> Retry Payment';
+                    lucide.createIcons();
+                    return;
+                }
+
+                /* Open Razorpay modal */
+                const options = {
+                    key:         "<%= process.env.RAZORPAY_KEY_ID %>",
+                    amount:      data.razorpayOrder.amount,
+                    currency:    "INR",
+                    name:        "iStore",
+                    description: "Order Payment — Retry",
+                    order_id:    data.razorpayOrder.id,
+                    theme:       { color: "#603763" },
+
+                    handler: async function (response) {
+                        /* Payment captured — verify with server */
+                        try {
+                            const verifyRes = await fetch("/checkout/verify-payment", {
+                                method:  "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                    razorpay_order_id:   response.razorpay_order_id,
+                                    razorpay_payment_id: response.razorpay_payment_id,
+                                    razorpay_signature:  response.razorpay_signature,
+                                }),
+                            });
+
+                            const result = await verifyRes.json();
+
+                            if (!result.success) {
+                                showToast("error", result.message || "Payment verification failed");
+                                btn.disabled  = false;
+                                btn.innerHTML = '<i data-lucide="refresh-cw" size="18"></i> Retry Payment';
+                                lucide.createIcons();
+                                return;
+                            }
+
+                            /* Success — go to order success page */
+                            window.location.href = result.redirectUrl;
+
+                        } catch {
+                            showToast("error", "Verification failed. Contact support if money was deducted.");
+                            btn.disabled  = false;
+                            btn.innerHTML = '<i data-lucide="refresh-cw" size="18"></i> Retry Payment';
+                            lucide.createIcons();
+                        }
+                    },
+
+                    modal: {
+                        ondismiss: function () {
+                            /* User closed modal without paying — keep button active */
+                            showToast("error", "Payment cancelled. You can retry anytime.");
+                            btn.disabled  = false;
+                            btn.innerHTML = '<i data-lucide="refresh-cw" size="18"></i> Retry Payment';
+                            lucide.createIcons();
+                        },
+                    },
+                };
+
+                const rzp = new Razorpay(options);
+
+                rzp.on("payment.failed", function (response) {
+                    showToast("error", response.error.description || "Payment failed");
+                    btn.disabled  = false;
+                    btn.innerHTML = '<i data-lucide="refresh-cw" size="18"></i> Retry Payment';
+                    lucide.createIcons();
+                });
+
+                rzp.open();
+
+            } catch {
+                showToast("error", "Something went wrong. Please try again.");
+                btn.disabled  = false;
+                btn.innerHTML = '<i data-lucide="refresh-cw" size="18"></i> Retry Payment';
+                lucide.createIcons();
+            }
+        });
 
         /* ================================================
            CANCEL FULL ORDER
@@ -563,7 +752,6 @@
 
                 if (!formValues) return;
 
-                /* Disable button immediately to prevent double-click */
                 this.disabled    = true;
                 this.textContent = "Submitting…";
 

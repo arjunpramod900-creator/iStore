@@ -1,38 +1,4 @@
-/* ============================================================
-   services/shared/refundCalculator.js
-   
-   Single source of truth for all refund calculations.
-   Used by both user orderService and admin orderService
-   so refund logic is 100% consistent.
 
-   KEY INSIGHT from Order model:
-   - item.price         = price AFTER offer discount (offer already baked in)
-   - item.offerDiscount = the offer saving per unit (stored for display only)
-   - order.offerDiscount  = total offer savings across all items
-   - order.couponDiscount = coupon saving (applied on discounted subtotal)
-   - order.discountAmount = offerDiscount + couponDiscount (combined total)
-   - order.subtotal       = sum of (item.price × qty) — already offer-discounted
-   - order.taxAmount      = 2% of (subtotal - couponDiscount)
-   - order.finalAmount    = subtotal - couponDiscount + taxAmount + deliveryCharge
-
-   REFUND RULES:
-   1. Full order cancel/return  → refund order.finalAmount (what they paid)
-   2. Single item cancel/return → proportional refund based on item's share
-      Formula:
-        itemBase              = item.price × item.quantity   (offer already deducted)
-        proportionalCoupon    = couponDiscount × (itemBase / order.subtotal)
-        proportionalTax       = taxAmount × (itemBase / order.subtotal)
-        deliveryRefund        = deliveryCharge if this is the LAST active item, else 0
-        refundAmount          = itemBase - proportionalCoupon + proportionalTax + deliveryRefund
-
-   WHY NOT deduct offerDiscount proportionally?
-   Because item.price is already the post-offer price. Deducting offerDiscount
-   again would double-penalise the customer.
-
-   WHY proportional coupon deduction?
-   Coupon discount is order-level. When one item is returned, the customer
-   loses a fair share of the coupon benefit proportional to that item's value.
-============================================================ */
 
 /**
  * Calculate refund amount for a SINGLE item being cancelled or returned.

@@ -3,663 +3,307 @@
 <head>
 
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Orders — iStore</title>
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <link rel="stylesheet" href="/css/components/header.css">
+    <link rel="stylesheet" href="/css/components/footer.css">
+    <link rel="stylesheet" href="/css/components/toast.css">
+    <link rel="stylesheet" href="/css/components/alert.css">
+    <link rel="stylesheet" href="/css/orders.css">
 
-    <title>
-        My Orders — iStore
-    </title>
-
-    <!-- CSS -->
-
-    <link
-        rel="stylesheet"
-        href="/css/components/header.css"
-    >
-
-    <link
-        rel="stylesheet"
-        href="/css/components/footer.css"
-    >
-
-   <link
-        rel="stylesheet"
-        href="/css/components/toast.css"
-        />
-
-    <link
-        rel="stylesheet"
-        href="/css/components/alert.css"
-    />
-
-    <link
-        rel="stylesheet"
-        href="/css/orders.css"
-    >
-
-    <!-- Fonts -->
-
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
-        rel="stylesheet"
-    >
-
-    <!-- Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <script src="https://unpkg.com/lucide@latest"></script>
-
-    <!-- GSAP -->
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+    <style>
+        /* Retry button — sits alongside other action buttons */
+        .or-btn--retry {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 48px;
+            padding: 12px 0;
+            font-family: var(--font);
+            font-size: 15px;
+            font-weight: 700;
+            border-radius: var(--or-radius-lg);
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+            transition: var(--or-transition);
+            border: none;
+            background: linear-gradient(135deg, #BA1A1A 0%, #D32F2F 100%);
+            color: #fff;
+            gap: 8px;
+            box-shadow: 0 6px 16px rgba(186, 26, 26, 0.24);
+        }
+        .or-btn--retry:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 24px rgba(186, 26, 26, 0.32);
+        }
+        .or-btn--retry:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Failed payment banner inside the card */
+        .or-payment-failed-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 9999px;
+            background: rgba(186, 26, 26, 0.10);
+            color: #BA1A1A;
+            margin-top: 4px;
+        }
+    </style>
 
 </head>
 
 <body>
 
-    <%- include(
-        "../partials/user/header",
-        { page: "orders" }
-    ) %>
+    <%- include("../partials/user/header", { page: "orders" }) %>
 
     <main class="or-page">
 
         <div class="or-container">
 
             <!-- BREADCRUMB -->
-
-            <nav
-                class="or-breadcrumbs"
-                aria-label="Breadcrumb"
-            >
-
-                <a
-                    href="/"
-                    class="or-bc-crumb"
-                >
-                    Home
-                </a>
-
+            <nav class="or-breadcrumbs" aria-label="Breadcrumb">
+                <a href="/" class="or-bc-crumb">Home</a>
                 <span class="or-bc-sep">
-                    <i
-                        data-lucide="chevron-right"
-                        size="12"
-                    ></i>
+                    <i data-lucide="chevron-right" size="12"></i>
                 </span>
-
-                <span class="or-bc-crumb active">
-                    Orders
-                </span>
-
+                <span class="or-bc-crumb active">Orders</span>
             </nav>
 
             <!-- PAGE HEADER -->
-
             <header class="or-header">
-
-                <h1 class="or-title">
-                    My Orders
-                </h1>
-
-                <p class="or-subtitle">
-                    View and manage your recent and past orders.
-                </p>
-
+                <h1 class="or-title">My Orders</h1>
+                <p class="or-subtitle">View and manage your recent and past orders.</p>
             </header>
 
             <!-- FILTER BAR -->
-
-            <form
-                class="or-filter-bar"
-                method="GET"
-                action="/orders"
-            >
-
-                <!-- SEARCH -->
+            <form class="or-filter-bar" method="GET" action="/orders">
 
                 <div class="or-filter-group">
-
-                    <label class="or-filter-label">
-                        Search Orders
-                    </label>
-
+                    <label class="or-filter-label">Search Orders</label>
                     <div class="or-search-wrap">
-
                         <span class="or-search-icon">
-
-                            <i
-                                data-lucide="search"
-                                size="18"
-                            ></i>
-
+                            <i data-lucide="search" size="18"></i>
                         </span>
-
                         <input
                             type="text"
                             name="search"
                             class="or-search-input"
                             placeholder="Search order ID or product"
-
                             value="<%= filters?.search || '' %>"
                         >
-
                     </div>
-
                 </div>
-
-                <!-- STATUS -->
 
                 <div class="or-filter-select-wrap">
-
-                    <label class="or-filter-label">
-                        Status
-                    </label>
-
-                    <select
-                        name="status"
-                        class="or-select"
-                    >
-
-                        <option value="">
-                            All Statuses
-                        </option>
-
-                        <option
-                            value="Pending"
-                            <%= filters?.status === "Pending"
-                            ? "selected"
-                            : "" %>
-                        >
-                            Pending
-                        </option>
-
-                        <option
-                            value="Processing"
-                            <%= filters?.status === "Processing"
-                            ? "selected"
-                            : "" %>
-                        >
-                            Processing
-                        </option>
-
-                        <option
-                            value="Shipped"
-                            <%= filters?.status === "Shipped"
-                            ? "selected"
-                            : "" %>
-                        >
-                            Shipped
-                        </option>
-
-                        <option
-                            value="Delivered"
-                            <%= filters?.status === "Delivered"
-                            ? "selected"
-                            : "" %>
-                        >
-                            Delivered
-                        </option>
-
-                        <option
-                            value="Cancelled"
-                            <%= filters?.status === "Cancelled"
-                            ? "selected"
-                            : "" %>
-                        >
-                            Cancelled
-                        </option>
-
+                    <label class="or-filter-label">Status</label>
+                    <select name="status" class="or-select">
+                        <option value="">All Statuses</option>
+                        <option value="Pending"    <%= filters?.status === "Pending"    ? "selected" : "" %>>Pending</option>
+                        <option value="Processing" <%= filters?.status === "Processing" ? "selected" : "" %>>Processing</option>
+                        <option value="Shipped"    <%= filters?.status === "Shipped"    ? "selected" : "" %>>Shipped</option>
+                        <option value="Delivered"  <%= filters?.status === "Delivered"  ? "selected" : "" %>>Delivered</option>
+                        <option value="Cancelled"  <%= filters?.status === "Cancelled"  ? "selected" : "" %>>Cancelled</option>
                     </select>
-
                 </div>
-
-                <!-- SORT -->
 
                 <div class="or-filter-select-wrap">
-
-                    <label class="or-filter-label">
-                        Sort By
-                    </label>
-
-                    <select
-                        name="sort"
-                        class="or-select"
-                    >
-
-                        <option
-                            value="newest"
-                            <%= filters?.sort === "newest"
-                            ? "selected"
-                            : "" %>
-                        >
-                            Newest First
-                        </option>
-
-                        <option
-                            value="oldest"
-                            <%= filters?.sort === "oldest"
-                            ? "selected"
-                            : "" %>
-                        >
-                            Oldest First
-                        </option>
-
-                        <option
-                            value="amount_high"
-                            <%= filters?.sort === "amount_high"
-                            ? "selected"
-                            : "" %>
-                        >
-                            Amount High-Low
-                        </option>
-
-                        <option
-                            value="amount_low"
-                            <%= filters?.sort === "amount_low"
-                            ? "selected"
-                            : "" %>
-                        >
-                            Amount Low-High
-                        </option>
-
+                    <label class="or-filter-label">Sort By</label>
+                    <select name="sort" class="or-select">
+                        <option value="newest"      <%= filters?.sort === "newest"      ? "selected" : "" %>>Newest First</option>
+                        <option value="oldest"      <%= filters?.sort === "oldest"      ? "selected" : "" %>>Oldest First</option>
+                        <option value="amount_high" <%= filters?.sort === "amount_high" ? "selected" : "" %>>Amount High–Low</option>
+                        <option value="amount_low"  <%= filters?.sort === "amount_low"  ? "selected" : "" %>>Amount Low–High</option>
                     </select>
-
                 </div>
 
-                <!-- BUTTON -->
-
-                <button
-                    class="or-filter-btn"
-                    type="submit"
-                >
-
-                    Apply
-
-                </button>
+                <button class="or-filter-btn" type="submit">Apply</button>
 
             </form>
 
             <!-- EMPTY STATE -->
-
             <% if (!orders || orders.length === 0) { %>
 
                 <div class="or-empty">
-
                     <div class="or-empty-icon">
-
-                        <i
-                            data-lucide="package-open"
-                            size="64"
-                        ></i>
-
+                        <i data-lucide="package-open" size="64"></i>
                     </div>
-
-                    <h2 class="or-empty-title">
-                        No orders found
-                    </h2>
-
-                    <p class="or-empty-sub">
-                        You haven’t placed any orders yet.
-                    </p>
-
-                    <a
-                        href="/products"
-                        class="or-empty-cta"
-                    >
-
-                        <i
-                            data-lucide="shopping-bag"
-                            size="18"
-                        ></i>
-
+                    <h2 class="or-empty-title">No orders found</h2>
+                    <p class="or-empty-sub">You haven't placed any orders yet.</p>
+                    <a href="/products" class="or-empty-cta">
+                        <i data-lucide="shopping-bag" size="18"></i>
                         Browse Products
-
                     </a>
-
                 </div>
 
             <% } else { %>
 
                 <!-- ORDER LIST -->
-
-                <div
-                    class="or-order-list"
-                    id="orOrderList"
-                >
+                <div class="or-order-list" id="orOrderList">
 
                     <% orders.forEach((order) => {
 
-                        const status =
-                        (
-                            order.orderStatus ||
-                            "Pending"
-                        )
-                        .toLowerCase()
-                        .replace(/\s+/g, "-");
+                        const status = (order.orderStatus || "Pending").toLowerCase().replace(/\s+/g, "-");
+                        const orderId = order.orderId;
 
-                        const orderId =
-                            order.orderId;
+                        const orderDate = new Date(order.createdAt).toLocaleDateString("en-IN", {
+                            day: "numeric", month: "short", year: "numeric",
+                        });
 
-                        const orderDate =
-                            new Date(order.createdAt)
-                            .toLocaleDateString(
-                                "en-IN",
-                                {
-                                    day: "numeric",
-                                    month: "short",
-                                    year: "numeric",
-                                }
-                            );
+                        const total = "₹" + Number(order.finalAmount || 0).toLocaleString("en-IN");
 
-                        const total =
-                            "₹" +
-                            Number(
-                                order.finalAmount || 0
-                            ).toLocaleString("en-IN");
+                        const items     = order.items || [];
+                        const itemNames = items.map(i => i.productName || "Product").join(", ");
 
-                        const items =
-                            order.items || [];
-
-                        const itemNames =
-                            items
-                            .map(
-                                item =>
-                                    item.productName ||
-                                    "Product"
-                            )
-                            .join(", ");
-
+                        /* Detect failed Razorpay payment */
+                        const isPaymentFailed =
+                            order.paymentMethod === "RAZORPAY" &&
+                            order.paymentStatus  === "Failed";
                     %>
 
                     <!-- ORDER CARD -->
-
                     <article
-                        class="
-                            or-card
-                            or-card--<%= status %>
-                        "
-
-                        data-order-id="
-                            <%= orderId.toLowerCase() %>
-                        "
-
-                        data-status="
-                            <%= status %>
-                        "
+                        class="or-card or-card--<%= isPaymentFailed ? 'payment-failed' : status %>"
+                        data-order-id="<%= orderId.toLowerCase() %>"
+                        data-status="<%= status %>"
                     >
-
                         <div class="or-card-inner">
 
                             <!-- LEFT -->
-
                             <div class="or-card-left">
 
-                                <!-- META -->
-
                                 <div class="or-card-meta">
-
-                                    <span
-                                        class="
-                                            or-badge
-                                            or-badge--<%= status %>
-                                        "
-                                    >
-
+                                    <span class="or-badge or-badge--<%= isPaymentFailed ? 'cancelled' : status %>">
                                         <%= order.orderStatus %>
-
                                     </span>
+                                    <span class="or-order-id">Order #<%= orderId %></span>
+                                    <span class="or-order-date">• <%= orderDate %></span>
 
-                                    <span class="or-order-id">
-
-                                        Order #<%= orderId %>
-
+                                    <!-- Failed payment tag -->
+                                    <% if (isPaymentFailed) { %>
+                                    <span class="or-payment-failed-tag">
+                                        <i data-lucide="alert-circle" size="11"></i>
+                                        Payment Failed
                                     </span>
-
-                                    <span class="or-order-date">
-
-                                        • <%= orderDate %>
-
-                                    </span>
-
+                                    <% } %>
                                 </div>
-
-                                <!-- ITEMS -->
 
                                 <div class="or-card-items">
-
                                     <div class="or-thumbs">
-
-                                        <% items
-                                        .slice(0, 2)
-                                        .forEach(item => { %>
-
-                                            <div class="or-thumb">
-
-                                                <img
-                                                    src="
-                                                    <%= item.productImage || '/images/product-placeholder.png' %>
-                                                    "
-
-                                                    alt="
-                                                    <%= item.productName %>
-                                                    "
-
-                                                    loading="lazy"
-                                                >
-
-                                            </div>
-
+                                        <% items.slice(0, 2).forEach(item => { %>
+                                        <div class="or-thumb">
+                                            <img
+                                                src="<%= item.productImage || '/images/product-placeholder.png' %>"
+                                                alt="<%= item.productName %>"
+                                                loading="lazy"
+                                            >
+                                        </div>
                                         <% }) %>
-
                                     </div>
-
-                                    <span class="or-item-names">
-
-                                        <%= itemNames %>
-
-                                    </span>
-
+                                    <span class="or-item-names"><%= itemNames %></span>
                                 </div>
 
-                                <!-- TOTAL -->
-
                                 <div class="or-card-total">
-
-                                    <span class="or-total-label">
-                                        Total Amount:
-                                    </span>
-
-                                    <span class="or-total-amount">
-
-                                        <%= total %>
-
-                                    </span>
-
+                                    <span class="or-total-label">Total Amount:</span>
+                                    <span class="or-total-amount"><%= total %></span>
                                 </div>
 
                             </div>
 
                             <!-- ACTIONS -->
-
                             <div class="or-card-actions">
 
-                                <!-- TRACK -->
+                                <% if (isPaymentFailed) { %>
 
-                                <% if (
-                                    [
-                                        "pending",
-                                        "processing",
-                                        "shipped",
-                                        "out-for-delivery"
-                                    ].includes(status)
-                                ) { %>
-
-                                    <a
-                                        href="/orders/<%= orderId %>"
-                                        class="or-btn or-btn--primary"
-                                    >
-
-                                        Track Order
-
-                                    </a>
-
-                                <% } %>
-
-                                <!-- DETAILS -->
-
-                                <a
-                                    href="/orders/<%= orderId %>"
-                                    class="or-btn or-btn--subtle"
-                                >
-
-                                    View Details
-
-                                </a>
-
-                                <!-- CANCEL -->
-
-                                <% if (
-                                    [
-                                        "pending",
-                                        "processing",
-                                        "shipped",
-                                        "out-for-delivery"
-                                    ].includes(status)
-                                ) { %>
-
+                                    <!-- RETRY PAYMENT — primary action for failed orders -->
                                     <button
-                                        class="or-btn or-btn--danger cancel-order-btn"
-
-                                        data-id="<%= orderId %>"
+                                        class="or-btn or-btn--retry retry-payment-btn"
+                                        data-order-id="<%= orderId %>"
+                                        data-amount="<%= order.finalAmount %>"
                                     >
-
-                                        Cancel Order
-
+                                        <i data-lucide="refresh-cw" size="16"></i>
+                                        Retry Payment
                                     </button>
 
-                                <% } %>
-
-                                <!-- RETURN -->
-
-                                <% if (
-                                    status === "delivered"
-                                ) { %>
-
-                                    <a
-                                        href="/orders/<%= orderId %>/return"
-                                        class="or-btn or-btn--outline"
-                                    >
-
-                                        Return Order
-
+                                    <!-- VIEW DETAILS — always available -->
+                                    <a href="/orders/<%= orderId %>" class="or-btn or-btn--subtle">
+                                        View Details
                                     </a>
+
+                                <% } else { %>
+
+                                    <!-- TRACK — for active orders -->
+                                    <% if (["pending","processing","shipped","out-for-delivery"].includes(status)) { %>
+                                    <a href="/orders/<%= orderId %>" class="or-btn or-btn--primary">
+                                        Track Order
+                                    </a>
+                                    <% } %>
+
+                                    <!-- VIEW DETAILS -->
+                                    <a href="/orders/<%= orderId %>" class="or-btn or-btn--subtle">
+                                        View Details
+                                    </a>
+
+                                    <!-- CANCEL -->
+                                    <% if (["pending","processing","shipped","out-for-delivery"].includes(status)) { %>
+                                    <button
+                                        class="or-btn or-btn--danger cancel-order-btn"
+                                        data-id="<%= orderId %>"
+                                    >
+                                        Cancel Order
+                                    </button>
+                                    <% } %>
+
+                                    <!-- RETURN -->
+                                    <% if (status === "delivered") { %>
+                                    <a href="/orders/<%= orderId %>/return" class="or-btn or-btn--outline">
+                                        Return Order
+                                    </a>
+                                    <% } %>
 
                                 <% } %>
 
                             </div>
 
                         </div>
-
                     </article>
 
                     <% }) %>
 
-                                </div>
+                </div>
 
                 <!-- PAGINATION -->
+                <% if (pagination && pagination.totalPages > 1) { %>
+                <div class="or-pagination">
 
-                <% if(
-                    pagination &&
-                    pagination.totalPages > 1
-                ){ %>
+                    <% if (pagination.hasPrevPage) { %>
+                    <a href="/orders?page=<%= pagination.currentPage - 1 %><%= filters.search ? `&search=${filters.search}` : '' %><%= filters.status ? `&status=${filters.status}` : '' %><%= filters.sort ? `&sort=${filters.sort}` : '' %>" class="or-page-btn">←</a>
+                    <% } %>
 
-                    <div class="or-pagination">
+                    <% for (let i = 1; i <= pagination.totalPages; i++) { %>
+                    <a href="/orders?page=<%= i %><%= filters.search ? `&search=${filters.search}` : '' %><%= filters.status ? `&status=${filters.status}` : '' %><%= filters.sort ? `&sort=${filters.sort}` : '' %>" class="or-page-btn <%= i === pagination.currentPage ? 'active' : '' %>"><%= i %></a>
+                    <% } %>
 
-                        <!-- PREV -->
+                    <% if (pagination.hasNextPage) { %>
+                    <a href="/orders?page=<%= pagination.currentPage + 1 %><%= filters.search ? `&search=${filters.search}` : '' %><%= filters.status ? `&status=${filters.status}` : '' %><%= filters.sort ? `&sort=${filters.sort}` : '' %>" class="or-page-btn">→</a>
+                    <% } %>
 
-                        <% if(
-                            pagination.hasPrevPage
-                        ){ %>
-
-                            <a
-                                href="
-                                    /orders?page=<%= pagination.currentPage - 1 %>
-                                    <%= filters.search ? `&search=${filters.search}` : '' %>
-                                    <%= filters.status ? `&status=${filters.status}` : '' %>
-                                    <%= filters.sort ? `&sort=${filters.sort}` : '' %>
-                                    "
-                                class="or-page-btn"
-                            >
-
-                                ←
-
-                            </a>
-
-                        <% } %>
-
-                        <!-- PAGE NUMBERS -->
-
-                        <% for(
-                            let i = 1;
-                            i <= pagination.totalPages;
-                            i++
-                        ){ %>
-
-                            <a
-                                href="
-
-                                    /orders?page=<%= i %>
-
-                                    <%= filters.search ? `&search=${filters.search}` : '' %>
-
-                                    <%= filters.status ? `&status=${filters.status}` : '' %>
-
-                                    <%= filters.sort ? `&sort=${filters.sort}` : '' %>
-
-                                    "
-
-                                class="
-                                    or-page-btn
-
-                                    <%= i === pagination.currentPage
-                                    ? 'active'
-                                    : ''
-                                    %>
-                                "
-                            >
-
-                                <%= i %>
-
-                            </a>
-
-                        <% } %>
-
-                        <!-- NEXT -->
-
-                        <% if(
-                            pagination.hasNextPage
-                        ){ %>
-
-                            <a
-                                href="
-                                    /orders?page=<%= pagination.currentPage + 1 %>
-                                    <%= filters.search ? `&search=${filters.search}` : '' %>
-                                    <%= filters.status ? `&status=${filters.status}` : '' %>
-                                    <%= filters.sort ? `&sort=${filters.sort}` : '' %>
-                                    "
-                                class="or-page-btn"
-                            >
-
-                                →
-
-                            </a>
-
-                        <% } %>
-
-                    </div>
-
+                </div>
                 <% } %>
 
             <% } %>
@@ -668,151 +312,162 @@
 
     </main>
 
-    <%- include(
-        "../partials/user/footer"
-    ) %>
-
-    <!-- SWEETALERT -->
+    <%- include("../partials/user/footer") %>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="/js/toast.js"></script>
     <script src="/js/alertConfig.js"></script>
 
     <script>
+        lucide.createIcons();
 
-        lucide.createIcons()
+        gsap.fromTo(".or-card",
+            { y: 24, opacity: 0 },
+            { y: 0, opacity: 1, duration: 0.5, stagger: 0.08, ease: "power2.out", clearProps: "all" }
+        );
 
-       gsap.fromTo(
+        /* ================================================
+           RETRY PAYMENT
+           Triggered from the orders list page.
+           Opens Razorpay modal, verifies on success.
+        ================================================ */
+        document.querySelectorAll(".retry-payment-btn").forEach(btn => {
+            btn.addEventListener("click", async function () {
+                const orderId = this.dataset.orderId;
 
-            ".or-card",
+                this.disabled  = true;
+                this.innerHTML = '<i data-lucide="loader" size="16"></i> Opening…';
+                lucide.createIcons();
 
-            {
-                y: 24,
-                opacity: 0,
-            },
+                try {
+                    const res  = await fetch(`/orders/${orderId}/retry-payment`, { method: "POST" });
+                    const data = await res.json();
 
-            {
-                y: 0,
-                opacity: 1,
-                duration: 0.5,
-                stagger: 0.08,
-                ease: "power2.out",
-                clearProps: "all",
-            }
-
-        )
-
-
-        const cancelButtons =
-            document.querySelectorAll(
-                ".cancel-order-btn"
-            );
-
-            cancelButtons.forEach(button => {
-
-                button.addEventListener(
-                    "click",
-                    async () => {
-
-                        const orderId =
-                        button.dataset.id;
-
-                       const result =
-                        await showConfirmAlert({
-
-                            title:
-                            "Cancel this order?",
-
-                            text:
-                            "This action cannot be undone.",
-
-                            confirmText:
-                            "Yes, Cancel",
-
-                            cancelText:
-                            "Keep Order",
-
-                            icon: "warning",
-
-                        });
-
-                        if (!result.isConfirmed) {
-                            return;
-                        }
-
-                        try {
-
-                            button.disabled = true;
-
-                            button.innerText =
-                                "Cancelling...";
-
-                            const response =
-                            await fetch(
-                                `/orders/${orderId}/cancel`,
-                                {
-
-                                    method: "POST",
-
-                                    headers: {
-                                        "Content-Type":
-                                            "application/json",
-                                    },
-
-                                    body: JSON.stringify({
-                                        reason:
-                                            "Cancelled by user",
-                                    }),
-
-                                }
-                            );
-
-                            const data =
-                            await response.json();
-
-                            if (data.success) {
-
-                                showToast(
-                                    "success",
-                                    data.message
-                                );
-
-                                setTimeout(() => {
-                                    window.location.reload();
-                                }, 1200);
-
-                            } else {
-
-                                showToast(
-                                    "error",
-                                    data.message
-                                );
-
-                                button.disabled = false;
-
-                                button.innerText =
-                                    "Cancel Order";
-                            }
-
-                        } catch (error) {
-
-                            console.log(error);
-
-                            showToast(
-                                "error",
-                                "Something went wrong"
-                            );
-
-                            button.disabled = false;
-
-                            button.innerText =
-                                "Cancel Order";
-                        }
-
+                    if (!data.success) {
+                        showToast("error", data.message || "Could not initiate payment");
+                        this.disabled  = false;
+                        this.innerHTML = '<i data-lucide="refresh-cw" size="16"></i> Retry Payment';
+                        lucide.createIcons();
+                        return;
                     }
-                );
 
+                    const self = this;
+
+                    const options = {
+                        key:         "<%= process.env.RAZORPAY_KEY_ID %>",
+                        amount:      data.razorpayOrder.amount,
+                        currency:    "INR",
+                        name:        "iStore",
+                        description: "Order Payment — Retry",
+                        order_id:    data.razorpayOrder.id,
+                        theme:       { color: "#603763" },
+
+                        handler: async function (response) {
+                            try {
+                                const verifyRes = await fetch("/checkout/verify-payment", {
+                                    method:  "POST",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({
+                                        razorpay_order_id:   response.razorpay_order_id,
+                                        razorpay_payment_id: response.razorpay_payment_id,
+                                        razorpay_signature:  response.razorpay_signature,
+                                    }),
+                                });
+
+                                const result = await verifyRes.json();
+
+                                if (!result.success) {
+                                    showToast("error", result.message || "Verification failed");
+                                    self.disabled  = false;
+                                    self.innerHTML = '<i data-lucide="refresh-cw" size="16"></i> Retry Payment';
+                                    lucide.createIcons();
+                                    return;
+                                }
+
+                                window.location.href = result.redirectUrl;
+
+                            } catch {
+                                showToast("error", "Verification error. Contact support if money was deducted.");
+                                self.disabled  = false;
+                                self.innerHTML = '<i data-lucide="refresh-cw" size="16"></i> Retry Payment';
+                                lucide.createIcons();
+                            }
+                        },
+
+                        modal: {
+                            ondismiss: function () {
+                                showToast("error", "Payment cancelled. You can retry anytime.");
+                                self.disabled  = false;
+                                self.innerHTML = '<i data-lucide="refresh-cw" size="16"></i> Retry Payment';
+                                lucide.createIcons();
+                            },
+                        },
+                    };
+
+                    const rzp = new Razorpay(options);
+
+                    rzp.on("payment.failed", function (response) {
+                        showToast("error", response.error.description || "Payment failed");
+                        self.disabled  = false;
+                        self.innerHTML = '<i data-lucide="refresh-cw" size="16"></i> Retry Payment';
+                        lucide.createIcons();
+                    });
+
+                    rzp.open();
+
+                } catch {
+                    showToast("error", "Something went wrong. Please try again.");
+                    this.disabled  = false;
+                    this.innerHTML = '<i data-lucide="refresh-cw" size="16"></i> Retry Payment';
+                    lucide.createIcons();
+                }
             });
+        });
+
+        /* ================================================
+           CANCEL ORDER
+        ================================================ */
+        document.querySelectorAll(".cancel-order-btn").forEach(button => {
+            button.addEventListener("click", async () => {
+                const orderId = button.dataset.id;
+
+                const result = await showConfirmAlert({
+                    title:       "Cancel this order?",
+                    text:        "This action cannot be undone.",
+                    confirmText: "Yes, Cancel",
+                    cancelText:  "Keep Order",
+                    icon:        "warning",
+                });
+
+                if (!result.isConfirmed) return;
+
+                try {
+                    button.disabled   = true;
+                    button.innerText  = "Cancelling...";
+
+                    const response = await fetch(`/orders/${orderId}/cancel`, {
+                        method:  "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body:    JSON.stringify({ reason: "Cancelled by user" }),
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        showToast("success", data.message);
+                        setTimeout(() => window.location.reload(), 1200);
+                    } else {
+                        showToast("error", data.message);
+                        button.disabled  = false;
+                        button.innerText = "Cancel Order";
+                    }
+                } catch {
+                    showToast("error", "Something went wrong");
+                    button.disabled  = false;
+                    button.innerText = "Cancel Order";
+                }
+            });
+        });
 
     </script>
 

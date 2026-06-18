@@ -2,6 +2,7 @@ import Offer from "../../models/Offer.js";
 
 
 
+
 const computeDiscount = (offer, unitPrice) => {
 
   if (!offer) return 0;
@@ -43,10 +44,9 @@ const buildBadgeLabel = (offer, discountAmount, unitPrice) => {
     return `₹${Math.round(discountAmount).toLocaleString("en-IN")} OFF`;
   }
 
- 
+
 
   const effectivePercent = (discountAmount / unitPrice) * 100;
-
 
 
   const rounded = Math.round(effectivePercent);
@@ -135,33 +135,24 @@ async (
     categoryDiscount
   );
 
-  const offerType =
-  productDiscount >= categoryDiscount
-    ? "PRODUCT"
-    : "CATEGORY";
 
-  /* =========================================
-     APPLIED OFFER
-  ========================================= */
 
   let appliedOffer = null;
 
+  let offerType = null;
+
   if (bestDiscount > 0) {
 
-    appliedOffer =
-    productDiscount >= categoryDiscount
-      ? productOffer
-      : categoryOffer;
-
+    if (productDiscount >= categoryDiscount) {
+      appliedOffer = productOffer;
+      offerType = "PRODUCT";
+    } else {
+      appliedOffer = categoryOffer;
+      offerType = "CATEGORY";
+    }
   }
 
-  /* =========================================
-     BADGE LABEL
-     Computed once here from the real numbers so
-     no caller has to re-derive percentage/fixed
-     display logic (and risk echoing the raw,
-     possibly-capped discountValue instead).
-  ========================================= */
+
 
   const badgeLabel = buildBadgeLabel(
     appliedOffer,
@@ -188,8 +179,9 @@ async (
     originalPrice:
       variant.price,
 
+    /* floor to avoid fractional paise in totals */
     offerDiscount:
-      bestDiscount * quantity,
+      Math.floor(bestDiscount * quantity),
 
     finalPrice,
 

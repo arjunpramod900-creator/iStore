@@ -13,12 +13,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 </head>
 <body>
-    <!-- Header -->
-    <%- include("../partials/user/header") %>
 
+    <%- include("../partials/user/header") %>
 
     <main class="change-email-main">
         <div class="change-email-container">
+
             <!-- Breadcrumbs -->
             <nav class="breadcrumb">
                 <a href="/">Home</a>
@@ -32,7 +32,7 @@
                 <span class="breadcrumb-current">Change Email</span>
             </nav>
 
-            <!-- Header Section -->
+            <!-- Header -->
             <header class="change-email-header">
                 <h1>Change Email</h1>
                 <p>Update your email address securely.</p>
@@ -40,122 +40,190 @@
 
             <!-- Form Card -->
             <div class="change-email-card">
-               <form
-class="change-email-form"
-action="/send-email-change-otp"
-method="POST">
+                <form
+                    class="change-email-form"
+                    action="/send-email-change-otp"
+                    method="POST"
+                    id="changeEmailForm"
+                    novalidate>
 
-<!-- Current Email -->
-<div class="form-group">
-<label>Current Email</label>
+                    <!-- Current Email (read-only, no validation needed) -->
+                    <div class="form-group">
+                        <label>Current Email</label>
+                        <div class="input-wrapper read-only">
+                            <input
+                                type="email"
+                                value="<%= user.email %>"
+                                readonly>
+                        </div>
+                    </div>
 
-<div class="input-wrapper read-only">
+                    <!-- New Email -->
+                    <div class="form-group">
+                        <label for="newEmail">New Email Address</label>
+                        <div class="input-wrapper">
+                            <input
+                                type="email"
+                                id="newEmail"
+                                name="newEmail"
+                                placeholder="Enter new email address"
+                                autocomplete="email">
+                        </div>
+                        <span class="field-error" id="newEmail-error"></span>
+                    </div>
 
-<input
-type="email"
-value="<%= user.email %>"
-readonly>
+                    <!-- Confirm Email -->
+                    <div class="form-group">
+                        <label for="confirmEmail">Confirm New Email</label>
+                        <div class="input-wrapper">
+                            <input
+                                type="email"
+                                id="confirmEmail"
+                                name="confirmEmail"
+                                placeholder="Re-enter new email address"
+                                autocomplete="email">
+                        </div>
+                        <span class="field-error" id="confirmEmail-error"></span>
+                    </div>
 
-</div>
+                    <div class="action-buttons">
+                        <button type="submit" class="update-btn" id="sendOtpBtn">
+                            Send OTP
+                        </button>
+                        <a href="/profile" class="cancel-btn-outlined">Cancel</a>
+                    </div>
 
-</div>
-
-<!-- New Email -->
-<div class="form-group">
-
-<label>New Email Address</label>
-
-<div class="input-wrapper">
-
-<input
-type="email"
-name="newEmail"
-placeholder="Enter new email address"
-required>
-
-</div>
-
-</div>
-
-<!-- Confirm Email -->
-<div class="form-group">
-
-<label>Confirm New Email</label>
-
-<div class="input-wrapper">
-
-<input
-type="email"
-name="confirmEmail"
-placeholder="Re-enter new email address"
-required>
-
-</div>
-
-</div>
-
-<div class="action-buttons">
-
-<button
-type="submit"
-class="update-btn">
-
-Send OTP
-
-</button>
-
-<a
-href="/profile"
-class="cancel-btn-outlined">
-
-Cancel
-
-</a>
-
-</div>
-
-</form>
+                </form>
             </div>
+
         </div>
     </main>
 
-    <!-- Footer -->
     <%- include("../partials/user/footer") %>
 
     <script>
         lucide.createIcons();
 
-        // Entrance animation
+        /* ── Entrance animations ── */
         gsap.from(".change-email-container", {
-            y: 30,
-            opacity: 0,
-            duration: 0.8,
-            ease: "power2.out"
+            y: 30, opacity: 0, duration: 0.8, ease: "power2.out"
         });
-        
         gsap.from(".change-email-card", {
-            scale: 0.98,
-            opacity: 0,
-            duration: 0.8,
-            ease: "power2.out",
-            delay: 0.2
+            scale: 0.98, opacity: 0, duration: 0.8, ease: "power2.out", delay: 0.2
         });
 
+        /* ── Safari back button fix ── */
+        window.addEventListener("pageshow", function (event) {
+            if (event.persisted) window.location.reload();
+        });
 
-/* =========================
-   SAFARI BACK BUTTON FIX
-========================= */
+        /* ================================================
+           INLINE VALIDATION
+        ================================================ */
 
-window.addEventListener("pageshow", function (event) {
+        const currentEmail = "<%= user.email %>";
 
-if (event.persisted) {
+        function showError(inputId, errorId, message) {
+            const input = document.getElementById(inputId);
+            const error = document.getElementById(errorId);
+            input.style.border      = "1.5px solid #e74c3c";
+            input.style.background  = "#fff8f8";
+            error.textContent       = message;
+            error.style.display     = "block";
+        }
 
-window.location.reload()
+        function showSuccess(inputId, errorId) {
+            const input = document.getElementById(inputId);
+            const error = document.getElementById(errorId);
+            input.style.border      = "1.5px solid #2ecc71";
+            input.style.background  = "#eeeef0";
+            error.textContent       = "";
+            error.style.display     = "none";
+        }
 
-}
+        function clearState(inputId, errorId) {
+            const input = document.getElementById(inputId);
+            const error = document.getElementById(errorId);
+            input.style.border      = "";
+            input.style.background  = "";
+            error.textContent       = "";
+            error.style.display     = "none";
+        }
 
-})
+        /* ── Individual validators ── */
 
+        function validateNewEmail() {
+            const val = document.getElementById("newEmail").value.trim();
+
+            if (!val) {
+                showError("newEmail", "newEmail-error", "New email address is required");
+                return false;
+            }
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
+                showError("newEmail", "newEmail-error", "Enter a valid email address");
+                return false;
+            }
+            if (val.length > 100) {
+                showError("newEmail", "newEmail-error", "Email cannot exceed 100 characters");
+                return false;
+            }
+            if (val === currentEmail) {
+                showError("newEmail", "newEmail-error", "New email must be different from your current email");
+                return false;
+            }
+            showSuccess("newEmail", "newEmail-error");
+
+            /* Re-check confirm field if already filled */
+            if (document.getElementById("confirmEmail").value) {
+                validateConfirmEmail();
+            }
+            return true;
+        }
+
+        function validateConfirmEmail() {
+            const newVal     = document.getElementById("newEmail").value.trim();
+            const confirmVal = document.getElementById("confirmEmail").value.trim();
+
+            if (!confirmVal) {
+                showError("confirmEmail", "confirmEmail-error", "Please confirm your new email");
+                return false;
+            }
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(confirmVal)) {
+                showError("confirmEmail", "confirmEmail-error", "Enter a valid email address");
+                return false;
+            }
+            if (confirmVal !== newVal) {
+                showError("confirmEmail", "confirmEmail-error", "Email addresses do not match");
+                return false;
+            }
+            showSuccess("confirmEmail", "confirmEmail-error");
+            return true;
+        }
+
+        /* ── Blur: validate when user leaves field ── */
+        document.getElementById("newEmail").addEventListener("blur", validateNewEmail);
+        document.getElementById("confirmEmail").addEventListener("blur", validateConfirmEmail);
+
+        /* ── Input: re-validate live only after an error has been shown ── */
+        document.getElementById("newEmail").addEventListener("input", function () {
+            if (this.style.border.includes("e74c3c")) validateNewEmail();
+        });
+        document.getElementById("confirmEmail").addEventListener("input", function () {
+            if (this.style.border.includes("e74c3c")) validateConfirmEmail();
+        });
+
+        /* ── Submit: run all validators before posting ── */
+        document.getElementById("changeEmailForm").addEventListener("submit", function (e) {
+            const newEmailOk     = validateNewEmail();
+            const confirmEmailOk = validateConfirmEmail();
+
+            if (!newEmailOk || !confirmEmailOk) {
+                e.preventDefault();
+                /* Scroll to first error */
+                const firstError = this.querySelector("[style*='e74c3c']");
+                if (firstError) firstError.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+        });
 
     </script>
 </body>

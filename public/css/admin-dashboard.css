@@ -832,6 +832,201 @@ tbody tr:last-child td {
   background-color: #603763 !important;
 }
 
+
+
+/* ── Filter links inside date-filter nav ── */
+.date-filter {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--white);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 6px;
+}
+
+.filter-link {
+  padding: 8px 18px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.filter-link:hover {
+  color: #603763;
+  background: rgba(96,55,99,0.06);
+}
+
+.active-filter {
+  background: #603763;
+  color: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(96,55,99,0.25);
+}
+
+/* ── Range label under page title ── */
+.range-label {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+/* ── KPI chip labels ── */
+.kpi-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.kpi-chip-purple { background: rgba(96,55,99,0.1);  color: #603763; }
+.kpi-chip-blue   { background: rgba(59,130,246,0.1); color: #1d4ed8; }
+.kpi-chip-green  { background: rgba(16,185,129,0.1); color: #065f46; }
+.kpi-chip-gray   { background: #f4f4f5;              color: #52525b; }
+.kpi-chip-red    { background: rgba(186,26,26,0.1);  color: #ba1a1a; }
+.kpi-chip-orange { background: rgba(245,158,11,0.1); color: #92400e; }
+
+/* ── KPI sub text ── */
+.kpi-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* ── Pending KPI icon ── */
+.kpi-icon.pending {
+  background: rgba(245,158,11,0.1);
+  color: #d97706;
+}
+
+/* ── Chart empty state ── */
+.chart-empty {
+  height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 500;
+}
+.chart-empty i { opacity: 0.4; }
+
+/* ── Chart container size ── */
+.chart-container {
+  width: 100%;
+  height: 300px;
+  position: relative;
+}
+
+.chart-subtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* ── Order status badges ── */
+.order-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.badge-delivered  { background: #d1fae5; color: #065f46; }
+.badge-processing { background: #fef3c7; color: #92400e; }
+.badge-pending    { background: #dbeafe; color: #1e40af; }
+.badge-cancelled  { background: #fee2e2; color: #991b1b; }
+.badge-returned   { background: #f3e8ff; color: #7e22ce; }
+.badge-shipped    { background: #e0f2fe; color: #075985; }
+
+/* ── Empty cell ── */
+.empty-cell {
+  text-align: center;
+  padding: 32px 16px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+/* ── Alert stock colors ── */
+.stock-critical { color: #ba1a1a; font-size: 12px; font-weight: 700; }
+.stock-low      { color: #d97706; font-size: 12px; font-weight: 700; }
+
+/* ── Alert empty state ── */
+.alert-empty {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px;
+  background: #f0fdf4;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #065f46;
+}
+
+/* ── Quick stats card ── */
+.quick-stats-card .card-header-inner { border-bottom: 1px solid #fafafa; }
+
+.quick-stats-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: #f4f4f5;
+  overflow: hidden;
+}
+
+.quick-stat-item {
+  background: var(--white);
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.quick-stat-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.quick-stat-value {
+  font-size: 32px;
+  font-weight: 400;
+  letter-spacing: -1px;
+  line-height: 1;
+}
+.qs-pending   { color: #1d4ed8; }
+.qs-cancelled { color: #ba1a1a; }
+.qs-returned  { color: #7e22ce; }
+.qs-rate      { color: #603763; }
+
+/* ── KPI grid 3 cols on smaller screens ── */
+@media (max-width: 1400px) {
+  .kpi-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 900px) {
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 600px) {
+  .kpi-grid { grid-template-columns: 1fr; }
+  .date-filter { flex-wrap: wrap; }
+  .filter-link { flex: 1; text-align: center; }
+}
+
 /* RESPONSIVE CSS — mirrors admin-categories.css pattern */
 @media (max-width: 1200px) {
   .kpi-grid {

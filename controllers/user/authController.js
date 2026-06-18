@@ -747,54 +747,67 @@ const sendEmailChangeOTP = async (req, res) => {
     }
 
     if (!newEmail) {
-      return res.status(400).json({
-        success: false,
-        message: "New email is required",
-      });
+      return res.status(400).json({ success: false, message: "New email is required" });
     }
 
     if (newEmail !== confirmEmail) {
-      return res.status(400).json({
-        success: false,
-        message: "Emails do not match",
-      });
+      return res.status(400).json({ success: false, message: "Emails do not match" });
     }
 
     const existingUser = await User.findOne({ email: newEmail });
-
     if (existingUser) {
-      return res.status(400).json({
-        success: false,
-        message: "This email is already in use",
-      });
+      return res.status(400).json({ success: false, message: "This email is already in use" });
     }
+
+    // Current logged-in user, to get the OLD email
+    const currentUser = await User.findById(req.session.userId);
+    if (!currentUser) return res.redirect("/login");
 
     await OTP.deleteMany({ email: newEmail, type: "emailChange" });
 
     const otp = generateOTP();
     const expiresAt = new Date(Date.now() + 300000);
-
     await OTP.create({ email: newEmail, code: otp, type: "emailChange", expiresAt });
 
-    await sendEmail(
-      newEmail,
-      "Email Change OTP",
-      `Your email change OTP is ${otp}. It expires in 5 minutes.`
-    );
+    // OTP to the NEW email + security alert to the OLD email.
+    // sendEmail now throws on failure (#6), so wrap and report it.
+    try {
+      await sendEmail(
+        newEmail,
+        "Email Change OTP",
+        `Your email change OTP is ${otp}. It expires in 5 minutes.`
+      );
+
+      await sendEmail(
+        currentUser.email,
+        "Security Alert: Email Change Requested",
+        `Hi ${currentUser.fullName},\n\n` +
+          `A request was made to change the email on your account to "${newEmail}".\n\n` +
+          `If this was you, no action is needed. The change completes once the OTP sent to the new address is verified.\n\n` +
+          `If you did NOT request this, please reset your password immediately and contact support.`
+      );
+    } catch (mailError) {
+      console.log("Email Change send failed:", mailError);
+      // Clean up the OTP we just created so the user can retry cleanly
+      await OTP.deleteMany({ email: newEmail, type: "emailChange" });
+      return res.status(500).json({
+        success: false,
+        message: "Failed to send verification email. Please try again.",
+      });
+    }
 
     res.redirect("/verify-email-otp?flow=email");
   } catch (error) {
     console.log("Email Change OTP Error:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Failed to send OTP",
-    });
+    return res.status(500).json({ success: false, message: "Failed to send OTP" });
   }
 };
+
 
 /* ================================
    VERIFY EMAIL CHANGE OTP
 ================================ */
+
 
 const verifyEmailChangeOTP = async (req, res) => {
   try {
@@ -816,7 +829,6 @@ const verifyEmailChangeOTP = async (req, res) => {
       });
     }
 
-    /* Match by email + code */
     const storedOTP = await OTP.findOne({
       email: newEmail,
       code: otp.trim(),
@@ -837,9 +849,42 @@ const verifyEmailChangeOTP = async (req, res) => {
       });
     }
 
-    await User.findByIdAndUpdate(req.session.userId, { email: newEmail });
+    // Re-check the new email is still free (#3).
+    // Someone could have registered it during the OTP window;
+    // the unique index would otherwise throw on update.
+    const taken = await User.findOne({ email: newEmail });
+    if (taken) {
+      await OTP.deleteMany({ email: newEmail, type: "emailChange" });
+      delete req.session.newEmail;
+      return res.status(400).json({
+        success: false,
+        message: "This email was just taken by another account. Please use a different email.",
+      });
+    }
+
+    // Capture the OLD email before swapping, for the confirmation alert (#1)
+    const currentUser = await User.findById(req.session.userId);
+    if (!currentUser) return res.redirect("/login");
+    const oldEmail = currentUser.email;
+
+    currentUser.email = newEmail;
+    await currentUser.save();
 
     await OTP.deleteMany({ email: newEmail, type: "emailChange" });
+
+    // Confirmation to the OLD email AFTER a successful change (#1).
+    // Wrapped so a mail failure doesn't undo the completed change.
+    try {
+      await sendEmail(
+        oldEmail,
+        "Your account email was changed",
+        `Hi ${currentUser.fullName},\n\n` +
+          `The email on your account was successfully changed to "${newEmail}".\n\n` +
+          `If you did NOT make this change, contact support immediately, as your account may be compromised.`
+      );
+    } catch (mailError) {
+      console.log("Email change confirmation failed:", mailError);
+    }
 
     delete req.session.newEmail;
 
@@ -849,6 +894,7 @@ const verifyEmailChangeOTP = async (req, res) => {
     res.redirect("/change-email");
   }
 };
+
 
 /* ================================
    SEND CHANGE PASSWORD OTP

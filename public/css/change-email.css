@@ -194,6 +194,14 @@
 .cancel-btn-outlined:hover {
   background: rgba(76, 0, 128, 0.05);
 }
+.field-error {
+    display: none;
+    color: #e74c3c;
+    font-size: 12px;
+    margin-top: 6px;
+    padding-left: 4px;
+    font-weight: 500;
+}
 
 /* Responsive */
 @media (max-width: 768px) {

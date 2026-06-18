@@ -3,430 +3,325 @@ import User from "../../models/User.js";
 import Product from "../../models/Product.js";
 import Variant from "../../models/Variant.js";
 
-export const getDashboardDataService =
-async (filter = "weekly") => {
-
-  /* ==========================
-     FILTER LOGIC
-  ========================== */
-
-  let matchStage = {
-    orderStatus: "Delivered",
-  };
+export const getDashboardDataService = async (filter = "weekly") => {
 
   const today = new Date();
 
+  /* ================================================
+     DATE RANGE per filter
+  ================================================ */
+
+  let rangeStart;
+  let rangeEnd = new Date();
+  rangeEnd.setHours(23, 59, 59, 999);
+
   if (filter === "daily") {
+    rangeStart = new Date();
+    rangeStart.setHours(0, 0, 0, 0);
 
-    const start = new Date();
+  } else if (filter === "weekly") {
+    rangeStart = new Date();
+    rangeStart.setDate(today.getDate() - 6);
+    rangeStart.setHours(0, 0, 0, 0);
 
-    start.setHours(
-      0,
-      0,
-      0,
-      0
-    );
+  } else if (filter === "monthly") {
+    rangeStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    rangeStart.setHours(0, 0, 0, 0);
 
-    matchStage.createdAt = {
-      $gte: start,
-    };
+  } else if (filter === "yearly") {
+    rangeStart = new Date(today.getFullYear(), 0, 1);
+    rangeStart.setHours(0, 0, 0, 0);
 
+  } else {
+    rangeStart = new Date();
+    rangeStart.setDate(today.getDate() - 6);
+    rangeStart.setHours(0, 0, 0, 0);
   }
-  else if (filter === "weekly") {
 
-  const start = new Date();
+  /* ================================================
+     MATCH STAGE
+  ================================================ */
 
-  start.setDate(
-    start.getDate() - 7
-  );
-
-  matchStage.createdAt = {
-    $gte: start,
+  const matchDelivered = {
+    orderStatus: "Delivered",
+    createdAt: { $gte: rangeStart, $lte: rangeEnd },
   };
 
-}
+  const matchAllStatuses = {
+    createdAt: { $gte: rangeStart, $lte: rangeEnd },
+  };
 
-  else if (filter === "monthly") {
+  /* ================================================
+     CHART FORMAT per filter
+  ================================================ */
 
-    const start = new Date(
-      today.getFullYear(),
-      today.getMonth(),
-      1
-    );
+  let chartDateFormat;
+  let chartGroupType;
 
-    matchStage.createdAt = {
-      $gte: start,
-    };
-
+  if (filter === "daily") {
+    chartDateFormat = "%H:00";
+    chartGroupType  = "hour";
+  } else if (filter === "weekly") {
+    chartDateFormat = "%d %b";
+    chartGroupType  = "day";
+  } else if (filter === "monthly") {
+    chartDateFormat = "%d";
+    chartGroupType  = "day";
+  } else {
+    chartDateFormat = "%b";
+    chartGroupType  = "month";
   }
 
-  else if (filter === "yearly") {
+  /* ================================================
+     TOTAL REVENUE (filtered)
+  ================================================ */
 
-    const start = new Date(
-      today.getFullYear(),
-      0,
-      1
-    );
+  const revenueResult = await Order.aggregate([
+    { $match: matchDelivered },
+    { $group: { _id: null, totalRevenue: { $sum: "$finalAmount" } } },
+  ]);
 
-    matchStage.createdAt = {
-      $gte: start,
-    };
+  /* ================================================
+     TOTAL ORDERS (filtered range, all statuses)
+  ================================================ */
 
-  }
+  const totalOrders = await Order.countDocuments(matchAllStatuses);
 
-  /* ==========================
-     TOTAL REVENUE
-  ========================== */
+  /* ================================================
+     TOTAL CUSTOMERS (all time — not filtered)
+  ================================================ */
 
-const revenueResult =
-await Order.aggregate([
+  const totalCustomers = await User.countDocuments({ isBlocked: false });
 
-  {
-    $match: matchStage,
-  },
+  /* ================================================
+     TOTAL PRODUCTS (all time)
+  ================================================ */
 
-  {
-    $group: {
-      _id: null,
+  const totalProducts = await Product.countDocuments({ isDeleted: false });
 
-      totalRevenue: {
-        $sum: "$finalAmount",
-      },
-    },
-  },
+  /* ================================================
+     TOTAL RETURNS (filtered)
+  ================================================ */
 
-]);
-  /* ==========================
-     TOTAL ORDERS
-  ========================== */
-
-  const totalOrders =
-  await Order.countDocuments();
-
-  /* ==========================
-     TOTAL CUSTOMERS
-  ========================== */
-
-  const totalCustomers =
-  await User.countDocuments({
-    isBlocked: false,
+  const totalReturns = await Order.countDocuments({
+    ...matchAllStatuses,
+    orderStatus: "Returned",
   });
 
-  /* ==========================
-     TOTAL PRODUCTS
-  ========================== */
+  /* ================================================
+     RETURN RATE
+  ================================================ */
 
-  const totalProducts =
-  await Product.countDocuments({
-    isDeleted: false,
+  const returnRate = totalOrders > 0
+    ? ((totalReturns / totalOrders) * 100).toFixed(1)
+    : 0;
+
+  /* ================================================
+     CANCELLED ORDERS (filtered)
+  ================================================ */
+
+  const totalCancelled = await Order.countDocuments({
+    ...matchAllStatuses,
+    orderStatus: "Cancelled",
   });
 
-  /* ==========================
-     RECENT ORDERS
-  ========================== */
+  /* ================================================
+     PENDING ORDERS (filtered)
+  ================================================ */
 
-  const recentOrders =
-await Order.find(matchStage)
+  const totalPending = await Order.countDocuments({
+    ...matchAllStatuses,
+    orderStatus: "Pending",
+  });
 
-    .populate(
-      "userId",
-      "fullName"
-    )
+  /* ================================================
+     REVENUE CHART — no gaps
+  ================================================ */
 
-    .sort({
-      createdAt: -1,
-    })
+  const rawChart = await Order.aggregate([
+    { $match: matchDelivered },
+    {
+      $group: {
+        _id:     { $dateToString: { format: chartDateFormat, date: "$createdAt", timezone: "Asia/Kolkata" } },
+        revenue: { $sum: "$finalAmount" },
+      },
+    },
+    { $sort: { _id: 1 } },
+  ]);
 
-    .limit(5)
+  /* Build a map then fill all buckets */
+  const revenueMap = {};
+  rawChart.forEach(item => { revenueMap[item._id] = item.revenue; });
 
+  const chartLabels = generateChartLabels(filter, rangeStart, rangeEnd, chartGroupType);
+  const chartData   = chartLabels.map(label => revenueMap[label] || 0);
+
+  /* ================================================
+     RECENT ORDERS (filtered, all statuses)
+  ================================================ */
+
+  const recentOrders = await Order
+    .find(matchAllStatuses)
+    .populate("userId", "fullName")
+    .sort({ createdAt: -1 })
+    .limit(8)
     .lean();
 
-  /* ==========================
-     REVENUE CHART DATA
-  ========================== */
+  /* ================================================
+     TOP SELLING PRODUCTS (filtered)
+  ================================================ */
 
-  const revenueChart =
-
-  await Order.aggregate([
-
-    {
-      $match: matchStage,
-    },
-
+  const topProducts = await Order.aggregate([
+    { $match: matchDelivered },
+    { $unwind: "$items" },
     {
       $group: {
-
-        _id: {
-
-          $dateToString: {
-            format: "%d-%m",
-            date: "$createdAt",
-          },
-
-        },
-
-        revenue: {
-          $sum: "$finalAmount",
-        },
-
+        _id:         "$items.productId",
+        productName: { $first: "$items.productName" },
+        unitsSold:   { $sum: "$items.quantity" },
+        revenue:     { $sum: { $multiply: ["$items.quantity", "$items.price"] } },
       },
     },
-
-    {
-      $sort: {
-        "_id": 1,
-      },
-    },
-
-    {
-      $limit: 7,
-    },
-
+    { $sort: { unitsSold: -1 } },
+    { $limit: 5 },
   ]);
 
-  /* ==========================
-     TOP SELLING PRODUCTS
-  ========================== */
+  /* ================================================
+     LOW STOCK ALERTS (all time — not filtered)
+  ================================================ */
 
-  const topProducts =
-
-  await Order.aggregate([
-
-{
-  $match: matchStage,
-},
-
-    {
-      $unwind: "$items",
-    },
-
-    {
-      $group: {
-
-        _id: "$items.productId",
-
-        productName: {
-          $first: "$items.productName",
-        },
-
-        unitsSold: {
-          $sum: "$items.quantity",
-        },
-
-        revenue: {
-
-          $sum: {
-
-            $multiply: [
-              "$items.quantity",
-              "$items.price",
-            ],
-
-          },
-
-        },
-
-      },
-    },
-
-    {
-      $sort: {
-        unitsSold: -1,
-      },
-    },
-
-    {
-      $limit: 10,
-    },
-
-  ]);
-
-  /* ==========================
-     LOW STOCK ALERTS
-  ========================== */
-
-  const stockAlerts =
-
-  await Variant.find({
-
-    isDeleted: false,
-
-    isActive: true,
-
-    stock: {
-      $lte: 5,
-    },
-
-  })
-
-    .populate(
-      "productId",
-      "name"
-    )
-
-    .sort({
-      stock: 1,
-    })
-
+  const stockAlerts = await Variant
+    .find({ isDeleted: false, isActive: true, stock: { $lte: 10 } })
+    .populate("productId", "name")
+    .sort({ stock: 1 })
     .limit(5)
-
     .lean();
 
-  /* ==========================
-     TOP CATEGORIES
-  ========================== */
+  /* ================================================
+     TOP CATEGORIES (filtered)
+  ================================================ */
 
-  const topCategories =
-
-  await Order.aggregate([
-
-{
-  $match: matchStage,
-},
-
-    {
-      $unwind: "$items",
-    },
-
+  const topCategories = await Order.aggregate([
+    { $match: matchDelivered },
+    { $unwind: "$items" },
     {
       $lookup: {
-
-        from: "products",
-
-        localField:
-          "items.productId",
-
-        foreignField:
-          "_id",
-
-        as: "product",
-
+        from: "products", localField: "items.productId",
+        foreignField: "_id", as: "product",
       },
     },
-
-    {
-      $unwind: "$product",
-    },
-
+    { $unwind: "$product" },
     {
       $lookup: {
-
-        from: "categories",
-
-        localField:
-          "product.categoryId",
-
-        foreignField:
-          "_id",
-
-        as: "category",
-
+        from: "categories", localField: "product.categoryId",
+        foreignField: "_id", as: "category",
       },
     },
-
-    {
-      $unwind: "$category",
-    },
-
+    { $unwind: "$category" },
     {
       $group: {
-
-        _id:
-          "$category.name",
-
-        revenue: {
-
-          $sum: {
-
-            $multiply: [
-
-              "$items.quantity",
-
-              "$items.price",
-
-            ],
-
-          },
-
-        },
-
+        _id:     "$category.name",
+        revenue: { $sum: { $multiply: ["$items.quantity", "$items.price"] } },
+        units:   { $sum: "$items.quantity" },
       },
     },
-
-    {
-      $sort: {
-        revenue: -1,
-      },
-    },
-
-    {
-      $limit: 10,
-    },
-
+    { $sort: { revenue: -1 } },
+    { $limit: 5 },
   ]);
 
-  const totalCategoryRevenue =
+  const totalCategoryRevenue = topCategories.reduce((sum, c) => sum + c.revenue, 0);
 
-  topCategories.reduce(
+  const categoriesWithPercentage = topCategories.map(cat => ({
+    ...cat,
+    percentage: totalCategoryRevenue > 0
+      ? Math.round((cat.revenue / totalCategoryRevenue) * 100)
+      : 0,
+  }));
 
-    (sum, category) =>
+  /* ================================================
+     CHART TITLE per filter
+  ================================================ */
 
-      sum + category.revenue,
-
-    0
-
-  );
-
-  const categoriesWithPercentage =
-
-  topCategories.map(
-
-    (category) => ({
-
-      ...category,
-
-      percentage:
-
-        totalCategoryRevenue > 0
-
-          ? Math.round(
-
-              (
-                category.revenue
-                /
-                totalCategoryRevenue
-              ) * 100
-
-            )
-
-          : 0,
-
-    })
-
-  );
+  const chartTitles = {
+    daily:   "Today — Hourly Revenue",
+    weekly:  "Last 7 Days — Revenue",
+    monthly: "This Month — Revenue",
+    yearly:  "This Year — Monthly Revenue",
+  };
 
   return {
-
-    totalRevenue:
-      revenueResult[0]?.totalRevenue || 0,
-
+    /* KPIs */
+    totalRevenue:    revenueResult[0]?.totalRevenue || 0,
     totalOrders,
-
     totalCustomers,
-
     totalProducts,
+    totalReturns,
+    totalCancelled,
+    totalPending,
+    returnRate,
 
+    /* Chart */
+    chartLabels,
+    chartData,
+    chartTitle: chartTitles[filter] || "Revenue Trends",
+
+    /* Tables */
     recentOrders,
-
-    revenueChart,
-
     topProducts,
-
     stockAlerts,
+    topCategories: categoriesWithPercentage,
 
-    topCategories:
-      categoriesWithPercentage,
-
+    /* Meta */
+    filter,
+    rangeLabel: `${rangeStart.toLocaleDateString("en-IN")} — ${rangeEnd.toLocaleDateString("en-IN")}`,
   };
-
 };
+
+/* ================================================
+   HELPER — generate full label set (no gaps)
+================================================ */
+
+function generateChartLabels(filter, rangeStart, rangeEnd, chartGroupType) {
+  const labels = [];
+
+  if (chartGroupType === "hour") {
+    for (let h = 0; h < 24; h++) {
+      labels.push(`${String(h).padStart(2, "0")}:00`);
+    }
+    return labels;
+  }
+
+  if (chartGroupType === "month") {
+    const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    const start = new Date(rangeStart.getFullYear(), rangeStart.getMonth(), 1);
+    const end   = new Date(rangeEnd.getFullYear(),   rangeEnd.getMonth(),   1);
+    const cur   = new Date(start);
+    while (cur <= end) {
+      labels.push(monthNames[cur.getMonth()]);
+      cur.setMonth(cur.getMonth() + 1);
+    }
+    return labels;
+  }
+
+  /* day-level */
+  if (filter === "monthly") {
+    const daysInMonth = new Date(rangeStart.getFullYear(), rangeStart.getMonth() + 1, 0).getDate();
+    for (let d = 1; d <= daysInMonth; d++) {
+      labels.push(String(d).padStart(2, "0"));
+    }
+    return labels;
+  }
+
+  /* weekly — iterate actual dates */
+  const cur = new Date(rangeStart);
+  cur.setHours(0, 0, 0, 0);
+  const end = new Date(rangeEnd);
+  end.setHours(0, 0, 0, 0);
+  while (cur <= end) {
+    const day   = String(cur.getDate()).padStart(2, "0");
+    const month = cur.toLocaleString("en-GB", { month: "short" });
+    labels.push(`${day} ${month}`);
+    cur.setDate(cur.getDate() + 1);
+  }
+  return labels;
+}

@@ -171,6 +171,13 @@ for (const item of cart.items) {
     item.offerType =
     offerData.offerType;
 
+    /* FIX: thread the computed badge label onto the
+       item so the EJS never has to echo the raw,
+       possibly-capped discountValue itself */
+
+    item.badgeLabel =
+    offerData.badgeLabel;
+
     subtotal +=
     offerData.finalPrice *
     item.quantity;
@@ -427,6 +434,7 @@ let cartSubtotal = 0;
 let totalItems = 0;
 let itemSubtotal = 0;
 let offerDiscount = 0;
+let itemBadgeLabel = null;
 
 for (const cartItem of cart.items) {
 
@@ -456,6 +464,13 @@ for (const cartItem of cart.items) {
         variantId.toString()
     ){
         itemSubtotal = lineTotal;
+
+        /* FIX: surface this item's real badge label
+           back to the client so the cart page can
+           refresh the badge text after a quantity
+           change without a full page reload */
+
+        itemBadgeLabel = offerData.badgeLabel;
     }
 
     cartSubtotal += lineTotal;
@@ -494,6 +509,8 @@ return {
 
     itemSubtotal,
 
+    itemBadgeLabel,
+
     cartSubtotal,
 
     offerDiscount,
@@ -530,10 +547,6 @@ export const removeCartItemService = async ({
   }
 
   const removedItem = cart.items.find(
-    (item) => item.variantId.toString() === variantId.toString(),
-  );
-
-  const removedCartItem = cart.items.find(
     (item) => item.variantId.toString() === variantId.toString(),
   );
 
