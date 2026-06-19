@@ -4,18 +4,16 @@ import {
   placeOrderWalletService,
   createRazorpayCheckoutService,
   verifyRazorpayPaymentService,
-  retryRazorpayPaymentService,
+  loadRetryCheckoutService,
 } from "../../services/user/checkoutService.js";
 
-import {
-  calculateCheckoutTotals,
-} from "../../services/shared/pricingService.js";
+import { calculateCheckoutTotals } from "../../services/shared/pricingService.js";
 
 import Cart  from "../../models/Cart.js";
 import Order from "../../models/Order.js";
 
 /* =========================================
-   LOAD CHECKOUT PAGE
+   LOAD CHECKOUT PAGE  (mode = "new")
 ========================================= */
 
 export const loadCheckoutPage = async (req, res) => {
@@ -32,22 +30,24 @@ export const loadCheckoutPage = async (req, res) => {
     }
 
     res.render("user/checkout", {
-      page:              "checkout",
+      page:             "checkout",
+      mode:             "new",          /* ← tells the template which UI to show */
       cart: {
         items:    response.cartItems,
         subtotal: response.subtotal,
       },
-      addresses:         response.addresses,
-      availableCoupons:  response.availableCoupons,
-      subtotal:          response.subtotal,
-      offerDiscount:     response.offerDiscount,
-      couponDiscount:    response.couponDiscount,
-      appliedCoupon:     req.session.appliedCoupon || null,
-      totalItems:        response.totalItems,
-      taxAmount:         response.taxAmount,
-      deliveryCharge:    response.deliveryCharge,
-      finalAmount:       response.finalAmount,
-      razorpayKey:       process.env.RAZORPAY_KEY_ID,
+      order:            null,           /* not used in new mode */
+      addresses:        response.addresses,
+      availableCoupons: response.availableCoupons,
+      subtotal:         response.subtotal,
+      offerDiscount:    response.offerDiscount,
+      couponDiscount:   response.couponDiscount,
+      appliedCoupon:    req.session.appliedCoupon || null,
+      totalItems:       response.totalItems,
+      taxAmount:        response.taxAmount,
+      deliveryCharge:   response.deliveryCharge,
+      finalAmount:      response.finalAmount,
+      razorpayKey:      process.env.RAZORPAY_KEY_ID,
     });
 
   } catch (error) {
@@ -58,7 +58,54 @@ export const loadCheckoutPage = async (req, res) => {
 
 
 /* =========================================
-   PLACE ORDER
+   LOAD RETRY CHECKOUT PAGE  (mode = "retry")
+   Renders the same checkout.ejs but with
+   order data instead of cart data.
+   Route: GET /orders/:orderId/retry
+========================================= */
+
+export const loadRetryCheckoutPage = async (req, res) => {
+  try {
+    const userId      = req.session.userId;
+    const { orderId } = req.params;
+
+    const response = await loadRetryCheckoutService(userId, orderId);
+
+    if (!response.success) {
+      /* Expired or ineligible — redirect to orders with error message */
+      const msg = encodeURIComponent(response.message);
+      return res.redirect(`/orders?retryError=${msg}`);
+    }
+
+    const order = response.order;
+
+    res.render("user/checkout", {
+      page:             "orders",
+      mode:             "retry",        /* ← tells the template which UI to show */
+      cart:             null,           /* not used in retry mode */
+      order,
+      addresses:        response.addresses,
+      availableCoupons: [],             /* hidden in retry mode */
+      subtotal:         order.subtotal,
+      offerDiscount:    order.offerDiscount  || 0,
+      couponDiscount:   order.couponDiscount || 0,
+      appliedCoupon:    null,           /* hidden in retry mode */
+      totalItems:       order.items?.length || 0,
+      taxAmount:        order.taxAmount,
+      deliveryCharge:   order.deliveryCharge,
+      finalAmount:      order.finalAmount,
+      razorpayKey:      process.env.RAZORPAY_KEY_ID,
+    });
+
+  } catch (error) {
+    console.log("Load Retry Checkout Error:", error);
+    return res.redirect("/orders");
+  }
+};
+
+
+/* =========================================
+   PLACE ORDER  (new mode)
 ========================================= */
 
 export const placeOrder = async (req, res) => {
@@ -66,12 +113,9 @@ export const placeOrder = async (req, res) => {
     const userId = req.session.userId;
     const { addressId, deliveryType, paymentMethod } = req.body;
 
-    let response;
-
     /* ── RAZORPAY ── */
     if (paymentMethod === "RAZORPAY") {
-
-      response = await createRazorpayCheckoutService(
+      const response = await createRazorpayCheckoutService(
         userId,
         addressId,
         deliveryType,
@@ -82,7 +126,6 @@ export const placeOrder = async (req, res) => {
         return res.status(400).json({ success: false, message: response.message });
       }
 
-      /* Clear coupon session now — order is saved */
       delete req.session.appliedCoupon;
 
       return res.json({
@@ -90,11 +133,12 @@ export const placeOrder = async (req, res) => {
         paymentMethod: "RAZORPAY",
         razorpayOrder: response.razorpayOrder,
         amount:        response.amount,
-        orderId:       response.orderId,  /* DB order ID for the verify step */
+        orderId:       response.orderId,
       });
     }
 
     /* ── WALLET ── */
+    let response;
     if (paymentMethod === "WALLET") {
       response = await placeOrderWalletService(
         userId,
@@ -135,18 +179,18 @@ export const placeOrder = async (req, res) => {
 
 /* =========================================
    VERIFY RAZORPAY PAYMENT
-   ─────────────────────────────────────────
-   No longer needs addressId / deliveryType
-   — the order already exists in the DB.
+   Shared by both new checkout and retry flow.
+   Finds the order by razorpayOrderId so it
+   works regardless of which flow created it.
 ========================================= */
 
 export const verifyRazorpayPayment = async (req, res) => {
   try {
     const response = await verifyRazorpayPaymentService({
-      userId:             req.session.userId,
-      razorpayOrderId:    req.body.razorpay_order_id,
-      razorpayPaymentId:  req.body.razorpay_payment_id,
-      razorpaySignature:  req.body.razorpay_signature,
+      userId:            req.session.userId,
+      razorpayOrderId:   req.body.razorpay_order_id,
+      razorpayPaymentId: req.body.razorpay_payment_id,
+      razorpaySignature: req.body.razorpay_signature,
     });
 
     if (!response.success) {
@@ -166,44 +210,12 @@ export const verifyRazorpayPayment = async (req, res) => {
 
 
 /* =========================================
-   RETRY RAZORPAY PAYMENT
-   ─────────────────────────────────────────
-   Called from the orders page when the user
-   clicks "Retry Payment" on a Failed order.
-========================================= */
-
-export const retryPayment = async (req, res) => {
-  try {
-    const userId  = req.session.userId;
-    const { orderId } = req.params;
-
-    const response = await retryRazorpayPaymentService(userId, orderId);
-
-    if (!response.success) {
-      return res.status(400).json({ success: false, message: response.message });
-    }
-
-    return res.json({
-      success:       true,
-      razorpayOrder: response.razorpayOrder,
-      amount:        response.amount,
-      orderId:       response.orderId,
-    });
-
-  } catch (error) {
-    console.log("Retry Payment Error:", error);
-    return res.status(500).json({ success: false, message: "Failed to retry payment" });
-  }
-};
-
-
-/* =========================================
    APPLY COUPON
 ========================================= */
 
 export const applyCoupon = async (req, res) => {
   try {
-    const userId     = req.session.userId;
+    const userId         = req.session.userId;
     const { couponCode } = req.body;
 
     const cart = await Cart.findOne({ userId })
@@ -215,11 +227,7 @@ export const applyCoupon = async (req, res) => {
       return res.json({ success: false, message: "Cart is empty" });
     }
 
-    const totals = await calculateCheckoutTotals({
-      cartItems:  cart.items,
-      couponCode,
-      userId,
-    });
+    const totals = await calculateCheckoutTotals({ cartItems: cart.items, couponCode, userId });
 
     if (!totals.coupon) {
       return res.json({ success: false, message: "Invalid coupon" });
@@ -264,11 +272,7 @@ export const removeCoupon = async (req, res) => {
       return res.json({ success: false, message: "Cart is empty" });
     }
 
-    const totals = await calculateCheckoutTotals({
-      cartItems:  cart.items,
-      userId,
-      couponCode: null,
-    });
+    const totals = await calculateCheckoutTotals({ cartItems: cart.items, userId, couponCode: null });
 
     return res.json({
       success:        true,
@@ -295,9 +299,7 @@ export const loadOrderSuccessPage = async (req, res) => {
       userId:  req.session.userId,
     });
 
-    if (!order) {
-      return res.redirect("/");
-    }
+    if (!order) return res.redirect("/");
 
     res.render("user/order-success", { page: "order-success", order });
 

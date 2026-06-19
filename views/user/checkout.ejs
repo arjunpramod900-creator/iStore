@@ -3,161 +3,219 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Checkout — iStore</title>
-    <meta name="description" content="Complete your iStore purchase. Secure checkout with multiple payment options.">
+    <title><%= mode === 'retry' ? 'Complete Payment' : 'Checkout' %> — iStore</title>
 
-    <!-- CSS -->
     <link rel="stylesheet" href="/css/components/header.css">
     <link rel="stylesheet" href="/css/components/footer.css">
     <link rel="stylesheet" href="/css/components/toast.css">
     <link rel="stylesheet" href="/css/checkout.css">
     <link rel="stylesheet" href="/css/addresses.css?v=5.0">
 
-    <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
-    <!-- Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
-
-    <!-- GSAP -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+    <style>
+        /* ── Failed payment banner (retry mode only) ── */
+        .co-retry-banner {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 20px 24px;
+            background: rgba(186, 26, 26, 0.06);
+            border: 1px solid rgba(186, 26, 26, 0.20);
+            border-radius: 18px;
+            margin-bottom: 8px;
+        }
+        .co-retry-banner svg { color: #BA1A1A; flex-shrink: 0; margin-top: 2px; }
+        .co-retry-banner-body { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+        .co-retry-banner-title { font-size: 15px; font-weight: 700; color: #BA1A1A; }
+        .co-retry-banner-sub   { font-size: 13px; color: #6B7280; line-height: 1.6; }
+
+        /* ── Countdown timer ── */
+        .co-countdown-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            padding: 10px 14px;
+            background: rgba(186, 26, 26, 0.08);
+            border-radius: 10px;
+            width: fit-content;
+        }
+        .co-countdown-wrap svg { color: #BA1A1A; }
+        .co-countdown-label { font-size: 13px; color: #6B7280; }
+        .co-countdown-value { font-size: 15px; font-weight: 800; color: #BA1A1A; font-variant-numeric: tabular-nums; }
+
+        /* ── Retry mode: lock delivery section ── */
+        .co-section--locked {
+            opacity: 0.5;
+            pointer-events: none;
+            user-select: none;
+            position: relative;
+        }
+        .co-section--locked::after {
+            content: "Locked — finalized at order time";
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 700;
+            color: #6B7280;
+            background: rgba(255,255,255,0.6);
+            border-radius: inherit;
+            backdrop-filter: blur(2px);
+        }
+
+        /* ── Retry mode: order items in summary ── */
+        .co-retry-item-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 999px;
+            background: rgba(76, 0, 128, 0.08);
+            color: #4C0080;
+            margin-top: 4px;
+        }
+    </style>
 </head>
 
 <body>
 
     <%- include('../partials/user/header', { page: 'checkout' }) %>
 
-<%
-const grandTotal = finalAmount;
-const currentCouponDiscount = couponDiscount || 0;
-%>
+    <%
+        /* ── Mode-aware variables ── */
+        const isRetry     = mode === "retry";
+        const grandTotal  = finalAmount;
+        const currentCouponDiscount = (!isRetry && couponDiscount) ? couponDiscount : 0;
+
+        /* Items to show in summary */
+        const summaryItems = isRetry
+            ? (order.items || []).filter(i => i.itemStatus !== "Cancelled")
+            : (cart && cart.items ? cart.items : []);
+
+        /* Order ID for retry endpoint */
+        const retryOrderId = isRetry ? order.orderId : "";
+
+        /* Address redirectTo — stays on same page after add/edit */
+        const addressRedirectTo = isRetry
+            ? `/orders/${retryOrderId}/retry`
+            : "/checkout";
+
+        /* Payment expiry for countdown */
+        const expiresAt = isRetry && order.paymentExpiresAt
+            ? new Date(order.paymentExpiresAt).getTime()
+            : null;
+    %>
 
     <main class="checkout-page" id="checkoutPage">
-
         <div class="checkout-container">
 
-            <!-- ── BREADCRUMBS ── -->
+            <!-- BREADCRUMBS -->
             <nav class="co-breadcrumbs" aria-label="Breadcrumb">
                 <a href="/" class="bc-crumb">Home</a>
-                <span class="bc-sep">
-                    <i data-lucide="chevron-right" size="12"></i>
-                </span>
-                <a href="/cart" class="bc-crumb">Cart</a>
-                <span class="bc-sep">
-                    <i data-lucide="chevron-right" size="12"></i>
-                </span>
-                <span class="bc-crumb active">Checkout</span>
+                <span class="bc-sep"><i data-lucide="chevron-right" size="12"></i></span>
+                <% if (isRetry) { %>
+                    <a href="/orders" class="bc-crumb">Orders</a>
+                    <span class="bc-sep"><i data-lucide="chevron-right" size="12"></i></span>
+                    <a href="/orders/<%= retryOrderId %>" class="bc-crumb">Order Details</a>
+                    <span class="bc-sep"><i data-lucide="chevron-right" size="12"></i></span>
+                    <span class="bc-crumb active">Complete Payment</span>
+                <% } else { %>
+                    <a href="/cart" class="bc-crumb">Cart</a>
+                    <span class="bc-sep"><i data-lucide="chevron-right" size="12"></i></span>
+                    <span class="bc-crumb active">Checkout</span>
+                <% } %>
             </nav>
 
-            <!-- ── PAGE HEADING ── -->
-            <h1 class="co-heading">Checkout</h1>
+            <!-- PAGE HEADING -->
+            <h1 class="co-heading">
+                <%= isRetry ? "Complete Your Payment" : "Checkout" %>
+            </h1>
 
-            <!-- ── TWO-COLUMN LAYOUT ── -->
+            <!-- ── RETRY BANNER (retry mode only) ── -->
+            <% if (isRetry) { %>
+            <div class="co-retry-banner" id="coRetryBanner">
+                <i data-lucide="alert-triangle" size="20"></i>
+                <div class="co-retry-banner-body">
+                    <span class="co-retry-banner-title">Your previous payment was not completed</span>
+                    <span class="co-retry-banner-sub">
+                        Your items are reserved. Complete payment now to confirm your order
+                        <strong>#<%= retryOrderId %></strong>.
+                        You can change your address or payment method below.
+                    </span>
+                    <% if (expiresAt) { %>
+                    <div class="co-countdown-wrap" id="countdownWrap">
+                        <i data-lucide="clock" size="14"></i>
+                        <span class="co-countdown-label">Reservation expires in</span>
+                        <span class="co-countdown-value" id="countdownDisplay">--:--</span>
+                    </div>
+                    <% } %>
+                </div>
+            </div>
+            <% } %>
+
+            <!-- TWO-COLUMN LAYOUT -->
             <div class="co-layout">
 
                 <!-- ══════════════════════════════
-                     LEFT COLUMN — Forms
+                     LEFT COLUMN
                 ══════════════════════════════ -->
                 <section class="co-left" id="coLeft">
 
-                    <!-- ── SECTION 1: SHIPPING DETAILS ── -->
+                    <!-- SECTION 1: SHIPPING DETAILS -->
                     <div class="co-section" id="sectionShipping">
-
                         <div class="co-section-header">
-                            <span class="co-section-icon">
-                                <i data-lucide="map-pin" size="16"></i>
-                            </span>
+                            <span class="co-section-icon"><i data-lucide="map-pin" size="16"></i></span>
                             <h2 class="co-section-title">Shipping Details</h2>
                         </div>
 
                         <div class="checkout-addresses-grid">
                             <input
-    type="hidden"
+                                type="hidden"
+                                id="selectedAddressId"
+                                value="<%= addresses?.find(a => a.isDefault)?._id || '' %>"
+                            >
 
-    id="selectedAddressId"
+                            <% if (addresses && addresses.length > 0) { %>
+                                <% addresses.forEach(address => { %>
+                                <div
+                                    class="checkout-address-wrapper <%= address.isDefault ? 'active' : '' %>"
+                                    data-address-id="<%= address._id %>"
+                                >
+                                    <%- include("../partials/user/address-card", { address }) %>
+                                </div>
+                                <% }) %>
+                            <% } else { %>
+                                <div class="co-empty-address"><p>No saved addresses found</p></div>
+                            <% } %>
+                        </div>
 
-    name="selectedAddressId"
-
-    value="<%= addresses?.find(a => a.isDefault)?._id || '' %>"
->
-
-    <% if(addresses && addresses.length > 0){ %>
-
-        <% addresses.forEach(address => { %>
-
-            <div
-
-                class="
-                checkout-address-wrapper
-                <%= address.isDefault ? 'active' : '' %>
-                "
-
-                data-address-id="<%= address._id %>"
-
-            >
-
-                <%- include(
-
-                    "../partials/user/address-card",
-
-                    { address }
-
-                ) %>
-
-            </div>
-
-        <% }) %>
-
-    <% } else { %>
-
-        <div class="co-empty-address">
-
-            <p>
-                No saved addresses found
-            </p>
-
-        </div>
-
-    <% } %>
-
-</div>
-
-<button
-type="button"
-id="checkoutAddAddressBtn"
-class="co-add-address-btn">
-
-+ Add New Address
-
-</button>
+                        <button type="button" id="checkoutAddAddressBtn" class="co-add-address-btn">
+                            + Add New Address
+                        </button>
                     </div>
 
-                    <!-- ── SECTION 2: DELIVERY OPTIONS ── -->
-                    <div class="co-section" id="sectionDelivery">
-
+                    <!-- SECTION 2: DELIVERY OPTIONS
+                         Hidden in retry mode — delivery is already finalised -->
+                    <div class="co-section <%= isRetry ? 'co-section--locked' : '' %>" id="sectionDelivery">
                         <div class="co-section-header">
-                            <span class="co-section-icon">
-                                <i data-lucide="truck" size="16"></i>
-                            </span>
+                            <span class="co-section-icon"><i data-lucide="truck" size="16"></i></span>
                             <h2 class="co-section-title">Delivery Options</h2>
                         </div>
 
                         <div class="co-delivery-grid">
-
-                            <!-- Standard Delivery (selected) -->
                             <label class="co-delivery-card selected" id="deliveryStandard">
-                                <input
-                                    type="radio"
-                                    name="delivery"
-                                    value="standard"
-                                    class="co-radio-hidden"
-                                    checked
-                                >
-                                <span class="co-radio-dot">
-                                    <span class="co-radio-dot-inner"></span>
-                                </span>
+                                <input type="radio" name="delivery" value="standard" class="co-radio-hidden" checked>
+                                <span class="co-radio-dot"><span class="co-radio-dot-inner"></span></span>
                                 <span class="co-delivery-info">
                                     <span class="co-delivery-name">Standard Delivery</span>
                                     <span class="co-delivery-desc">3–5 Business Days</span>
@@ -165,299 +223,186 @@ class="co-add-address-btn">
                                 <span class="co-delivery-price free">Free</span>
                             </label>
 
-                            <!-- Express Delivery -->
                             <label class="co-delivery-card" id="deliveryExpress">
-                                <input
-                                    type="radio"
-                                    name="delivery"
-                                    value="express"
-                                    class="co-radio-hidden"
-                                >
-                                <span class="co-radio-dot unselected">
-                                    <span class="co-radio-dot-inner"></span>
-                                </span>
+                                <input type="radio" name="delivery" value="express" class="co-radio-hidden">
+                                <span class="co-radio-dot unselected"><span class="co-radio-dot-inner"></span></span>
                                 <span class="co-delivery-info">
                                     <span class="co-delivery-name">Express Delivery</span>
                                     <span class="co-delivery-desc">Next Day Delivery</span>
                                 </span>
                                 <span class="co-delivery-price">₹500</span>
                             </label>
-
                         </div>
                     </div>
 
-                    <!-- ── SECTION 3: PAYMENT METHOD ── -->
+                    <!-- SECTION 3: PAYMENT METHOD -->
                     <div class="co-section" id="sectionPayment">
-
                         <div class="co-section-header">
-                            <span class="co-section-icon">
-                                <i data-lucide="credit-card" size="16"></i>
-                            </span>
+                            <span class="co-section-icon"><i data-lucide="credit-card" size="16"></i></span>
                             <h2 class="co-section-title">Payment Method</h2>
                         </div>
 
                         <div class="co-payment-card">
-
-                            <!-- Payment method tabs -->
-                          <div class="co-payment-tabs">
-
-                                <button
-                                    class="co-pay-tab active"
-                                    data-method="razorpay"
-                                    id="tabRazorpay">
-
+                            <div class="co-payment-tabs">
+                                <button class="co-pay-tab active" data-method="razorpay" id="tabRazorpay">
                                     <i data-lucide="credit-card" size="18"></i>
-
                                     <span>Razorpay</span>
-
                                 </button>
-
-                                <button
-                                    class="co-pay-tab"
-                                    data-method="wallet"
-                                    id="tabWallet">
-
+                                <button class="co-pay-tab" data-method="wallet" id="tabWallet">
                                     <i data-lucide="wallet" size="18"></i>
-
                                     <span>Wallet</span>
-
                                 </button>
-
-                                <button
-                                    class="co-pay-tab"
-                                    data-method="cod"
-                                    id="tabCod">
-
+                                <button class="co-pay-tab" data-method="cod" id="tabCod">
                                     <i data-lucide="banknote" size="18"></i>
-
                                     <span>Cash On Delivery</span>
-
                                 </button>
-
                             </div>
-
-
-                            <!-- RAZORPAY -->
 
                             <div class="co-card-details" id="panelRazorpay">
-
                                 <div class="co-cod-notice">
-
                                     <i data-lucide="shield-check" size="24"></i>
-
                                     <div>
-
-                                        <p class="co-cod-title">
-                                            Secure Razorpay Payment
-                                        </p>
-
-                                        <p class="co-cod-desc">
-                                            Pay using UPI, Cards, Net Banking,
-                                            Wallets and more through Razorpay.
-                                        </p>
-
+                                        <p class="co-cod-title">Secure Razorpay Payment</p>
+                                        <p class="co-cod-desc">Pay using UPI, Cards, Net Banking, Wallets and more.</p>
                                     </div>
-
                                 </div>
-
                             </div>
-
-
-                            <!-- WALLET -->
 
                             <div class="co-card-details hidden" id="panelWallet">
-
                                 <div class="co-cod-notice">
-
                                     <i data-lucide="wallet" size="24"></i>
-
                                     <div>
-
-                                        <p class="co-cod-title">
-                                            Wallet Payment
-                                        </p>
-
-                                        <p class="co-cod-desc">
-                                            Your iStore wallet balance will be used.
-                                        </p>
-
+                                        <p class="co-cod-title">Wallet Payment</p>
+                                        <p class="co-cod-desc">Your iStore wallet balance will be used.</p>
                                     </div>
-
                                 </div>
-
                             </div>
-
-
-                            <!-- COD -->
 
                             <div class="co-card-details hidden" id="panelCod">
-
                                 <div class="co-cod-notice">
-
                                     <i data-lucide="package-check" size="24"></i>
-
                                     <div>
-
-                                        <p class="co-cod-title">
-                                            Cash On Delivery
-                                        </p>
-
-                                        <p class="co-cod-desc">
-                                            Pay when your order arrives.
-                                        </p>
-
+                                        <p class="co-cod-title">Cash On Delivery</p>
+                                        <p class="co-cod-desc">Pay when your order arrives.</p>
                                     </div>
-
                                 </div>
-
                             </div>
-
                         </div>
                     </div>
 
                 </section>
 
                 <!-- ══════════════════════════════
-                     RIGHT COLUMN — Order Summary
+                     RIGHT COLUMN
                 ══════════════════════════════ -->
                 <aside class="co-right" id="coRight">
 
                     <!-- ORDER SUMMARY CARD -->
                     <div class="co-summary-card">
-
                         <h2 class="co-summary-title">Order Summary</h2>
 
-                        <!-- Items list -->
                         <div class="co-summary-items">
 
-                            <% if (cart && cart.items && cart.items.length > 0) { %>
+                            <% if (summaryItems.length > 0) { %>
+                                <% summaryItems.forEach(item => { %>
 
-                                <% cart.items.forEach(item => { %>
-
-                                    <div class="co-summary-item">
-                                        <div class="co-item-thumb">
+                                <div class="co-summary-item">
+                                    <div class="co-item-thumb">
+                                        <% if (isRetry) { %>
                                             <img
-                                                src="<%= item.variantId.images?.[0] || item.productId.thumbnail || '/img/placeholder.png' %>"
-                                                alt="<%= item.productId.name %>"
+                                                src="<%= item.productImage || '/img/placeholder.png' %>"
+                                                alt="<%= item.productName %>"
                                                 loading="lazy"
                                             >
-                                        </div>
-                                        <div class="co-item-meta">
-                                            <p class="co-item-name"><%= item.productId.name %></p>
-                                            <p class="co-item-variant">
-                                                <% if(item.offerDiscount > 0){ %>
-
-                                                <div
-                                                style="
-                                                font-size:12px;
-                                                font-weight:600;
-                                                color:#16A34A;
-                                                margin-top:4px;
-                                                ">
-
-                                                Offer Applied
-
-                                                </div>
-
-                                                <% } %>
-                                                <%= [item.variantId.color, item.variantId.storage].filter(Boolean).join(' • ') %>
-                                                <% if (item.quantity > 1) { %> &nbsp;·&nbsp; Qty: <%= item.quantity %><% } %>
-                                            </p>
-                                        </div>
-                                        <span class="co-item-price">
-
-                                        ₹<%= (
-                                        (
-                                        item.finalPrice || item.price
-                                        )
-                                        *
-                                        item.quantity
-                                        ).toLocaleString('en-IN') %>
-
-                                        </span>
+                                        <% } else { %>
+                                            <img
+                                                src="<%= item.variantId?.images?.[0] || item.productId?.thumbnail || '/img/placeholder.png' %>"
+                                                alt="<%= item.productId?.name || item.productName %>"
+                                                loading="lazy"
+                                            >
+                                        <% } %>
                                     </div>
+                                    <div class="co-item-meta">
+                                        <p class="co-item-name">
+                                            <%= isRetry ? item.productName : item.productId?.name %>
+                                        </p>
+                                        <p class="co-item-variant">
+                                            <% if (isRetry) { %>
+                                                <%= item.variantName %>
+                                                <% if (item.quantity > 1) { %> · Qty: <%= item.quantity %><% } %>
+                                            <% } else { %>
+                                                <% if (item.offerDiscount > 0) { %>
+                                                <div style="font-size:12px;font-weight:600;color:#16A34A;margin-top:4px;">
+                                                    Offer Applied
+                                                </div>
+                                                <% } %>
+                                                <%= [item.variantId?.color, item.variantId?.storage].filter(Boolean).join(' • ') %>
+                                                <% if (item.quantity > 1) { %> &nbsp;·&nbsp; Qty: <%= item.quantity %><% } %>
+                                            <% } %>
+                                        </p>
+                                    </div>
+                                    <span class="co-item-price">
+                                        ₹<%= (isRetry
+                                            ? item.price * item.quantity
+                                            : (item.finalPrice || item.price) * item.quantity
+                                        ).toLocaleString('en-IN') %>
+                                    </span>
+                                </div>
 
                                 <% }) %>
-
                             <% } else { %>
-
-                                <!-- Demo items when no real cart data -->
                                 <div class="co-summary-item">
                                     <div class="co-item-thumb co-item-thumb--placeholder">
                                         <i data-lucide="smartphone" size="24"></i>
                                     </div>
                                     <div class="co-item-meta">
-                                        <p class="co-item-name">iPhone 17 Pro</p>
-                                        <p class="co-item-variant">Natural Titanium • 256GB</p>
+                                        <p class="co-item-name">No items</p>
                                     </div>
-                                    <span class="co-item-price">₹1,19,900</span>
                                 </div>
-
-                                <div class="co-summary-item">
-                                    <div class="co-item-thumb co-item-thumb--placeholder">
-                                        <i data-lucide="headphones" size="24"></i>
-                                    </div>
-                                    <div class="co-item-meta">
-                                        <p class="co-item-name">AirPods Pro (2nd Gen)</p>
-                                        <p class="co-item-variant">Qty: 1</p>
-                                    </div>
-                                    <span class="co-item-price">₹24,800</span>
-                                </div>
-
                             <% } %>
 
                         </div>
 
-                        <!-- Summary totals -->
+                        <!-- BREAKDOWN -->
                         <div class="co-summary-breakdown">
-
                             <div class="co-breakdown-row">
                                 <span>Subtotal</span>
-                                <span id="coSubtotal">
-                                    ₹<%= subtotal.toLocaleString('en-IN') %>
+                                <span id="coSubtotal">₹<%= subtotal.toLocaleString('en-IN') %></span>
+                            </div>
+
+                            <div class="co-breakdown-row">
+                                <span>Shipping</span>
+                                <span
+                                    class="<%= deliveryCharge === 0 ? 'co-free' : '' %>"
+                                    id="coShipping"
+                                >
+                                    <%= deliveryCharge === 0
+                                        ? 'Free'
+                                        : `₹${deliveryCharge.toLocaleString('en-IN')}` %>
                                 </span>
                             </div>
 
-                            <div class="co-breakdown-row">
-    <span>Shipping</span>
-
-    <span
-        class="<%= deliveryCharge === 0 ? 'co-free' : '' %>"
-        id="coShipping"
-    >
-        <%= deliveryCharge === 0
-            ? 'Free'
-            : `₹${deliveryCharge.toLocaleString('en-IN')}` %>
-    </span>
-</div>
-
-                           <div
-                            class="co-breakdown-row co-discount"
-                            id="coDiscountRow"
-                            style="<%= currentCouponDiscount > 0 ? '' : 'display:none;' %>"
+                            <!-- Coupon row — hidden in retry mode -->
+                            <% if (!isRetry) { %>
+                            <div
+                                class="co-breakdown-row co-discount"
+                                id="coDiscountRow"
+                                style="<%= currentCouponDiscount > 0 ? '' : 'display:none;' %>"
                             >
-                                <span>Discount (<span id="coCouponCode">
-<%= appliedCoupon?.code || "-" %>
-</span>)</span>
+                                <span>Discount (<span id="coCouponCode"><%= appliedCoupon?.code || '-' %></span>)</span>
                                 <span class="co-discount-val" id="coDiscount">
-
-    −₹<%= currentCouponDiscount.toLocaleString('en-IN') %>
-
-</span>
+                                    −₹<%= currentCouponDiscount.toLocaleString('en-IN') %>
+                                </span>
                             </div>
+                            <% } %>
 
                             <div class="co-breakdown-row">
                                 <span>Estimated Tax</span>
-                                <span id="coTax">
-
-                                    ₹<%= taxAmount.toLocaleString('en-IN') %>
-
-                                </span>
+                                <span id="coTax">₹<%= taxAmount.toLocaleString('en-IN') %></span>
                             </div>
-
                         </div>
 
-                        <!-- Grand Total -->
+                        <!-- TOTAL -->
                         <div class="co-total-row">
                             <div class="co-total-label">
                                 Total Amount
@@ -468,93 +413,52 @@ class="co-add-address-btn">
                             </span>
                         </div>
 
-                        <!-- Place Order CTA -->
+                        <!-- CTA BUTTON -->
                         <button class="co-place-order-btn" id="placeOrderBtn" type="button">
-                            Place Order
+                            <%= isRetry ? "Confirm Payment" : "Place Order" %>
                         </button>
 
-                        <!-- Secure checkout badge -->
                         <div class="co-secure-badge">
                             <i data-lucide="lock" size="14"></i>
                             <span>Secure Checkout — Your payment information is protected</span>
                         </div>
-
                     </div>
 
-                    <!-- AVAILABLE COUPONS -->
+                    <!-- COUPONS CARD — hidden in retry mode (totals already finalised) -->
+                    <% if (!isRetry) { %>
                     <div class="co-coupons-card">
-
                         <h3 class="co-coupons-title">Available Coupons</h3>
 
                         <div class="co-coupon-list">
-
-                            <% if(availableCoupons && availableCoupons.length > 0){ %>
-
+                            <% if (availableCoupons && availableCoupons.length > 0) { %>
                                 <% availableCoupons.forEach(coupon => { %>
-
-                                    <div class="co-coupon">
-
-                                        <div class="co-coupon-info">
-
-                                            <span class="co-coupon-code">
-                                                <%= coupon.code %>
-                                            </span>
-
-                                            <span class="co-coupon-desc">
-
-                                                <% if(coupon.discountType === "PERCENTAGE"){ %>
-
-                                                    <%= coupon.discountValue %>% OFF
-
-                                                <% } else { %>
-
-                                                    ₹<%= coupon.discountValue.toLocaleString("en-IN") %> OFF
-
-                                                <% } %>
-
-                                                <% if(coupon.minPurchase > 0){ %>
-
-                                                    • Min ₹<%= coupon.minPurchase.toLocaleString("en-IN") %>
-
-                                                <% } %>
-
-                                            </span>
-
-                                        </div>
-
-                                        <button
-                                            class="co-coupon-apply-btn"
-                                            data-code="<%= coupon.code %>">
-
-                                            Apply
-
-                                        </button>
-
-                                    </div>
-
-                                <% }) %>
-
-                            <% } else { %>
-
                                 <div class="co-coupon">
-
                                     <div class="co-coupon-info">
-
+                                        <span class="co-coupon-code"><%= coupon.code %></span>
                                         <span class="co-coupon-desc">
-                                            No coupons available right now
+                                            <% if (coupon.discountType === "PERCENTAGE") { %>
+                                                <%= coupon.discountValue %>% OFF
+                                            <% } else { %>
+                                                ₹<%= coupon.discountValue.toLocaleString("en-IN") %> OFF
+                                            <% } %>
+                                            <% if (coupon.minPurchase > 0) { %>
+                                                • Min ₹<%= coupon.minPurchase.toLocaleString("en-IN") %>
+                                            <% } %>
                                         </span>
-
                                     </div>
-
+                                    <button class="co-coupon-apply-btn" data-code="<%= coupon.code %>">Apply</button>
                                 </div>
-
+                                <% }) %>
+                            <% } else { %>
+                                <div class="co-coupon">
+                                    <div class="co-coupon-info">
+                                        <span class="co-coupon-desc">No coupons available right now</span>
+                                    </div>
+                                </div>
                             <% } %>
-
                         </div>
 
-                        <!-- Manual coupon entry -->
                         <div class="co-coupon-manual">
-
                             <input
                                 type="text"
                                 id="couponInput"
@@ -562,14 +466,7 @@ class="co-add-address-btn">
                                 placeholder="Enter promo code"
                                 value="<%= appliedCoupon?.code || '' %>"
                             >
-
-                            <button
-                                class="co-coupon-manual-btn"
-                                id="applyCouponBtn"
-                            >
-                                Apply
-                            </button>
-
+                            <button class="co-coupon-manual-btn" id="applyCouponBtn">Apply</button>
                             <button
                                 type="button"
                                 id="removeCouponBtn"
@@ -578,210 +475,180 @@ class="co-add-address-btn">
                             >
                                 Remove
                             </button>
-
                         </div>
-
                     </div>
+                    <% } %>
 
                 </aside>
 
             </div>
         </div>
-
     </main>
-     <!-- Add Address Modal -->
-        <div class="modal-overlay" id="address-modal">
-            <div class="modal-card">
-                <div class="modal-header">
-                    <h2>Add New Address</h2>
-                    <p>Enter your delivery details for a seamless shipping experience.</p>
-                </div>
-             <form
-                id="new-address-form"
-                class="address-form-v2"
-                method="POST"
-                action="/add-address"
-                >
 
-                <input
-                type="hidden"
-                name="redirectTo"
-                value="/checkout"
-                >
+
+    <!-- ══════════════════════════════
+         ADD ADDRESS MODAL
+    ══════════════════════════════ -->
+    <div class="modal-overlay" id="address-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2>Add New Address</h2>
+                <p>Enter your delivery details for a seamless shipping experience.</p>
+            </div>
+            <form id="new-address-form" class="address-form-v2" method="POST" action="/add-address">
+
+                <!-- redirectTo keeps user on same page (checkout or retry) -->
+                <input type="hidden" name="redirectTo" value="<%= addressRedirectTo %>">
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="form-name" name="fullName" placeholder="e.g. John Doe" required style="width:100%;padding:14px 16px;background:#EEEEF0;border:none;border-radius:12px;">
+                    </div>
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <input type="tel" id="form-phone" name="phoneNumber" placeholder="(+91) 00 00 00 00" required style="width:100%;padding:14px 16px;background:#EEEEF0;border:none;border-radius:12px;">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Street Address</label>
+                    <input type="text" id="form-address" name="addressLine1" placeholder="House no., Street name" required style="width:100%;padding:14px 16px;background:#EEEEF0;border:none;border-radius:12px;">
+                </div>
+
+                <div class="form-group">
+                    <label>Apartment / Building (Optional)</label>
+                    <input type="text" id="form-building" placeholder="Suite, floor, gate code" style="width:100%;padding:14px 16px;background:#EEEEF0;border:none;border-radius:12px;">
+                </div>
+
+                <div class="form-row-3">
+                    <div class="form-group">
+                        <label>City</label>
+                        <input type="text" id="form-city" name="city" placeholder="Kochi" required style="width:100%;padding:14px 16px;background:#EEEEF0;border:none;border-radius:12px;">
+                    </div>
+                    <div class="form-group">
+                        <label>State</label>
+                        <input type="text" id="form-state" name="state" placeholder="Kerala" required style="width:100%;padding:14px 16px;background:#EEEEF0;border:none;border-radius:12px;">
+                    </div>
+                    <div class="form-group">
+                        <label>Pin Code</label>
+                        <input type="text" id="form-pin" name="pincode" placeholder="682001" required style="width:100%;padding:14px 16px;background:#EEEEF0;border:none;border-radius:12px;">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Country</label>
+                    <div class="custom-select-wrapper">
+                        <select id="form-country" name="country">
+                            <option value="India">India</option>
+                            <option value="United States">United States</option>
+                            <option value="United Kingdom">United Kingdom</option>
+                            <option value="Canada">Canada</option>
+                        </select>
+                        <div class="select-arrow"><i data-lucide="chevron-down"></i></div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Address Type</label>
+                    <div class="type-selector-premium">
+                        <div class="type-option-premium">
+                            <input type="radio" name="type" id="type-home" value="Home" checked>
+                            <label for="type-home"><i data-lucide="home"></i><span>Home</span></label>
+                        </div>
+                        <div class="type-option-premium">
+                            <input type="radio" name="type" id="type-work" value="Work">
+                            <label for="type-work"><i data-lucide="briefcase"></i><span>Work</span></label>
+                        </div>
+                        <div class="type-option-premium">
+                            <input type="radio" name="type" id="type-other" value="Other">
+                            <label for="type-other"><i data-lucide="more-horizontal"></i><span>Other</span></label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="default-toggle-wrapper">
+                    <label class="switch">
+                        <input type="checkbox" id="form-default" name="isDefault" value="true">
+                        <span class="slider"></span>
+                    </label>
+                    <span class="toggle-label">Set as Default Address</span>
+                </div>
+
+                <div class="modal-actions-premium">
+                    <button type="button" class="cancel-btn-premium" id="close-modal">Cancel</button>
+                    <button type="submit" class="save-address-btn-premium">Save Address</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- ══════════════════════════════
+         EDIT ADDRESS MODAL
+    ══════════════════════════════ -->
+    <div class="modal-overlay" id="edit-address-modal">
+        <div class="edit-modal-card">
+            <div class="edit-modal-left">
+                <div class="modal-header" style="margin-bottom:32px;">
+                    <h2>Edit Address</h2>
+                    <p>Update your delivery details.</p>
+                </div>
+                <form class="address-form-v2" id="edit-address-form" method="POST">
+
+                    <input type="hidden" name="redirectTo" value="<%= addressRedirectTo %>">
+
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="edit-form-name" name="fullName" required style="width:100%;padding:14px 16px;background:#EEEEF0;border:none;border-radius:12px;">
+                    </div>
+
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Full Name</label>
-                            <input type="text" id="form-name" name="fullName" placeholder="e.g. fullName" required style="width: 100%; padding: 14px 16px; background: #EEEEF0; border: none; border-radius: 12px;">
+                            <label>Phone Number</label>
+                            <input type="tel" id="edit-form-phone" name="phoneNumber" required style="width:100%;padding:14px 16px;background:#EEEEF0;border:none;border-radius:12px;">
                         </div>
                         <div class="form-group">
-                            <label>Phone Number</label>
-                            <input type="tel" id="form-phone" name="phoneNumber" placeholder="(+91)00 00 00 00" required style="width: 100%; padding: 14px 16px; background: #EEEEF0; border: none; border-radius: 12px;">
+                            <label>Address Type</label>
+                            <div class="type-selector-pill">
+                                <div class="type-option-pill">
+                                    <input type="radio" name="type" id="edit-type-home" value="Home">
+                                    <label for="edit-type-home">Home</label>
+                                </div>
+                                <div class="type-option-pill">
+                                    <input type="radio" name="type" id="edit-type-work" value="Work">
+                                    <label for="edit-type-work">Work</label>
+                                </div>
+                                <div class="type-option-pill">
+                                    <input type="radio" name="type" id="edit-type-other" value="Other">
+                                    <label for="edit-type-other">Other</label>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Street Address</label>
-                        <input type="text" id="form-address" name="addressLine1" placeholder="In Hariharnagar In" required style="width: 100%; padding: 14px 16px; background: #EEEEF0; border: none; border-radius: 12px;">
                     </div>
 
                     <div class="form-group">
-                        <label>Apartment / Building (Optional)</label>
-                        <input type="text" id="form-building" placeholder="Suite, floor, gate code" style="width: 100%; padding: 14px 16px; background: #EEEEF0; border: none; border-radius: 12px;">
+                        <label>Street Address</label>
+                        <input type="text" id="edit-form-address" name="addressLine1" required style="width:100%;padding:14px 16px;background:#EEEEF0;border:none;border-radius:12px;">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Apartment / Area</label>
+                        <input type="text" id="edit-form-building" name="building" style="width:100%;padding:14px 16px;background:#EEEEF0;border:none;border-radius:12px;">
                     </div>
 
                     <div class="form-row-3">
                         <div class="form-group">
                             <label>City</label>
-                            <input type="text" id="form-city" name="city" placeholder="Kannur" required style="width: 100%; padding: 14px 16px; background: #EEEEF0; border: none; border-radius: 12px;">
+                            <input type="text" id="edit-form-city" name="city" required style="width:100%;padding:14px 16px;background:#EEEEF0;border:none;border-radius:12px;">
                         </div>
                         <div class="form-group">
                             <label>State</label>
-                            <input type="text" id="form-state" name="state" placeholder="Kerala" required style="width: 100%; padding: 14px 16px; background: #EEEEF0; border: none; border-radius: 12px;">
+                            <input type="text" id="edit-form-state" name="state" required style="width:100%;padding:14px 16px;background:#EEEEF0;border:none;border-radius:12px;">
                         </div>
                         <div class="form-group">
-                            <label>Pin Code</label>
-                            <input type="text" id="form-pin" name="pincode" placeholder="670571" required style="width: 100%; padding: 14px 16px; background: #EEEEF0; border: none; border-radius: 12px;">
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Country</label>
-                        <div class="custom-select-wrapper">
-                            <select id="form-country" name="country">
-                                <option value="United States">United States</option>
-                                <option value="India">India</option>
-                                <option value="United Kingdom">United Kingdom</option>
-                                <option value="Canada">Canada</option>
-                            </select>
-                            <div class="select-arrow"><i data-lucide="chevron-down"></i></div>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Address Type</label>
-                        <div class="type-selector-premium">
-                            <div class="type-option-premium">
-                                <input type="radio" name="type" id="type-home" value="Home" checked>
-                                <label for="type-home">
-                                    <i data-lucide="home"></i>
-                                    <span>Home</span>
-                                </label>
-                            </div>
-                            <div class="type-option-premium">
-                                <input type="radio" name="type" id="type-work" value="Work">
-                                <label for="type-work">
-                                    <i data-lucide="briefcase"></i>
-                                    <span>Work</span>
-                                </label>
-                            </div>
-                            <div class="type-option-premium">
-                                <input type="radio" name="type" id="type-other" value="Other">
-                                <label for="type-other">
-                                    <i data-lucide="more-horizontal"></i>
-                                    <span>Other</span>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="default-toggle-wrapper">
-                        <label class="switch">
-                            <input type="checkbox" id="form-default" name="isDefault" value="true">
-                            <span class="slider"></span>
-                        </label>
-                        <span class="toggle-label">Set as Default Address</span>
-                    </div>
-
-                    <div class="modal-actions-premium">
-                        <button type="button" class="cancel-btn-premium" id="close-modal">Cancel</button>
-                        <button type="submit" class="save-address-btn-premium">Save Address</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Edit Address Modal -->
-        <div class="modal-overlay" id="edit-address-modal">
-            <div class="edit-modal-card">
-                <div class="edit-modal-left">
-                    <div class="modal-header" style="margin-bottom: 32px;">
-                        <h2>Edit Address</h2>
-                        <p>Update your delivery details.</p>
-                    </div>
-                    <form
-                    class="address-form-v2"
-                    id="edit-address-form"
-                    method="POST"
-                    >
-
-                    <input
-                    type="hidden"
-                    name="redirectTo"
-                    value="/checkout"
-                    >
-                        <div class="form-group">
-                            <label>Full Name</label>
-                            <input type="text" id="edit-form-name" name="fullName" required style="width: 100%; padding: 14px 16px; background: #EEEEF0; border: none; border-radius: 12px;">
-                        </div>
-                        
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Phone Number</label>
-                                <input type="tel" id="edit-form-phone" name="phoneNumber" required style="width: 100%; padding: 14px 16px; background: #EEEEF0; border: none; border-radius: 12px;">
-                            </div>
-                            <div class="form-group">
-                                <label>Address Type</label>
-                                <div class="type-selector-pill">
-                                    <div class="type-option-pill">
-                                        <input type="radio" name="type" id="edit-type-home" value="Home">
-                                        <label for="edit-type-home">Home</label>
-                                    </div>
-                                    <div class="type-option-pill">
-                                        <input type="radio" name="type" id="edit-type-work" value="Work">
-                                        <label for="edit-type-work">Work</label>
-                                    </div>
-                                    <div class="type-option-pill">
-                                        <input type="radio" name="type" id="edit-type-other" value="Other">
-                                        <label for="edit-type-other">Other</label>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Street Address</label>
-                            <input type="text" id="edit-form-address" name="addressLine1" required style="width: 100%; padding: 14px 16px; background: #EEEEF0; border: none; border-radius: 12px;">
-                        </div>
-
-                        <div class="form-group">
-                            <label>Apartment / Area</label>
-                            <input type="text" id="edit-form-building" name="building" style="width: 100%; padding: 14px 16px; background: #EEEEF0; border: none; border-radius: 12px;">
-                        </div>
-
-                        <div class="form-row-3">
-                            <div class="form-group">
-                                <label>City</label>
-                                <input type="text" id="edit-form-city" name="city" required style="width: 100%; padding: 14px 16px; background: #EEEEF0; border: none; border-radius: 12px;">
-                            </div>
-                            <div class="form-group">
-                                <label>State</label>
-                                <input type="text" id="edit-form-state" name="state" required style="width: 100%; padding: 14px 16px; background: #EEEEF0; border: none; border-radius: 12px;">
-                            </div>
-                           <div class="form-group">
-                                <label>Country</label>
-
-                                <select
-                                id="edit-form-country"
-                                name="country"
-                                required
-                                style="
-                                width: 100%;
-                                padding: 14px 16px;
-                                background: #EEEEF0;
-                                border: none;
-                                border-radius: 12px;
-                                ">
-
+                            <label>Country</label>
+                            <select id="edit-form-country" name="country" required style="width:100%;padding:14px 16px;background:#EEEEF0;border:none;border-radius:12px;">
                                 <option value="India">India</option>
                                 <option value="United States">United States</option>
                                 <option value="United Kingdom">United Kingdom</option>
@@ -791,1191 +658,468 @@ class="co-add-address-btn">
                                 <option value="France">France</option>
                                 <option value="Singapore">Singapore</option>
                                 <option value="UAE">UAE</option>
-
-                                </select>
-
-                                </div>
-                            <div class="form-group">
-                                <label>Postal Code</label>
-                                <input type="text" id="edit-form-pin" name="pincode" required style="width: 100%; padding: 14px 16px; background: #EEEEF0; border: none; border-radius: 12px;">
-                            </div>
+                            </select>
                         </div>
-
-                        <label class="custom-checkbox-container">
-                            <input type="checkbox" id="edit-form-default" name="isDefault" value="true">
-                            <span class="checkmark"></i></span>
-                            <span class="toggle-label" style="font-size: 14px;">Set as Default Address</span>
-                        </label>
-
-                        <div class="edit-modal-actions">
-                            <button type="submit" class="update-address-btn">Update Address</button>
-                            <button type="button" class="edit-cancel-btn" id="close-edit-modal">Cancel</button>
+                        <div class="form-group">
+                            <label>Postal Code</label>
+                            <input type="text" id="edit-form-pin" name="pincode" required style="width:100%;padding:14px 16px;background:#EEEEF0;border:none;border-radius:12px;">
                         </div>
-                    </form>
+                    </div>
+
+                    <label class="custom-checkbox-container">
+                        <input type="checkbox" id="edit-form-default" name="isDefault" value="true">
+                        <span class="checkmark"></span>
+                        <span class="toggle-label" style="font-size:14px;">Set as Default Address</span>
+                    </label>
+
+                    <div class="edit-modal-actions">
+                        <button type="submit" class="update-address-btn">Update Address</button>
+                        <button type="button" class="edit-cancel-btn" id="close-edit-modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+            <div class="edit-modal-right">
+                <div class="edit-info-card">
+                    <i data-lucide="truck"></i>
+                    <h3>Delivery Precision</h3>
+                    <p>Accurate addresses ensure your iStore orders reach you on time.</p>
                 </div>
-                <div class="edit-modal-right">
-                    <div class="edit-info-card">
-                        <i data-lucide="truck"></i>
-                        <h3>Delivery Precision</h3>
-                        <p>Accurate addresses ensure your iStore orders reach you on time. Make sure your postal code matches your city to avoid shipping delays.</p>
-                    </div>
-                    <div class="edit-image-container">
-                        <img src="/images/premium_apartment.png" alt="Premium Apartment">
-                    </div>
+                <div class="edit-image-container">
+                    <img src="/images/premium_apartment.png" alt="Premium Apartment">
                 </div>
             </div>
         </div>
+    </div>
+
 
     <%- include('../partials/user/footer') %>
 
-    <!-- SweetAlert -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
         lucide.createIcons();
 
+        /* =========================================
+           MODE — set once, used throughout
+        ========================================= */
+        const mode        = "<%= mode %>";
+        const isRetry     = mode === "retry";
+        const retryOrderId = "<%= retryOrderId %>";
+
         /* ── Entrance animations ── */
-        gsap.from('#coLeft', { x: -30, opacity: 0, duration: 0.7, ease: 'power2.out' });
-        gsap.from('#coRight', { x: 30, opacity: 0, duration: 0.7, ease: 'power2.out' });
-        gsap.from('.co-section', { y: 20, opacity: 0, duration: 0.5, stagger: 0.12, delay: 0.2, ease: 'power2.out' });
-
-        /* ── Payment method tab switching ── */
-
-
-const tabs =
-document.querySelectorAll(
-'.co-pay-tab'
-);
-
-const panels = {
-
-    razorpay:
-    document.getElementById(
-        'panelRazorpay'
-    ),
-
-    wallet:
-    document.getElementById(
-        'panelWallet'
-    ),
-
-    cod:
-    document.getElementById(
-        'panelCod'
-    ),
-
-};
-
-tabs.forEach(tab => {
-
-    tab.addEventListener(
-        'click',
-        () => {
-
-            tabs.forEach(t =>
-                t.classList.remove(
-                    'active'
-                )
-            );
-
-            tab.classList.add(
-                'active'
-            );
-
-            const method =
-            tab.dataset.method;
-
-            Object.values(
-                panels
-            ).forEach(panel => {
-
-                panel.classList.add(
-                    "hidden"
-                );
-
-            });
-
-            panels[method]
-            ?.classList.remove(
-                "hidden"
-            );
-
-        }
-    );
-
-});
-
-        /* ── Delivery option selection ── */
-                    const deliveryCards =
-                document.querySelectorAll('.co-delivery-card');
-
-                deliveryCards.forEach(card => {
-
-                    card.addEventListener('click', () => {
-
-                        deliveryCards.forEach(c =>
-                            c.classList.remove('selected')
-                        );
-
-                        card.classList.add('selected');
-
-                        const shippingEl =
-                        document.getElementById('coShipping');
-
-                        const taxEl =
-                        document.getElementById('coTax');
-
-                        const totalEl =
-                        document.getElementById('coGrandTotal');
-
-                        const tax =
-                        Number(
-                            taxEl.textContent
-                            .replace(/[₹,]/g,'')
-                        );
-
-                        let shipping = 0;
-
-                        if (
-                            card.querySelector(
-                                'input[value="express"]'
-                            )
-                        ) {
-
-                            shipping = 500;
-
-                            shippingEl.textContent =
-                            '₹500';
-
-                            shippingEl.classList.remove(
-                                'co-free'
-                            );
-
-                        } else {
-
-                            shipping = 0;
-
-                            shippingEl.textContent =
-                            'Free';
-
-                            shippingEl.classList.add(
-                                'co-free'
-                            );
-                        }
-
-                        const subtotal =
-                        <%= subtotal %>;
-
-                        const discount =
-                            Number(
-                            document
-                            .getElementById("coDiscount")
-                            .textContent
-                            .replace(/[−₹,]/g,"")
-                            ) || 0;
-
-                        const newTotal =
-                        subtotal +
-                        tax +
-                        shipping -
-                        discount;
-
-                        totalEl.textContent =
-                        `₹${newTotal.toLocaleString('en-IN')}`;
-
-                    });
-
-                });
-
-
-        /* ── Coupon apply ── */
-        document.querySelectorAll('.co-coupon-apply-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const code = btn.dataset.code;
-                document.getElementById('couponInput').value = code;
-                applyCouponCode(code);
-            });
-        });
-
-        document.getElementById('applyCouponBtn').addEventListener('click', () => {
-            const code = document.getElementById('couponInput').value.trim().toUpperCase();
-            if (code) applyCouponCode(code);
-        });
-
-        document.getElementById("removeCouponBtn")?.addEventListener("click", async () => {
-
-        try {
-
-            const response =
-            await fetch(
-                "/checkout/remove-coupon",
-                {
-                    method: "POST"
-                }
-            );
-
-            const data =
-            await response.json();
-
-            if (!data.success) {
-
-                return Swal.fire({
-
-                    icon: "error",
-
-                    title: "Coupon Error",
-
-                    text: data.message
-                });
-
-            }
-
-            document.getElementById(
-                    "couponInput"
-                ).value = "";
-
-                document.getElementById(
-                    "coCouponCode"
-                ).textContent = "-";
-
-                document.getElementById(
-                    "coDiscount"
-                ).textContent = "−₹0";
-
-                document.getElementById(
-                    "coDiscountRow"
-                ).style.display = "none";
-
-                /* RESTORE TAX */
-
-                document.getElementById(
-                    "coTax"
-                ).textContent =
-                `₹${data.taxAmount.toLocaleString("en-IN")}`;
-
-                /* RESTORE SHIPPING */
-
-                const shippingEl =
-                document.getElementById(
-                    "coShipping"
-                );
-
-                shippingEl.textContent =
-                data.deliveryCharge === 0
-                ? "Free"
-                : `₹${data.deliveryCharge.toLocaleString("en-IN")}`;
-
-                shippingEl.classList.toggle(
-                    "co-free",
-                    data.deliveryCharge === 0
-                );
-
-                /* RESTORE GRAND TOTAL */
-
-                document.getElementById(
-                    "coGrandTotal"
-                ).textContent =
-                `₹${data.finalAmount.toLocaleString("en-IN")}`;
-
-                /* HIDE REMOVE BUTTON */
-
-                document.getElementById(
-                    "removeCouponBtn"
-                ).style.display =
-                "none";
-
-        }
-
-        catch (error) {
-
-            Swal.fire({
-
-                icon: "error",
-
-                title: "Something went wrong"
-            });
-
-        }
-
-    }
-);
-
-       async function applyCouponCode(code) {
-
-    try {
-
-        const response =
-        await fetch(
-            "/checkout/apply-coupon",
-            {
-                method: "POST",
-
-                headers: {
-                    "Content-Type":
-                    "application/json"
-                },
-
-                body: JSON.stringify({
-                    couponCode: code
-                })
-            }
-        );
-
-        const data =
-        await response.json();
-
-        if (!data.success) {
-
-            return Swal.fire({
-
-                icon: "error",
-
-                title: "Coupon Error",
-
-                text: data.message,
-
-                confirmButtonColor:
-                "#603763"
-            });
-        }
-
-        document.getElementById(
-            "coCouponCode"
-        ).textContent =
-        data.couponCode;
-
-        document.getElementById(
-            "coDiscountRow"
-        ).style.display = "flex";
-
-        document.getElementById(
-            "coDiscount"
-        ).textContent =
-        `−₹${data.couponDiscount.toLocaleString("en-IN")}`;
-
-        document.getElementById(
-            "coTax"
-        ).textContent =
-        `₹${data.taxAmount.toLocaleString("en-IN")}`;
-
-        document.getElementById(
-            "coGrandTotal"
-        ).textContent =
-        `₹${data.finalAmount.toLocaleString("en-IN")}`;
-
-        document.getElementById(
-            "removeCouponBtn"
-        ).style.display =
-        "inline-flex";
-
-        Swal.fire({
-
-            toast: true,
-
-            position: "top-end",
-
-            icon: "success",
-
-            title:
-            "Coupon Applied",
-
-            showConfirmButton: false,
-
-            timer: 2000,
-        });
-
-    }
-
-    catch (error) {
-
-        Swal.fire({
-
-            icon: "error",
-
-            title:
-            "Something went wrong",
-
-            text:
-            "Please try again later.",
-        });
-
-    }
-
-}
-/* =========================================
-   PLACE ORDER
-========================================= */
-
-document
-.getElementById("placeOrderBtn")
-
-.addEventListener(
-
-    "click",
-
-    () => {
-
-        const placeOrderBtn =
-        document.getElementById(
-            "placeOrderBtn"
-        );
-
-        placeOrderBtn.disabled = true;
-
-        placeOrderBtn.textContent =
-        "Processing...";
-
-        /* ADDRESS ID */
-
-        const addressId =
-
-        document.getElementById(
-            "selectedAddressId"
-        ).value
-
-        /* NO ADDRESS */
-
-        if (!addressId) {
-
-            placeOrderBtn.disabled =
-            false;
-
-            placeOrderBtn.textContent =
-            "Place Order";
-
-            Swal.fire({
-
-                icon: "warning",
-
-                title: "Select Address",
-
-                text:
-                "Please select a delivery address.",
-
-                confirmButtonColor:
-                "#4C0080"
-
-            })
-
-            return
-        }
-
-        console.log(
-            "Selected Address:",
-            addressId
-        )
-
-        const deliveryType =
-        document.querySelector(
-        'input[name="delivery"]:checked'
-        )?.value || "standard";
-
-        const paymentMethod =
-        document.querySelector(
-        ".co-pay-tab.active"
-        )?.dataset.method;
-
-        fetch("/checkout/place-order", {
-
-            method: "POST",
-
-            headers: {
-                "Content-Type":
-                "application/json"
-            },
-
-
-        body: JSON.stringify({
-
-            addressId,
-
-            deliveryType,
-
-            paymentMethod:
-            paymentMethod === "wallet"
-            ? "WALLET"
-            : paymentMethod === "cod"
-            ? "COD"
-            : "RAZORPAY",
-
-        })
-
-})
-
-.then(res => res.json())
-
-.then(data => {
-
-    if (!data.success) {
-
-        placeOrderBtn.disabled = false;
-
-        placeOrderBtn.textContent =
-        "Place Order";
-
-        Swal.fire({
-
-            icon: "error",
-
-            title: "Order Failed",
-
-            text: data.message,
-
-            confirmButtonColor:
-            "#4C0080"
-
-        });
-
-        return;
-    }
-
-    /* ==========================
-       RAZORPAY PAYMENT
-    ========================== */
-
-    if (
-        data.paymentMethod ===
-        "RAZORPAY"
-    ) {
-
-        const options = {
-
-            key: "<%= razorpayKey %>",
-
-            amount:
-            data.razorpayOrder.amount,
-
-            currency:
-            "INR",
-
-            name:
-            "iStore",
-
-            description:
-            "Order Payment",
-
-            order_id:
-            data.razorpayOrder.id,
-
-            prefill: {
-
-                name: "Customer",
-
-                email: "",
-
-                contact: ""
-
-            },
-
-            notes: {
-
-                addressId: addressId,
-
-                deliveryType: deliveryType
-
-            },
-
-handler: async function(response) {
-
-    try {
-
-        const verifyResponse =
-        await fetch(
-            "/checkout/verify-payment",
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type":
-                    "application/json",
-                },
-                body: JSON.stringify({
-
-                    razorpay_order_id:
-                    response.razorpay_order_id,
-
-                    razorpay_payment_id:
-                    response.razorpay_payment_id,
-
-                    razorpay_signature:
-                    response.razorpay_signature,
-
-                    addressId,
-
-                    deliveryType,
-
-                }),
-            }
-        );
-
-        const result =
-        await verifyResponse.json();
-
-if (!result.success) {
-
-    placeOrderBtn.disabled = false;
-
-    placeOrderBtn.textContent =
-    "Place Order";
-
-    return Swal.fire({
-
-        icon: "error",
-
-        title:
-        "Payment Verification Failed",
-
-        text:
-        result.message,
-
-    });
-
-}
-
-        window.location.href =
-        result.redirectUrl;
-
-    }
-
-catch(error) {
-
-    placeOrderBtn.disabled = false;
-
-    placeOrderBtn.textContent =
-    "Place Order";
-
-    Swal.fire({
-
-        icon: "error",
-
-        title:
-        "Verification Failed",
-
-        text:
-        "Please contact support if money was deducted."
-
-    });
-
-}
-
-},
-
-
-
-    modal: {
-
-        ondismiss: function () {
-
-            placeOrderBtn.disabled = false;
-
-            placeOrderBtn.textContent =
-
-            "Place Order";
-
-        }
-
-    },
-
-
-            theme: {
-
-                color:
-                "#603763"
-
-            }
-
-        };
-
-const razorpay =
-new Razorpay(options);
-
-razorpay.on(
-    "payment.failed",
-    function(response){
-
-        Swal.fire({
-
-            icon: "error",
-
-            title: "Payment Failed",
-
-            text:
-            response.error.description,
-
-        });
-
-        placeOrderBtn.disabled =
-        false;
-
-        placeOrderBtn.textContent =
-        "Place Order";
-
-    }
-);
-
-razorpay.open();
-
-        return;
-    }
-
-    /* COD / WALLET */
-
-    window.location.href =
-    data.redirectUrl;
-
-})
-
-.catch(error => {
-
-    placeOrderBtn.disabled =
-    false;
-
-    placeOrderBtn.textContent =
-    "Place Order";
-
-    Swal.fire({
-
-        icon: "error",
-
-        title: "Something Went Wrong",
-
-        text:
-        "Please try again later.",
-
-        confirmButtonColor:
-        "#4C0080"
-
-    })
-
-})
-
-    }
-
-)
+        gsap.from('#coLeft',    { x: -30, opacity: 0, duration: 0.7, ease: 'power2.out' });
+        gsap.from('#coRight',   { x:  30, opacity: 0, duration: 0.7, ease: 'power2.out' });
+        gsap.from('.co-section',{ y:  20, opacity: 0, duration: 0.5, stagger: 0.12, delay: 0.2, ease: 'power2.out' });
 
         /* =========================================
-            ADDRESS SELECTION
-            ========================================= */
+           COUNTDOWN TIMER (retry mode only)
+        ========================================= */
+        <% if (isRetry && expiresAt) { %>
+        (function () {
+            const expiresAt  = <%= expiresAt %>;
+            const display    = document.getElementById('countdownDisplay');
+            const warnSwal   = Swal.mixin({
+                icon:               'warning',
+                confirmButtonColor: '#4C0080',
+                allowOutsideClick:  false,
+            });
 
-            const addressCards =
+            function tick() {
+                const remaining = expiresAt - Date.now();
 
-            document.querySelectorAll(
+                if (remaining <= 0) {
+                    if (display) display.textContent = '00:00';
 
-                ".checkout-address-wrapper"
+                    warnSwal.fire({
+                        title: 'Reservation Expired',
+                        text:  'Your payment window has closed and the reserved stock has been released. Please place a new order.',
+                        confirmButtonText: 'Go to Orders',
+                    }).then(() => {
+                        window.location.href = '/orders';
+                    });
 
-            );
+                    return; /* stop ticking */
+                }
 
-           addressCards.forEach(card => {
+                const mins = String(Math.floor(remaining / 60000)).padStart(2, '0');
+                const secs = String(Math.floor((remaining % 60000) / 1000)).padStart(2, '0');
+                if (display) display.textContent = `${mins}:${secs}`;
 
-    card.addEventListener(
-
-        "click",
-
-        (event) => {
-
-            if (
-
-                event.target.closest(
-                    ".action-link"
-                ) ||
-
-                event.target.closest(
-                    ".deliver-here-btn"
-                )
-
-            ) {
-
-                return
-
+                setTimeout(tick, 1000);
             }
 
-            addressCards.forEach(c => {
+            tick();
+        })();
+        <% } %>
 
-                c.classList.remove(
-                    "active"
-                )
+        /* =========================================
+           PAYMENT METHOD TAB SWITCHING
+        ========================================= */
+        const tabs   = document.querySelectorAll('.co-pay-tab');
+        const panels = {
+            razorpay: document.getElementById('panelRazorpay'),
+            wallet:   document.getElementById('panelWallet'),
+            cod:      document.getElementById('panelCod'),
+        };
 
-            })
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                const method = tab.dataset.method;
+                Object.values(panels).forEach(p => p.classList.add('hidden'));
+                panels[method]?.classList.remove('hidden');
+            });
+        });
 
-            card.classList.add(
-                "active"
-            )
+        /* =========================================
+           DELIVERY OPTION SELECTION (new mode only)
+           In retry mode the section is locked via CSS
+           so these clicks never fire, but guard anyway.
+        ========================================= */
+        document.querySelectorAll('.co-delivery-card').forEach(card => {
+            card.addEventListener('click', () => {
+                if (isRetry) return;
 
-            document.getElementById(
-                "selectedAddressId"
-            ).value =
+                document.querySelectorAll('.co-delivery-card').forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
 
-            card.dataset.addressId
+                const shippingEl = document.getElementById('coShipping');
+                const taxEl      = document.getElementById('coTax');
+                const totalEl    = document.getElementById('coGrandTotal');
+                const tax        = Number(taxEl.textContent.replace(/[₹,]/g, ''));
+                const discount   = Number((document.getElementById('coDiscount')?.textContent || '0').replace(/[−₹,]/g, '')) || 0;
 
+                let shipping = 0;
+                if (card.querySelector('input[value="express"]')) {
+                    shipping = 500;
+                    shippingEl.textContent = '₹500';
+                    shippingEl.classList.remove('co-free');
+                } else {
+                    shipping = 0;
+                    shippingEl.textContent = 'Free';
+                    shippingEl.classList.add('co-free');
+                }
+
+                const newTotal = <%= subtotal %> + tax + shipping - discount;
+                totalEl.textContent = `₹${newTotal.toLocaleString('en-IN')}`;
+            });
+        });
+
+        /* =========================================
+           COUPON LOGIC (new mode only)
+        ========================================= */
+        if (!isRetry) {
+
+            document.querySelectorAll('.co-coupon-apply-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const code = btn.dataset.code;
+                    document.getElementById('couponInput').value = code;
+                    applyCouponCode(code);
+                });
+            });
+
+            document.getElementById('applyCouponBtn')?.addEventListener('click', () => {
+                const code = document.getElementById('couponInput').value.trim().toUpperCase();
+                if (code) applyCouponCode(code);
+            });
+
+            document.getElementById('removeCouponBtn')?.addEventListener('click', async () => {
+                try {
+                    const data = await fetch('/checkout/remove-coupon', { method: 'POST' }).then(r => r.json());
+                    if (!data.success) return Swal.fire({ icon: 'error', title: 'Coupon Error', text: data.message });
+
+                    document.getElementById('couponInput').value         = '';
+                    document.getElementById('coCouponCode').textContent  = '-';
+                    document.getElementById('coDiscount').textContent    = '−₹0';
+                    document.getElementById('coDiscountRow').style.display = 'none';
+                    document.getElementById('coTax').textContent         = `₹${data.taxAmount.toLocaleString('en-IN')}`;
+                    document.getElementById('coGrandTotal').textContent  = `₹${data.finalAmount.toLocaleString('en-IN')}`;
+                    document.getElementById('removeCouponBtn').style.display = 'none';
+
+                    const shippingEl = document.getElementById('coShipping');
+                    shippingEl.textContent = data.deliveryCharge === 0 ? 'Free' : `₹${data.deliveryCharge.toLocaleString('en-IN')}`;
+                    shippingEl.classList.toggle('co-free', data.deliveryCharge === 0);
+                } catch {
+                    Swal.fire({ icon: 'error', title: 'Something went wrong' });
+                }
+            });
+
+            async function applyCouponCode(code) {
+                try {
+                    const data = await fetch('/checkout/apply-coupon', {
+                        method:  'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body:    JSON.stringify({ couponCode: code }),
+                    }).then(r => r.json());
+
+                    if (!data.success) {
+                        return Swal.fire({ icon: 'error', title: 'Coupon Error', text: data.message, confirmButtonColor: '#603763' });
+                    }
+
+                    document.getElementById('coCouponCode').textContent    = data.couponCode;
+                    document.getElementById('coDiscountRow').style.display = 'flex';
+                    document.getElementById('coDiscount').textContent      = `−₹${data.couponDiscount.toLocaleString('en-IN')}`;
+                    document.getElementById('coTax').textContent           = `₹${data.taxAmount.toLocaleString('en-IN')}`;
+                    document.getElementById('coGrandTotal').textContent    = `₹${data.finalAmount.toLocaleString('en-IN')}`;
+                    document.getElementById('removeCouponBtn').style.display = 'inline-flex';
+
+                    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Coupon Applied', showConfirmButton: false, timer: 2000 });
+                } catch {
+                    Swal.fire({ icon: 'error', title: 'Something went wrong', text: 'Please try again later.' });
+                }
+            }
         }
 
-    )
+        /* =========================================
+           PLACE / CONFIRM ORDER
+        ========================================= */
+        document.getElementById('placeOrderBtn').addEventListener('click', async () => {
+            const btn = document.getElementById('placeOrderBtn');
+            btn.disabled    = true;
+            btn.textContent = 'Processing…';
+
+            /* Address validation */
+            const addressId = document.getElementById('selectedAddressId').value;
+            if (!addressId) {
+                btn.disabled    = false;
+                btn.textContent = isRetry ? 'Confirm Payment' : 'Place Order';
+                Swal.fire({ icon: 'warning', title: 'Select Address', text: 'Please select a delivery address.', confirmButtonColor: '#4C0080' });
+                return;
+            }
+
+            const paymentMethodRaw = document.querySelector('.co-pay-tab.active')?.dataset.method;
+            const paymentMethod    = paymentMethodRaw === 'wallet' ? 'WALLET'
+                                   : paymentMethodRaw === 'cod'    ? 'COD'
+                                   : 'RAZORPAY';
+
+            /* ── Endpoint: different for new vs retry ── */
+            const endpoint = isRetry
+                ? `/orders/${retryOrderId}/retry-pay`
+                : '/checkout/place-order';
+
+            /* ── Payload: retry only needs addressId + paymentMethod ── */
+            const payload = isRetry
+                ? { addressId, paymentMethod }
+                : {
+                    addressId,
+                    paymentMethod,
+                    deliveryType: document.querySelector('input[name="delivery"]:checked')?.value || 'standard',
+                };
+
+            try {
+                const res  = await fetch(endpoint, {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body:    JSON.stringify(payload),
+                });
+                const data = await res.json();
+
+                /* Expired reservation */
+                if (data.expired) {
+                    Swal.fire({ icon: 'error', title: 'Reservation Expired', text: data.message, confirmButtonColor: '#4C0080' })
+                        .then(() => { window.location.href = '/orders'; });
+                    return;
+                }
+
+                if (!data.success) {
+                    btn.disabled    = false;
+                    btn.textContent = isRetry ? 'Confirm Payment' : 'Place Order';
+                    Swal.fire({ icon: 'error', title: isRetry ? 'Payment Failed' : 'Order Failed', text: data.message, confirmButtonColor: '#4C0080' });
+                    return;
+                }
+
+                /* COD / WALLET — direct redirect */
+                if (data.redirectUrl) {
+                    window.location.href = data.redirectUrl;
+                    return;
+                }
+
+                /* RAZORPAY — open modal */
+                if (data.paymentMethod === 'RAZORPAY' || data.razorpayOrder) {
+                    openRazorpay(data.razorpayOrder, addressId, btn);
+                    return;
+                }
+
+            } catch {
+                btn.disabled    = false;
+                btn.textContent = isRetry ? 'Confirm Payment' : 'Place Order';
+                Swal.fire({ icon: 'error', title: 'Something Went Wrong', text: 'Please try again later.', confirmButtonColor: '#4C0080' });
+            }
+        });
+
+        /* =========================================
+           RAZORPAY MODAL — shared handler
+           Used by both new checkout and retry flow.
+           Verification always hits /checkout/verify-payment
+           because that endpoint finds the order by
+           razorpayOrderId which is always up to date.
+        ========================================= */
+        function openRazorpay(razorpayOrder, addressId, btn) {
+            const resetBtn = () => {
+                btn.disabled    = false;
+                btn.textContent = isRetry ? 'Confirm Payment' : 'Place Order';
+            };
+
+            const options = {
+                key:         '<%= razorpayKey %>',
+                amount:      razorpayOrder.amount,
+                currency:    'INR',
+                name:        'iStore',
+                description: isRetry ? 'Order Payment — Retry' : 'Order Payment',
+                order_id:    razorpayOrder.id,
+                theme:       { color: '#603763' },
+
+                handler: async function (response) {
+                    try {
+                        const verifyRes = await fetch('/checkout/verify-payment', {
+                            method:  'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                razorpay_order_id:   response.razorpay_order_id,
+                                razorpay_payment_id: response.razorpay_payment_id,
+                                razorpay_signature:  response.razorpay_signature,
+                            }),
+                        });
+                        const result = await verifyRes.json();
+
+                        if (!result.success) {
+                            resetBtn();
+                            Swal.fire({ icon: 'error', title: 'Payment Verification Failed', text: result.message });
+                            return;
+                        }
+
+                        window.location.href = result.redirectUrl;
+                    } catch {
+                        resetBtn();
+                        Swal.fire({ icon: 'error', title: 'Verification Failed', text: 'Contact support if money was deducted.' });
+                    }
+                },
+
+                modal: {
+                    ondismiss: function () {
+                        resetBtn();
+                        if (isRetry) {
+                            Swal.fire({ toast: true, position: 'top', icon: 'info', title: 'Payment cancelled — you can retry anytime.', showConfirmButton: false, timer: 3000 });
+                        }
+                    },
+                },
+            };
+
+            const rzp = new Razorpay(options);
+
+            rzp.on('payment.failed', function (response) {
+                resetBtn();
+                Swal.fire({ icon: 'error', title: 'Payment Failed', text: response.error.description });
+            });
+
+            rzp.open();
+        }
+
+        /* =========================================
+           ADDRESS SELECTION
+        ========================================= */
+        document.querySelectorAll('.checkout-address-wrapper').forEach(card => {
+            card.addEventListener('click', (event) => {
+                if (event.target.closest('.action-link') || event.target.closest('.deliver-here-btn')) return;
+                document.querySelectorAll('.checkout-address-wrapper').forEach(c => c.classList.remove('active'));
+                card.classList.add('active');
+                document.getElementById('selectedAddressId').value = card.dataset.addressId;
+            });
+        });
+
+        /* =========================================
+           ADD ADDRESS MODAL
+        ========================================= */
+        const addAddressModal = document.getElementById('address-modal');
+
+        document.getElementById('checkoutAddAddressBtn')?.addEventListener('click', () => {
+            addAddressModal.classList.add('active');
+        });
+        document.getElementById('close-modal')?.addEventListener('click', () => {
+            addAddressModal.classList.remove('active');
+        });
+
+        /* =========================================
+           EDIT ADDRESS MODAL
+        ========================================= */
+        const editModal = document.getElementById('edit-address-modal');
+        const editForm  = document.getElementById('edit-address-form');
+
+        document.querySelectorAll('.edit-trigger').forEach(btn => {
+            btn.addEventListener('click', (event) => {
+                event.preventDefault();
+                const addressId = btn.dataset.id;
+                editForm.action = `/edit-address/${addressId}`;
+
+                document.getElementById('edit-form-name').value    = btn.dataset.name;
+                document.getElementById('edit-form-phone').value   = btn.dataset.phone;
+                document.getElementById('edit-form-address').value = btn.dataset.address;
+                document.getElementById('edit-form-city').value    = btn.dataset.city;
+                document.getElementById('edit-form-state').value   = btn.dataset.state;
+                document.getElementById('edit-form-pin').value     = btn.dataset.pincode;
+                document.getElementById('edit-form-country').value = btn.dataset.country;
+
+                const typeEl = document.querySelector(`#edit-type-${btn.dataset.type?.toLowerCase()}`);
+                if (typeEl) typeEl.checked = true;
+
+                document.getElementById('edit-form-default').checked = btn.dataset.default === 'true';
+                editModal.classList.add('active');
+            });
+        });
+
+        document.getElementById('close-edit-modal')?.addEventListener('click', () => {
+            editModal.classList.remove('active');
+        });
+
+        /* =========================================
+           ADD ADDRESS AJAX
+        ========================================= */
+        document.getElementById('new-address-form')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                const formData = Object.fromEntries(new FormData(e.target));
+                const data     = await fetch('/add-address', {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body:    JSON.stringify(formData),
+                }).then(r => r.json());
+
+                if (!data.success) {
+                    return Swal.fire({ toast: true, position: 'top', icon: 'warning', title: data.message, showConfirmButton: false, timer: 3000 });
+                }
+
+                await Swal.fire({ icon: 'success', title: 'Address Added', text: data.message, confirmButtonColor: '#603763' });
+                window.location.reload();
+            } catch {
+                Swal.fire({ icon: 'error', title: 'Something went wrong', text: 'Please try again.' });
+            }
+        });
+
+        /* =========================================
+           EDIT ADDRESS AJAX
+        ========================================= */
+        editForm?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                const formData = Object.fromEntries(new FormData(editForm));
+                const data     = await fetch(editForm.action, {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body:    JSON.stringify(formData),
+                }).then(r => r.json());
+
+                if (!data.success) {
+                    return Swal.fire({ toast: true, position: 'top', icon: 'warning', title: data.message, showConfirmButton: false, timer: 3000 });
+                }
+
+                await Swal.fire({ icon: 'success', title: 'Address Updated', text: data.message, confirmButtonColor: '#603763' });
+                window.location.reload();
+            } catch {
+                Swal.fire({ icon: 'error', title: 'Something went wrong', text: 'Please try again.' });
+            }
+        });
 
-})
-
-/* =========================================
-   ADD ADDRESS MODAL
-========================================= */
-
-const addAddressModal =
-document.getElementById(
-"address-modal"
-);
-
-document
-.getElementById(
-"checkoutAddAddressBtn"
-)
-?.addEventListener(
-
-"click",
-
-() => {
-
-addAddressModal.classList.add(
-"active"
-);
-
-}
-
-);
-
-document
-.getElementById(
-"close-modal"
-)
-?.addEventListener(
-
-"click",
-
-() => {
-
-addAddressModal.classList.remove(
-"active"
-);
-
-}
-
-);
-
-/* =========================================
-   EDIT ADDRESS MODAL
-========================================= */
-
-const editModal =
-document.getElementById(
-"edit-address-modal"
-);
-
-const editForm =
-document.getElementById(
-"edit-address-form"
-);
-
-document
-.querySelectorAll(
-".edit-trigger"
-)
-
-.forEach(btn => {
-
-btn.addEventListener(
-
-"click",
-
-(event) => {
-
-event.preventDefault();
-
-/* ADDRESS ID */
-
-const addressId =
-btn.dataset.id;
-
-/* FORM ACTION */
-
-editForm.action =
-`/edit-address/${addressId}`;
-
-/* FILL FORM */
-
-document.getElementById(
-"edit-form-name"
-).value =
-btn.dataset.name;
-
-document.getElementById(
-"edit-form-phone"
-).value =
-btn.dataset.phone;
-
-document.getElementById(
-"edit-form-address"
-).value =
-btn.dataset.address;
-
-document.getElementById(
-"edit-form-city"
-).value =
-btn.dataset.city;
-
-document.getElementById(
-"edit-form-state"
-).value =
-btn.dataset.state;
-
-document.getElementById(
-"edit-form-pin"
-).value =
-btn.dataset.pincode;
-
-document.getElementById(
-"edit-form-country"
-).value =
-btn.dataset.country;
-
-/* TYPE */
-
-document.querySelector(
-
-`#edit-type-${btn.dataset.type.toLowerCase()}`
-
-).checked = true;
-
-/* DEFAULT */
-
-document.getElementById(
-"edit-form-default"
-).checked =
-
-btn.dataset.default === "true";
-
-/* OPEN */
-
-editModal.classList.add(
-"active"
-);
-
-}
-
-);
-
-});
-
-/* =========================================
-   CLOSE EDIT MODAL
-========================================= */
-
-document
-.getElementById(
-"close-edit-modal"
-)
-
-?.addEventListener(
-
-"click",
-
-() => {
-
-editModal.classList.remove(
-"active"
-);
-
-}
-
-);
-
-/* =========================================
-   ADD ADDRESS AJAX
-========================================= */
-
-const addAddressForm =
-document.getElementById(
-"new-address-form"
-);
-
-addAddressForm?.addEventListener(
-
-"submit",
-
-async (e) => {
-
-e.preventDefault();
-
-try {
-
-const formData = Object.fromEntries(
-  new FormData(addAddressForm)
-);
-
-const response = await fetch(
-  "/add-address",
-  {
-    method: "POST",
-
-    headers: {
-      "Content-Type": "application/json"
-    },
-
-    body: JSON.stringify(formData)
-  }
-);
-
-const data =
-await response.json();
-
-if(!data.success){
-
-return Swal.fire({
-
-    toast: true,
-
-    position: "top",
-
-    icon: "warning",
-
-    title: data.message,
-
-    showConfirmButton: false,
-
-    timer: 3000,
-
-    timerProgressBar: true,
-
-    background: "#FFFFFF",
-
-    color: "#1A1C1D"
-
-});
-
-}
-
-await Swal.fire({
-
-icon:"success",
-
-title:"Address Added",
-
-text:data.message,
-
-confirmButtonColor:"#603763"
-
-});
-
-window.location.reload();
-
-}
-
-catch(error){
-
-Swal.fire({
-
-icon:"error",
-
-title:"Something went wrong",
-
-text:"Please try again."
-
-});
-
-}
-
-}
-
-);
-
-/* =========================================
-   EDIT ADDRESS AJAX
-========================================= */
-
-editForm?.addEventListener(
-
-"submit",
-
-async (e) => {
-
-e.preventDefault();
-
-try {
-
-const formData = Object.fromEntries(
-  new FormData(editForm)
-);
-
-const response = await fetch(
-  editForm.action,
-  {
-    method: "POST",
-
-    headers: {
-      "Content-Type": "application/json"
-    },
-
-    body: JSON.stringify(formData)
-  }
-);
-
-const data =
-await response.json();
-
-if(!data.success){
-
-return Swal.fire({
-
-    toast: true,
-
-    position: "top",
-
-    icon: "warning",
-
-    title: data.message,
-
-    showConfirmButton: false,
-
-    timer: 3000,
-
-    timerProgressBar: true,
-
-    background: "#FFFFFF",
-
-    color: "#1A1C1D"
-
-});
-
-}
-
-await Swal.fire({
-
-icon:"success",
-
-title:"Address Updated",
-
-text:data.message,
-
-confirmButtonColor:"#603763"
-
-});
-
-window.location.reload();
-
-}
-
-catch(error){
-
-Swal.fire({
-
-icon:"error",
-
-title:"Something went wrong",
-
-text:"Please try again."
-
-});
-
-}
-
-}
-
-);
     </script>
 
 </body>

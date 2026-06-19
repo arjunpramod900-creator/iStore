@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Failed — iStore</title>
+    <meta name="description" content="Your payment could not be completed. Retry your payment to confirm your iStore order.">
+
+    <link rel="stylesheet" href="/css/components/header.css">
+    <link rel="stylesheet" href="/css/components/footer.css">
+    <link rel="stylesheet" href="/css/order-failure.css">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+</head>
+
+<body>
+
+    <%- include('../partials/user/header', { page: 'orders' }) %>
+
+    <%
+        const orderNumber   = order.orderId;
+        const orderDate     = new Date(order.createdAt).toLocaleDateString('en-IN', {
+            year: 'numeric', month: 'long', day: 'numeric'
+        });
+        const paymentMethod = order.paymentMethod || 'RAZORPAY';
+        const orderItems    = order.items || [];
+        const subtotal      = order.subtotal      || 0;
+        const discount      = order.discountAmount || 0;
+        const tax           = order.taxAmount      || 0;
+        const shipping      = order.deliveryCharge || 0;
+        const grandTotal    = order.finalAmount    || 0;
+
+        const addr = order.shippingAddress || {};
+        const shippingAddr = addr.fullName
+            ? `${addr.fullName}, ${addr.addressLine1}, ${addr.city}, ${addr.state} - ${addr.pincode}`
+            : 'Address unavailable';
+
+        /* Countdown — if paymentExpiresAt is set show the timer */
+        const expiresAt = order.paymentExpiresAt
+            ? new Date(order.paymentExpiresAt).getTime()
+            : null;
+
+        const isExpired = expiresAt && Date.now() > expiresAt;
+    %>
+
+    <main class="of-page" id="ofPage">
+        <div class="of-container">
+
+            <!-- BREADCRUMBS -->
+            <nav class="of-breadcrumbs" aria-label="Breadcrumb">
+                <a href="/" class="of-bc-crumb">Home</a>
+                <span class="of-bc-sep"><i data-lucide="chevron-right" size="12"></i></span>
+                <a href="/orders" class="of-bc-crumb">Orders</a>
+                <span class="of-bc-sep"><i data-lucide="chevron-right" size="12"></i></span>
+                <span class="of-bc-crumb active">Payment Failed</span>
+            </nav>
+
+            <!-- MAIN CARD -->
+            <div class="of-main-card" id="ofMainCard">
+
+                <!-- HERO -->
+                <div class="of-hero" id="ofHero">
+
+                    <div class="of-icon-wrap">
+                        <div class="of-icon-circle" id="ofIconCircle">
+                            <i data-lucide="x" size="28"></i>
+                        </div>
+                    </div>
+
+                    <h1 class="of-heading">Payment Failed</h1>
+
+                    <p class="of-subtext">
+                        <% if (isExpired) { %>
+                            Your payment window has expired and the reserved stock has been released.
+                            Please place a new order to continue.
+                        <% } else { %>
+                            Your payment could not be completed.
+                            Your items are still reserved — retry now to confirm your order.
+                        <% } %>
+                    </p>
+
+                    <!-- Countdown timer — only when not expired -->
+                    <% if (expiresAt && !isExpired) { %>
+                    <div class="of-countdown-card" id="ofCountdownCard">
+                        <i data-lucide="clock" size="16"></i>
+                        <span class="of-countdown-label">Reservation expires in</span>
+                        <span class="of-countdown-value" id="ofCountdown">--:--</span>
+                    </div>
+                    <% } %>
+
+                </div>
+
+                <!-- ORDER DETAILS GRID -->
+                <div class="of-details-grid" id="ofDetailsGrid">
+
+                    <div class="of-detail-item">
+                        <span class="of-detail-label">Order Number</span>
+                        <span class="of-detail-value"><%= orderNumber %></span>
+                    </div>
+
+                    <div class="of-detail-item">
+                        <span class="of-detail-label">Order Date</span>
+                        <span class="of-detail-value"><%= orderDate %></span>
+                    </div>
+
+                    <div class="of-detail-item">
+                        <span class="of-detail-label">Payment Method</span>
+                        <span class="of-detail-value">
+                            <i data-lucide="credit-card" size="16"></i>
+                            <%= paymentMethod %>
+                        </span>
+                    </div>
+
+                    <div class="of-detail-item">
+                        <span class="of-detail-label">Payment Status</span>
+                        <span class="of-detail-value of-status-badge">
+                            <i data-lucide="alert-circle" size="14"></i>
+                            Failed
+                        </span>
+                    </div>
+
+                    <div class="of-detail-item of-detail-item--full">
+                        <span class="of-detail-label">Shipping Address</span>
+                        <span class="of-detail-value"><%= shippingAddr %></span>
+                    </div>
+
+                </div>
+
+                <!-- ORDER SUMMARY -->
+                <div class="of-summary-card" id="ofSummaryCard">
+
+                    <p class="of-summary-label">Order Summary</p>
+
+                    <div class="of-items-list">
+                        <% orderItems.forEach(item => { %>
+                        <div class="of-item-row">
+                            <div class="of-item-info">
+                                <span class="of-item-name">
+                                    <%= item.productName %> &times; <%= item.quantity %>
+                                </span>
+                                <span class="of-item-variant"><%= item.variantName %></span>
+                            </div>
+                            <span class="of-item-price">
+                                ₹<%= (item.price * item.quantity).toLocaleString('en-IN') %>
+                            </span>
+                        </div>
+                        <% }) %>
+                    </div>
+
+                    <div class="of-breakdown">
+                        <div class="of-breakdown-row">
+                            <span>Subtotal</span>
+                            <span>₹<%= subtotal.toLocaleString('en-IN') %></span>
+                        </div>
+                        <div class="of-breakdown-row">
+                            <span>Shipping</span>
+                            <span class="<%= shipping === 0 ? 'of-free' : '' %>">
+                                <%= shipping === 0 ? 'Free' : `₹${shipping.toLocaleString('en-IN')}` %>
+                            </span>
+                        </div>
+                        <div class="of-breakdown-row">
+                            <span>Tax</span>
+                            <span>₹<%= tax.toLocaleString('en-IN') %></span>
+                        </div>
+                        <% if (discount > 0) { %>
+                        <div class="of-breakdown-row">
+                            <span>Discount</span>
+                            <span class="of-discount">−₹<%= discount.toLocaleString('en-IN') %></span>
+                        </div>
+                        <% } %>
+                    </div>
+
+                    <div class="of-total-row">
+                        <span class="of-total-label">Amount Due</span>
+                        <span class="of-total-value">₹<%= grandTotal.toLocaleString('en-IN') %></span>
+                    </div>
+
+                </div>
+
+                <!-- ACTION BUTTONS -->
+                <div class="of-actions" id="ofActions">
+
+                    <% if (!isExpired) { %>
+
+                        <!-- PRIMARY: Retry Payment -->
+                        <a href="/orders/<%= orderNumber %>/retry" class="of-btn-primary" id="btnRetryPayment">
+                            <i data-lucide="refresh-cw" size="18"></i>
+                            Retry Payment — ₹<%= grandTotal.toLocaleString('en-IN') %>
+                        </a>
+
+                        <!-- SECONDARY: View Order Details -->
+                        <a href="/orders/<%= orderNumber %>" class="of-btn-outline" id="btnViewOrder">
+                            <i data-lucide="file-text" size="18"></i>
+                            View Order Details
+                        </a>
+
+                    <% } else { %>
+
+                        <!-- Expired: only option is to shop again -->
+                        <a href="/products" class="of-btn-primary" id="btnShopAgain">
+                            <i data-lucide="shopping-bag" size="18"></i>
+                            Shop Again
+                        </a>
+
+                        <a href="/orders" class="of-btn-outline" id="btnViewOrders">
+                            <i data-lucide="list-ordered" size="18"></i>
+                            View All Orders
+                        </a>
+
+                    <% } %>
+
+                    <!-- Always: Continue Shopping -->
+                    <a href="/products" class="of-btn-subtle" id="btnContinueShopping">
+                        Continue Shopping
+                    </a>
+
+                </div>
+
+                <!-- INFO BANNER -->
+                <div class="of-info-banner" id="ofInfoBanner">
+                    <i data-lucide="<%= isExpired ? 'info' : 'shield-check' %>" size="16"></i>
+                    <span>
+                        <% if (isExpired) { %>
+                            No money has been deducted. Any pending charges will be automatically reversed.
+                        <% } else { %>
+                            No money has been deducted. Your items are reserved for a limited time.
+                        <% } %>
+                    </span>
+                </div>
+
+            </div>
+
+        </div>
+    </main>
+
+    <%- include('../partials/user/footer') %>
+
+    <script>
+        lucide.createIcons();
+
+        /* GSAP entrance */
+        gsap.from('#ofHero',        { y: -20, opacity: 0, duration: 0.55, ease: 'power2.out', delay: 0.05 });
+        gsap.from('#ofDetailsGrid', { y:  24, opacity: 0, duration: 0.5,  ease: 'power2.out', delay: 0.18 });
+        gsap.from('#ofSummaryCard', { y:  24, opacity: 0, duration: 0.5,  ease: 'power2.out', delay: 0.30 });
+        gsap.from('#ofActions',     { y:  20, opacity: 0, duration: 0.45, ease: 'power2.out', delay: 0.42 });
+        gsap.from('#ofInfoBanner',  { y:  16, opacity: 0, duration: 0.4,  ease: 'power2.out', delay: 0.52 });
+
+        /* COUNTDOWN — only rendered when expiresAt exists and not expired */
+        <% if (expiresAt && !isExpired) { %>
+        (function () {
+            const expiresAt = <%= expiresAt %>;
+            const display   = document.getElementById('ofCountdown');
+            const card      = document.getElementById('ofCountdownCard');
+
+            function tick() {
+                const remaining = expiresAt - Date.now();
+
+                if (remaining <= 0) {
+                    if (display) display.textContent = '00:00';
+                    /* Disable retry button and show expired state */
+                    const retryBtn = document.getElementById('btnRetryPayment');
+                    if (retryBtn) {
+                        retryBtn.style.pointerEvents = 'none';
+                        retryBtn.style.opacity       = '0.45';
+                        retryBtn.innerHTML           = '<i data-lucide="clock" size="18"></i> Reservation Expired';
+                        lucide.createIcons();
+                    }
+                    if (card) {
+                        card.classList.add('of-countdown-card--expired');
+                    }
+                    return;
+                }
+
+                /* Urgent styling when under 5 minutes */
+                if (remaining < 5 * 60 * 1000 && card) {
+                    card.classList.add('of-countdown-card--urgent');
+                }
+
+                const mins = String(Math.floor(remaining / 60000)).padStart(2, '0');
+                const secs = String(Math.floor((remaining % 60000) / 1000)).padStart(2, '0');
+                if (display) display.textContent = `${mins}:${secs}`;
+
+                setTimeout(tick, 1000);
+            }
+
+            tick();
+        })();
+        <% } %>
+    </script>
+
+</body>
+</html>

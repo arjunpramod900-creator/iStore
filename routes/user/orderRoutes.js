@@ -1,9 +1,8 @@
 import express from "express";
-
 const router = express.Router();
 
-import { isLoggedIn } from "../../middleware/authMiddleware.js";
-import userBlockCheckMiddleware from "../../middleware/userBlockCheckMiddleware.js";
+import { isLoggedIn }           from "../../middleware/authMiddleware.js";
+import userBlockCheckMiddleware  from "../../middleware/userBlockCheckMiddleware.js";
 
 import {
   loadOrdersPage,
@@ -13,28 +12,41 @@ import {
   returnOrder,
   returnOrderItem,
   downloadInvoice,
-  retryPayment,
+  retryPayment,       /* legacy — used by orders list / order details retry buttons */
+  retryOrderPay,      /* new retry checkout — handles COD / WALLET / RAZORPAY */
 } from "../../controllers/user/orderController.js";
 
-/* =========================================
-   PROTECTED ORDER ROUTES
-========================================= */
+/* ─── loadRetryCheckoutPage lives in checkoutController
+       because it renders checkout.ejs in mode="retry" ─── */
+import { loadRetryCheckoutPage } from "../../controllers/user/checkoutController.js";
 
-router.use(isLoggedIn, userBlockCheckMiddleware);
+const auth = [isLoggedIn, userBlockCheckMiddleware];
 
+router.use(...auth);
+
+/* ── Order list & details ── */
 router.get("/orders",          loadOrdersPage);
 router.get("/orders/:orderId", loadOrderDetailsPage);
 
+/* ── Cancel ── */
 router.post("/orders/:orderId/cancel",              cancelOrder);
 router.post("/orders/:orderId/item/:itemId/cancel", cancelOrderItem);
+
+/* ── Return ── */
 router.post("/orders/:orderId/return",              returnOrder);
 router.post("/orders/:orderId/item/:itemId/return", returnOrderItem);
 
-/* =========================================
-   RETRY RAZORPAY PAYMENT
-========================================= */
-router.post("/orders/:orderId/retry-payment", retryPayment);
+/* ── Retry payment flow ──
+     GET  /orders/:orderId/retry        → unified checkout.ejs in mode="retry"
+     POST /orders/:orderId/retry-pay    → COD / WALLET / RAZORPAY handler
+     POST /orders/:orderId/retry-payment → legacy quick-retry (Razorpay only)
+                                           kept for old buttons in orders/order-details
+*/
+router.get( "/orders/:orderId/retry",          loadRetryCheckoutPage);
+router.post("/orders/:orderId/retry-pay",      retryOrderPay);
+router.post("/orders/:orderId/retry-payment",  retryPayment);  /* legacy */
 
+/* ── Invoice ── */
 router.get("/orders/:orderId/invoice", downloadInvoice);
 
 export default router;

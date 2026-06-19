@@ -326,104 +326,18 @@
             { y: 0, opacity: 1, duration: 0.5, stagger: 0.08, ease: "power2.out", clearProps: "all" }
         );
 
-        /* ================================================
-           RETRY PAYMENT
-           Triggered from the orders list page.
-           Opens Razorpay modal, verifies on success.
-        ================================================ */
-        document.querySelectorAll(".retry-payment-btn").forEach(btn => {
-            btn.addEventListener("click", async function () {
-                const orderId = this.dataset.orderId;
 
-                this.disabled  = true;
-                this.innerHTML = '<i data-lucide="loader" size="16"></i> Opening…';
-                lucide.createIcons();
+document.querySelectorAll(".retry-payment-btn").forEach(btn => {
 
-                try {
-                    const res  = await fetch(`/orders/${orderId}/retry-payment`, { method: "POST" });
-                    const data = await res.json();
+    btn.addEventListener("click", function () {
 
-                    if (!data.success) {
-                        showToast("error", data.message || "Could not initiate payment");
-                        this.disabled  = false;
-                        this.innerHTML = '<i data-lucide="refresh-cw" size="16"></i> Retry Payment';
-                        lucide.createIcons();
-                        return;
-                    }
+        const orderId = this.dataset.orderId;
 
-                    const self = this;
+        window.location.href = `/orders/${orderId}/retry`;
 
-                    const options = {
-                        key:         "<%= process.env.RAZORPAY_KEY_ID %>",
-                        amount:      data.razorpayOrder.amount,
-                        currency:    "INR",
-                        name:        "iStore",
-                        description: "Order Payment — Retry",
-                        order_id:    data.razorpayOrder.id,
-                        theme:       { color: "#603763" },
+    });
 
-                        handler: async function (response) {
-                            try {
-                                const verifyRes = await fetch("/checkout/verify-payment", {
-                                    method:  "POST",
-                                    headers: { "Content-Type": "application/json" },
-                                    body: JSON.stringify({
-                                        razorpay_order_id:   response.razorpay_order_id,
-                                        razorpay_payment_id: response.razorpay_payment_id,
-                                        razorpay_signature:  response.razorpay_signature,
-                                    }),
-                                });
-
-                                const result = await verifyRes.json();
-
-                                if (!result.success) {
-                                    showToast("error", result.message || "Verification failed");
-                                    self.disabled  = false;
-                                    self.innerHTML = '<i data-lucide="refresh-cw" size="16"></i> Retry Payment';
-                                    lucide.createIcons();
-                                    return;
-                                }
-
-                                window.location.href = result.redirectUrl;
-
-                            } catch {
-                                showToast("error", "Verification error. Contact support if money was deducted.");
-                                self.disabled  = false;
-                                self.innerHTML = '<i data-lucide="refresh-cw" size="16"></i> Retry Payment';
-                                lucide.createIcons();
-                            }
-                        },
-
-                        modal: {
-                            ondismiss: function () {
-                                showToast("error", "Payment cancelled. You can retry anytime.");
-                                self.disabled  = false;
-                                self.innerHTML = '<i data-lucide="refresh-cw" size="16"></i> Retry Payment';
-                                lucide.createIcons();
-                            },
-                        },
-                    };
-
-                    const rzp = new Razorpay(options);
-
-                    rzp.on("payment.failed", function (response) {
-                        showToast("error", response.error.description || "Payment failed");
-                        self.disabled  = false;
-                        self.innerHTML = '<i data-lucide="refresh-cw" size="16"></i> Retry Payment';
-                        lucide.createIcons();
-                    });
-
-                    rzp.open();
-
-                } catch {
-                    showToast("error", "Something went wrong. Please try again.");
-                    this.disabled  = false;
-                    this.innerHTML = '<i data-lucide="refresh-cw" size="16"></i> Retry Payment';
-                    lucide.createIcons();
-                }
-            });
-        });
-
+});
         /* ================================================
            CANCEL ORDER
         ================================================ */

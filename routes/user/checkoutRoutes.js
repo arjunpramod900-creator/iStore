@@ -1,8 +1,7 @@
 import express from "express";
 
-import { isLoggedIn } from "../../middleware/authMiddleware.js";
-
-import userBlockCheckMiddleware from "../../middleware/userBlockCheckMiddleware.js";
+import { isLoggedIn }              from "../../middleware/authMiddleware.js";
+import userBlockCheckMiddleware    from "../../middleware/userBlockCheckMiddleware.js";
 
 import {
   loadCheckoutPage,
@@ -15,97 +14,27 @@ import {
 
 const router = express.Router();
 
-/* =========================================
-   LOAD CHECKOUT
-========================================= */
-
-router.get(
-  "/checkout",
-
-  isLoggedIn,
-
-  userBlockCheckMiddleware,
-
-  loadCheckoutPage,
-);
-
+const auth = [isLoggedIn, userBlockCheckMiddleware];
 
 /* =========================================
-   APPLY COUPON
+   CHECKOUT — new order flow
 ========================================= */
-
-router.post(
-
-  "/checkout/apply-coupon",
-
-  isLoggedIn,
-
-  userBlockCheckMiddleware,
-
-  applyCoupon,
-
-);
+router.get( "/checkout",              ...auth, loadCheckoutPage);
+router.post("/checkout/place-order",  ...auth, placeOrder);
+router.post("/checkout/apply-coupon", ...auth, applyCoupon);
+router.post("/checkout/remove-coupon",...auth, removeCoupon);
 
 /* =========================================
-   REMOVE COUPON
+   RAZORPAY VERIFICATION
+   Shared by new checkout AND retry flow.
+   Both flows store the order by razorpayOrderId
+   so this single endpoint handles both.
 ========================================= */
-
-router.post(
-
-  "/checkout/remove-coupon",
-
-  isLoggedIn,
-
-  userBlockCheckMiddleware,
-
-  removeCoupon,
-
-);
-
-/* =========================================
-   PLACE ORDER (COD)
-========================================= */
-
-router.post(
-  
-  "/checkout/place-order",
-
-  isLoggedIn,
-
-  userBlockCheckMiddleware,
-
-  placeOrder,
-);
-
-/* =========================================
-   VERIFY RAZORPAY PAYMENT
-========================================= */
-
-router.post(
-
-  "/checkout/verify-payment",
-
-  isLoggedIn,
-
-  userBlockCheckMiddleware,
-
-  verifyRazorpayPayment,
-
-);
+router.post("/checkout/verify-payment", ...auth, verifyRazorpayPayment);
 
 /* =========================================
    ORDER SUCCESS
 ========================================= */
-
-router.get(
-
-  "/order-success/:orderId",
-
-  isLoggedIn,
-
-  userBlockCheckMiddleware,
-
-  loadOrderSuccessPage,
-);
+router.get("/order-success/:orderId", ...auth, loadOrderSuccessPage);
 
 export default router;
