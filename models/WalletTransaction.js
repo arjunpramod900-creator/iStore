@@ -21,6 +21,12 @@ new mongoose.Schema(
       default: null,
     },
 
+    transactionId: {
+      type: String,
+      default: null,
+      index: true,
+    },
+
     amount: {
       type: Number,
       required: true,
@@ -43,6 +49,7 @@ new mongoose.Schema(
         "AdminCancellationRefund",
         "ReturnRefund",
         "OrderPayment",
+        "OrderPaymentRefund",   
         "ReferralBonus",
         "AdminAdjustment",
         "WalletTopup",
@@ -74,6 +81,21 @@ new mongoose.Schema(
     timestamps: true,
   }
 );
+
+walletTransactionSchema.index({
+  transactionType: 1,
+  orderId: 1,
+});
+
+walletTransactionSchema.index({
+  transactionType: 1,
+  transactionId: 1,
+});
+
+walletTransactionSchema.index({
+  transactionType: 1,
+  razorpayPaymentId: 1,
+});
 
 const WalletTransaction =
 mongoose.model(

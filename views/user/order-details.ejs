@@ -93,33 +93,40 @@
             transform: none;
         }
 
-        /* ── Failed payment banner ── */
-        .od-payment-failed-banner {
+        /* ── REFACTOR: Dynamic Payment Alert banner ── */
+        .od-payment-alert-banner {
             display: flex;
             align-items: flex-start;
             gap: 14px;
             padding: 18px 20px;
-            background: rgba(186, 26, 26, 0.06);
-            border: 1px solid rgba(186, 26, 26, 0.18);
             border-radius: 16px;
             margin-bottom: 4px;
         }
-        .od-payment-failed-banner svg {
-            color: #BA1A1A;
-            flex-shrink: 0;
-            margin-top: 2px;
+        
+        .od-payment-alert-banner.failed {
+            background: rgba(186, 26, 26, 0.06);
+            border: 1px solid rgba(186, 26, 26, 0.18);
         }
-        .od-payment-failed-banner-text {
+        .od-payment-alert-banner.failed svg { color: #BA1A1A; flex-shrink: 0; margin-top: 2px; }
+        .od-payment-alert-banner.failed .od-payment-alert-banner-title { color: #BA1A1A; }
+        
+        .od-payment-alert-banner.pending {
+            background: rgba(230, 154, 0, 0.06);
+            border: 1px solid rgba(230, 154, 0, 0.18);
+        }
+        .od-payment-alert-banner.pending svg { color: #E69A00; flex-shrink: 0; margin-top: 2px; }
+        .od-payment-alert-banner.pending .od-payment-alert-banner-title { color: #E69A00; }
+
+        .od-payment-alert-banner-text {
             display: flex;
             flex-direction: column;
             gap: 4px;
         }
-        .od-payment-failed-banner-title {
+        .od-payment-alert-banner-title {
             font-size: 14px;
             font-weight: 700;
-            color: #BA1A1A;
         }
-        .od-payment-failed-banner-sub {
+        .od-payment-alert-banner-sub {
             font-size: 13px;
             color: #6B7280;
             line-height: 1.5;
@@ -149,12 +156,20 @@
         const paymentMethod = order.paymentMethod || "COD";
         const paymentStatus = order.paymentStatus || "Pending";
 
-        /* Is this a failed Razorpay payment that can be retried? */
-        const isPaymentFailed = paymentMethod === "RAZORPAY" && paymentStatus === "Failed";
+        /* REFACTOR: Determine if order is eligible for Retry */
+        const isRetryable = 
+            paymentMethod === "RAZORPAY" && 
+            paymentStatus !== "Paid" && 
+            paymentStatus !== "Refunded" &&
+            order.orderStatus !== "Cancelled" &&
+            order.orderStatus !== "Returned" &&
+            !order.isStockRestored;
 
-        const cancelledItems = items.filter(i => i.itemStatus === "Cancelled");
-        const refundAmount   = cancelledItems.reduce((t, i) => t + (i.price * i.quantity), 0);
-        const updatedTotal   = order.finalAmount;
+        const refundAmount = order.refundAmount || 0;
+        const updatedTotal =
+    paymentMethod === "COD"
+        ? order.finalAmount
+        : Math.max(order.finalAmount - refundAmount, 0);
 
         const deliveredItems = items.filter(i => i.itemStatus === "Delivered");
         const allItemsReturnRequested = deliveredItems.length > 0 &&
@@ -192,10 +207,11 @@
                             <i data-lucide="x-circle" size="18"></i>
                             This order was cancelled
                         </div>
-                    <% } else if (isPaymentFailed) { %>
-                        <div class="od-cancelled-banner" style="background:#FEF2F2; color:#BA1A1A; border-color:#FECACA;">
-                            <i data-lucide="alert-circle" size="18"></i>
-                            Payment failed — please retry to confirm your order
+                    <% } else if (isRetryable) { %>
+                        <!-- REFACTOR: Dynamic Timeline Banner -->
+                        <div class="od-cancelled-banner" style="<%= paymentStatus === 'Failed' ? 'background:#FEF2F2; color:#BA1A1A; border-color:#FECACA;' : 'background:#FFFBEB; color:#B45309; border-color:#FDE68A;' %>">
+                            <i data-lucide="<%= paymentStatus === 'Failed' ? 'alert-circle' : 'clock' %>" size="18"></i>
+                            Payment <%= paymentStatus === 'Failed' ? 'failed' : 'pending' %> — please retry to confirm your order
                         </div>
                     <% } else { %>
                         <div class="od-timeline">
@@ -224,8 +240,8 @@
                     <span class="od-header-order-id">Order ID : <%= orderId %></span>
                 </div>
 
-                <!-- Invoice — only show when payment is not failed -->
-                <% if (!isPaymentFailed) { %>
+                <!-- Invoice — only show when payment is completed -->
+                <% if (!isRetryable) { %>
                 <a href="/orders/<%= orderId %>/invoice" class="od-invoice-btn">
                     <i data-lucide="file-down" size="18"></i>
                     Download Invoice
@@ -315,12 +331,12 @@
                                     <span class="od-item-price"><%= fmt(price) %></span>
 
                                     <%
-                                      /* Hide cancel/return buttons when payment is failed
+                                      /* Hide cancel/return buttons when payment is unverified
                                          — order isn't confirmed yet */
                                     %>
 
                                     <% if (
-                                        !isPaymentFailed &&
+                                        !isRetryable &&
                                         ["Pending","Processing"].includes(order.orderStatus) &&
                                         item.itemStatus !== "Cancelled"
                                     ) { %>
@@ -332,7 +348,7 @@
                                     </button>
                                     <% } %>
 
-                                    <% if (!isPaymentFailed && canReturnItem) { %>
+                                    <% if (!isRetryable && canReturnItem) { %>
                                     <button
                                         class="od-item-return-btn"
                                         data-order-id="<%= orderId %>"
@@ -409,16 +425,21 @@
                     </section>
 
                     <!-- REFUND SUMMARY — only for paid orders with cancellations -->
-                    <% if (refundAmount > 0 && !isPaymentFailed) { %>
+                    <% if (refundAmount > 0 && !isRetryable) { %>
                     <section class="od-refund-card">
                         <div class="od-refund-header">
                             <i data-lucide="badge-indian-rupee" size="18"></i>
                             <%= paymentMethod === "COD" ? "Payment Adjustment" : "Refund Summary" %>
                         </div>
-                        <div class="od-refund-row">
-                            <span><%= paymentMethod === "COD" ? "Cancelled Items Value" : "Refund Amount" %></span>
-                            <strong><%= fmt(refundAmount) %></strong>
-                        </div>
+ <div class="od-refund-row">
+    <span>
+        <%= paymentMethod === "COD"
+            ? "Adjusted Amount"
+            : "Refund Amount" %>
+    </span>
+
+    <strong><%= fmt(refundAmount) %></strong>
+</div>
                         <div class="od-refund-row total">
                             <span><%= paymentMethod === "COD" ? "Updated Payable Amount" : "Updated Order Total" %></span>
                             <strong><%= fmt(updatedTotal) %></strong>
@@ -435,8 +456,8 @@
                                 <%= paymentMethod === "COD" ? "Cash on Delivery" : paymentMethod %>
                             </div>
                             <div class="od-payment-sub">
-                                <% if (isPaymentFailed) { %>
-                                    Payment was not completed
+                                <% if (isRetryable) { %>
+                                    Payment is pending or failed
                                 <% } else if (paymentMethod === "COD") { %>
                                     Pay when your order arrives
                                 <% } else { %>
@@ -486,13 +507,15 @@
                     <!-- ACTIONS -->
                     <div class="od-actions" id="odActions">
 
-                        <!-- ── RETRY PAYMENT (shown only when payment failed) ── -->
-                        <% if (isPaymentFailed) { %>
-                        <div class="od-payment-failed-banner">
-                            <i data-lucide="alert-triangle" size="18"></i>
-                            <div class="od-payment-failed-banner-text">
-                                <span class="od-payment-failed-banner-title">Payment Incomplete</span>
-                                <span class="od-payment-failed-banner-sub">
+                        <!-- ── RETRY PAYMENT (shown only when payment is pending or failed) ── -->
+                        <% if (isRetryable) { %>
+                        <div class="od-payment-alert-banner <%= paymentStatus === 'Failed' ? 'failed' : 'pending' %>">
+                            <i data-lucide="<%= paymentStatus === 'Failed' ? 'alert-triangle' : 'clock' %>" size="18"></i>
+                            <div class="od-payment-alert-banner-text">
+                                <span class="od-payment-alert-banner-title">
+                                    <%= paymentStatus === 'Failed' ? 'Payment Failed' : 'Payment Pending' %>
+                                </span>
+                                <span class="od-payment-alert-banner-sub">
                                     Your order is reserved. Complete payment now to confirm it.
                                 </span>
                             </div>
@@ -508,7 +531,7 @@
                         <% } %>
 
                         <!-- Track -->
-                        <% if (!isPaymentFailed && ["pending","processing","shipped"].includes(status)) { %>
+                        <% if (!isRetryable && ["pending","processing","shipped"].includes(status)) { %>
                         <a href="/orders/<%= orderId %>/track" class="od-btn-track">
                             <i data-lucide="package-search" size="18"></i>
                             Track Order
@@ -517,7 +540,7 @@
 
                         <!-- Return full order -->
                         <% if (
-                            !isPaymentFailed &&
+                            !isRetryable &&
                             status === "delivered" &&
                             !["Requested","Approved"].includes(order.returnStatus) &&
                             !allItemsReturnRequested
@@ -528,8 +551,8 @@
                         </button>
                         <% } %>
 
-                        <!-- Cancel order — hidden for failed payments (use retry instead) -->
-                        <% if (!isPaymentFailed && ["pending","processing"].includes(status)) { %>
+                        <!-- Cancel order — hidden for failed/pending payments (use retry instead) -->
+                        <% if (!isRetryable && ["pending","processing"].includes(status)) { %>
                         <div class="od-btn-cancel-wrap">
                             <button class="od-btn-cancel" id="btnCancelOrder" data-id="<%= orderId %>">
                                 Cancel Order
@@ -562,9 +585,7 @@
 
         /* ================================================
            RETRY PAYMENT
-           Opens a fresh Razorpay modal for the same order.
-           On success → redirects to order-success page.
-           On failure → shows error, keeps button active.
+           Redirects to the retry checkout page.
         ================================================ */
 document.getElementById("btnRetryPayment")?.addEventListener("click", function () {
 

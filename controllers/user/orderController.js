@@ -253,6 +253,48 @@ const getPaymentStatusStyle = (status) => {
   return map[status] || { bg: "#F4F4F5", text: "#52525B" };
 };
 
+
+/* =========================================
+   LOAD ORDER FAILURE PAGE
+========================================= */
+export const loadOrderFailurePage = async (req, res) => {
+
+  try {
+
+    const userId = req.session.userId;
+    const { orderId } = req.params;
+
+    const response = await loadOrderDetailsService(
+      userId,
+      orderId
+    );
+
+    if (!response.success) {
+      return res.redirect("/orders");
+    }
+
+    const order = response.order;
+
+    /* REFACTOR: Allow both "Failed" and "Pending" orders to view this page */
+    if (order.paymentStatus === "Paid") {
+      return res.redirect(`/orders/${orderId}`);
+    }
+
+    return res.render("user/order-failure", {
+      page: "orders",
+      order,
+    });
+
+  } catch (error) {
+
+    console.log("Load Order Failure Page Error:", error);
+    return res.redirect("/orders");
+
+  }
+
+};
+
+
 /* =========================================
    DOWNLOAD INVOICE PDF
 ========================================= */
@@ -447,10 +489,26 @@ const activeItems = order.items;
        .text("Payment Summary", 335, summaryY + 15);
 
     const summaryRows = [
-      { label: "Subtotal",  value: `Rs.${order.subtotal.toLocaleString("en-IN")}` },
-      { label: "Tax",       value: `Rs.${order.taxAmount.toLocaleString("en-IN")}` },
-      { label: "Shipping",  value: `Rs.${order.deliveryCharge.toLocaleString("en-IN")}` },
-      { label: "Discount",  value: `Rs.${order.discountAmount.toLocaleString("en-IN")}` },
+      {
+        label: "Subtotal",
+        value: `Rs.${order.subtotal.toLocaleString("en-IN")}`,
+      },
+      {
+        label: "Offer Discount",
+        value: `Rs.${(order.offerDiscount || 0).toLocaleString("en-IN")}`,
+      },
+      {
+        label: "Coupon Discount",
+        value: `Rs.${(order.couponDiscount || 0).toLocaleString("en-IN")}`,
+      },
+      {
+        label: "Tax",
+        value: `Rs.${order.taxAmount.toLocaleString("en-IN")}`,
+      },
+      {
+        label: "Shipping",
+        value: `Rs.${order.deliveryCharge.toLocaleString("en-IN")}`,
+      },
     ];
 
     summaryRows.forEach((row, i) => {

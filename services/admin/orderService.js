@@ -105,208 +105,515 @@ export const getOrderDetailsService = async (orderId) => {
 /* ============================
    UPDATE STATUS
 ============================ */
-export const updateOrderStatusService = async (orderId, status) => {
+export const updateOrderStatusService = async (
+    orderId,
+    status
+) => {
 
     const order = await Order.findById(orderId);
-    if (!order)                            throw new Error("Order not found");
-    if (!allowedStatuses.includes(status)) throw new Error("Invalid status");
-    if (order.orderStatus === status)      throw new Error(`Order already marked as ${status}`);
 
-    const transitions = {
-        Pending:            ["Processing", "Cancelled"],
-        Processing:         ["Shipped",    "Cancelled"],
-        Shipped:            ["Out for Delivery"],
-        "Out for Delivery": ["Delivered"],
-        Delivered:          [],
-        Cancelled:          [],
-        Returned:           [],
-    };
-
-    if (!transitions[order.orderStatus].includes(status)) {
-        throw new Error(`Cannot move from ${order.orderStatus} to ${status}`);
+    if (!order) {
+        throw new Error("Order not found");
     }
 
-    /* ADMIN CANCEL — restore stock + refund */
+    if (!allowedStatuses.includes(status)) {
+        throw new Error("Invalid status");
+    }
+
+    if (order.orderStatus === status) {
+        throw new Error(
+            `Order already marked as ${status}`
+        );
+    }
+
+    const transitions = {
+
+        Pending: [
+            "Processing",
+            "Cancelled",
+        ],
+
+        Processing: [
+            "Shipped",
+            "Cancelled",
+        ],
+
+        Shipped: [
+            "Out for Delivery",
+        ],
+
+        "Out for Delivery": [
+            "Delivered",
+        ],
+
+        Delivered: [],
+
+        Cancelled: [],
+
+        Returned: [],
+    };
+
+    if (
+        !transitions[
+            order.orderStatus
+        ].includes(status)
+    ) {
+
+        throw new Error(
+            `Cannot move from ${order.orderStatus} to ${status}`
+        );
+
+    }
+
+    /* ==========================
+       ADMIN CANCEL
+    ========================== */
     if (status === "Cancelled") {
+
+        const bulkOperations = [];
+
         for (const item of order.items) {
-            if (["Cancelled", "Returned"].includes(item.itemStatus)) continue;
-            if (item.variantId) {
-                await Variant.findByIdAndUpdate(item.variantId, { $inc: { stock: item.quantity } });
+
+            if (
+                item.itemStatus === "Cancelled" ||
+                item.itemStatus === "Returned"
+            ) {
+                continue;
             }
-        }
 
-        if (
-            ["RAZORPAY", "WALLET"].includes(order.paymentMethod) &&
-            !order.isRefundProcessed
-        ) {
-            const { refundAmount } = calculateFullOrderRefund(order);
-
-            await creditWallet({
-                userId:          order.userId,
-                amount:          refundAmount,
-                transactionType: "AdminCancellationRefund",
-                description:     `Refund for admin-cancelled order ${order.orderId}`,
-                orderId:         order._id,
+            bulkOperations.push({
+                updateOne: {
+                    filter: {
+                        _id: item.variantId,
+                    },
+                    update: {
+                        $inc: {
+                            stock: item.quantity,
+                        },
+                    },
+                },
             });
 
-            order.refundAmount      = refundAmount;
-            order.isRefundProcessed = true;
-            order.paymentStatus     = "Refunded";
+            item.itemStatus = "Cancelled";
+        }
+
+        if (bulkOperations.length > 0) {
+
+            await Variant.bulkWrite(
+                bulkOperations,
+                {
+                    ordered: false,
+                }
+            );
+
+        }
+
+        /* Refund only once */
+        if (
+            ["RAZORPAY", "WALLET"].includes(
+                order.paymentMethod
+            ) &&
+            !order.isRefundProcessed
+        ) {
+
+            const {
+                refundAmount,
+            } = calculateFullOrderRefund(order);
+
+            if (refundAmount > 0) {
+
+                await creditWallet({
+                    userId: order.userId,
+                    amount: refundAmount,
+                    transactionType:
+                        "AdminCancellationRefund",
+                    description:
+                        `Refund for admin-cancelled order ${order.orderId}`,
+                    orderId: order._id,
+                });
+
+                order.refundAmount += refundAmount;
+
+                order.isRefundProcessed = true;
+
+                order.paymentStatus = "Refunded";
+            }
         }
     }
 
     order.orderStatus = status;
 
     for (const item of order.items) {
-        if (!["Cancelled", "Returned"].includes(item.itemStatus)) {
+
+        if (
+            ![
+                "Cancelled",
+                "Returned",
+            ].includes(item.itemStatus)
+        ) {
+
             item.itemStatus = status;
         }
     }
 
-    if (status === "Delivered") order.deliveredDate = new Date();
+    if (status === "Delivered") {
+
+        order.deliveredDate =
+            new Date();
+
+    }
+
     await order.save();
+
 };
 
 /* ============================
    FULL ORDER RETURN — approve / reject
 ============================ */
-export const handleReturnRequestService = async (orderId, action) => {
+export const handleReturnRequestService = async (
+    orderId,
+    action
+) => {
 
     const order = await Order.findById(orderId);
-    if (!order)                               throw new Error("Order not found");
-    if (order.returnStatus !== "Requested")   throw new Error("No pending return request");
 
-    /* APPROVE */
+    if (!order) {
+        throw new Error("Order not found");
+    }
+
+    if (order.returnStatus !== "Requested") {
+        throw new Error(
+            "No pending return request"
+        );
+    }
+
+    /* ==========================
+       APPROVE RETURN
+    ========================== */
     if (action === "approve") {
 
-        order.returnStatus     = "Approved";
+        order.returnStatus = "Approved";
+
         order.returnApprovedAt = new Date();
-        order.orderStatus      = "Returned";
-        order.paymentStatus    = "Refunded";
 
-        if (!order.isRefundProcessed) {
-            const { refundAmount } = calculateFullOrderRefund(order);
+        order.orderStatus = "Returned";
 
-            await creditWallet({
-                userId:          order.userId,
-                amount:          refundAmount,
-                transactionType: "ReturnRefund",
-                description:     `Refund for returned order ${order.orderId}`,
-                orderId:         order._id,
+        const bulkOperations = [];
+
+        for (const item of order.items) {
+
+            if (
+                item.itemStatus === "Cancelled" ||
+                item.itemStatus === "Returned"
+            ) {
+                continue;
+            }
+
+            bulkOperations.push({
+                updateOne: {
+                    filter: {
+                        _id: item.variantId,
+                    },
+                    update: {
+                        $inc: {
+                            stock: item.quantity,
+                        },
+                    },
+                },
             });
 
-            order.refundAmount      = refundAmount;
-            order.isRefundProcessed = true;
-        }
-
-        /* RESTORE STOCK */
-        for (const item of order.items) {
-            if (item.itemStatus === "Cancelled") continue;
-            const variant = await Variant.findById(item.variantId);
-            if (variant) { variant.stock += item.quantity; await variant.save(); }
             item.itemStatus = "Returned";
+
+            item.itemReturnStatus = "Approved";
+
+            item.returnApprovedAt = new Date();
         }
 
-        /* RECALCULATE TOTALS */
-        const activeItems   = order.items.filter(i => !["Cancelled", "Returned"].includes(i.itemStatus));
-        const updatedTotals = recalculateOrderTotals(order, activeItems);
-        order.subtotal       = updatedTotals.subtotal;
-        order.taxAmount      = updatedTotals.taxAmount;
-        order.deliveryCharge = updatedTotals.deliveryCharge;
-        order.couponDiscount = updatedTotals.couponDiscount;
-        order.discountAmount = updatedTotals.discountAmount;
-        order.finalAmount    = updatedTotals.finalAmount;
+        if (bulkOperations.length > 0) {
+
+            await Variant.bulkWrite(
+                bulkOperations,
+                {
+                    ordered: false,
+                }
+            );
+
+        }
+
+        /* Refund only once */
+        if (
+            ["RAZORPAY", "WALLET"].includes(
+                order.paymentMethod
+            ) &&
+            !order.isRefundProcessed
+        ) {
+
+            const {
+                refundAmount,
+            } = calculateFullOrderRefund(order);
+
+            if (refundAmount > 0) {
+
+                await creditWallet({
+                    userId: order.userId,
+                    amount: refundAmount,
+                    transactionType: "ReturnRefund",
+                    description:
+                        `Refund for returned order ${order.orderId}`,
+                    orderId: order._id,
+                });
+
+                order.refundAmount += refundAmount;
+
+                order.isRefundProcessed = true;
+
+                order.paymentStatus = "Refunded";
+            }
+        }
+
+        /* Order becomes empty */
+        order.subtotal = 0;
+        order.taxAmount = 0;
+        order.deliveryCharge = 0;
+        order.couponDiscount = 0;
+        order.discountAmount = 0;
+        order.finalAmount = 0;
 
         await order.save();
-        return { success: true, message: "Return approved and refund credited to wallet" };
+
+        return {
+            success: true,
+            message:
+                "Return approved and refund credited to wallet",
+        };
     }
 
-    /* REJECT */
+    /* ==========================
+       REJECT RETURN
+    ========================== */
     if (action === "reject") {
+
         order.returnStatus = "Rejected";
+
         order.returnReason = null;
+
+        for (const item of order.items) {
+
+            if (
+                item.itemReturnStatus === "Requested"
+            ) {
+
+                item.itemReturnStatus = "Rejected";
+            }
+        }
+
         await order.save();
-        return { success: true, message: "Return request rejected" };
+
+        return {
+            success: true,
+            message:
+                "Return request rejected",
+        };
     }
 
-    throw new Error("Invalid action");
-};
+    throw new Error(
+        "Invalid action"
+    );
 
+};
 /* ============================
    SINGLE ITEM RETURN — approve / reject
    FIX: isRefundProcessed guard per item
    to prevent double refund on retries
 ============================ */
-export const handleItemReturnRequestService = async (orderId, itemId, action) => {
+export const handleItemReturnRequestService = async (
+    orderId,
+    itemId,
+    action
+) => {
 
     const order = await Order.findById(orderId);
-    if (!order) throw new Error("Order not found");
+
+    if (!order) {
+        throw new Error("Order not found");
+    }
 
     const item = order.items.id(itemId);
-    if (!item)  throw new Error("Item not found");
+
+    if (!item) {
+        throw new Error("Item not found");
+    }
 
     if (item.itemReturnStatus !== "Requested") {
-        throw new Error("No pending return request for this item");
+        throw new Error(
+            "No pending return request for this item"
+        );
     }
 
-    /* APPROVE */
+    /* =================================
+       APPROVE RETURN
+    ================================= */
     if (action === "approve") {
 
-        /* FIX: guard against double approval */
-        if (item.itemStatus === "Returned") {
-            throw new Error("Item has already been returned");
+        /* Already returned */
+        if (
+            item.itemStatus === "Returned"
+        ) {
+
+            throw new Error(
+                "Item already returned"
+            );
+
         }
 
-        /* RESTORE STOCK */
-        const variant = await Variant.findById(item.variantId);
-        if (variant) { variant.stock += item.quantity; await variant.save(); }
+        /* Restore stock */
+        await Variant.findByIdAndUpdate(
+            item.variantId,
+            {
+                $inc: {
+                    stock: item.quantity,
+                },
+            }
+        );
 
-        /* REFUND — proportional, with per-item dedup via transactionId */
-        if (["RAZORPAY", "WALLET"].includes(order.paymentMethod)) {
-            const { refundAmount } = calculateItemRefund(order, item);
+        /* Refund only once */
+        if (
+            ["RAZORPAY", "WALLET"].includes(
+                order.paymentMethod
+            ) &&
+            !item.isRefundProcessed
+        ) {
 
-            await creditWallet({
-                userId:          order.userId,
-                amount:          refundAmount,
-                transactionType: "ReturnRefund",
-                description:     `Refund for returned item [${item._id}] "${item.productName}" in order ${order.orderId}`,
-                orderId:         order._id,
-                transactionId:   String(item._id),
-            });
+            const {
+                refundAmount,
+            } = calculateItemRefund(
+                order,
+                item
+            );
+
+            if (refundAmount > 0) {
+
+                await creditWallet({
+                    userId: order.userId,
+                    amount: refundAmount,
+                    transactionType: "ReturnRefund",
+                    description:
+                        `Refund for returned item [${item._id}] "${item.productName}" in order ${order.orderId}`,
+                    orderId: order._id,
+                    transactionId: String(item._id),
+                });
+
+                item.refundAmount =
+                    refundAmount;
+
+                item.isRefundProcessed =
+                    true;
+
+                    order.refundAmount += refundAmount;
+            }
         }
 
-        item.itemStatus       = "Returned";
-        item.itemReturnStatus = "Approved";
+        item.itemStatus =
+            "Returned";
 
-        /* RECALCULATE ORDER TOTALS */
-        const activeItems   = order.items.filter(i => !["Cancelled", "Returned"].includes(i.itemStatus));
-        const updatedTotals = recalculateOrderTotals(order, activeItems);
-        order.subtotal       = updatedTotals.subtotal;
-        order.taxAmount      = updatedTotals.taxAmount;
-        order.deliveryCharge = updatedTotals.deliveryCharge;
-        order.couponDiscount = updatedTotals.couponDiscount;
-        order.discountAmount = updatedTotals.discountAmount;
-        order.finalAmount    = updatedTotals.finalAmount;
+        item.itemReturnStatus =
+            "Approved";
 
-        /* Mark whole order returned if all items resolved */
-        const allResolved = order.items.every(i => ["Cancelled", "Returned"].includes(i.itemStatus));
-        if (allResolved) {
-            order.orderStatus      = "Returned";
-            order.returnStatus     = "Approved";
-            order.returnApprovedAt = new Date();
-            order.paymentStatus    = "Refunded";
-        }
+        item.returnApprovedAt =
+            new Date();
+
+        /* Remaining active items */
+        const activeItems =
+            order.items.filter(
+                i =>
+                    ![
+                        "Cancelled",
+                        "Returned",
+                    ].includes(
+                        i.itemStatus
+                    )
+            );
+
+        /* Recalculate order totals */
+        const updatedTotals =
+            recalculateOrderTotals(
+                order,
+                activeItems
+            );
+
+        order.subtotal =
+            updatedTotals.subtotal;
+
+        order.taxAmount =
+            updatedTotals.taxAmount;
+
+        order.deliveryCharge =
+            updatedTotals.deliveryCharge;
+
+        order.couponDiscount =
+            updatedTotals.couponDiscount;
+
+        order.discountAmount =
+            updatedTotals.discountAmount;
+
+        order.finalAmount =
+            updatedTotals.finalAmount;
+
+        /* Entire order resolved */
+        const allResolved =
+            order.items.every(
+                i =>
+                    [
+                        "Cancelled",
+                        "Returned",
+                    ].includes(
+                        i.itemStatus
+                    )
+            );
+
+if (allResolved) {
+
+    order.orderStatus = "Returned";
+
+    order.returnStatus = "Approved";
+
+    order.returnApprovedAt = new Date();
+
+    if (
+        ["RAZORPAY", "WALLET"].includes(order.paymentMethod)
+    ) {
+        order.paymentStatus = "Refunded";
+    }
+}
 
         await order.save();
-        return { success: true, message: "Item return approved and refund credited to wallet" };
+
+        return {
+            success: true,
+            message:
+                "Item return approved and refund credited to wallet",
+        };
     }
 
-    /* REJECT */
+    /* =================================
+       REJECT RETURN
+    ================================= */
     if (action === "reject") {
-        item.itemReturnStatus = "Rejected";
+
+        item.itemReturnStatus =
+            "Rejected";
+
         await order.save();
-        return { success: true, message: "Item return request rejected" };
+
+        return {
+            success: true,
+            message:
+                "Item return request rejected",
+        };
     }
 
-    throw new Error("Invalid action");
+    throw new Error(
+        "Invalid action"
+    );
+
 };

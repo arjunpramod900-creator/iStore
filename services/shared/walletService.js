@@ -5,11 +5,20 @@ import WalletTransaction from "../../models/WalletTransaction.js";
    CREATE WALLET
 ========================================= */
 export const createWallet = async (userId) => {
-    let wallet = await Wallet.findOne({ userId });
-    if (!wallet) {
-        wallet = await Wallet.create({ userId, balance: 0 });
-    }
-    return wallet;
+
+    return await Wallet.findOneAndUpdate(
+        { userId },
+        {
+            $setOnInsert: {
+                balance: 0,
+            },
+        },
+        {
+            new: true,
+            upsert: true,
+        }
+    );
+
 };
 
 /* =========================================
@@ -38,43 +47,111 @@ export const creditWallet = async ({
     userId,
     amount,
     transactionType,
-    description    = "",
-    orderId        = null,
-    transactionId  = null,   /* optional unique key for item-level dedup */
+    description = "",
+    orderId = null,
+    transactionId = null,
+    razorpayPaymentId = null,
 }) => {
-    /* DEDUPLICATION — skip if already processed */
+
+    if (!amount || amount <= 0) {
+        const wallet = await createWallet(userId);
+
+        return {
+            success: true,
+            wallet,
+        };
+    }
+
+    /* ==========================
+       IDEMPOTENCY CHECK
+    ========================== */
+
+ const dedupQuery = {
+    transactionType,
+    type: "Credit",
+};
+
     if (orderId) {
-        const dedupQuery = { orderId, transactionType };
+        dedupQuery.orderId = orderId;
+    }
 
-        /* For item-level transactions use transactionId (itemId) to distinguish
-           multiple credits on the same order */
-        if (transactionId) {
-            dedupQuery.description = { $regex: transactionId };
-        }
+    if (transactionId) {
+        dedupQuery.transactionId = transactionId;
+    }
 
-        const existing = await WalletTransaction.findOne(dedupQuery);
-        if (existing) {
-            const wallet = await createWallet(userId);
-            return wallet;
+    if (razorpayPaymentId) {
+        dedupQuery.razorpayPaymentId = razorpayPaymentId;
+    }
+
+    if (
+        orderId ||
+        transactionId ||
+        razorpayPaymentId
+    ) {
+
+        const existingTransaction =
+            await WalletTransaction.findOne(
+                dedupQuery
+            );
+
+        if (existingTransaction) {
+
+            const wallet =
+                await createWallet(userId);
+
+            return {
+                success: true,
+                wallet,
+            };
         }
     }
 
-    const wallet = await createWallet(userId);
-    wallet.balance += amount;
-    await wallet.save();
+    await createWallet(userId);
+
+    const wallet =
+        await Wallet.findOneAndUpdate(
+            {
+                userId,
+            },
+            {
+                $inc: {
+                    balance: amount,
+                },
+            },
+            {
+                new: true,
+            }
+        );
 
     await WalletTransaction.create({
-        walletId:     wallet._id,
+
+        walletId: wallet._id,
+
         userId,
+
         orderId,
+
+        transactionId,
+
+        razorpayPaymentId,
+
         amount,
-        type:         "Credit",
+
+        type: "Credit",
+
         transactionType,
+
         description,
+
         balanceAfter: wallet.balance,
+
     });
 
-    return wallet;
+    return {
+        success: true,
+        wallet,
+    };
+
 };
 
 /* =========================================
@@ -85,27 +162,124 @@ export const debitWallet = async ({
     amount,
     transactionType,
     description = "",
-    orderId     = null,
+    orderId = null,
+    transactionId = null,
+    razorpayPaymentId = null,
 }) => {
-    const wallet = await createWallet(userId);
 
-    if (wallet.balance < amount) {
-        return { success: false, message: "Insufficient wallet balance" };
+    if (!amount || amount <= 0) {
+        const wallet = await createWallet(userId);
+
+        return {
+            success: true,
+            wallet,
+        };
     }
 
-    wallet.balance -= amount;
-    await wallet.save();
+    await createWallet(userId);
+
+    /* ==========================
+       IDEMPOTENCY CHECK
+    ========================== */
+
+    const dedupQuery = {
+        transactionType,
+        type: "Debit",
+    };
+
+    if (orderId) {
+        dedupQuery.orderId = orderId;
+    }
+
+    if (transactionId) {
+        dedupQuery.transactionId = transactionId;
+    }
+
+    if (razorpayPaymentId) {
+        dedupQuery.razorpayPaymentId = razorpayPaymentId;
+    }
+
+    if (
+        orderId ||
+        transactionId ||
+        razorpayPaymentId
+    ) {
+
+        const existingTransaction =
+            await WalletTransaction.findOne(
+                dedupQuery
+            );
+
+        if (existingTransaction) {
+
+            const wallet =
+                await Wallet.findOne({ userId });
+
+            return {
+                success: true,
+                wallet,
+            };
+        }
+    }
+
+    /* ==========================
+       ATOMIC BALANCE CHECK
+    ========================== */
+
+    const wallet =
+        await Wallet.findOneAndUpdate(
+            {
+                userId,
+                balance: {
+                    $gte: amount,
+                },
+            },
+            {
+                $inc: {
+                    balance: -amount,
+                },
+            },
+            {
+                new: true,
+            }
+        );
+
+    if (!wallet) {
+
+        return {
+            success: false,
+            message: "Insufficient wallet balance",
+        };
+
+    }
 
     await WalletTransaction.create({
-        walletId:     wallet._id,
+
+        walletId: wallet._id,
+
         userId,
+
         orderId,
+
+        transactionId,
+
+        razorpayPaymentId,
+
         amount,
-        type:         "Debit",
+
+        type: "Debit",
+
         transactionType,
+
         description,
+
         balanceAfter: wallet.balance,
+
     });
 
-    return { success: true, wallet };
+    return {
+        success: true,
+        wallet,
+    };
+
 };

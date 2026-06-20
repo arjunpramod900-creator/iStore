@@ -51,8 +51,8 @@
             transform: none;
         }
 
-        /* Failed payment banner inside the card */
-        .or-payment-failed-tag {
+        /* REFACTOR: Payment Alert banner inside the card (Handles both Pending and Failed) */
+        .or-payment-alert-tag {
             display: inline-flex;
             align-items: center;
             gap: 5px;
@@ -60,9 +60,15 @@
             font-weight: 700;
             padding: 4px 10px;
             border-radius: 9999px;
+            margin-top: 4px;
+        }
+        .or-payment-alert-tag.failed {
             background: rgba(186, 26, 26, 0.10);
             color: #BA1A1A;
-            margin-top: 4px;
+        }
+        .or-payment-alert-tag.pending {
+            background: rgba(230, 154, 0, 0.10);
+            color: #E69A00;
         }
     </style>
 
@@ -76,7 +82,6 @@
 
         <div class="or-container">
 
-            <!-- BREADCRUMB -->
             <nav class="or-breadcrumbs" aria-label="Breadcrumb">
                 <a href="/" class="or-bc-crumb">Home</a>
                 <span class="or-bc-sep">
@@ -85,13 +90,11 @@
                 <span class="or-bc-crumb active">Orders</span>
             </nav>
 
-            <!-- PAGE HEADER -->
             <header class="or-header">
                 <h1 class="or-title">My Orders</h1>
                 <p class="or-subtitle">View and manage your recent and past orders.</p>
             </header>
 
-            <!-- FILTER BAR -->
             <form class="or-filter-bar" method="GET" action="/orders">
 
                 <div class="or-filter-group">
@@ -136,7 +139,6 @@
 
             </form>
 
-            <!-- EMPTY STATE -->
             <% if (!orders || orders.length === 0) { %>
 
                 <div class="or-empty">
@@ -153,7 +155,6 @@
 
             <% } else { %>
 
-                <!-- ORDER LIST -->
                 <div class="or-order-list" id="orOrderList">
 
                     <% orders.forEach((order) => {
@@ -170,35 +171,37 @@
                         const items     = order.items || [];
                         const itemNames = items.map(i => i.productName || "Product").join(", ");
 
-                        /* Detect failed Razorpay payment */
-                        const isPaymentFailed =
-                            order.paymentMethod === "RAZORPAY" &&
-                            order.paymentStatus  === "Failed";
+                        /* REFACTOR: Determine if order is eligible for Retry */
+
+                        const isRetryable = 
+                            order.paymentMethod === "RAZORPAY" && 
+                            order.paymentStatus !== "Paid" && 
+                            order.paymentStatus !== "Refunded" &&
+                            order.orderStatus !== "Cancelled" &&
+                            order.orderStatus !== "Returned" &&
+                            !order.isStockRestored;
                     %>
 
-                    <!-- ORDER CARD -->
                     <article
-                        class="or-card or-card--<%= isPaymentFailed ? 'payment-failed' : status %>"
+                        class="or-card or-card--<%= isRetryable ? 'retryable' : status %>"
                         data-order-id="<%= orderId.toLowerCase() %>"
                         data-status="<%= status %>"
                     >
                         <div class="or-card-inner">
 
-                            <!-- LEFT -->
                             <div class="or-card-left">
 
                                 <div class="or-card-meta">
-                                    <span class="or-badge or-badge--<%= isPaymentFailed ? 'cancelled' : status %>">
+                                    <span class="or-badge or-badge--<%= status %>">
                                         <%= order.orderStatus %>
                                     </span>
                                     <span class="or-order-id">Order #<%= orderId %></span>
                                     <span class="or-order-date">• <%= orderDate %></span>
 
-                                    <!-- Failed payment tag -->
-                                    <% if (isPaymentFailed) { %>
-                                    <span class="or-payment-failed-tag">
-                                        <i data-lucide="alert-circle" size="11"></i>
-                                        Payment Failed
+                                    <% if (isRetryable) { %>
+                                    <span class="or-payment-alert-tag <%= order.paymentStatus === 'Failed' ? 'failed' : 'pending' %>">
+                                        <i data-lucide="<%= order.paymentStatus === 'Failed' ? 'alert-circle' : 'clock' %>" size="11"></i>
+                                        <%= order.paymentStatus === "Failed" ? "Payment Failed" : "Payment Pending" %>
                                     </span>
                                     <% } %>
                                 </div>
@@ -225,12 +228,10 @@
 
                             </div>
 
-                            <!-- ACTIONS -->
                             <div class="or-card-actions">
 
-                                <% if (isPaymentFailed) { %>
+                                <% if (isRetryable) { %>
 
-                                    <!-- RETRY PAYMENT — primary action for failed orders -->
                                     <button
                                         class="or-btn or-btn--retry retry-payment-btn"
                                         data-order-id="<%= orderId %>"
@@ -240,26 +241,22 @@
                                         Retry Payment
                                     </button>
 
-                                    <!-- VIEW DETAILS — always available -->
                                     <a href="/orders/<%= orderId %>" class="or-btn or-btn--subtle">
                                         View Details
                                     </a>
 
                                 <% } else { %>
 
-                                    <!-- TRACK — for active orders -->
                                     <% if (["pending","processing","shipped","out-for-delivery"].includes(status)) { %>
                                     <a href="/orders/<%= orderId %>" class="or-btn or-btn--primary">
                                         Track Order
                                     </a>
                                     <% } %>
 
-                                    <!-- VIEW DETAILS -->
                                     <a href="/orders/<%= orderId %>" class="or-btn or-btn--subtle">
                                         View Details
                                     </a>
 
-                                    <!-- CANCEL -->
                                     <% if (["pending","processing","shipped","out-for-delivery"].includes(status)) { %>
                                     <button
                                         class="or-btn or-btn--danger cancel-order-btn"
@@ -269,7 +266,6 @@
                                     </button>
                                     <% } %>
 
-                                    <!-- RETURN -->
                                     <% if (status === "delivered") { %>
                                     <a href="/orders/<%= orderId %>/return" class="or-btn or-btn--outline">
                                         Return Order
@@ -287,7 +283,6 @@
 
                 </div>
 
-                <!-- PAGINATION -->
                 <% if (pagination && pagination.totalPages > 1) { %>
                 <div class="or-pagination">
 

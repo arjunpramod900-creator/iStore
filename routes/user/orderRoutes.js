@@ -12,8 +12,9 @@ import {
   returnOrder,
   returnOrderItem,
   downloadInvoice,
-  retryPayment,       /* legacy — used by orders list / order details retry buttons */
-  retryOrderPay,      /* new retry checkout — handles COD / WALLET / RAZORPAY */
+  retryPayment,       
+  retryOrderPay,   
+  loadOrderFailurePage,
 } from "../../controllers/user/orderController.js";
 
 /* ─── loadRetryCheckoutPage lives in checkoutController
@@ -45,6 +46,12 @@ router.post("/orders/:orderId/item/:itemId/return", returnOrderItem);
 router.get( "/orders/:orderId/retry",          loadRetryCheckoutPage);
 router.post("/orders/:orderId/retry-pay",      retryOrderPay);
 router.post("/orders/:orderId/retry-payment",  retryPayment);  /* legacy */
+
+/* ── Failed Payment Page ── */
+router.get(
+  "/order-failure/:orderId",
+  loadOrderFailurePage
+);
 
 /* ── Invoice ── */
 router.get("/orders/:orderId/invoice", downloadInvoice);

@@ -5,9 +5,11 @@ import userBlockCheckMiddleware    from "../../middleware/userBlockCheckMiddlewa
 
 import {
   loadCheckoutPage,
+  loadRetryCheckoutPage,
   placeOrder,
   verifyRazorpayPayment,
   loadOrderSuccessPage,
+  loadOrderFailurePage,
   applyCoupon,
   removeCoupon,
 } from "../../controllers/user/checkoutController.js";
@@ -24,6 +26,16 @@ router.post("/checkout/place-order",  ...auth, placeOrder);
 router.post("/checkout/apply-coupon", ...auth, applyCoupon);
 router.post("/checkout/remove-coupon",...auth, removeCoupon);
 
+
+/* =========================================
+   RETRY CHECKOUT
+========================================= */
+router.get(
+  "/orders/:orderId/retry",
+  ...auth,
+  loadRetryCheckoutPage
+);
+
 /* =========================================
    RAZORPAY VERIFICATION
    Shared by new checkout AND retry flow.
@@ -36,5 +48,10 @@ router.post("/checkout/verify-payment", ...auth, verifyRazorpayPayment);
    ORDER SUCCESS
 ========================================= */
 router.get("/order-success/:orderId", ...auth, loadOrderSuccessPage);
+
+/* =========================================
+   ORDER FAILURE
+========================================= */
+router.get("/order-failure/:orderId", ...auth, loadOrderFailurePage);
 
 export default router;

@@ -56,6 +56,16 @@ const orderItemSchema = new mongoose.Schema({
     default: 0,
   },
 
+    couponDiscount: {
+    type: Number,
+    default: 0,
+  },
+
+  taxAmount: {
+    type: Number,
+    default: 0,
+  },
+
   itemStatus: {
     type: String,
     enum: [
@@ -193,6 +203,48 @@ const orderSchema = new mongoose.Schema(
       required: true,
     },
 
+    /* ==================================================
+      PRICING SNAPSHOT
+      Stores the original order values permanently.
+      These values NEVER change after order placement.
+    ================================================== */
+
+    pricingSnapshot: {
+
+      originalSubtotal: {
+        type: Number,
+        required: true,
+        default: 0,
+      },
+
+      originalOfferDiscount: {
+        type: Number,
+        default: 0,
+      },
+
+      originalCouponDiscount: {
+        type: Number,
+        default: 0,
+      },
+
+      originalTaxAmount: {
+        type: Number,
+        default: 0,
+      },
+
+      originalDeliveryCharge: {
+        type: Number,
+        default: 0,
+      },
+
+      originalFinalAmount: {
+        type: Number,
+        required: true,
+        default: 0,
+      },
+
+    },
+
     couponId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Coupon",
@@ -303,7 +355,6 @@ const orderSchema = new mongoose.Schema(
 
 // useful indexes
 orderSchema.index({ userId: 1, createdAt: -1 });
-orderSchema.index({ orderId: 1 });
 orderSchema.index({ paymentStatus: 1 });
 orderSchema.index({ orderStatus: 1 });
 

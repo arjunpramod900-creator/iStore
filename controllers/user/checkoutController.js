@@ -308,3 +308,40 @@ export const loadOrderSuccessPage = async (req, res) => {
     return res.redirect("/");
   }
 };
+
+/* =========================================
+   LOAD ORDER FAILURE PAGE
+========================================= */
+
+export const loadOrderFailurePage = async (req, res) => {
+
+  try {
+
+    const order = await Order.findOne({
+      orderId: req.params.orderId,
+      userId: req.session.userId,
+    });
+
+    if (!order) {
+      return res.redirect("/orders");
+    }
+
+/* Paid orders should not show failure page */
+if (order.paymentStatus === "Paid") {
+  return res.redirect(`/orders/${order.orderId}`);
+}
+
+    res.render("user/order-failure", {
+      page: "order-failure",
+      order,
+    });
+
+  } catch (error) {
+
+    console.log("Load Failure Page Error:", error);
+
+    return res.redirect("/orders");
+
+  }
+
+};

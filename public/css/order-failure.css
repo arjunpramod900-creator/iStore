@@ -1,0 +1,617 @@
+/* ============================================================
+   ORDER FAILURE PAGE CSS  |  order-failure.css
+   iStore — mirrors order-success.css design system exactly.
+   Palette: Background #F9F9FB, Failure #BA1A1A, Text #1A1C1D
+   Accent kept consistent with success page for shared elements.
+============================================================ */
+
+/* ── RESET / ROOT ── */
+*, *::before, *::after { box-sizing: border-box; }
+
+:root {
+    /* Brand */
+    --of-accent:        #4C0080;
+    --of-accent-2:      #6A0DAD;
+    --of-accent-light:  rgba(76, 0, 128, 0.08);
+
+    /* Failure-specific */
+    --of-red:           #BA1A1A;
+    --of-red-2:         #D32F2F;
+    --of-red-light:     rgba(186, 26, 26, 0.08);
+    --of-red-border:    rgba(186, 26, 26, 0.20);
+    --of-red-glow:      rgba(186, 26, 26, 0.18);
+
+    /* Warning (countdown urgent state) */
+    --of-amber:         #D97706;
+    --of-amber-light:   rgba(217, 119, 6, 0.10);
+
+    /* Neutrals — identical to order-success */
+    --of-bg:            #F9F9FB;
+    --of-card-bg:       #F3F3F5;
+    --of-white:         #FFFFFF;
+    --of-text:          #1A1C1D;
+    --of-text-sub:      #4D4353;
+    --of-border:        rgba(207, 194, 213, 0.25);
+    --of-border-mid:    rgba(207, 194, 213, 0.40);
+    --of-border-light:  rgba(207, 194, 213, 0.20);
+
+    /* Shared tokens */
+    --of-radius-xl:     24px;
+    --of-radius-lg:     16px;
+    --of-radius-md:     12px;
+    --of-shadow:        0px 10px 15px -3px rgba(186, 26, 26, 0.18),
+                        0px 4px 6px -4px rgba(186, 26, 26, 0.14);
+    --of-shadow-subtle: 0px 4px 12px rgba(17, 17, 17, 0.06);
+    --of-transition:    all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    --font:             'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+body {
+    background: var(--of-bg);
+    font-family: var(--font);
+    color: var(--of-text);
+    -webkit-font-smoothing: antialiased;
+    margin: 0;
+}
+
+/* ============================================================
+   PAGE SHELL
+============================================================ */
+.of-page {
+    min-height: 100vh;
+    background: var(--of-bg);
+}
+
+.of-container {
+    max-width: 992px;
+    margin: 0 auto;
+    padding: 96px 24px 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+/* ============================================================
+   BREADCRUMBS  — identical pattern to order-success
+============================================================ */
+.of-breadcrumbs {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 0;
+    margin-bottom: 32px;
+}
+
+.of-bc-crumb {
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 20px;
+    color: var(--of-text-sub);
+    text-decoration: none;
+    transition: var(--of-transition);
+}
+
+.of-bc-crumb:hover { color: var(--of-red); }
+
+.of-bc-crumb.active {
+    color: var(--of-red);
+    font-weight: 600;
+}
+
+.of-bc-sep {
+    color: var(--of-text-sub);
+    display: flex;
+    align-items: center;
+}
+
+/* ============================================================
+   MAIN CARD  — same structure as .os-main-card
+============================================================ */
+.of-main-card {
+    background: var(--of-white);
+    border-radius: var(--of-radius-xl);
+    padding: 48px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 40px;
+}
+
+/* ============================================================
+   FAILURE HERO
+============================================================ */
+.of-hero {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+}
+
+.of-icon-wrap {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    margin-bottom: 24px;
+}
+
+/* Red circle mirrors the purple circle from order-success */
+.of-icon-circle {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #BA1A1A 0%, #D32F2F 100%);
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--of-shadow);
+    animation: of-pop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes of-pop {
+    from { transform: scale(0.4); opacity: 0; }
+    to   { transform: scale(1);   opacity: 1; }
+}
+
+.of-icon-circle svg {
+    color: #fff;
+    stroke-width: 2.5;
+}
+
+.of-heading {
+    font-size: 36px;
+    font-weight: 700;
+    line-height: 40px;
+    letter-spacing: -0.9px;
+    color: var(--of-text);
+    text-align: center;
+    margin: 0 0 16px;
+}
+
+.of-subtext {
+    font-size: 18px;
+    font-weight: 400;
+    line-height: 29px;
+    color: var(--of-text-sub);
+    text-align: center;
+    max-width: 480px;
+    margin: 0 0 20px;
+}
+
+/* ── Countdown card ── */
+.of-countdown-card {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+    padding: 12px 20px;
+    background: rgba(217, 119, 6, 0.08);
+    border: 1px solid rgba(217, 119, 6, 0.24);
+    border-radius: 14px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #92400E;
+    transition: var(--of-transition);
+}
+
+.of-countdown-card svg { color: var(--of-amber); flex-shrink: 0; }
+
+.of-countdown-value {
+    font-size: 18px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.4px;
+    color: #92400E;
+}
+
+/* Urgent — under 5 minutes */
+.of-countdown-card--urgent {
+    background: rgba(186, 26, 26, 0.07);
+    border-color: rgba(186, 26, 26, 0.22);
+    color: var(--of-red);
+}
+
+.of-countdown-card--urgent .of-countdown-value { color: var(--of-red); }
+.of-countdown-card--urgent svg { color: var(--of-red); }
+
+/* Expired */
+.of-countdown-card--expired {
+    background: rgba(107, 114, 128, 0.08);
+    border-color: rgba(107, 114, 128, 0.20);
+    color: #6b7280;
+}
+
+.of-countdown-card--expired .of-countdown-value { color: #6b7280; }
+
+/* ============================================================
+   ORDER DETAILS GRID  — identical to os-details-grid
+============================================================ */
+.of-details-grid {
+    width: 100%;
+    border-top: 1px solid var(--of-border-light);
+    border-bottom: 1px solid var(--of-border-light);
+    padding: 33px 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px 48px;
+}
+
+.of-detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.of-detail-item--full { grid-column: 1 / -1; }
+
+.of-detail-label {
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 16px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--of-text-sub);
+}
+
+.of-detail-value {
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 24px;
+    color: var(--of-text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.of-detail-value svg {
+    color: var(--of-text-sub);
+    flex-shrink: 0;
+}
+
+/* Failed status badge inside the detail grid */
+.of-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px 4px 8px;
+    background: var(--of-red-light);
+    border: 1px solid var(--of-red-border);
+    border-radius: 9999px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--of-red);
+    width: fit-content;
+}
+
+.of-status-badge svg { color: var(--of-red); }
+
+/* ============================================================
+   ORDER SUMMARY CARD  — identical structure to os-summary-card
+============================================================ */
+.of-summary-card {
+    width: 100%;
+    background: var(--of-card-bg);
+    border-radius: var(--of-radius-xl);
+    padding: 40px 32px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.of-summary-label {
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 20px;
+    letter-spacing: -0.35px;
+    text-transform: uppercase;
+    color: var(--of-text-sub);
+    margin: 0;
+}
+
+.of-items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.of-item-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.of-item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.of-item-name {
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 24px;
+    color: var(--of-text);
+}
+
+.of-item-variant {
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 16px;
+    color: var(--of-text-sub);
+}
+
+.of-item-price {
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 24px;
+    color: var(--of-text);
+    white-space: nowrap;
+}
+
+.of-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    border-top: 1px solid rgba(207, 194, 213, 0.30);
+    padding-top: 16px;
+}
+
+.of-breakdown-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.of-breakdown-row span:first-child {
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 20px;
+    color: var(--of-text-sub);
+}
+
+.of-breakdown-row span:last-child {
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 20px;
+    color: var(--of-text-sub);
+}
+
+.of-breakdown-row .of-free {
+    color: var(--of-accent);
+    font-weight: 500;
+}
+
+.of-breakdown-row .of-discount {
+    color: var(--of-red);
+}
+
+/* Total row — "Amount Due" in red to signal unpaid */
+.of-total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid var(--of-border-mid);
+    padding-top: 16px;
+}
+
+.of-total-label {
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 28px;
+    color: var(--of-text);
+}
+
+.of-total-value {
+    font-size: 24px;
+    font-weight: 800;
+    line-height: 32px;
+    color: var(--of-red);
+}
+
+/* ============================================================
+   ACTION BUTTONS  — mirrors .os-actions pattern
+============================================================ */
+.of-actions {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+/* Primary: Retry Payment — red gradient */
+.of-btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px 28px;
+    height: 56px;
+    background: linear-gradient(135deg, #BA1A1A 0%, #D32F2F 100%);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 24px;
+    border: none;
+    border-radius: var(--of-radius-xl);
+    cursor: pointer;
+    text-decoration: none;
+    box-shadow: var(--of-shadow);
+    transition: var(--of-transition);
+    white-space: nowrap;
+}
+
+.of-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0px 16px 24px -4px rgba(186, 26, 26, 0.30);
+}
+
+.of-btn-primary svg { flex-shrink: 0; }
+
+/* Outline: View Order Details — red border */
+.of-btn-outline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px 28px;
+    height: 56px;
+    background: var(--of-white);
+    color: var(--of-red);
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 24px;
+    border: 2px solid var(--of-red);
+    border-radius: var(--of-radius-xl);
+    cursor: pointer;
+    text-decoration: none;
+    transition: var(--of-transition);
+    white-space: nowrap;
+}
+
+.of-btn-outline:hover {
+    background: var(--of-red-light);
+    transform: translateY(-2px);
+}
+
+.of-btn-outline svg { flex-shrink: 0; }
+
+/* Subtle: Continue Shopping — neutral */
+.of-btn-subtle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px 24px;
+    height: 56px;
+    background: transparent;
+    color: var(--of-text-sub);
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 24px;
+    border: 2px solid var(--of-border-mid);
+    border-radius: var(--of-radius-xl);
+    cursor: pointer;
+    text-decoration: none;
+    transition: var(--of-transition);
+    white-space: nowrap;
+}
+
+.of-btn-subtle:hover {
+    color: var(--of-text);
+    border-color: rgba(207, 194, 213, 0.60);
+    background: var(--of-card-bg);
+    transform: translateY(-1px);
+}
+
+/* ============================================================
+   INFO BANNER  — mirrors .os-delivery-banner
+   Green for active stock reservation, grey for expired
+============================================================ */
+.of-info-banner {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 16px 24px;
+    background: rgba(186, 26, 26, 0.05);
+    border: 1px solid rgba(186, 26, 26, 0.12);
+    border-radius: var(--of-radius-lg);
+}
+
+.of-info-banner svg {
+    color: var(--of-red);
+    flex-shrink: 0;
+}
+
+.of-info-banner span {
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 20px;
+    color: var(--of-red);
+    text-align: center;
+}
+
+/* ============================================================
+   RESPONSIVE — TABLET
+============================================================ */
+@media (max-width: 768px) {
+    .of-container {
+        padding: 80px 16px 60px;
+    }
+
+    .of-main-card {
+        padding: 32px 24px;
+        gap: 32px;
+    }
+
+    .of-heading {
+        font-size: 28px;
+        line-height: 34px;
+    }
+
+    .of-subtext {
+        font-size: 16px;
+    }
+
+    .of-details-grid {
+        grid-template-columns: 1fr;
+        gap: 24px;
+    }
+
+    .of-detail-item--full {
+        grid-column: 1;
+    }
+
+    .of-summary-card {
+        padding: 28px 20px 24px;
+    }
+
+    .of-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .of-btn-primary,
+    .of-btn-outline,
+    .of-btn-subtle {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* ============================================================
+   RESPONSIVE — MOBILE
+============================================================ */
+@media (max-width: 480px) {
+    .of-main-card {
+        padding: 24px 16px;
+        border-radius: 16px;
+    }
+
+    .of-heading {
+        font-size: 24px;
+        line-height: 30px;
+    }
+
+    .of-subtext {
+        font-size: 15px;
+    }
+
+    .of-total-value {
+        font-size: 20px;
+    }
+
+    .of-total-label {
+        font-size: 16px;
+    }
+
+    .of-countdown-card {
+        flex-wrap: wrap;
+        justify-content: center;
+        text-align: center;
+    }
+}

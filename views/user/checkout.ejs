@@ -937,7 +937,12 @@
 
                 /* RAZORPAY — open modal */
                 if (data.paymentMethod === 'RAZORPAY' || data.razorpayOrder) {
-                    openRazorpay(data.razorpayOrder, addressId, btn);
+                    openRazorpay(
+                        data.razorpayOrder,
+                        addressId,
+                        btn,
+                        data.orderId
+                    );
                     return;
                 }
 
@@ -955,7 +960,12 @@
            because that endpoint finds the order by
            razorpayOrderId which is always up to date.
         ========================================= */
-        function openRazorpay(razorpayOrder, addressId, btn) {
+        function openRazorpay(
+            razorpayOrder,
+            addressId,
+            btn,
+            orderId
+        ) {
             const resetBtn = () => {
                 btn.disabled    = false;
                 btn.textContent = isRetry ? 'Confirm Payment' : 'Place Order';
@@ -998,20 +1008,26 @@
 
                 modal: {
                     ondismiss: function () {
+
                         resetBtn();
-                        if (isRetry) {
-                            Swal.fire({ toast: true, position: 'top', icon: 'info', title: 'Payment cancelled — you can retry anytime.', showConfirmButton: false, timer: 3000 });
-                        }
+
+                        /* User simply closed Razorpay popup.
+                        Do NOT mark payment as failed. */
+
                     },
                 },
             };
 
             const rzp = new Razorpay(options);
 
-            rzp.on('payment.failed', function (response) {
-                resetBtn();
-                Swal.fire({ icon: 'error', title: 'Payment Failed', text: response.error.description });
-            });
+                rzp.on('payment.failed', function () {
+
+                    resetBtn();
+
+                    window.location.href =
+                        `/order-failure/${isRetry ? retryOrderId : orderId}`;
+
+                });
 
             rzp.open();
         }
