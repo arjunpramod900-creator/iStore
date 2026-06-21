@@ -5,6 +5,7 @@ import {
   createRazorpayCheckoutService,
   verifyRazorpayPaymentService,
   loadRetryCheckoutService,
+  markPaymentFailedService,
 } from "../../services/user/checkoutService.js";
 
 import { calculateCheckoutTotals } from "../../services/shared/pricingService.js";
@@ -343,5 +344,30 @@ if (order.paymentStatus === "Paid") {
     return res.redirect("/orders");
 
   }
+
+};
+
+export const markPaymentFailed = async (req, res) => {
+
+    try {
+
+        await markPaymentFailedService(
+            req.session.userId,
+            req.body.orderId
+        );
+
+        res.json({
+            success: true
+        });
+
+    } catch (error) {
+
+        console.log("Mark Payment Failed Error:", error);
+
+        res.status(500).json({
+            success: false
+        });
+
+    }
 
 };

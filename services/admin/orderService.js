@@ -120,6 +120,25 @@ export const updateOrderStatusService = async (
         throw new Error("Invalid status");
     }
 
+    /* ==========================
+   PAYMENT VALIDATION
+========================== */
+
+if (
+    order.paymentMethod === "RAZORPAY" &&
+    order.paymentStatus !== "Paid"
+) {
+
+    if (status !== "Cancelled") {
+
+        throw new Error(
+            "Cannot update order status until payment is completed."
+        );
+
+    }
+
+}
+
     if (order.orderStatus === status) {
         throw new Error(
             `Order already marked as ${status}`

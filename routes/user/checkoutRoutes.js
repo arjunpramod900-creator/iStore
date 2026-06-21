@@ -12,6 +12,7 @@ import {
   loadOrderFailurePage,
   applyCoupon,
   removeCoupon,
+  markPaymentFailed,
 } from "../../controllers/user/checkoutController.js";
 
 const router = express.Router();
@@ -53,5 +54,11 @@ router.get("/order-success/:orderId", ...auth, loadOrderSuccessPage);
    ORDER FAILURE
 ========================================= */
 router.get("/order-failure/:orderId", ...auth, loadOrderFailurePage);
+
+router.post(
+    "/checkout/payment-failed",
+    ...auth,
+    markPaymentFailed
+);
 
 export default router;

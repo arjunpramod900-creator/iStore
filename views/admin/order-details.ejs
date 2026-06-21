@@ -171,9 +171,15 @@
         /* ── FIX 4: lock status update if return is pending ── */
         const isLocked = ["Delivered","Cancelled","Returned"].includes(order.orderStatus);
         const isReturnPending = order.returnStatus === "Requested";
+        const isPaymentLocked =
+    order.paymentMethod === "RAZORPAY" &&
+    order.paymentStatus !== "Paid";
 
         /* Combine both locks for the select/button */
-        const statusUpdateLocked = isLocked || isReturnPending;
+        const statusUpdateLocked =
+    isLocked ||
+    isReturnPending ||
+    isPaymentLocked;
 
         function fmt(n) { return "₹" + Number(n).toLocaleString("en-IN"); }
 
@@ -584,6 +590,14 @@
                             <span>A return request is pending. Resolve it before updating the order status.</span>
                         </div>
                         <% } %>
+                        <% if (isPaymentLocked) { %>
+<div class="aod-return-pending-notice">
+    <i data-lucide="alert-triangle"></i>
+    <span>
+        Payment has not been completed. Order status cannot be updated until payment succeeds.
+    </span>
+</div>
+<% } %>
 
                         <select
                             id="orderStatusSelect"

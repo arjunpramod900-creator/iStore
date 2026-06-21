@@ -1006,28 +1006,57 @@
                     }
                 },
 
-                modal: {
-                    ondismiss: function () {
+modal: {
+    ondismiss: async function () {
 
-                        resetBtn();
+        resetBtn();
 
-                        /* User simply closed Razorpay popup.
-                        Do NOT mark payment as failed. */
+        try {
 
-                    },
+            await fetch('/checkout/payment-failed', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
                 },
+                body: JSON.stringify({
+                    orderId: isRetry ? retryOrderId : orderId
+                })
+            });
+
+        } catch (err) {
+            console.error(err);
+        }
+
+    }
+},
             };
 
             const rzp = new Razorpay(options);
 
-                rzp.on('payment.failed', function () {
+rzp.on('payment.failed', async function () {
 
-                    resetBtn();
+    resetBtn();
 
-                    window.location.href =
-                        `/order-failure/${isRetry ? retryOrderId : orderId}`;
+    try {
 
-                });
+        await fetch('/checkout/payment-failed', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                orderId: isRetry ? retryOrderId : orderId
+            })
+        });
+
+    } catch (err) {
+        console.error(err);
+    }
+
+    window.location.href =
+        `/order-failure/${isRetry ? retryOrderId : orderId}`;
+
+});
 
             rzp.open();
         }

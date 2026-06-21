@@ -814,11 +814,14 @@ export const createRazorpayCheckoutService = async (
     }
 
     /* Prevent multiple unpaid Razorpay orders */
-    const existingPendingOrder = await Order.findOne({
-        userId,
-        paymentMethod: "RAZORPAY",
-        paymentStatus: "Pending",
-    });
+const existingPendingOrder = await Order.findOne({
+    userId,
+    paymentMethod: "RAZORPAY",
+    paymentStatus: {
+        $in: ["Pending","Failed"]
+    },
+    isStockRestored: false
+});
 
     if (existingPendingOrder) {
 
@@ -1079,12 +1082,26 @@ export const verifyRazorpayPaymentService = async ({
         razorpaySignature,
     });
 
-    if (!isValid) {
-        return {
-            success: false,
-            message: "Payment verification failed",
-        };
+if (!isValid) {
+
+    const order = await Order.findOne({
+        userId,
+        razorpayOrderId,
+    });
+
+    if (order && order.paymentStatus !== "Paid") {
+
+        order.paymentStatus = "Failed";
+
+        await order.save();
+
     }
+
+    return {
+        success: false,
+        message: "Payment verification failed",
+    };
+}
 
     /* Find order */
     const order = await Order.findOne({
@@ -1635,5 +1652,30 @@ export const retryRazorpayPaymentService = async (
             order.orderId,
 
     };
+
+};
+
+export const markPaymentFailedService = async (
+    userId,
+    orderId
+) => {
+
+    const order = await Order.findOne({
+        userId,
+        orderId
+    });
+
+    if (!order) {
+        return;
+    }
+
+    /* Don't touch successful orders */
+    if (order.paymentStatus === "Paid") {
+        return;
+    }
+
+    order.paymentStatus = "Failed";
+
+    await order.save();
 
 };
