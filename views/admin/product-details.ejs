@@ -1241,16 +1241,28 @@
         }
 
         /* ── field validators (return error string or null) ── */
+        
+function validateColor() {
+    const el = document.getElementById("variantColor");
+    const val = el.value.trim();
 
-        function validateColor() {
-            const el  = document.getElementById("variantColor");
-            const val = el.value.trim();
-            if (!val)              return [el, "Color is required"];
-            if (val.length < 2)   return [el, "Color must be at least 2 characters"];
-            if (val.length > 40)  return [el, "Color cannot exceed 40 characters"];
-            if (!/^[a-zA-Z0-9\s\-\/]+$/.test(val)) return [el, "Only letters, numbers, spaces and hyphens allowed"];
-            return [el, null];
-        }
+    if (!val)
+        return [el, "Color is required"];
+
+    if (val.length < 2)
+        return [el, "Color must be at least 2 characters"];
+
+    if (val.length > 40)
+        return [el, "Color cannot exceed 40 characters"];
+
+    if (!/^[A-Za-z]/.test(val))
+        return [el, "Color must start with a letter"];
+
+    if (!/^[A-Za-z\s&-]+$/.test(val))
+        return [el, "Only letters, spaces, hyphens and & are allowed"];
+
+    return [el, null];
+}
 
         function validateStorage() {
             const el  = document.getElementById("variantStorage");
@@ -1268,15 +1280,29 @@
             return [el, null];
         }
 
-        function validateSKU() {
-            const el  = document.getElementById("variantSKU");
-            const val = el.value.trim();
-            if (!val)                           return [el, "SKU is required"];
-            if (val.length < 3)                 return [el, "SKU must be at least 3 characters"];
-            if (val.length > 50)                return [el, "SKU cannot exceed 50 characters"];
-            if (!/^[A-Z0-9\-]+$/.test(val))    return [el, "Only uppercase letters, numbers and hyphens (e.g. IP17-BLK-256)"];
-            return [el, null];
-        }
+ function validateSKU() {
+    const el = document.getElementById("variantSKU");
+    const val = el.value.trim();
+
+    if (!val)
+        return [el, "SKU is required"];
+
+    if (val.length < 3)
+        return [el, "SKU must be at least 3 characters"];
+
+    if (val.length > 50)
+        return [el, "SKU cannot exceed 50 characters"];
+
+    // First 3 characters must be alphabets
+    if (!/^[A-Z]{3}/.test(val))
+        return [el, "First 3 characters must be letters"];
+
+    // Entire SKU can contain only uppercase letters, numbers and hyphens
+    if (!/^[A-Z0-9-]+$/.test(val))
+        return [el, "Only uppercase letters, numbers and hyphens are allowed"];
+
+    return [el, null];
+}
 
         function validatePrice() {
             const el  = document.getElementById("variantPrice");

@@ -10,6 +10,28 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        .field-error {
+            display: none;
+            color: #e74c3c;
+            font-size: 12px;
+            margin-top: 4px;
+            font-weight: 500;
+        }
+        .field-error.visible { display: block; }
+        .m-input.input-error,
+        .m-select.input-error,
+        .m-textarea.input-error {
+            border: 1.5px solid #e74c3c !important;
+            background: #fff8f8 !important;
+        }
+        .m-input.input-success,
+        .m-select.input-success,
+        .m-textarea.input-success {
+            border: 1.5px solid #2ecc71 !important;
+        }
+    </style>
 </head>
 <body>
 
@@ -71,7 +93,6 @@
                 <h1 class="page-title">Coupon Management</h1>
             </div>
 
-            <!-- Opens Add Modal -->
             <button class="btn-add" id="btnOpenAdd">
                 <i data-lucide="plus" size="18"></i>
                 <span>Add New Coupon</span>
@@ -293,21 +314,24 @@
                                     <label class="m-label" for="add-code">Coupon Code *</label>
                                     <div class="code-row">
                                         <input type="text" id="add-code" name="code" class="m-input"
-                                            placeholder="E.g. SUMMER2026" required autocomplete="off"
+                                            placeholder="E.g. SUMMER2026" autocomplete="off"
                                             style="text-transform:uppercase;">
                                         <button type="button" class="btn-generate" onclick="generateCode('add-code', 'add-preview-code', 'add-preview-code-pill')">Generate</button>
                                     </div>
+                                    <span class="field-error" id="add-code-error"></span>
                                 </div>
                                 <div class="m-form-group">
                                     <label class="m-label" for="add-title">Coupon Name *</label>
                                     <input type="text" id="add-title" name="title" class="m-input"
-                                        placeholder="Season Sale Special" required>
+                                        placeholder="Season Sale Special">
+                                    <span class="field-error" id="add-title-error"></span>
                                 </div>
                             </div>
                             <div class="m-form-group">
                                 <label class="m-label" for="add-description">Coupon Description</label>
                                 <textarea id="add-description" name="description" class="m-textarea"
                                     placeholder="Briefly describe the purpose and terms of this coupon..."></textarea>
+                                <span class="field-error" id="add-description-error"></span>
                             </div>
                         </div>
 
@@ -329,8 +353,9 @@
                                 <div class="m-form-group">
                                     <label class="m-label" for="add-discountValue">Discount Value *</label>
                                     <input type="number" id="add-discountValue" name="discountValue"
-                                        class="m-input" placeholder="10" min="0" required
+                                        class="m-input" placeholder="10" min="0"
                                         oninput="updatePreview('add')">
+                                    <span class="field-error" id="add-discountValue-error"></span>
                                 </div>
                             </div>
                             <div class="form-row-2">
@@ -341,6 +366,7 @@
                                         <input type="number" id="add-maxDiscount" name="maxDiscount"
                                             class="m-input" placeholder="0" min="0" value="0">
                                     </div>
+                                    <span class="field-error" id="add-maxDiscount-error"></span>
                                 </div>
                                 <div class="m-form-group">
                                     <label class="m-label" for="add-minPurchase">Min. Purchase (₹)</label>
@@ -350,6 +376,7 @@
                                             class="m-input" placeholder="0" min="0" value="0"
                                             oninput="updatePreview('add')">
                                     </div>
+                                    <span class="field-error" id="add-minPurchase-error"></span>
                                 </div>
                             </div>
                         </div>
@@ -365,11 +392,13 @@
                                     <label class="m-label" for="add-totalUsageLimit">Total Usage Limit</label>
                                     <input type="number" id="add-totalUsageLimit" name="totalUsageLimit"
                                         class="m-input" placeholder="0 = unlimited" min="0" value="0">
+                                    <span class="field-error" id="add-totalUsageLimit-error"></span>
                                 </div>
                                 <div class="m-form-group">
                                     <label class="m-label" for="add-userUsageLimit">Limit Per User</label>
                                     <input type="number" id="add-userUsageLimit" name="userUsageLimit"
                                         class="m-input" placeholder="1" min="1" value="1">
+                                    <span class="field-error" id="add-userUsageLimit-error"></span>
                                 </div>
                             </div>
                         </div>
@@ -383,12 +412,14 @@
                             <div class="form-row-2">
                                 <div class="m-form-group">
                                     <label class="m-label" for="add-startDate">Start Date *</label>
-                                    <input type="date" id="add-startDate" name="startDate" class="m-input" required>
+                                    <input type="date" id="add-startDate" name="startDate" class="m-input">
+                                    <span class="field-error" id="add-startDate-error"></span>
                                 </div>
                                 <div class="m-form-group">
                                     <label class="m-label" for="add-endDate">Expiry Date *</label>
-                                    <input type="date" id="add-endDate" name="endDate" class="m-input" required
+                                    <input type="date" id="add-endDate" name="endDate" class="m-input"
                                         oninput="updatePreview('add')">
+                                    <span class="field-error" id="add-endDate-error"></span>
                                 </div>
                             </div>
                         </div>
@@ -473,19 +504,22 @@
                                     <label class="m-label" for="edit-code">Coupon Code *</label>
                                     <div class="code-row">
                                         <input type="text" id="edit-code" name="code" class="m-input"
-                                            required autocomplete="off" style="text-transform:uppercase;">
+                                            autocomplete="off" style="text-transform:uppercase;">
                                         <button type="button" class="btn-generate" onclick="generateCode('edit-code','edit-preview-code','edit-preview-code-pill')">Generate</button>
                                     </div>
+                                    <span class="field-error" id="edit-code-error"></span>
                                 </div>
                                 <div class="m-form-group">
                                     <label class="m-label" for="edit-title">Coupon Name *</label>
-                                    <input type="text" id="edit-title" name="title" class="m-input" required>
+                                    <input type="text" id="edit-title" name="title" class="m-input">
+                                    <span class="field-error" id="edit-title-error"></span>
                                 </div>
                             </div>
                             <div class="m-form-group">
                                 <label class="m-label" for="edit-description">Coupon Description</label>
                                 <textarea id="edit-description" name="description" class="m-textarea"
                                     placeholder="Briefly describe the purpose and terms..."></textarea>
+                                <span class="field-error" id="edit-description-error"></span>
                             </div>
                         </div>
 
@@ -506,7 +540,8 @@
                                 <div class="m-form-group">
                                     <label class="m-label" for="edit-discountValue">Discount Value *</label>
                                     <input type="number" id="edit-discountValue" name="discountValue"
-                                        class="m-input" min="0" required oninput="updatePreview('edit')">
+                                        class="m-input" min="0" oninput="updatePreview('edit')">
+                                    <span class="field-error" id="edit-discountValue-error"></span>
                                 </div>
                             </div>
                             <div class="form-row-2">
@@ -517,6 +552,7 @@
                                         <input type="number" id="edit-maxDiscount" name="maxDiscount"
                                             class="m-input" min="0" value="0">
                                     </div>
+                                    <span class="field-error" id="edit-maxDiscount-error"></span>
                                 </div>
                                 <div class="m-form-group">
                                     <label class="m-label" for="edit-minPurchase">Min. Purchase (₹)</label>
@@ -525,6 +561,7 @@
                                         <input type="number" id="edit-minPurchase" name="minPurchase"
                                             class="m-input" min="0" value="0" oninput="updatePreview('edit')">
                                     </div>
+                                    <span class="field-error" id="edit-minPurchase-error"></span>
                                 </div>
                             </div>
                         </div>
@@ -539,11 +576,13 @@
                                     <label class="m-label" for="edit-totalUsageLimit">Total Usage Limit</label>
                                     <input type="number" id="edit-totalUsageLimit" name="totalUsageLimit"
                                         class="m-input" placeholder="0 = unlimited" min="0" value="0">
+                                    <span class="field-error" id="edit-totalUsageLimit-error"></span>
                                 </div>
                                 <div class="m-form-group">
                                     <label class="m-label" for="edit-userUsageLimit">Limit Per User</label>
                                     <input type="number" id="edit-userUsageLimit" name="userUsageLimit"
                                         class="m-input" min="1" value="1">
+                                    <span class="field-error" id="edit-userUsageLimit-error"></span>
                                 </div>
                             </div>
                         </div>
@@ -556,12 +595,14 @@
                             <div class="form-row-2">
                                 <div class="m-form-group">
                                     <label class="m-label" for="edit-startDate">Start Date *</label>
-                                    <input type="date" id="edit-startDate" name="startDate" class="m-input" required>
+                                    <input type="date" id="edit-startDate" name="startDate" class="m-input">
+                                    <span class="field-error" id="edit-startDate-error"></span>
                                 </div>
                                 <div class="m-form-group">
                                     <label class="m-label" for="edit-endDate">Expiry Date *</label>
-                                    <input type="date" id="edit-endDate" name="endDate" class="m-input" required
+                                    <input type="date" id="edit-endDate" name="endDate" class="m-input"
                                         oninput="updatePreview('edit')">
+                                    <span class="field-error" id="edit-endDate-error"></span>
                                 </div>
                             </div>
                         </div>
@@ -632,25 +673,222 @@ function closeModal(id) {
   document.body.style.overflow = '';
 }
 
-/* Close on backdrop click */
 document.querySelectorAll('.modal-overlay').forEach(el => {
   el.addEventListener('click', function(e) {
     if (e.target === this) closeModal(this.id);
   });
 });
 
-/* Escape key */
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     document.querySelectorAll('.modal-overlay.open').forEach(el => closeModal(el.id));
   }
 });
 
-/* ────────────────────────────────────────────
-   ADD BUTTON
-──────────────────────────────────────────── */
+/* ================================================
+   INLINE VALIDATION HELPERS
+================================================ */
+
+function setError(el, errorId, msg) {
+  if (!el) return;
+  el.classList.add("input-error");
+  el.classList.remove("input-success");
+  const s = document.getElementById(errorId);
+  if (s) { s.textContent = msg; s.classList.add("visible"); }
+}
+
+function setSuccess(el, errorId) {
+  if (!el) return;
+  el.classList.remove("input-error");
+  el.classList.add("input-success");
+  const s = document.getElementById(errorId);
+  if (s) { s.textContent = ""; s.classList.remove("visible"); }
+}
+
+function clearAllErrors(prefix) {
+  const fields = [
+    "code","title","description","discountValue","maxDiscount","minPurchase",
+    "totalUsageLimit","userUsageLimit","startDate","endDate"
+  ];
+  fields.forEach(f => {
+    const errSpan = document.getElementById(`${prefix}-${f}-error`);
+    if (errSpan) { errSpan.textContent = ""; errSpan.classList.remove("visible"); }
+  });
+  document.querySelectorAll(`#${prefix === "add" ? "addCouponForm" : "editCouponForm"} .input-error,
+                              #${prefix === "add" ? "addCouponForm" : "editCouponForm"} .input-success`)
+    .forEach(el => el.classList.remove("input-error", "input-success"));
+}
+
+/* ---- field validators ---- */
+
+function validateCode(prefix) {
+  const el  = document.getElementById(prefix + '-code');
+  const val = el.value.trim();
+  const err = prefix + '-code-error';
+  if (!val)            { setError(el, err, "Coupon code is required");                          return false; }
+  if (val.length < 3)  { setError(el, err, "Code must be at least 3 characters");               return false; }
+  if (val.length > 20) { setError(el, err, "Code cannot exceed 20 characters");                 return false; }
+  if (!/^[A-Za-z0-9]+$/.test(val)) { setError(el, err, "Code can only contain letters and numbers"); return false; }
+  setSuccess(el, err); return true;
+}
+
+/* FIX: title must start with a letter — coupon name is a human-readable
+   label, not a code/identifier, so it follows the project-wide rule. */
+function validateTitle(prefix) {
+  const el  = document.getElementById(prefix + '-title');
+  const val = el.value.trim();
+  const err = prefix + '-title-error';
+  if (!val)                    { setError(el, err, "Coupon name is required");            return false; }
+  if (!/^[A-Za-z]/.test(val))  { setError(el, err, "Must start with a letter");            return false; }
+  if (val.length < 3)          { setError(el, err, "Name must be at least 3 characters"); return false; }
+  if (val.length > 100)        { setError(el, err, "Name cannot exceed 100 characters");  return false; }
+  setSuccess(el, err); return true;
+}
+
+/* FIX: description must start with a letter when provided (empty is still allowed). */
+function validateDescription(prefix) {
+  const el  = document.getElementById(prefix + '-description');
+  const val = el.value.trim();
+  const err = prefix + '-description-error';
+  if (val && !/^[A-Za-z]/.test(val)) { setError(el, err, "Must start with a letter");                         return false; }
+  if (val && val.length < 10)        { setError(el, err, "Description must be at least 10 characters if provided"); return false; }
+  if (val && val.length > 500)       { setError(el, err, "Description cannot exceed 500 characters");        return false; }
+  setSuccess(el, err); return true;
+}
+
+function validateDiscountValue(prefix) {
+  const el   = document.getElementById(prefix + '-discountValue');
+  const type = document.getElementById(prefix + '-discountType').value;
+  const err  = prefix + '-discountValue-error';
+  const val  = el.value;
+
+  if (!val) { setError(el, err, "Discount value is required"); return false; }
+  const n = parseFloat(val);
+  if (isNaN(n) || n <= 0) { setError(el, err, "Enter a valid discount value"); return false; }
+
+  if (type === "PERCENTAGE" && n > 100) {
+    setError(el, err, "Percentage discount cannot exceed 100%");
+    return false;
+  }
+  if (type === "FIXED" && n > 10000000) {
+    setError(el, err, "Discount value seems too high");
+    return false;
+  }
+  setSuccess(el, err); return true;
+}
+
+function validateMaxDiscount(prefix) {
+  const el  = document.getElementById(prefix + '-maxDiscount');
+  const err = prefix + '-maxDiscount-error';
+  if (el.value === "") { setSuccess(el, err); return true; }
+  const n = parseFloat(el.value);
+  if (isNaN(n) || n < 0) { setError(el, err, "Max discount cannot be negative"); return false; }
+  setSuccess(el, err); return true;
+}
+
+function validateMinPurchase(prefix) {
+  const el  = document.getElementById(prefix + '-minPurchase');
+  const err = prefix + '-minPurchase-error';
+  if (el.value === "") { setSuccess(el, err); return true; }
+  const n = parseFloat(el.value);
+  if (isNaN(n) || n < 0) { setError(el, err, "Minimum purchase cannot be negative"); return false; }
+  setSuccess(el, err); return true;
+}
+
+function validateTotalUsageLimit(prefix) {
+  /* 0 = unlimited, so empty/0 is valid */
+  const el  = document.getElementById(prefix + '-totalUsageLimit');
+  const err = prefix + '-totalUsageLimit-error';
+  if (el.value === "") { setSuccess(el, err); return true; }
+  const n = parseInt(el.value);
+  if (isNaN(n) || n < 0) { setError(el, err, "Usage limit cannot be negative"); return false; }
+  setSuccess(el, err); return true;
+}
+
+function validateUserUsageLimit(prefix) {
+  const el  = document.getElementById(prefix + '-userUsageLimit');
+  const err = prefix + '-userUsageLimit-error';
+  const val = el.value;
+  if (!val) { setError(el, err, "Limit per user is required"); return false; }
+  const n = parseInt(val);
+  if (isNaN(n) || n < 1) { setError(el, err, "Limit per user must be at least 1"); return false; }
+  setSuccess(el, err); return true;
+}
+
+function validateStartDate(prefix) {
+  const el  = document.getElementById(prefix + '-startDate');
+  const err = prefix + '-startDate-error';
+  if (!el.value) { setError(el, err, "Start date is required"); return false; }
+  setSuccess(el, err);
+
+  const endEl = document.getElementById(prefix + '-endDate');
+  if (endEl.value) validateEndDate(prefix);
+
+  return true;
+}
+
+function validateEndDate(prefix) {
+  const el      = document.getElementById(prefix + '-endDate');
+  const startEl = document.getElementById(prefix + '-startDate');
+  const err     = prefix + '-endDate-error';
+
+  if (!el.value) { setError(el, err, "Expiry date is required"); return false; }
+
+  if (startEl.value) {
+    const start = new Date(startEl.value);
+    const end   = new Date(el.value);
+    if (end <= start) {
+      setError(el, err, "Expiry date must be after start date");
+      return false;
+    }
+  }
+  setSuccess(el, err); return true;
+}
+
+/* ---- attach blur + live-clear ---- */
+
+function attachBlur(inputId, validator) {
+  const el = document.getElementById(inputId);
+  if (!el) return;
+  el.addEventListener("blur", validator);
+  el.addEventListener("input", function () {
+    if (this.classList.contains("input-error")) validator();
+  });
+}
+
+["add", "edit"].forEach(prefix => {
+  attachBlur(`${prefix}-code`,             () => validateCode(prefix));
+  attachBlur(`${prefix}-title`,            () => validateTitle(prefix));
+  attachBlur(`${prefix}-description`,      () => validateDescription(prefix));
+  attachBlur(`${prefix}-discountValue`,    () => validateDiscountValue(prefix));
+  attachBlur(`${prefix}-maxDiscount`,      () => validateMaxDiscount(prefix));
+  attachBlur(`${prefix}-minPurchase`,      () => validateMinPurchase(prefix));
+  attachBlur(`${prefix}-totalUsageLimit`,  () => validateTotalUsageLimit(prefix));
+  attachBlur(`${prefix}-userUsageLimit`,   () => validateUserUsageLimit(prefix));
+  attachBlur(`${prefix}-startDate`,        () => validateStartDate(prefix));
+  attachBlur(`${prefix}-endDate`,          () => validateEndDate(prefix));
+});
+
+function validateCouponForm(prefix) {
+  const checks = [
+    validateCode(prefix),
+    validateTitle(prefix),
+    validateDescription(prefix),
+    validateDiscountValue(prefix),
+    validateMaxDiscount(prefix),
+    validateMinPurchase(prefix),
+    validateTotalUsageLimit(prefix),
+    validateUserUsageLimit(prefix),
+    validateStartDate(prefix),
+    validateEndDate(prefix),
+  ];
+  return checks.every(Boolean);
+}
+
+/* ── ADD BUTTON ── */
 document.getElementById('btnOpenAdd').addEventListener('click', () => {
   document.getElementById('addCouponForm').reset();
+  clearAllErrors('add');
   document.getElementById('add-isActive').checked = true;
   onTypeChange(document.getElementById('add-discountType'), 'add');
   updatePreview('add');
@@ -662,62 +900,27 @@ document.getElementById('btnOpenAdd').addEventListener('click', () => {
 ──────────────────────────────────────────── */
 function openEditModal(button) {
 
-  const f = id =>
-    document.getElementById(
-      'edit-' + id
-    );
+  clearAllErrors('edit');
 
-  f('id').value =
-    button.dataset.id;
+  const f = id => document.getElementById('edit-' + id);
 
-  f('code').value =
-    button.dataset.code;
+  f('id').value = button.dataset.id;
+  f('code').value = button.dataset.code;
+  f('title').value = button.dataset.title;
+  f('description').value = button.dataset.description;
+  f('discountType').value = button.dataset.discounttype;
+  f('discountValue').value = button.dataset.discountvalue;
+  f('maxDiscount').value = button.dataset.maxdiscount;
+  f('minPurchase').value = button.dataset.minpurchase;
+  f('totalUsageLimit').value = button.dataset.totalusagelimit;
+  f('userUsageLimit').value = button.dataset.userusagelimit;
+  f('startDate').value = button.dataset.startdate;
+  f('endDate').value = button.dataset.enddate;
+  f('isActive').checked = button.dataset.isactive === 'true';
 
-  f('title').value =
-    button.dataset.title;
-
-  f('description').value =
-    button.dataset.description;
-
-  f('discountType').value =
-    button.dataset.discounttype;
-
-  f('discountValue').value =
-    button.dataset.discountvalue;
-
-  f('maxDiscount').value =
-    button.dataset.maxdiscount;
-
-  f('minPurchase').value =
-    button.dataset.minpurchase;
-
-  f('totalUsageLimit').value =
-    button.dataset.totalusagelimit;
-
-  f('userUsageLimit').value =
-    button.dataset.userusagelimit;
-
-  f('startDate').value =
-    button.dataset.startdate;
-
-  f('endDate').value =
-    button.dataset.enddate;
-
-  f('isActive').checked =
-    button.dataset.isactive === 'true';
-
-  onTypeChange(
-    f('discountType'),
-    'edit'
-  );
-
-  updatePreview(
-    'edit'
-  );
-
-  openModal(
-    'editModal'
-  );
+  onTypeChange(f('discountType'), 'edit');
+  updatePreview('edit');
+  openModal('editModal');
 }
 
 /* ────────────────────────────────────────────
@@ -726,6 +929,13 @@ function openEditModal(button) {
 function onTypeChange(sel, prefix) {
   const group = document.getElementById(prefix + '-maxDiscount-group');
   group.style.display = sel.value === 'PERCENTAGE' ? '' : 'none';
+
+  /* re-validate value against new type's rules if already touched */
+  const discInput = document.getElementById(prefix + '-discountValue');
+  if (discInput.classList.contains("input-error") || discInput.classList.contains("input-success")) {
+    validateDiscountValue(prefix);
+  }
+
   updatePreview(prefix);
 }
 
@@ -771,10 +981,14 @@ function generateCode(inputId, previewTextId, previewPillId) {
   document.getElementById(inputId).value = code;
   if (previewTextId)  document.getElementById(previewTextId).textContent = code;
   if (previewPillId)  document.getElementById(previewPillId).textContent = code;
+
+  /* clear/validate the code field now that it's been auto-filled */
+  const prefix = inputId.split('-')[0];
+  validateCode(prefix);
 }
 
 /* ────────────────────────────────────────────
-   TOAST HELPER (matches iStore SweetAlert theme)
+   TOAST HELPER
 ──────────────────────────────────────────── */
 function showToast(icon, title) {
   Swal.fire({
@@ -837,12 +1051,26 @@ async function submitCouponForm(form, url, saveBtn, modalId, successMsg) {
 /* Add form */
 document.getElementById('addCouponForm').addEventListener('submit', function(e) {
   e.preventDefault();
+
+  if (!validateCouponForm('add')) {
+    const firstError = this.querySelector('.input-error');
+    if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+
   submitCouponForm(this, '/admin/coupons/add', document.getElementById('addSaveBtn'), 'addModal', 'Coupon created successfully!');
 });
 
 /* Edit form */
 document.getElementById('editCouponForm').addEventListener('submit', function(e) {
   e.preventDefault();
+
+  if (!validateCouponForm('edit')) {
+    const firstError = this.querySelector('.input-error');
+    if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+
   const id = document.getElementById('edit-id').value;
   submitCouponForm(this, `/admin/coupons/edit/${id}`, document.getElementById('editSaveBtn'), 'editModal', 'Coupon updated successfully!');
 });

@@ -652,9 +652,25 @@
       const el  = document.getElementById(prefix === "add" ? "add-name" : "editName");
       const val = el.value.trim();
       const err = prefix + "-name-error";
-      if (!val)             { setError(el, err, "Product name is required");                   return false; }
-      if (val.length < 3)   { setError(el, err, "Name must be at least 3 characters");         return false; }
-      if (val.length > 100) { setError(el, err, "Name cannot exceed 100 characters");          return false; }
+if (!val) {
+  setError(el, err, "Product name is required");
+  return false;
+}
+
+if (!/^[A-Za-z]/.test(val)) {
+  setError(el, err, "Must start with a letter");
+  return false;
+}
+
+if (val.length < 3) {
+  setError(el, err, "Name must be at least 3 characters");
+  return false;
+}
+
+if (val.length > 30) {
+  setError(el, err, "Name cannot exceed 100 characters");
+  return false;
+}
       setSuccess(el, err); return true;
     }
 
@@ -670,7 +686,15 @@
       const val = el.value.trim();
       const err = prefix + "-description-error";
       if (!val)            { setError(el, err, "Description is required");                      return false; }
+      if (!/^[A-Za-z]/.test(val)) {
+
+  setError(el, err, "Must start with a letter");
+
+  return false;
+
+}
       if (val.length < 10) { setError(el, err, "Description must be at least 10 characters");  return false; }
+      if (val.length > 1000) { setError(el, err, "Description is too long");  return false; }
       setSuccess(el, err); return true;
     }
 
@@ -711,6 +735,13 @@
       const err = prefix + "-sku-error";
       if (!val)            { setError(el, err, "SKU is required");                                           return false; }
       if (val.length < 3)  { setError(el, err, "SKU must be at least 3 characters");                        return false; }
+      if (!/^[A-Za-z]/.test(val)) {
+
+  setError(el, err, "Must start with a letter");
+
+  return false;
+
+}
       if (val.length > 40) { setError(el, err, "SKU cannot exceed 40 characters");                          return false; }
       if (!/^[A-Za-z0-9\-_]+$/.test(val)) { setError(el, err, "SKU can only contain letters, numbers, - and _"); return false; }
       setSuccess(el, err); return true;
@@ -734,15 +765,35 @@
       setSuccess(el, err); return true;
     }
 
-    function validateColor(prefix) {
-      const el  = document.getElementById(prefix === "add" ? "add-color" : "editColor");
-      const val = el.value.trim();
-      const err = prefix + "-color-error";
-      if (!val)            { setError(el, err, "Color is required");              return false; }
-      if (val.length < 2)  { setError(el, err, "Enter a valid color name");      return false; }
-      if (val.length > 30) { setError(el, err, "Color name is too long");        return false; }
-      setSuccess(el, err); return true;
-    }
+function validateColor(prefix) {
+  const el  = document.getElementById(prefix === "add" ? "add-color" : "editColor");
+  const val = el.value.trim();
+  const err = prefix + "-color-error";
+
+  if (!val) {
+    setError(el, err, "Color is required");
+    return false;
+  }
+
+  if (val.length < 2) {
+    setError(el, err, "Enter a valid color name");
+    return false;
+  }
+
+  if (val.length > 30) {
+    setError(el, err, "Color name is too long");
+    return false;
+  }
+
+  // Allow only letters and spaces
+  if (!/^[A-Za-z ]+$/.test(val)) {
+    setError(el, err, "Only letters and spaces are allowed");
+    return false;
+  }
+
+  setSuccess(el, err);
+  return true;
+}
 
     function validateThumbnail(prefix, fileInput) {
       const err  = prefix + "-thumbnail-error";

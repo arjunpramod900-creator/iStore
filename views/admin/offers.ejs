@@ -10,13 +10,34 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        .field-error {
+            display: none;
+            color: #e74c3c;
+            font-size: 12px;
+            margin-top: 4px;
+            font-weight: 500;
+        }
+        .field-error.visible { display: block; }
+        .m-input.input-error,
+        .m-select.input-error,
+        .m-textarea.input-error {
+            border: 1.5px solid #e74c3c !important;
+            background: #fff8f8 !important;
+        }
+        .m-input.input-success,
+        .m-select.input-success,
+        .m-textarea.input-success {
+            border: 1.5px solid #2ecc71 !important;
+        }
+    </style>
 </head>
 <body>
 
 <%
   const now = new Date();
 
-  /* ── Derived stats ── */
   const totalOffers     = offers.length;
   const activeOffers    = offers.filter(o =>
     o.isActive && new Date(o.startDate) <= now && new Date(o.endDate) >= now
@@ -24,7 +45,6 @@
   const expiredOffers   = offers.filter(o => new Date(o.endDate) < now).length;
   const scheduledOffers = offers.filter(o => new Date(o.startDate) > now).length;
 
-  /* ── Helpers ── */
   function offerStatus(o) {
     if (!o.isActive) return 'INACTIVE';
     if (new Date(o.endDate) < now) return 'EXPIRED';
@@ -334,8 +354,9 @@
                             <div class="m-form-group">
                                 <label class="m-label" for="add-offerName">Offer Name *</label>
                                 <input type="text" id="add-offerName" name="offerName" class="m-input"
-                                    placeholder="e.g., Seasonal Flagship Event" required
+                                    placeholder="e.g., Seasonal Flagship Event"
                                     oninput="updateBanner('add')">
+                                <span class="field-error" id="add-offerName-error"></span>
                                 <p class="m-hint"><i data-lucide="info" size="11"></i> Name will be visible to customers.</p>
                             </div>
 
@@ -360,7 +381,7 @@
                             <!-- Target selection -->
                             <div class="m-form-group">
                                 <label class="m-label" for="add-targetId" id="add-target-label">Target Selection *</label>
-                                <select id="add-targetId" name="targetId" class="m-select" required onchange="updatePricePreview('add')">
+                                <select id="add-targetId" name="targetId" class="m-select" onchange="updatePricePreview('add')">
                                     <option value="">Select a product...</option>
                                     <% products.forEach(p => { %>
                                     <option value="<%= p._id %>" data-type="PRODUCT" data-price="<%= p.lowestPrice || 0 %>"><%= p.name %></option>
@@ -369,6 +390,7 @@
                                     <option value="<%= c._id %>" data-type="CATEGORY" data-price="<%= c.lowestPrice || 0 %>" style="display:none;"><%= c.name %></option>
                                     <% }) %>
                                 </select>
+                                <span class="field-error" id="add-targetId-error"></span>
                             </div>
 
                             <!-- Description (optional) -->
@@ -376,6 +398,7 @@
                                 <label class="m-label" for="add-description">Offer Description</label>
                                 <textarea id="add-description" name="description" class="m-textarea"
                                     placeholder="Describe the terms and premium benefits of this offer..."></textarea>
+                                <span class="field-error" id="add-description-error"></span>
                             </div>
                         </div>
 
@@ -398,10 +421,11 @@
                                     <label class="m-label" for="add-discountValue">Discount Value *</label>
                                     <div class="suffix-wrap">
                                         <input type="number" id="add-discountValue" name="discountValue"
-                                            class="m-input" placeholder="10" min="1" max="100" required
+                                            class="m-input" placeholder="10" min="1" max="100"
                                             oninput="updatePricePreview('add')">
                                         <span class="input-suffix" id="add-disc-suffix">%</span>
                                     </div>
+                                    <span class="field-error" id="add-discountValue-error"></span>
                                 </div>
                                 <div class="m-form-group">
                                     <label class="m-label" for="add-maxDiscount">Max Discount (₹ cap)</label>
@@ -411,6 +435,7 @@
                                             oninput="updatePricePreview('add')">
                                         <span class="input-suffix" id="add-max-suffix">₹</span>
                                     </div>
+                                    <span class="field-error" id="add-maxDiscount-error"></span>
                                     <p class="m-hint"><i data-lucide="info" size="11"></i> The discount will never exceed this rupee amount, regardless of discount type.</p>
                                 </div>
                             </div>
@@ -436,19 +461,22 @@
                             <div class="form-row-2">
                                 <div class="m-form-group">
                                     <label class="m-label" for="add-startDate">Start Date *</label>
-                                    <input type="date" id="add-startDate" name="startDate" class="m-input" required
+                                    <input type="date" id="add-startDate" name="startDate" class="m-input"
                                         oninput="updateBanner('add')">
+                                    <span class="field-error" id="add-startDate-error"></span>
                                 </div>
                                 <div class="m-form-group">
                                     <label class="m-label" for="add-endDate">End Date *</label>
-                                    <input type="date" id="add-endDate" name="endDate" class="m-input" required
+                                    <input type="date" id="add-endDate" name="endDate" class="m-input"
                                         oninput="updateBanner('add')">
+                                    <span class="field-error" id="add-endDate-error"></span>
                                 </div>
                             </div>
                             <div class="m-form-group">
                                 <label class="m-label" for="add-minPurchase">Usage Limit Per User</label>
                                 <input type="number" id="add-minPurchase" name="minPurchase" class="m-input"
                                     placeholder="1" min="0" value="1">
+                                <span class="field-error" id="add-minPurchase-error"></span>
                             </div>
                         </div>
 
@@ -531,8 +559,9 @@
                             <div class="form-row-2">
                                 <div class="m-form-group">
                                     <label class="m-label" for="edit-offerName">Offer Name *</label>
-                                    <input type="text" id="edit-offerName" name="offerName" class="m-input" required
+                                    <input type="text" id="edit-offerName" name="offerName" class="m-input"
                                         oninput="updateBanner('edit')">
+                                    <span class="field-error" id="edit-offerName-error"></span>
                                 </div>
                                 <div class="m-form-group">
                                     <label class="m-label">Offer Type *</label>
@@ -552,7 +581,7 @@
 
                             <div class="m-form-group">
                                 <label class="m-label" for="edit-targetId">Target Selection *</label>
-                                <select id="edit-targetId" name="targetId" class="m-select" required onchange="updatePricePreview('edit')">
+                                <select id="edit-targetId" name="targetId" class="m-select" onchange="updatePricePreview('edit')">
                                     <option value="">Select...</option>
                                     <% products.forEach(p => { %>
                                     <option value="<%= p._id %>" data-type="PRODUCT" data-price="<%= p.lowestPrice || 0 %>"><%= p.name %></option>
@@ -561,6 +590,7 @@
                                     <option value="<%= c._id %>" data-type="CATEGORY" data-price="<%= c.lowestPrice || 0 %>"><%= c.name %></option>
                                     <% }) %>
                                 </select>
+                                <span class="field-error" id="edit-targetId-error"></span>
                             </div>
                         </div>
 
@@ -582,10 +612,11 @@
                                     <label class="m-label" for="edit-discountValue">Discount Value *</label>
                                     <div class="suffix-wrap">
                                         <input type="number" id="edit-discountValue" name="discountValue"
-                                            class="m-input" min="1" required
+                                            class="m-input" min="1"
                                             oninput="updatePricePreview('edit')">
                                         <span class="input-suffix" id="edit-disc-suffix">%</span>
                                     </div>
+                                    <span class="field-error" id="edit-discountValue-error"></span>
                                 </div>
                                 <div class="m-form-group">
                                     <label class="m-label" for="edit-maxDiscount">Max Discount (₹ cap)</label>
@@ -594,6 +625,7 @@
                                             class="m-input" min="0" oninput="updatePricePreview('edit')">
                                         <span class="input-suffix" id="edit-max-suffix">₹</span>
                                     </div>
+                                    <span class="field-error" id="edit-maxDiscount-error"></span>
                                 </div>
                             </div>
                         </div>
@@ -623,18 +655,21 @@
                             <div class="form-row-2">
                                 <div class="m-form-group">
                                     <label class="m-label" for="edit-startDate">Start Date *</label>
-                                    <input type="date" id="edit-startDate" name="startDate" class="m-input" required
+                                    <input type="date" id="edit-startDate" name="startDate" class="m-input"
                                         oninput="updateBanner('edit')">
+                                    <span class="field-error" id="edit-startDate-error"></span>
                                 </div>
                                 <div class="m-form-group">
                                     <label class="m-label" for="edit-endDate">End Date *</label>
-                                    <input type="date" id="edit-endDate" name="endDate" class="m-input" required
+                                    <input type="date" id="edit-endDate" name="endDate" class="m-input"
                                         oninput="updateBanner('edit')">
+                                    <span class="field-error" id="edit-endDate-error"></span>
                                 </div>
                             </div>
                             <div class="m-form-group">
                                 <label class="m-label" for="edit-minPurchase">Usage Limit Per User</label>
                                 <input type="number" id="edit-minPurchase" name="minPurchase" class="m-input" min="0" value="1">
+                                <span class="field-error" id="edit-minPurchase-error"></span>
                             </div>
                         </div>
 
@@ -697,31 +732,18 @@ function getSelectedPrice(prefix) {
   const sel = document.getElementById(prefix + '-targetId');
   const opt = sel && sel.selectedOptions[0];
   const price = opt ? Number(opt.dataset.price) : 0;
-  /* price is stored in whole rupees on the option; convert to
-     paise here so the rest of the math (which works in paise)
-     doesn't need to change */
   return (price > 0 ? price : FALLBACK_PRICE / 100) * 100;
 }
 
 /* ── MODAL HELPERS ── */
 function openModal(id) {
-
-    const modal =
-    document.getElementById(id);
-
+    const modal = document.getElementById(id);
     modal.classList.add("open");
-
     document.body.style.overflow = "hidden";
-
-    if(window.lucide){
-        lucide.createIcons();
-    }
+    if (window.lucide) lucide.createIcons();
 }
 function closeModal(id) {
-
-    document.getElementById(id)
-    .classList.remove("open");
-
+    document.getElementById(id).classList.remove("open");
     document.body.style.overflow = "";
 }
 document.querySelectorAll('.modal-overlay').forEach(el => {
@@ -732,9 +754,186 @@ document.addEventListener('keydown', e => {
     document.querySelectorAll('.modal-overlay.open').forEach(el => closeModal(el.id));
 });
 
+/* ================================================
+   INLINE VALIDATION HELPERS
+================================================ */
+
+function setError(el, errorId, msg) {
+  if (!el) return;
+  el.classList.add("input-error");
+  el.classList.remove("input-success");
+  const s = document.getElementById(errorId);
+  if (s) { s.textContent = msg; s.classList.add("visible"); }
+}
+
+function setSuccess(el, errorId) {
+  if (!el) return;
+  el.classList.remove("input-error");
+  el.classList.add("input-success");
+  const s = document.getElementById(errorId);
+  if (s) { s.textContent = ""; s.classList.remove("visible"); }
+}
+
+function clearAllErrors(prefix) {
+  const fields = ["offerName","targetId","description","discountValue","maxDiscount","startDate","endDate","minPurchase"];
+  fields.forEach(f => {
+    const errSpan = document.getElementById(`${prefix}-${f}-error`);
+    if (errSpan) { errSpan.textContent = ""; errSpan.classList.remove("visible"); }
+  });
+  document.querySelectorAll(`#${prefix === "add" ? "addOfferForm" : "editOfferForm"} .input-error,
+                              #${prefix === "add" ? "addOfferForm" : "editOfferForm"} .input-success`)
+    .forEach(el => el.classList.remove("input-error", "input-success"));
+}
+
+/* ---- field validators ---- */
+
+function validateOfferName(prefix) {
+  const el  = document.getElementById(prefix + '-offerName');
+  const val = el.value.trim();
+  const err = prefix + '-offerName-error';
+  if (!val)             { setError(el, err, "Offer name is required");                 return false; }
+  if (!/^[A-Za-z]/.test(val)) { setError(el, err, "Must start with a letter");          return false; }
+  if (val.length < 3)   { setError(el, err, "Name must be at least 3 characters");     return false; }
+  if (val.length > 100) { setError(el, err, "Name cannot exceed 100 characters");      return false; }
+  setSuccess(el, err); return true;
+}
+
+function validateTarget(prefix) {
+  const el  = document.getElementById(prefix + '-targetId');
+  const err = prefix + '-targetId-error';
+  if (!el.value) { setError(el, err, "Please select a target product or category"); return false; }
+  setSuccess(el, err); return true;
+}
+
+function validateDescription(prefix) {
+  /* optional field — only validate length if filled.
+     NOTE: the edit modal has no description field in the markup,
+     so this must be null-safe or it throws and silently kills
+     the rest of the submit handler (this was the root cause of
+     "Update Offer" doing nothing). */
+  const el = document.getElementById(prefix + '-description');
+  if (!el) return true;
+
+  const val = el.value.trim();
+  const err = prefix + '-description-error';
+  if (val && !/^[A-Za-z]/.test(val)) { setError(el, err, "Must start with a letter"); return false; }
+  if (val && val.length < 10)  { setError(el, err, "Description must be at least 10 characters if provided"); return false; }
+  if (val && val.length > 500) { setError(el, err, "Description cannot exceed 500 characters"); return false; }
+  setSuccess(el, err); return true;
+}
+
+function validateDiscountValue(prefix) {
+  const el   = document.getElementById(prefix + '-discountValue');
+  const type = document.getElementById(prefix + '-discountType').value;
+  const err  = prefix + '-discountValue-error';
+  const val  = el.value;
+
+  if (!val) { setError(el, err, "Discount value is required"); return false; }
+  const n = parseFloat(val);
+  if (isNaN(n) || n <= 0) { setError(el, err, "Enter a valid discount value"); return false; }
+
+  if (type === "PERCENTAGE" && n > 100) {
+    setError(el, err, "Percentage discount cannot exceed 100%");
+    return false;
+  }
+  if (type === "FIXED" && n > 10000000) {
+    setError(el, err, "Discount value seems too high");
+    return false;
+  }
+  setSuccess(el, err); return true;
+}
+
+function validateMaxDiscount(prefix) {
+  /* optional — 0 means no cap */
+  const el  = document.getElementById(prefix + '-maxDiscount');
+  const err = prefix + '-maxDiscount-error';
+  if (el.value === "" ) { setSuccess(el, err); return true; }
+  const n = parseFloat(el.value);
+  if (isNaN(n) || n < 0) { setError(el, err, "Max discount cannot be negative"); return false; }
+  setSuccess(el, err); return true;
+}
+
+function validateStartDate(prefix) {
+  const el  = document.getElementById(prefix + '-startDate');
+  const err = prefix + '-startDate-error';
+  if (!el.value) { setError(el, err, "Start date is required"); return false; }
+  setSuccess(el, err);
+
+  /* re-check end date relationship */
+  const endEl = document.getElementById(prefix + '-endDate');
+  if (endEl.value) validateEndDate(prefix);
+
+  return true;
+}
+
+function validateEndDate(prefix) {
+  const el      = document.getElementById(prefix + '-endDate');
+  const startEl = document.getElementById(prefix + '-startDate');
+  const err     = prefix + '-endDate-error';
+
+  if (!el.value) { setError(el, err, "End date is required"); return false; }
+
+  if (startEl.value) {
+    const start = new Date(startEl.value);
+    const end   = new Date(el.value);
+    if (end <= start) {
+      setError(el, err, "End date must be after start date");
+      return false;
+    }
+  }
+  setSuccess(el, err); return true;
+}
+
+function validateMinPurchase(prefix) {
+  /* "Usage Limit Per User" field — optional, default 1 */
+  const el  = document.getElementById(prefix + '-minPurchase');
+  const err = prefix + '-minPurchase-error';
+  if (el.value === "") { setSuccess(el, err); return true; }
+  const n = parseInt(el.value);
+  if (isNaN(n) || n < 0) { setError(el, err, "Usage limit cannot be negative"); return false; }
+  setSuccess(el, err); return true;
+}
+
+/* ---- attach blur + live-clear ---- */
+
+function attachBlur(inputId, validator) {
+  const el = document.getElementById(inputId);
+  if (!el) return; /* field doesn't exist in this modal — skip safely */
+  el.addEventListener("blur", validator);
+  el.addEventListener("input", function () {
+    if (this.classList.contains("input-error")) validator();
+  });
+}
+
+["add", "edit"].forEach(prefix => {
+  attachBlur(`${prefix}-offerName`,      () => validateOfferName(prefix));
+  attachBlur(`${prefix}-targetId`,       () => validateTarget(prefix));
+  attachBlur(`${prefix}-description`,    () => validateDescription(prefix));
+  attachBlur(`${prefix}-discountValue`,  () => validateDiscountValue(prefix));
+  attachBlur(`${prefix}-maxDiscount`,    () => validateMaxDiscount(prefix));
+  attachBlur(`${prefix}-startDate`,      () => validateStartDate(prefix));
+  attachBlur(`${prefix}-endDate`,        () => validateEndDate(prefix));
+  attachBlur(`${prefix}-minPurchase`,    () => validateMinPurchase(prefix));
+});
+
+function validateOfferForm(prefix) {
+  const checks = [
+    validateOfferName(prefix),
+    validateTarget(prefix),
+    validateDescription(prefix),
+    validateDiscountValue(prefix),
+    validateMaxDiscount(prefix),
+    validateStartDate(prefix),
+    validateEndDate(prefix),
+    validateMinPurchase(prefix),
+  ];
+  return checks.every(Boolean);
+}
+
 /* ── ADD BUTTON ── */
 document.getElementById('btnOpenAdd').addEventListener('click', () => {
   document.getElementById('addOfferForm').reset();
+  clearAllErrors('add');
   setOfferType('add', 'PRODUCT');
   setDiscType('add', 'PERCENTAGE');
   document.getElementById('add-isActive').checked = true;
@@ -752,7 +951,6 @@ function setOfferType(prefix, type) {
   btnP.classList.toggle('active', type === 'PRODUCT');
   btnC.classList.toggle('active', type === 'CATEGORY');
 
-  /* Show/hide options in select */
   const sel = document.getElementById(prefix + '-targetId');
   sel.value = '';
   Array.from(sel.options).forEach(opt => {
@@ -761,20 +959,12 @@ function setOfferType(prefix, type) {
     opt.style.display = (t === type) ? '' : 'none';
   });
 
-  /* Update label if it exists */
   const lbl = document.getElementById(prefix + '-target-label');
   if (lbl) lbl.textContent = (type === 'PRODUCT' ? 'Select Product *' : 'Select Category *');
 
-  /* Target was just cleared above — refresh preview so it
-     doesn't keep showing the previously selected item's price */
   updatePricePreview(prefix);
 }
 
-/* ── DISCOUNT TYPE CHIPS ──
-   Only the discount-value suffix/limits change with type.
-   maxDiscount is ALWAYS a rupee cap — its suffix never
-   changes, regardless of whether the offer itself is a
-   percentage or fixed-amount discount. */
 function setDiscType(prefix, type) {
   document.getElementById(prefix + '-discountType').value = type;
 
@@ -784,9 +974,6 @@ function setDiscType(prefix, type) {
   const suffix = type === 'PERCENTAGE' ? '%' : '₹';
   document.getElementById(prefix + '-disc-suffix').textContent = suffix;
 
-  /* Discount value's max attribute only makes sense for
-     percentage (capped at 100). Fixed amounts have no
-     natural ceiling here, so remove the constraint. */
   const discInput = document.getElementById(prefix + '-discountValue');
   if (type === 'PERCENTAGE') {
     discInput.setAttribute('max', '100');
@@ -794,6 +981,11 @@ function setDiscType(prefix, type) {
   } else {
     discInput.removeAttribute('max');
     discInput.placeholder = '2000';
+  }
+
+  /* re-validate value against new type's rules if already touched */
+  if (discInput.classList.contains("input-error") || discInput.classList.contains("input-success")) {
+    validateDiscountValue(prefix);
   }
 
   updatePricePreview(prefix);
@@ -821,12 +1013,7 @@ function updateBanner(p) {
   document.getElementById(p + '-banner-days').textContent  = daysLabel;
 }
 
-/* ── LIVE PRICE PREVIEW ──
-   discAmt is always tracked in paise internally so fmt()
-   can divide by 100 consistently across both branches.
-   maxD is entered in whole rupees by the admin, so it's
-   converted to paise (`maxD * 100`) before being compared
-   against discAmt, which is already in paise either way. */
+/* ── LIVE PRICE PREVIEW ── */
 function updatePricePreview(p) {
   const disc  = Number(document.getElementById(p + '-discountValue').value) || 0;
   const type  = document.getElementById(p + '-discountType').value;
@@ -842,14 +1029,10 @@ function updatePricePreview(p) {
   if (type === 'PERCENTAGE') {
     discAmt = Math.round(samplePrice * disc / 100);
   } else {
-    /* FIXED — disc is a whole-rupee amount, convert to paise */
     discAmt = disc * 100;
   }
 
-  /* maxDiscount is always a rupee cap, applies to both types */
   if (maxD > 0) discAmt = Math.min(discAmt, maxD * 100);
-
-  /* never exceed the item's own price */
   discAmt = Math.min(discAmt, samplePrice);
 
   const final = Math.max(0, samplePrice - discAmt);
@@ -866,6 +1049,8 @@ function updatePricePreview(p) {
 function openEditModal(data) {
   const f = id => document.getElementById('edit-' + id);
 
+  clearAllErrors('edit');
+
   f('id').value             = data._id;
   f('offerName').value      = data.offerName;
   f('discountValue').value  = data.discountValue;
@@ -878,14 +1063,11 @@ function openEditModal(data) {
   setOfferType('edit', data.applyTo);
   setDiscType('edit', data.discountType || 'PERCENTAGE');
 
-  /* Wait a tick for options to re-filter, then set the
-     target and refresh the preview using its real price */
   setTimeout(() => {
     f('targetId').value = data.targetId || '';
     updatePricePreview('edit');
   }, 10);
 
-  /* Status indicator */
   const now = new Date();
   const stat = !data.isActive ? 'INACTIVE'
     : new Date(data.endDate) < now ? 'EXPIRED'
@@ -944,11 +1126,25 @@ async function submitOfferForm(form, url, saveBtn, modalId, successMsg) {
 
 document.getElementById('addOfferForm').addEventListener('submit', function(e) {
   e.preventDefault();
+
+  if (!validateOfferForm('add')) {
+    const firstError = this.querySelector('.input-error');
+    if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+
   submitOfferForm(this, '/admin/offers/add', document.getElementById('addSaveBtn'), 'addModal', 'Offer published successfully!');
 });
 
 document.getElementById('editOfferForm').addEventListener('submit', function(e) {
   e.preventDefault();
+
+  if (!validateOfferForm('edit')) {
+    const firstError = this.querySelector('.input-error');
+    if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+
   const id = document.getElementById('edit-id').value;
   submitOfferForm(this, `/admin/offers/edit/${id}`, document.getElementById('editSaveBtn'), 'editModal', 'Offer updated successfully!');
 });
@@ -1010,54 +1206,24 @@ async function confirmDelete(id, name) {
   status.addEventListener('change', render);
 }());
 
-
-
-
 document
 .querySelectorAll(".edit-offer-btn")
 .forEach(btn => {
-
     btn.addEventListener("click", () => {
-
         openEditModal({
-
-            _id:
-            btn.dataset.id,
-
-            offerName:
-            btn.dataset.name,
-
-            applyTo:
-            btn.dataset.applyto,
-
-            targetId:
-            btn.dataset.target,
-
-            discountType:
-            btn.dataset.discounttype,
-
-            discountValue:
-            btn.dataset.discount,
-
-            maxDiscount:
-            btn.dataset.maxdiscount,
-
-            minPurchase:
-            btn.dataset.minpurchase,
-
-            startDate:
-            btn.dataset.start,
-
-            endDate:
-            btn.dataset.end,
-
-            isActive:
-            btn.dataset.active === "true"
-
+            _id: btn.dataset.id,
+            offerName: btn.dataset.name,
+            applyTo: btn.dataset.applyto,
+            targetId: btn.dataset.target,
+            discountType: btn.dataset.discounttype,
+            discountValue: btn.dataset.discount,
+            maxDiscount: btn.dataset.maxdiscount,
+            minPurchase: btn.dataset.minpurchase,
+            startDate: btn.dataset.start,
+            endDate: btn.dataset.end,
+            isActive: btn.dataset.active === "true"
         });
-
     });
-
 });
 </script>
 
