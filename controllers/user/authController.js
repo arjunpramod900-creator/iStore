@@ -1010,7 +1010,7 @@ const logoutUser = (req, res) => {
       console.log("Logout Error:", err);
       return res.redirect("/");
     }
-    res.clearCookie("connect.sid");
+    res.clearCookie("user.sid");
     res.redirect(303, "/");
   });
 };

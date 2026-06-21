@@ -58,7 +58,7 @@ export const adminLogout = (req, res) => {
     }
 
     res.clearCookie(
-      "connect.sid",
+      "admin.sid",
 
       {
         path: "/",

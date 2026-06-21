@@ -6,24 +6,11 @@ import session from "express-session";
 
 import connectDB from "./config/db.js";
 
-import authRoutes from "./routes/user/authRoutes.js";
+import userRoutes from "./routes/user/index.js";
 
-import authController
-from "./controllers/user/authController.js";
+import adminRouter from "./routes/admin/index.js";
 
-import profileRoutes from "./routes/user/profileRoutes.js";
-
-import productRoutes from "./routes/user/productRoutes.js";
-
-import cartRoutes from "./routes/user/cartRoutes.js";
-
-import wishlistRoutes from "./routes/user/wishlistRoutes.js";
-
-import checkoutRoutes from "./routes/user/checkoutRoutes.js";
-
-import orderRoutes from "./routes/user/orderRoutes.js";
-
-import walletRoutes from "./routes/user/walletRoutes.js";
+import localsMiddleware from "./middleware/localsMiddleware.js";
 
 import noCache from "./middleware/noCache.js";
 
@@ -31,19 +18,15 @@ import adminNoCache from "./middleware/adminNoCache.js";
 
 import passport from "./config/passport.js";
 
-import adminAuthRoutes from "./routes/admin/adminAuthRoutes.js";
-
-import adminRoutes from "./routes/admin/adminRoutes.js";
-
 import userBlockCheckMiddleware from "./middleware/userBlockCheckMiddleware.js";
 
-import categoryRoutes from "./routes/admin/categoryRoutes.js";
+import errorHandler from "./middleware/errorHandler.js";
 
-import adminSalesRoutes from "./routes/admin/adminSalesRoutes.js";
+import {
+  adminNotFound,
+  userNotFound,
+} from "./middleware/notFoundMiddleware.js";
 
-import couponRoutes from "./routes/admin/adminCouponRoutes.js";
-
-import offerRoutes from "./routes/admin/adminOfferRoutes.js";
 
 const app = express();
 
@@ -73,32 +56,59 @@ app.use(express.static("public"));
 
 /* ================================
    SESSION SETUP
+   FIX: split into two independent
+   sessions (separate cookies/secrets)
+   so user logout never destroys the
+   admin session, and vice versa.
 ================================ */
 
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET || "mySecretKey",
+const userSession = session({
+  name: "user.sid",
+  secret: process.env.SESSION_SECRET || "mySecretKey",
 
-    resave: false,
+  resave: false,
 
-    saveUninitialized: false,
+  saveUninitialized: false,
 
-    cookie: {
-      httpOnly: true,
+  cookie: {
+    httpOnly: true,
 
-      sameSite: "lax",
+    sameSite: "lax",
 
-      secure: false,
+    secure: false,
 
-      maxAge: 1000 * 60 * 60 * 24, // 1 day
-    },
-  }),
-);
+    maxAge: 1000 * 60 * 60 * 24, // 1 day
+  },
+});
 
-/* ================================
-   GLOBAL USER BLOCK CHECK
-================================ */
-// app.use(userBlockCheckMiddleware)  // already skips /admin and non-logged-in users
+const adminSession = session({
+  name: "admin.sid",
+  secret: process.env.ADMIN_SESSION_SECRET || "myAdminSecretKey",
+
+  resave: false,
+
+  saveUninitialized: false,
+
+  cookie: {
+    httpOnly: true,
+
+    sameSite: "lax",
+
+    secure: false,
+
+    maxAge: 1000 * 60 * 60 * 24, // 1 day
+  },
+});
+
+/* Admin routes get the admin session */
+app.use("/admin", adminSession);
+
+/* Everything else gets the user session */
+app.use((req, res, next) => {
+  if (req.path.startsWith("/admin")) return next();
+  userSession(req, res, next);
+});
+
 
 /* ================================
 
@@ -120,13 +130,7 @@ app.use(noCache);
 GLOBAL VARIABLES
 ================================ */
 
-app.use((req, res, next) => {
-  res.locals.userId = req.session.userId || null;
-
-  res.locals.adminId = req.session.adminId || null;
-
-  next();
-});
+app.use(localsMiddleware);
 
 /* ================================
 VIEW ENGINE
@@ -139,35 +143,7 @@ app.set("views", "./views");
 /* ================================
 PROTECTED HOME ROUTE
 ================================ */
-
-app.get(
-  "/",
-  authController.loadHome
-);
-
-//* USER AUTH ROUTES */
-app.use("/", authRoutes);
-
-/* USER PROFILE ROUTES (PROTECTED) */
-app.use("/", profileRoutes);
-
-/* USER PRODUCT ROUTES */
-app.use("/", productRoutes);
-
-/* USER CART ROUTES */
-app.use("/cart", cartRoutes);
-
-/* USER WISHLIST ROUTES */
-app.use("/wishlist", wishlistRoutes);
-
-/* USER CHECKOUT ROUTES */
-app.use("/", checkoutRoutes);
-
-/* USER ORDER ROUTES */
-app.use("/", orderRoutes);
-
-/* USER WALLET ROUTES */
-app.use("/", walletRoutes);
+app.use("/", userRoutes);
 
 /* ================================
 
@@ -175,17 +151,7 @@ ADMIN ROUTES
 
 ================================ */
 
-app.use("/admin", adminNoCache, adminAuthRoutes);
-
-app.use("/admin", adminNoCache, adminRoutes);
-
-app.use("/admin", categoryRoutes);
-
-app.use("/admin", adminSalesRoutes);
-
-app.use("/admin", couponRoutes);
-
-app.use("/admin", offerRoutes);
+app.use("/admin", adminRouter);
 
 
 
@@ -193,23 +159,16 @@ app.use("/admin", offerRoutes);
 /* ================================
 404 HANDLER
 ================================ */
-app.use("/admin", (req, res) => {
-    res.status(404).render("admin/error-404");
-});
+app.use("/admin", adminNotFound);
 
-
-app.use((req, res) => {
-    res.status(404).render("user/error-404");
-});
+app.use(userNotFound);
 
  
 /* ============================================================
   General 500 error handler
 ============================================================ */
-app.use((err, req, res, next) => {
-    console.error("Server Error:", err.stack);
-    res.status(500).render("user/error-404");
-});
+app.use(errorHandler);
+
 
 /* ================================
    START SERVER
