@@ -258,6 +258,14 @@ if (
                 order.paymentStatus = "Refunded";
             }
         }
+        /*
+   COD cancelled before delivery
+*/
+if (order.paymentMethod === "COD") {
+
+    order.paymentStatus = "Cancelled";
+
+}
     }
 
     order.orderStatus = status;
@@ -275,12 +283,18 @@ if (
         }
     }
 
-    if (status === "Delivered") {
+if (status === "Delivered") {
 
-        order.deliveredDate =
-            new Date();
+    order.deliveredDate = new Date();
 
+    /*
+       COD payment collected at delivery
+    */
+    if (order.paymentMethod === "COD") {
+        order.paymentStatus = "Paid";
     }
+
+}
 
     await order.save();
 
@@ -389,6 +403,17 @@ export const handleReturnRequestService = async (
                 order.paymentStatus = "Refunded";
             }
         }
+        /*
+   COD already paid at delivery.
+   Returned order means money returned.
+*/
+if (
+    order.paymentMethod === "COD"
+) {
+
+    order.paymentStatus = "Refunded";
+
+}
 
         /* Order becomes empty */
         order.subtotal = 0;
@@ -425,6 +450,18 @@ export const handleReturnRequestService = async (
                 item.itemReturnStatus = "Rejected";
             }
         }
+        /*
+   Rejected return means customer keeps product.
+   Delivered COD order remains paid.
+*/
+if (
+    order.paymentMethod === "COD" &&
+    order.deliveredDate
+) {
+
+    order.paymentStatus = "Paid";
+
+}
 
         await order.save();
 
@@ -621,6 +658,15 @@ if (allResolved) {
 
         item.itemReturnStatus =
             "Rejected";
+
+            if (
+    order.paymentMethod === "COD" &&
+    order.deliveredDate
+) {
+
+    order.paymentStatus = "Paid";
+
+}
 
         await order.save();
 

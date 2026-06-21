@@ -124,6 +124,20 @@
             opacity: 0.5;
             cursor: not-allowed;
         }
+        /* ── Active item badge ── */
+        .aod-active-badge{
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            padding:5px 14px;
+            border-radius:999px;
+            background:rgba(37,99,235,.1);
+            color:#2563EB;
+            font-size:11px;
+            font-weight:800;
+            letter-spacing:.5px;
+            text-transform:uppercase;
+        }
     </style>
 </head>
 
@@ -255,7 +269,7 @@
                                 <th class="center">Qty</th>
                                 <th class="right">Unit Price</th>
                                 <th class="right">Total</th>
-                                <th class="center">Return</th>
+                                <th class="center">Status</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -285,49 +299,60 @@
                                 <td class="center"><span class="aod-qty"><%= item.quantity %></span></td>
                                 <td class="right"><span class="aod-price"><%= fmt(item.price) %></span></td>
                                 <td class="right"><span class="aod-total"><%= fmt(rowTotal) %></span></td>
-                                <td class="center">
+<td class="center">
 
-                                    <% if (item.itemReturnStatus === "Requested") { %>
+    <% if (item.itemStatus === "Cancelled") { %>
 
-                                        <div class="aod-item-return-actions">
+        <span class="aod-return-status-badge aod-return-status-badge--rejected">
+            <i data-lucide="x" size="10"></i>
+            Cancelled
+        </span>
 
-                                            <button
-                                                class="aod-btn-approve aod-btn-approve--sm"
-                                                data-item-id="<%= item._id %>"
-                                                onclick="handleItemReturn('<%= item._id %>', 'approve', this)"
-                                            >
-                                                Approve
-                                            </button>
+    <% } else if (item.itemReturnStatus === "Requested") { %>
 
-                                            <button
-                                                class="aod-btn-reject aod-btn-reject--sm"
-                                                data-item-id="<%= item._id %>"
-                                                onclick="handleItemReturn('<%= item._id %>', 'reject', this)"
-                                            >
-                                                Reject
-                                            </button>
+        <div class="aod-item-return-actions">
 
-                                        </div>
+            <button
+                class="aod-btn-approve aod-btn-approve--sm"
+                data-item-id="<%= item._id %>"
+                onclick="handleItemReturn('<%= item._id %>', 'approve', this)"
+            >
+                Approve
+            </button>
 
-                                    <% } else if (item.itemReturnStatus === "Approved") { %>
+            <button
+                class="aod-btn-reject aod-btn-reject--sm"
+                data-item-id="<%= item._id %>"
+                onclick="handleItemReturn('<%= item._id %>', 'reject', this)"
+            >
+                Reject
+            </button>
 
-                                        <span class="aod-return-status-badge aod-return-status-badge--approved">
-                                            <i data-lucide="check" size="10"></i> Returned
-                                        </span>
+        </div>
 
-                                    <% } else if (item.itemReturnStatus === "Rejected") { %>
+    <% } else if (item.itemStatus === "Returned") { %>
 
-                                        <span class="aod-return-status-badge aod-return-status-badge--rejected">
-                                            <i data-lucide="x" size="10"></i> Rejected
-                                        </span>
+        <span class="aod-return-status-badge aod-return-status-badge--approved">
+            <i data-lucide="check" size="10"></i>
+            Returned
+        </span>
 
-                                    <% } else { %>
+    <% } else if (item.itemReturnStatus === "Rejected") { %>
 
-                                        <span class="aod-field-value">—</span>
+        <span class="aod-return-status-badge aod-return-status-badge--rejected">
+            <i data-lucide="x" size="10"></i>
+            Return Rejected
+        </span>
 
-                                    <% } %>
+    <% } else { %>
 
-                                </td>
+        <span class="aod-active-badge">
+            Active
+        </span>
+
+    <% } %>
+
+</td>
                             </tr>
                             <% }) %>
                         </tbody>

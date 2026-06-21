@@ -266,11 +266,19 @@
                                     </button>
                                     <% } %>
 
-                                    <% if (status === "delivered") { %>
-                                    <a href="/orders/<%= orderId %>/return" class="or-btn or-btn--outline">
-                                        Return Order
-                                    </a>
-                                    <% } %>
+<% if (
+    status === "delivered" &&
+    !["Requested","Approved"].includes(order.returnStatus)
+) { %>
+
+<button
+    class="or-btn or-btn--outline return-order-btn"
+    data-order-id="<%= orderId %>"
+>
+    Return Order
+</button>
+
+<% } %>
 
                                 <% } %>
 
@@ -377,6 +385,65 @@ document.querySelectorAll(".retry-payment-btn").forEach(btn => {
                 }
             });
         });
+
+
+
+        /* ================================================
+   RETURN ORDER
+================================================ */
+document.querySelectorAll(".return-order-btn").forEach(button => {
+
+    button.addEventListener("click", async () => {
+
+        const orderId = button.dataset.orderId;
+
+        const { value: formValues } = await showReturnReasonAlert();
+
+        if (!formValues) return;
+
+        try {
+
+            showLoadingAlert();
+
+            const response = await fetch(`/orders/${orderId}/return`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    reason: formValues.reason
+                })
+            });
+
+            const data = await response.json();
+
+            Swal.close();
+
+            if (data.success) {
+
+                showToast("success", data.message);
+
+                setTimeout(() => {
+                    window.location.reload();
+                }, 900);
+
+            } else {
+
+                showToast("error", data.message);
+
+            }
+
+        } catch {
+
+            Swal.close();
+
+            showToast("error", "Something went wrong");
+
+        }
+
+    });
+
+});
 
     </script>
 
