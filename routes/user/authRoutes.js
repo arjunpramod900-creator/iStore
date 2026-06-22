@@ -33,16 +33,33 @@ router.post("/resend-otp", authController.resendOTP);
    OTP ROUTES
 ========================= */
 
-router.get("/verify-otp", (req, res) => {
+router.get("/verify-otp", isLoggedOut, (req, res) => {
+
   const type = req.query.type || "signup";
 
-  /* Pass email from session so the OTP page can send it on resend */
+  if (
+    (type === "signup" && !req.session.signupData) ||
+    (type === "reset" && !req.session.resetEmail)
+  ) {
+    return res.redirect("/login");
+  }
+
   const email =
     type === "signup"
       ? req.session.signupData?.email || ""
       : req.session.resetEmail || "";
 
-  res.render("user/otp", { type, email });
+  res.set({
+    "Cache-Control": "no-store, no-cache, must-revalidate, private",
+    "Pragma": "no-cache",
+    "Expires": "0"
+  });
+
+  res.render("user/otp", {
+    type,
+    email
+  });
+
 });
 
 /* Verify Signup OTP */

@@ -469,12 +469,25 @@ const verifySignupOTP = async (req, res) => {
       await referredByUser.save();
     }
 
-    delete req.session.signupData;
+delete req.session.signupData;
 
-    return res.status(200).json({
-      success: true,
-      message: "Signup successful! Please login.",
+req.session.save((err) => {
+
+  if (err) {
+
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong. Please try again."
     });
+
+  }
+
+  return res.status(200).json({
+    success: true,
+    message: "Signup successful! Please login."
+  });
+
+});
   } catch (error) {
     console.log("OTP Verification Error:", error);
     return res.status(500).json({
