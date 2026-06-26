@@ -11,6 +11,7 @@ import {
   loadCart,
   updateCartQuantity,
   removeCartItem,
+  clearCart,
   checkCartValidity,
 } from "../../controllers/user/cartController.js";
 
@@ -49,6 +50,16 @@ router.post(
 ========================================= */
 
 router.post("/update-quantity", updateCartQuantity);
+
+
+/* =========================================
+   CLEAR CART
+========================================= */
+
+router.delete(
+    "/clear",
+    clearCart
+);
 
 /* =========================================
    REMOVE ITEM

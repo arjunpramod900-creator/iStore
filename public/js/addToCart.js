@@ -10,6 +10,12 @@ addToCartButtons.forEach((button) => {
 
     async (e) => {
       e.preventDefault();
+      if (
+    button.disabled ||
+    button.classList.contains("unavailable")
+) {
+    return;
+}
 
       const variantId = button.dataset.variantId;
 
@@ -26,9 +32,26 @@ addToCartButtons.forEach((button) => {
       }
 
       try {
-        button.disabled = true;
+        if (button.dataset.loading === "true") {
+    return;
+}
 
-        button.innerHTML = "Adding...";
+button.dataset.loading = "true";
+button.disabled = true;
+
+button.innerHTML=`
+
+<i
+    data-lucide="loader-circle"
+    class="spin"
+    size="18"
+></i>
+
+Adding...
+
+`;
+
+lucide.createIcons();
 
         const response = await fetch(
           "/cart/add",
@@ -52,7 +75,23 @@ addToCartButtons.forEach((button) => {
           },
         );
 
-        const data = await response.json();
+let data;
+
+try {
+
+    data = await response.json();
+
+} catch {
+
+    data = {
+
+        success: false,
+
+        message: "We couldn't process the server response. Please try again."
+
+    };
+
+}
 
         /* =========================
                         LOGIN REQUIRED
@@ -66,6 +105,9 @@ addToCartButtons.forEach((button) => {
               }
             },
           );
+
+
+          button.dataset.loading = "false";
 
           button.disabled = false;
 
@@ -92,20 +134,30 @@ addToCartButtons.forEach((button) => {
             `.add-to-cart-btn[data-variant-id="${variantId}"]`,
           );
 
-          cartButtons.forEach((cartButton) => {
-            cartButton.classList.add("added");
+cartButtons.forEach((cartButton) => {
 
-            cartButton.disabled = false;
+    cartButton.classList.remove("unavailable");
 
-            cartButton.innerHTML = `
-                                <i
-                                    data-lucide="shopping-bag"
-                                    size="18"
-                                ></i>
+    cartButton.classList.add("added");
 
-                                Go to Cart
-                            `;
-          });
+    cartButton.dataset.loading = "false";
+
+    cartButton.disabled = false;
+
+    cartButton.style.opacity = "";
+
+    cartButton.style.cursor = "";
+
+    cartButton.innerHTML = `
+        <i
+            data-lucide="shopping-bag"
+            size="18"
+        ></i>
+
+        Go to Cart
+    `;
+
+});
 
           /* =========================================
                         REMOVE FROM ALL WISHLIST BUTTONS
@@ -141,41 +193,123 @@ addToCartButtons.forEach((button) => {
 
           /* TOAST */
 
-          showToast(
-            "success",
+showToast(
+  "success",
+  "Added to cart",
+);
 
-            "Added to cart",
-          );
+updateHeaderCounts(
+  data.cartCount,
+  data.wishlistCount
+);
         } else {
 
-        /* =========================
-                       FAILED
-                    ========================= */
-          button.disabled = false;
+            /* =========================
+       ITEM BLOCKED
+========================= */
 
-          button.innerHTML = `
-                            <i
-                                data-lucide="shopping-cart"
-                                size="18"
-                            ></i>
+if (
 
-                            Add to Cart
-                        `;
+    data.unavailable ||
 
-          lucide.createIcons();
+    data.message === "Out of stock"
 
-          showToast(
-            "info",
+){
 
-            data.message,
-          );
+  const cartButtons = document.querySelectorAll(
+    `.add-to-cart-btn[data-variant-id="${variantId}"]`
+  );
+
+  cartButtons.forEach((cartButton) => {
+
+cartButton.classList.remove("added");
+
+cartButton.classList.add("unavailable");
+
+cartButton.dataset.loading = "false";
+
+cartButton.disabled = true;
+
+    cartButton.innerHTML = `
+      <i
+        data-lucide="slash"
+        size="18"
+      ></i>
+
+      Unavailable
+    `;
+
+    cartButton.style.opacity = ".6";
+
+    cartButton.style.cursor = "not-allowed";
+
+  });
+
+  /* remove wishlist highlight */
+
+  const wishlistButtons = document.querySelectorAll(
+    `.wishlist-toggle[data-variant-id="${variantId}"]`
+  );
+
+  wishlistButtons.forEach((wishlistButton) => {
+
+    wishlistButton.classList.remove("active");
+
+  });
+
+  lucide.createIcons();
+
+  showToast(
+    "warning",
+    data.message
+  );
+
+  return;
+
+}
+
+/* =========================
+       NORMAL FAILURE
+========================= */
+
+else {
+
+    button.dataset.loading = "false";
+
+    button.disabled = false;
+
+    button.classList.remove("unavailable");
+
+    button.style.opacity = "";
+
+    button.style.cursor = "";
+
+    button.innerHTML = `
+        <i
+            data-lucide="shopping-cart"
+            size="18"
+        ></i>
+
+        Add to Cart
+    `;
+
+    lucide.createIcons();
+
+    showToast(
+        "info",
+        data.message
+    );
+
+}
         }
       } catch (error) {
         console.log(error);
 
-        button.disabled = false;
+button.dataset.loading = "false";
 
-        button.innerHTML = `
+button.disabled = false;
+
+button.innerHTML = `
                         <i
                             data-lucide="shopping-cart"
                             size="18"

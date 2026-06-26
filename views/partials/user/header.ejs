@@ -52,36 +52,37 @@
                 <i data-lucide="search"></i>
             </div>
 
-            <a href="/wishlist" class="nav-icon <%= currentPage === 'wishlist' ? 'active' : '' %>">
+ <a href="/wishlist" class="nav-icon <%= currentPage === 'wishlist' ? 'active' : '' %>">
 
-                        <i data-lucide="heart"></i>
+    <i data-lucide="heart"></i>
 
-                        <% if(typeof wishlistCount !== "undefined" && wishlistCount > 0){ %>
+    <% if(typeof wishlistCount !== "undefined" && wishlistCount > 0){ %>
 
-                            <span class="cart-count">
+        <span class="wishlist-count">
 
-                                <%= wishlistCount %>
+            <%= wishlistCount %>
 
-                            </span>
+        </span>
 
-                        <% } %>
+    <% } %>
 
-                    </a>
+</a>
 
-           <a href="/cart" class="nav-icon <%= currentPage === 'cart' ? 'active' : '' %>">
+<a href="/cart" class="nav-icon <%= currentPage === 'cart' ? 'active' : '' %>">
 
-                 <i data-lucide="shopping-cart"></i>
-                     <% if(typeof cartCount !== "undefined" && cartCount > 0){ %>
+    <i data-lucide="shopping-cart"></i>
 
-                    <span class="cart-count">
+    <% if(typeof cartCount !== "undefined" && cartCount > 0){ %>
 
-                        <%= cartCount %>
+        <span class="cart-count">
 
-                    </span>
+            <%= cartCount %>
 
-                 <% } %>
-                
-            </a>
+        </span>
+
+    <% } %>
+
+</a>
 
             <% if (userId) { %>
 

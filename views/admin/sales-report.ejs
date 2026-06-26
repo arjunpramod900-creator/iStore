@@ -89,6 +89,12 @@
     </div>
 
     <div class="stat-card">
+      <div class="stat-header"><span class="stat-label">TOTAL REFUNDS</span></div>
+      <span class="stat-value">₹<%= (safeReport.totalRefundAmount || 0).toLocaleString("en-IN") %></span>
+      <div class="stat-sub">Refunded to customers</div>
+    </div>
+
+    <div class="stat-card">
       <div class="stat-header"><span class="stat-label">TOTAL DISCOUNT</span></div>
       <span class="stat-value">₹<%= (safeReport.totalDiscount || 0).toLocaleString("en-IN") %></span>
       <div class="stat-sub">Discounts Given</div>

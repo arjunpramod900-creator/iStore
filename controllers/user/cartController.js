@@ -1,8 +1,10 @@
+
 import {
   addToCartService,
   loadCartService,
   updateCartQuantityService,
   removeCartItemService,
+  clearCartService,
   checkCartValidityService,
 } from "../../services/user/cartService.js";
 
@@ -118,23 +120,29 @@ export const updateCartQuantity = async (req, res) => {
            SUCCESS RESPONSE
         ========================================= */
 
-    return res.status(200).json({
-      success: true,
+return res.status(200).json({
+  success: true,
 
-      quantity: response.quantity,
+  quantity: response.quantity,
 
-      itemSubtotal: response.itemSubtotal,
+  itemSubtotal: response.itemSubtotal,
 
-      cartSubtotal: response.cartSubtotal,
+  cartSubtotal: response.cartSubtotal,
 
-      totalItems: response.totalItems,
+  totalItems: response.totalItems,
 
-      shipping: response.shipping,
+  shipping: response.shipping,
 
-      estimatedTax: response.estimatedTax,
+  estimatedTax: response.estimatedTax,
 
-      finalTotal: response.finalTotal,
-    });
+  finalTotal: response.finalTotal,
+
+  offerDiscount: response.offerDiscount,
+
+  cartCount: response.cartCount,
+
+  wishlistCount: response.wishlistCount,
+});
   } catch (error) {
     console.log("Update Quantity Error:", error);
 
@@ -172,6 +180,34 @@ export const removeCartItem = async (req, res) => {
       message: "Something went wrong",
     });
   }
+};
+
+/* =========================================
+   CLEAR CART
+========================================= */
+
+export const clearCart = async (req, res) => {
+
+    try {
+
+        const userId = req.session.userId;
+
+        const response =
+            await clearCartService(userId);
+
+        return res.status(200).json(response);
+
+    } catch (error) {
+
+        console.log("Clear Cart Error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong"
+        });
+
+    }
+
 };
 
 

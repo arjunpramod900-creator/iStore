@@ -69,12 +69,34 @@
                 <!-- LEFT -->
                 <section class="cart-left">
 
-                    <h1 class="cart-title">
+  <div class="cart-header">
 
-                        Your Shopping Cart
-                        (<%= cart.totalItems %>)
+    <h1 class="cart-title">
 
-                    </h1>
+        Your Shopping Cart
+        (<%= cart.totalItems %>)
+
+    </h1>
+
+    <% if(cart.items.length > 0){ %>
+
+        <button
+            id="clearCartBtn"
+            class="clear-cart-btn"
+        >
+
+            <i
+                data-lucide="trash-2"
+                size="18"
+            ></i>
+
+            Clear Cart
+
+        </button>
+
+    <% } %>
+
+</div>
 
                     <div class="cart-items-list">
 
@@ -84,14 +106,14 @@
 
                             <div class="empty-cart">
 
-    <div class="empty-cart-glow"></div>
+                    <div class="empty-cart-glow"></div>
 
-    <div class="empty-cart-icon">
+                    <div class="empty-cart-icon">
 
-        <i
-            data-lucide="shopping-cart"
-            size="64"
-        ></i>
+                        <i
+                            data-lucide="shopping-cart"
+                            size="64"
+                        ></i>
 
     </div>
 
@@ -340,33 +362,7 @@
 
                             <% }) %>
 
-                            <!-- COUPON -->
 
-                            <div class="coupon-section">
-
-                                <span class="coupon-label">
-
-                                    Apply Coupon
-
-                                </span>
-
-                                <div class="coupon-input-group">
-
-                                    <input
-                                        type="text"
-                                        class="coupon-input"
-                                        placeholder="Enter Coupon Code"
-                                    >
-
-                                    <button class="coupon-btn">
-
-                                        Apply
-
-                                    </button>
-
-                                </div>
-
-                            </div>
 
                         <% } %>
 
@@ -713,6 +709,150 @@
         });
 
     });
+
+
+
+    /* =========================================
+   CLEAR CART
+========================================= */
+
+const clearCartBtn =
+document.getElementById(
+    "clearCartBtn"
+);
+
+if (clearCartBtn) {
+
+    clearCartBtn.addEventListener(
+        "click",
+
+        async () => {
+
+            const result =
+            await Swal.fire({
+
+                title:
+                    "Clear Cart?",
+
+                text:
+                    "All items will be removed from your cart.",
+
+                icon:
+                    "warning",
+
+                showCancelButton:
+                    true,
+
+                confirmButtonText:
+                    "Clear Cart",
+
+                cancelButtonText:
+                    "Cancel",
+
+                reverseButtons:
+                    true,
+
+                background:
+                    "#FFFFFF",
+
+                color:
+                    "#111111",
+
+                customClass:{
+
+                    popup:
+                        "cart-swal-popup",
+
+                    confirmButton:
+                        "cart-swal-confirm",
+
+                    cancelButton:
+                        "cart-swal-cancel"
+
+                }
+
+            });
+
+            if(!result.isConfirmed){
+                return;
+            }
+
+            clearCartBtn.disabled = true;
+
+            const response =
+            await fetch(
+                "/cart/clear",
+                {
+                    method:"DELETE"
+                }
+            );
+
+            const data =
+            await parseResponse(
+                response
+            );
+
+            if(!data.success){
+
+                showToast(
+                    "info",
+                    data.message
+                );
+
+                clearCartBtn.disabled = false;
+
+                return;
+
+            }
+
+            updateHeaderCounts(
+                data.cartCount,
+                data.wishlistCount
+            );
+
+            document
+            .querySelectorAll(
+                ".cart-item-card"
+            )
+            .forEach(
+                (
+                    card,
+                    index
+                )=>{
+
+                    gsap.to(
+                        card,
+                        {
+                            opacity:0,
+                            y:-30,
+                            duration:.4,
+                            delay:index*.05,
+                            onComplete(){
+                                card.remove();
+                            }
+                        }
+                    );
+
+                }
+            );
+
+            showToast(
+                "success",
+                "Cart cleared"
+            );
+
+            setTimeout(
+                ()=>{
+                    location.reload();
+                },
+                500
+            );
+
+        }
+
+    );
+
+}
 
     </script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

@@ -51,14 +51,19 @@ export const getSalesReportService = async (filterType, startDate, endDate) => {
     rangeEnd.setHours(23, 59, 59, 999);
   }
 
-  /* ================================================
-     MATCH STAGE — only Delivered orders for revenue
-  ================================================ */
+/* ================================================
+   MATCH STAGE
+   Include both Delivered and Returned orders
+   so revenue reflects actual sales.
+================================================ */
 
-  const matchStage = {
-    orderStatus: "Delivered",
-    createdAt: { $gte: rangeStart, $lte: rangeEnd },
-  };
+const matchStage = {
+  orderStatus: "Delivered",
+  createdAt: {
+    $gte: rangeStart,
+    $lte: rangeEnd
+  }
+};
 
   /* Match for counts (all statuses in range) */
   const matchAllStatuses = {
@@ -112,42 +117,140 @@ export const getSalesReportService = async (filterType, startDate, endDate) => {
      SUMMARY REPORT
   ================================================ */
 
-  const report = await Order.aggregate([
-    { $match: matchStage },
-    {
-      $group: {
-        _id: null,
-        totalSalesCount:     { $sum: 1 },
-        totalOrderAmount:    { $sum: "$finalAmount" },
-        totalDiscount:       { $sum: { $add: ["$offerDiscount", "$couponDiscount"] } },
-        totalCouponDeduction: {
-          $sum: {
-            $cond: [
-              { $and: [{ $ne: ["$couponCode", null] }, { $ne: ["$couponCode", ""] }] },
-              "$couponDiscount",
-              0,
-            ],
-          },
-        },
-      },
-    },
-  ]);
+const report = await Order.aggregate([
+  { $match: matchStage },
 
+  {
+    $group: {
+      _id: null,
+
+      totalSalesCount: {
+        $sum: {
+          $cond: [
+            { $eq: ["$orderStatus", "Delivered"] },
+            1,
+            0
+          ]
+        }
+      },
+
+      grossRevenue: {
+        $sum: {
+          $ifNull: [
+            "$pricingSnapshot.originalFinalAmount",
+            "$finalAmount"
+          ]
+        }
+      },
+
+      totalRefundAmount: {
+        $sum: "$refundAmount"
+      },
+
+      totalDiscount: {
+        $sum: {
+          $add: [
+            {
+              $ifNull: [
+                "$pricingSnapshot.originalOfferDiscount",
+                "$offerDiscount"
+              ]
+            },
+            {
+              $ifNull: [
+                "$pricingSnapshot.originalCouponDiscount",
+                "$couponDiscount"
+              ]
+            }
+          ]
+        }
+      },
+
+      totalCouponDeduction: {
+        $sum: {
+          $ifNull: [
+            "$pricingSnapshot.originalCouponDiscount",
+            "$couponDiscount"
+          ]
+        }
+      }
+    }
+  }
+]);
+
+
+const refundReport = await Order.aggregate([
+  {
+    $match: {
+      orderStatus: "Returned",
+      createdAt: {
+        $gte: rangeStart,
+        $lte: rangeEnd
+      }
+    }
+  },
+  {
+    $group: {
+      _id: null,
+      totalRefundAmount: {
+        $sum: "$refundAmount"
+      },
+      returnedOrders: {
+        $sum: 1
+      }
+    }
+  }
+]);
   /* ================================================
      REVENUE CHART — fill ALL buckets so graph
      has no gaps (e.g. days with zero revenue still show)
   ================================================ */
 
-  const rawChart = await Order.aggregate([
-    { $match: matchStage },
-    {
-      $group: {
-        _id:     { $dateToString: { format: chartDateFormat, date: "$createdAt", timezone: "Asia/Kolkata" } },
-        revenue: { $sum: "$finalAmount" },
+const rawChart = await Order.aggregate([
+  { $match: matchStage },
+
+  {
+    $group: {
+      _id: {
+        $dateToString: {
+          format: chartDateFormat,
+          date: "$createdAt",
+          timezone: "Asia/Kolkata"
+        }
       },
-    },
-    { $sort: { _id: 1 } },
-  ]);
+
+      grossRevenue: {
+        $sum: {
+          $ifNull: [
+            "$pricingSnapshot.originalFinalAmount",
+            "$finalAmount"
+          ]
+        }
+      },
+
+      refunds: {
+        $sum: "$refundAmount"
+      }
+    }
+  },
+
+  {
+    $project: {
+      revenue: {
+        $subtract: [
+          "$grossRevenue",
+          "$refunds"
+        ]
+      }
+    }
+  },
+
+  {
+    $sort: {
+      _id: 1
+    }
+  }
+]);
 
   /* Build a lookup map from db results */
   const revenueMap = {};
@@ -163,51 +266,121 @@ export const getSalesReportService = async (filterType, startDate, endDate) => {
      TOP PRODUCTS
   ================================================ */
 
-  const topProducts = await Order.aggregate([
-    { $match: matchStage },
-    { $unwind: "$items" },
-    {
-      $group: {
-        _id:     "$items.productId",
-        name:    { $first: "$items.productName" },
-        units:   { $sum: "$items.quantity" },
-        revenue: { $sum: { $multiply: ["$items.quantity", "$items.price"] } },
+const topProducts = await Order.aggregate([
+  { $match: matchStage },
+
+  { $unwind: "$items" },
+
+  {
+    $match: {
+      "items.itemStatus": {
+        $nin: ["Returned", "Cancelled"]
+      }
+    }
+  },
+
+  {
+    $group: {
+      _id: "$items.productId",
+
+      name: {
+        $first: "$items.productName"
       },
-    },
-    { $sort: { units: -1 } },
-    { $limit: 10 },
-  ]);
+
+      units: {
+        $sum: "$items.quantity"
+      },
+
+      revenue: {
+        $sum: {
+          $multiply: [
+            "$items.quantity",
+            "$items.price"
+          ]
+        }
+      }
+    }
+  },
+
+  {
+    $sort: {
+      revenue: -1
+    }
+  },
+
+  {
+    $limit: 10
+  }
+]);
 
   /* ================================================
      TOP CATEGORIES
   ================================================ */
 
-  const topCategories = await Order.aggregate([
-    { $match: matchStage },
-    { $unwind: "$items" },
-    {
-      $lookup: {
-        from: "products", localField: "items.productId",
-        foreignField: "_id", as: "product",
-      },
-    },
-    { $unwind: "$product" },
-    {
-      $lookup: {
-        from: "categories", localField: "product.categoryId",
-        foreignField: "_id", as: "category",
-      },
-    },
-    { $unwind: "$category" },
-    {
-      $group: {
-        _id:     "$category.name",
-        revenue: { $sum: { $multiply: ["$items.quantity", "$items.price"] } },
-      },
-    },
-    { $sort: { revenue: -1 } },
-    { $limit: 10 },
-  ]);
+const topCategories = await Order.aggregate([
+  { $match: matchStage },
+
+  { $unwind: "$items" },
+
+  {
+    $match: {
+      "items.itemStatus": {
+        $nin: ["Returned", "Cancelled"]
+      }
+    }
+  },
+
+  {
+    $lookup: {
+      from: "products",
+      localField: "items.productId",
+      foreignField: "_id",
+      as: "product"
+    }
+  },
+
+  {
+    $unwind: "$product"
+  },
+
+  {
+    $lookup: {
+      from: "categories",
+      localField: "product.categoryId",
+      foreignField: "_id",
+      as: "category"
+    }
+  },
+
+  {
+    $unwind: "$category"
+  },
+
+  {
+    $group: {
+      _id: "$category.name",
+
+      revenue: {
+        $sum: {
+          $multiply: [
+            "$items.quantity",
+            "$items.price"
+          ]
+        }
+      }
+    }
+  },
+
+  {
+    $sort: {
+      revenue: -1
+    }
+  },
+
+  {
+    $limit: 10
+  }
+]);
 
   const totalCategoryRevenue = topCategories.reduce((sum, c) => sum + c.revenue, 0);
 
@@ -269,11 +442,33 @@ export const getSalesReportService = async (filterType, startDate, endDate) => {
      RETURN
   ================================================ */
 
-  return {
-    totalSalesCount:      report[0]?.totalSalesCount      || 0,
-    totalOrderAmount:     report[0]?.totalOrderAmount     || 0,
-    totalDiscount:        report[0]?.totalDiscount        || 0,
-    totalCouponDeduction: report[0]?.totalCouponDeduction || 0,
+const grossRevenue =
+    report[0]?.grossRevenue || 0;
+
+const refundedRevenue =
+    refundReport[0]?.totalRefundAmount || 0;
+
+const netRevenue = grossRevenue;
+
+return {
+
+    totalSalesCount:
+        report[0]?.totalSalesCount || 0,
+
+    grossRevenue,
+
+    totalRefundAmount:
+        refundedRevenue,
+
+    totalOrderAmount:
+        netRevenue,
+
+    totalDiscount:
+        report[0]?.totalDiscount || 0,
+
+    totalCouponDeduction:
+        report[0]?.totalCouponDeduction || 0,
+
     chartLabels,
     chartData,
     topProducts,
@@ -281,10 +476,9 @@ export const getSalesReportService = async (filterType, startDate, endDate) => {
     paymentMethods,
     returnRate,
     recentOrders,
-    /* Pass formatted date strings back for the view */
     resolvedStartDate: rangeStart.toLocaleDateString("en-IN"),
-    resolvedEndDate:   rangeEnd.toLocaleDateString("en-IN"),
-  };
+    resolvedEndDate: rangeEnd.toLocaleDateString("en-IN"),
+};
 };
 
 /* ================================================

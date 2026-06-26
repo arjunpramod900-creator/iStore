@@ -265,7 +265,7 @@ export const loadProductDetailsService = async (
 
     isDeleted: false,
 
-    isActive: true,
+
   })
 
     .populate("categoryId")
@@ -279,7 +279,16 @@ export const loadProductDetailsService = async (
       product: null,
     };
   }
+/* =========================================
+   PRODUCT AVAILABILITY
+========================================= */
 
+product.isUnavailable =
+  !product.isActive ||
+  product.categoryId?.isDeleted ||
+  !product.categoryId?.isActive;
+
+  
   /* =========================================
    ALL ACTIVE VARIANTS
 ========================================= */

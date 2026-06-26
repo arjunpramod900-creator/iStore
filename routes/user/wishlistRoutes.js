@@ -9,6 +9,7 @@ import {
   removeWishlistItem,
   loadWishlist,
   moveWishlistToCart,
+  moveAllWishlistToCart,
 } from "../../controllers/user/wishlistController.js";
 
 /* =========================================
@@ -55,6 +56,15 @@ router.post(
   "/move-to-cart/:variantId",
 
   moveWishlistToCart,
+);
+
+/* =========================================
+   MOVE ALL WISHLIST ITEMS TO CART
+========================================= */
+
+router.post(
+  "/add-all-to-cart",
+  moveAllWishlistToCart,
 );
 
 export default router;

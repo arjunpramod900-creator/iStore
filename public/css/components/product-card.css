@@ -337,6 +337,30 @@
   gap: 12px;
 }
 
+
+.add-to-cart-btn.unavailable{
+
+    background:#E5E7EB;
+
+    color:#6B7280;
+
+    cursor:not-allowed;
+
+    pointer-events:none;
+
+    opacity:.85;
+
+}
+
+.wishlist-toggle.disabled{
+
+    opacity:.45;
+
+    cursor:not-allowed;
+
+    pointer-events:none;
+
+}
 /* =========================
 
    LARGE LAPTOPS

@@ -467,3 +467,94 @@
 .main-content {
   transform: none !important;
 }
+
+
+
+
+
+
+/* =========================
+   PREMIUM COUNT BADGES
+========================= */
+
+.nav-icon {
+    position: relative;
+}
+
+/* Shared Badge Style */
+
+.cart-count,
+.wishlist-count {
+
+    position: absolute;
+
+    top: 2px;
+
+    right: 0;
+
+    min-width: 18px;
+    height: 18px;
+
+    padding: 0 5px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 999px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #603763 0%,
+            #7C3AED 100%
+        );
+
+    color: #ffffff;
+
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+
+    border: 2px solid #ffffff;
+
+    box-shadow:
+        0 4px 12px rgba(96,55,99,.28),
+        0 2px 6px rgba(124,58,237,.22);
+
+    z-index: 10;
+
+    animation:
+        badgePop .35s ease;
+}
+
+/* Hover */
+
+.nav-icon:hover .cart-count,
+.nav-icon:hover .wishlist-count {
+
+    transform: scale(1.08);
+
+    transition: .25s ease;
+
+}
+
+/* Count Change Animation */
+
+@keyframes badgePop {
+
+    0% {
+        transform: scale(.4);
+        opacity: 0;
+    }
+
+    70% {
+        transform: scale(1.15);
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+}

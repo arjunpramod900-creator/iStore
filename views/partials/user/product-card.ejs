@@ -2,20 +2,34 @@
 
     <!-- Wishlist -->
 
-    <button
+<button
 
-    class="wishlist-toggle <%= wishlistVariantIds?.includes(product.variant?._id?.toString()) ? 'active' : '' %>"
+class="wishlist-toggle
+<%= wishlistVariantIds?.includes(product.variant?._id?.toString())
+? 'active'
+: ''
+%>
 
-    data-product-id="<%= product._id %>"
+<%= product.variant.stock <= 0
+? 'disabled'
+: ''
+%>"
 
-    data-variant-id="<%= product.variant?._id %>"
+data-product-id="<%= product._id %>"
+
+data-variant-id="<%= product.variant?._id %>"
+
+<%= product.variant.stock <= 0
+? "disabled"
+: ""
+%>
 
 >
 
-    <i
-        data-lucide="heart"
-        size="18"
-    ></i>
+<i
+    data-lucide="heart"
+    size="18"
+></i>
 
 </button>
 
@@ -153,7 +167,6 @@
     </a>
 
 
-    <!-- Add To Cart -->
 
    <!-- Add To Cart -->
 
@@ -161,20 +174,31 @@
 
 class="add-to-cart-btn
 
-<%= cartVariantIds?.includes(
-    product.variant?._id?.toString()
-)
-? 'added'
-: ''
+<%= product.variant.stock <= 0
+    ? "unavailable"
+    : cartVariantIds?.includes(product.variant?._id?.toString())
+    ? "added"
+    : ""
 %>"
 
 data-product-id="<%= product._id %>"
 
 data-variant-id="<%= product.variant?._id %>"
 
+<%= product.variant.stock <= 0 ? "disabled" : "" %>
+
 >
 
-<% if(
+<% if(product.variant.stock <= 0){ %>
+
+    <i
+        data-lucide="slash"
+        size="18"
+    ></i>
+
+    Out of Stock
+
+<% } else if(
 
     cartVariantIds?.includes(
         product.variant?._id?.toString()

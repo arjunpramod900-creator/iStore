@@ -1,4 +1,103 @@
 /* =========================================
+   UPDATE HEADER COUNTS
+========================================= */
+
+function updateHeaderCounts(
+    cartCount,
+    wishlistCount
+) {
+
+    const wishlistLink =
+        document.querySelector(
+            'a[href="/wishlist"]'
+        );
+
+    const cartLink =
+        document.querySelector(
+            'a[href="/cart"]'
+        );
+
+    /* WISHLIST */
+
+    if (
+        wishlistLink &&
+        typeof wishlistCount !== "undefined"
+    ) {
+
+let badge =
+    wishlistLink.querySelector(
+        ".wishlist-count"
+    );
+
+        if (wishlistCount > 0) {
+
+            if (!badge) {
+
+                badge =
+                    document.createElement("span");
+
+badge.className =
+    "wishlist-count";
+
+                wishlistLink.appendChild(
+                    badge
+                );
+            }
+
+            badge.textContent =
+                wishlistCount;
+
+        } else if (badge) {
+
+            badge.remove();
+
+        }
+
+    }
+
+    /* CART */
+
+    if (
+        cartLink &&
+        typeof cartCount !== "undefined"
+    ) {
+
+        let badge =
+            cartLink.querySelector(
+                ".cart-count"
+            );
+
+        if (cartCount > 0) {
+
+            if (!badge) {
+
+                badge =
+                    document.createElement("span");
+
+                badge.className =
+                    "cart-count";
+
+                cartLink.appendChild(
+                    badge
+                );
+            }
+
+            badge.textContent =
+                cartCount;
+
+        } else if (badge) {
+
+            badge.remove();
+
+        }
+
+    }
+
+}
+
+
+
+/* =========================================
    ADD TO WISHLIST
 ========================================= */
 
@@ -54,13 +153,24 @@ wishlistButtons.forEach((button) => {
         }
 
         if (data.success) {
-          button.classList.add("active");
+const allWishlistButtons = document.querySelectorAll(
+  `.wishlist-toggle[data-variant-id="${variantId}"],
+   .btn-wishlist[data-variant-id="${variantId}"]`
+);
 
-          showToast(
-            "success",
+allWishlistButtons.forEach(btn => {
+  btn.classList.add("active");
+});
 
-            data.message,
-          );
+showToast(
+  "success",
+  data.message,
+);
+
+updateHeaderCounts(
+  data.cartCount,
+  data.wishlistCount
+);
         } else {
           /* REMOVE FROM WISHLIST */
 
@@ -121,15 +231,79 @@ wishlistButtons.forEach((button) => {
                 wishlistButton.classList.remove("active");
               });
 
-              lucide.createIcons();
+   lucide.createIcons();
 
               showToast(
                 "success",
-
                 "Removed from wishlist",
               );
+
+              updateHeaderCounts(
+                removeData.cartCount,
+                removeData.wishlistCount
+              );
             }
-          } else {
+          }
+          
+          else {
+
+
+            /* =========================================
+   ITEM UNAVAILABLE
+========================================= */
+
+if (data.unavailable) {
+
+const allWishlistButtons = document.querySelectorAll(
+  `.wishlist-toggle[data-variant-id="${variantId}"],
+   .btn-wishlist[data-variant-id="${variantId}"]`
+);
+
+  allWishlistButtons.forEach(btn => {
+
+    btn.classList.remove("active");
+
+    btn.disabled = true;
+
+    btn.style.opacity = ".6";
+
+    btn.style.cursor = "not-allowed";
+
+  });
+
+  /* disable cart buttons too */
+
+  const cartButtons = document.querySelectorAll(
+    `.add-to-cart-btn[data-variant-id="${variantId}"]`
+  );
+
+  cartButtons.forEach(btn => {
+
+    btn.classList.remove("added");
+
+    btn.disabled = true;
+
+    btn.style.opacity = ".6";
+
+    btn.style.cursor = "not-allowed";
+
+    btn.innerHTML = `
+      <i data-lucide="slash" size="18"></i>
+      Unavailable
+    `;
+
+  });
+
+  lucide.createIcons();
+
+  showToast(
+    "warning",
+    data.message
+  );
+
+  return;
+
+}
             showToast(
               "info",
 
@@ -213,11 +387,15 @@ async function removeFromWishlist(variantId) {
         },
       );
 
-      showToast(
-        "success",
+showToast(
+  "success",
+  "Removed from wishlist",
+);
 
-        "Removed from wishlist",
-      );
+updateHeaderCounts(
+  data.cartCount,
+  data.wishlistCount
+);
     }
   } catch (error) {
     console.log(error);
@@ -280,18 +458,48 @@ async function moveToCart(variantId) {
         },
       );
 
-      showToast(
-        "success",
+showToast(
+  "success",
 
-        "Moved to cart",
-      );
+  "Moved to cart",
+);
+
+updateHeaderCounts(
+  data.cartCount,
+  data.wishlistCount
+);
     } else {
-      showToast(
-        "info",
 
-        data.message,
-      );
+  if (data.unavailable) {
+
+    const card =
+      document.getElementById(`card-${variantId}`);
+
+    if (card) {
+
+      card.querySelector(".btn-add-cart").disabled = true;
+
+      card.querySelector(".btn-add-cart").innerHTML = `
+        Unavailable
+      `;
+
+      card.querySelector(".btn-add-cart").style.opacity = ".6";
+
     }
+
+    showToast(
+      "warning",
+      data.message
+    );
+
+    return;
+  }
+
+  showToast(
+    "info",
+    data.message
+  );
+}
   } catch (error) {
     console.log(error);
   }
@@ -357,3 +565,218 @@ window.addEventListener(
     localStorage.removeItem("wishlistRestore");
   },
 );
+
+
+/* =========================================
+   ADD ALL TO CART
+========================================= */
+
+const addAllToCartBtn =
+document.getElementById(
+    "addAllToCartBtn"
+);
+
+if (addAllToCartBtn) {
+
+    addAllToCartBtn.addEventListener(
+        "click",
+
+        async () => {
+
+            const originalText =
+            addAllToCartBtn.innerHTML;
+
+            try {
+
+                addAllToCartBtn.disabled = true;
+
+                addAllToCartBtn.innerHTML =
+                "Moving...";
+
+                const response =
+                await fetch(
+                    "/wishlist/add-all-to-cart",
+                    {
+                        method: "POST"
+                    }
+                );
+
+                const data =
+                await response.json();
+
+                if (!data.success) {
+
+                    showToast(
+                        "info",
+                        data.message
+                    );
+
+                    return;
+                }
+
+                /* HEADER COUNTS */
+
+                updateHeaderCounts(
+                    data.cartCount,
+                    data.wishlistCount
+                );
+
+                /* REMOVE MOVED CARDS */
+
+                if (
+                    Array.isArray(
+                        data.movedVariantIds
+                    )
+                ) {
+
+                    data.movedVariantIds.forEach(
+                        (
+                            variantId,
+                            index
+                        ) => {
+
+                            const card =
+                            document.getElementById(
+                                `card-${variantId}`
+                            );
+
+                            if (!card) return;
+
+                            gsap.to(
+                                card,
+                                {
+                                    y: -30,
+                                    opacity: 0,
+                                    duration: .45,
+                                    delay:
+                                    index * .05,
+
+                                    ease:
+                                    "power2.inOut",
+
+                                    onComplete: () => {
+
+                                        card.remove();
+
+                                        checkEmptyWishlist();
+
+                                    }
+                                }
+                            );
+
+                        }
+                    );
+
+                }
+
+                /* PARTIAL SUCCESS */
+
+                if (
+                    data.skippedItems &&
+                    data.skippedItems.length
+                ) {
+
+                    let html = `
+                        <div style="text-align:left;">
+                            <p>
+                                <strong>
+                                    ${data.addedCount}
+                                </strong>
+                                item(s) added to cart
+                            </p>
+
+                            <br>
+
+                            <strong>
+                                Couldn't move:
+                            </strong>
+
+                            <ul
+                                style="
+                                    margin-top:10px;
+                                    padding-left:18px;
+                                "
+                            >
+                                ${
+                                    data.skippedItems
+                                    .map(
+                                        item =>
+                                        `<li>
+                                            ${item.name}
+                                            — 
+                                            ${item.reason}
+                                        </li>`
+                                    )
+                                    .join("")
+                                }
+                            </ul>
+                        </div>
+                    `;
+
+                    await Swal.fire({
+
+                        icon: "info",
+
+                        title:
+                        "Some Items Were Skipped",
+
+                        html,
+
+                        confirmButtonText:
+                        "Continue",
+
+                        background:
+                        "#FFFFFF",
+
+                        color:
+                        "#111111",
+
+                        customClass: {
+
+                            popup:
+                            "cart-swal-popup",
+
+                            confirmButton:
+                            "cart-swal-confirm"
+
+                        }
+
+                    });
+
+                } else {
+
+                    /* FULL SUCCESS */
+
+                    showToast(
+                        "success",
+                        `${data.addedCount} item${data.addedCount > 1 ? "s" : ""} added to cart`
+                    );
+
+                }
+
+            } catch (error) {
+
+                console.log(
+                    "Move All Error:",
+                    error
+                );
+
+                showToast(
+                    "error",
+                    "Something went wrong"
+                );
+
+            } finally {
+
+                addAllToCartBtn.disabled =
+                false;
+
+                addAllToCartBtn.innerHTML =
+                originalText;
+
+            }
+
+        }
+    );
+
+}

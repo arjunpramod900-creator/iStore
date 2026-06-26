@@ -88,25 +88,23 @@
 
 <div class="price-wrapper">
 
-    <p
+<p
+class="stock-status
+<%= product.isUnavailable || product.variant.stock <= 0
+? 'out-stock'
+: 'in-stock' %>"
+id="stockStatus"
+>
 
-        class="stock-status
+<% if (product.isUnavailable) { %>
+    This item is currently unavailable
+<% } else if (product.variant.stock > 0) { %>
+    In Stock
+<% } else { %>
+    Out of Stock
+<% } %>
 
-        <%= product.variant.stock > 0
-        ? 'in-stock'
-        : 'out-stock'
-        %>"
-
-        id="stockStatus"
-
-    >
-
-        <%= product.variant.stock > 0
-        ? 'In Stock'
-        : 'Out of Stock'
-        %>
-
-    </p>
+</p>
 
     <p
 
@@ -376,17 +374,35 @@
 </div>
 
                     <!-- Actions -->
-                    <div class="action-row">
-                       <button
+<div class="action-row">
 
+<% if(product.isUnavailable){ %>
+
+<button
+class="btn-primary"
+disabled
+style="opacity:.6;cursor:not-allowed;"
+>
+Unavailable
+</button>
+
+<button
+class="btn-secondary"
+disabled
+style="opacity:.6;cursor:not-allowed;"
+>
+Unavailable
+</button>
+
+<% } else { %>
+
+<button
 class="btn-primary add-to-cart-btn
-
-<%= cartVariantIds?.includes(
-    product.variant?._id?.toString()
-)
-? 'added'
-: ''
-%>"
+<% if(product.variant.stock <= 0){ %>
+unavailable
+<% } else if(cartVariantIds?.includes(product.variant?._id?.toString())){ %>
+added
+<% } %>"
 
 id="addToCartBtn"
 
@@ -394,15 +410,14 @@ data-product-id="<%= product._id %>"
 
 data-variant-id="<%= product.variant?._id %>"
 
+<%= product.variant.stock <= 0 ? "disabled" : "" %>
 >
 
-<% if(
+<% if(product.variant.stock <= 0){ %>
 
-    cartVariantIds?.includes(
-        product.variant?._id?.toString()
-    )
+    Out of Stock
 
-){ %>
+<% } else if(cartVariantIds?.includes(product.variant?._id?.toString())){ %>
 
     Go to Cart
 
@@ -412,37 +427,22 @@ data-variant-id="<%= product.variant?._id %>"
 
 <% } %>
 
-                    </button>
-                        <button
-                            class="btn-secondary"
-                            id="buyNowBtn"
-                        >
-                            Buy Now
-                        </button>
-                     <button
-
-class="btn-wishlist wishlist-toggle
-
-<%= wishlistVariantIds?.includes(
-    product.variant?._id?.toString()
-)
-? 'active'
-: ''
-%>"
-
-data-product-id="<%= product._id %>"
-
-data-variant-id="<%= product.variant?._id %>"
-
->
-
-    <i
-        data-lucide="heart"
-        size="24"
-    ></i>
-
 </button>
-                    </div>
+
+
+
+<% } %>
+
+<button
+class="btn-wishlist wishlist-toggle
+<%= wishlistVariantIds?.includes(product.variant?._id?.toString()) ? 'active' : '' %>"
+data-product-id="<%= product._id %>"
+data-variant-id="<%= product.variant?._id %>"
+>
+<i data-lucide="heart" size="24"></i>
+</button>
+
+</div>
 
                     <!-- Trust Badges -->
                     <div class="trust-badges">
@@ -762,8 +762,7 @@ document.querySelector(".thumbnail-grid")
 const emiText =
 document.getElementById("emiText")
 
-const buyNowBtn =
-document.getElementById("buyNowBtn")
+
 
 /* =========================================
    FIND BEST VARIANT
@@ -1055,31 +1054,75 @@ else{
 
     }
 
-    /* STOCK */
+/* STOCK */
 
-    if(variant.stock > 0){
+if (variant.stock > 0) {
 
-        stockElement.innerText =
-        "In Stock"
+    stockElement.innerText =
+    "In Stock";
 
-        stockElement.className =
-        "stock-status in-stock"
+    stockElement.className =
+    "stock-status in-stock";
 
-        cartButton.disabled = false
+    cartButton.disabled = false;
+
+    cartButton.classList.remove(
+        "unavailable"
+    );
+
+    cartButton.style.opacity = "";
+
+    cartButton.style.cursor = "";
+
+    if (
+        cartVariantIds.includes(
+            variant._id.toString()
+        )
+    ) {
+
+        cartButton.classList.add("added");
+
+        cartButton.innerHTML = `
+            Go to Cart
+        `;
+
+    } else {
+
+        cartButton.classList.remove("added");
+
+        cartButton.innerHTML = `
+            Add to Cart
+        `;
 
     }
 
-    else{
+} else {
 
-        stockElement.innerText =
-        "Out of Stock"
+    stockElement.innerText =
+    "Out of Stock";
 
-        stockElement.className =
-        "stock-status out-stock"
+    stockElement.className =
+    "stock-status out-stock";
 
-        cartButton.disabled = true
+    cartButton.disabled = true;
 
-    }
+    cartButton.classList.remove(
+        "added"
+    );
+
+    cartButton.classList.add(
+        "unavailable"
+    );
+
+    cartButton.innerHTML =
+    "Out of Stock";
+
+    cartButton.style.opacity = ".6";
+
+    cartButton.style.cursor =
+    "not-allowed";
+
+}
 
     /* LOW STOCK */
 
@@ -1122,8 +1165,7 @@ else{
     wishlistButton.dataset.variantId =
     variant._id
 
-    buyNowBtn.dataset.variantId =
-    variant._id
+
 
 }
 

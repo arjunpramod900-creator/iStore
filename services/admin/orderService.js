@@ -415,13 +415,7 @@ if (
 
 }
 
-        /* Order becomes empty */
-        order.subtotal = 0;
-        order.taxAmount = 0;
-        order.deliveryCharge = 0;
-        order.couponDiscount = 0;
-        order.discountAmount = 0;
-        order.finalAmount = 0;
+
 
         await order.save();
 

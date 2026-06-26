@@ -1,4 +1,102 @@
 /* =========================================
+   UPDATE HEADER COUNTS
+========================================= */
+
+function updateHeaderCounts(
+    cartCount,
+    wishlistCount
+) {
+
+    const wishlistLink =
+        document.querySelector(
+            'a[href="/wishlist"]'
+        );
+
+    const cartLink =
+        document.querySelector(
+            'a[href="/cart"]'
+        );
+
+    /* WISHLIST */
+
+    if (
+        wishlistLink &&
+        typeof wishlistCount !== "undefined"
+    ) {
+
+        let badge =
+            wishlistLink.querySelector(
+                ".wishlist-count"
+            );
+
+        if (wishlistCount > 0) {
+
+            if (!badge) {
+
+                badge =
+                    document.createElement("span");
+
+                badge.className =
+                    "wishlist-count";
+
+                wishlistLink.appendChild(
+                    badge
+                );
+            }
+
+            badge.textContent =
+                wishlistCount;
+
+        } else if (badge) {
+
+            badge.remove();
+
+        }
+
+    }
+
+    /* CART */
+
+    if (
+        cartLink &&
+        typeof cartCount !== "undefined"
+    ) {
+
+        let badge =
+            cartLink.querySelector(
+                ".cart-count"
+            );
+
+        if (cartCount > 0) {
+
+            if (!badge) {
+
+                badge =
+                    document.createElement("span");
+
+                badge.className =
+                    "cart-count";
+
+                cartLink.appendChild(
+                    badge
+                );
+            }
+
+            badge.textContent =
+                cartCount;
+
+        } else if (badge) {
+
+            badge.remove();
+
+        }
+
+    }
+
+}
+
+
+/* =========================================
    UPDATE CART UI
 ========================================= */
 
@@ -229,13 +327,19 @@ increaseButtons.forEach((button) => {
 
         const data = await parseResponse(response);
 
-        if (data.success) {
-          updateCartUI(
-            variantId,
+if (data.success) {
 
-            data,
-          );
-        } else {
+  updateCartUI(
+    variantId,
+    data,
+  );
+
+  updateHeaderCounts(
+    data.cartCount,
+    data.wishlistCount
+  );
+
+} else {
           showToast(
             data.message.includes("Maximum") || data.message.includes("Stock")
               ? "warning"
@@ -293,13 +397,19 @@ decreaseButtons.forEach((button) => {
 
         const data = await parseResponse(response);
 
-        if (data.success) {
-          updateCartUI(
-            variantId,
+if (data.success) {
 
-            data,
-          );
-        } else {
+  updateCartUI(
+    variantId,
+    data,
+  );
+
+  updateHeaderCounts(
+    data.cartCount,
+    data.wishlistCount
+  );
+
+} else {
           showToast(
             data.message.includes("Maximum") || data.message.includes("Stock")
               ? "warning"
@@ -443,11 +553,20 @@ removeButtons.forEach((button) => {
 
           /* SUCCESS TOAST */
 
-          showToast(
-            "success",
+updateCartUI(
+  variantId,
+  data
+);
 
-            "Removed from cart",
-          );
+updateHeaderCounts(
+  data.cartCount,
+  data.wishlistCount
+);
+
+showToast(
+  "success",
+  "Removed from cart"
+);
 
           navigator.vibrate?.(30);
 

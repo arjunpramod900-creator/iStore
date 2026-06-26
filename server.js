@@ -20,6 +20,8 @@ import passport from "./config/passport.js";
 
 import userBlockCheckMiddleware from "./middleware/userBlockCheckMiddleware.js";
 
+import userCountsMiddleware from "./middleware/userCountsMiddleware.js";
+
 import errorHandler from "./middleware/errorHandler.js";
 
 import {
@@ -131,6 +133,9 @@ GLOBAL VARIABLES
 ================================ */
 
 app.use(localsMiddleware);
+
+
+app.use(userCountsMiddleware);
 
 /* ================================
 VIEW ENGINE

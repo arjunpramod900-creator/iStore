@@ -3,6 +3,7 @@ import {
   addToWishlistService,
   removeWishlistItemService,
   moveWishlistToCartService,
+  moveAllWishlistToCartService,
 } from "../../services/user/wishlistService.js";
 
 /* =========================================
@@ -117,5 +118,42 @@ export const moveWishlistToCart = async (req, res) => {
 
       message: "Something went wrong",
     });
+  }
+};
+
+/* =========================================
+   MOVE ALL WISHLIST ITEMS TO CART
+========================================= */
+
+export const moveAllWishlistToCart = async (
+  req,
+  res,
+) => {
+  try {
+
+    const userId = req.session.userId;
+
+    const response =
+      await moveAllWishlistToCartService(
+        userId
+      );
+
+    return res
+      .status(200)
+      .json(response);
+
+  } catch (error) {
+
+    console.log(error);
+
+    return res.status(500).json({
+
+      success: false,
+
+      message:
+        "Something went wrong",
+
+    });
+
   }
 };
