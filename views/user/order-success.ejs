@@ -30,58 +30,28 @@
         const orderNumber = typeof order !== 'undefined'? order.orderId: '#IST123456';
         const orderDate      = typeof order !== 'undefined' ? new Date(order.createdAt).toLocaleDateString('en-IN', { year:'numeric', month:'long', day:'numeric' }) : 'May 24, 2024';
         const deliveryEta =
-typeof order !== 'undefined' &&
-order.estimatedDelivery
-? new Date(order.estimatedDelivery)
-.toLocaleDateString('en-IN', {
-    year:'numeric',
-    month:'long',
-    day:'numeric'
-})
-: '3–5 Business Days';
-        const paymentMethod =
-typeof order !== 'undefined'
-? order.paymentMethod
-: 'COD';
+            typeof order !== 'undefined' && order.estimatedDelivery
+            ? new Date(order.estimatedDelivery).toLocaleDateString('en-IN', { year:'numeric', month:'long', day:'numeric' })
+            : '3–5 Business Days';
+        const paymentMethod = typeof order !== 'undefined' ? order.paymentMethod : 'COD';
         const shippingAddr =
-typeof order !== 'undefined' &&
-order.shippingAddress
-? `${order.shippingAddress.fullName},
-${order.shippingAddress.addressLine1},
-${order.shippingAddress.city},
-${order.shippingAddress.state},
-${order.shippingAddress.pincode}`
-: 'Address unavailable';
+            typeof order !== 'undefined' && order.shippingAddress
+            ? `${order.shippingAddress.fullName}, ${order.shippingAddress.addressLine1}, ${order.shippingAddress.city}, ${order.shippingAddress.state}, ${order.shippingAddress.pincode}`
+            : 'Address unavailable';
 
-        const orderItems =
-typeof order !== 'undefined'
-? order.items
-: [];
+        const orderItems = typeof order !== 'undefined' ? order.items : [];
+        const tax        = typeof order !== 'undefined' ? order.taxAmount     : 0;
+        const shipping   = typeof order !== 'undefined' ? order.deliveryCharge : 0;
+        const grandTotal = typeof order !== 'undefined' ? order.finalAmount    : 0;
 
-        const subtotal =
-typeof order !== 'undefined'
-? order.subtotal
-: 0;
+        /* Compute summary from ALL items (order just placed, nothing cancelled yet) */
+        const mrpTotal      = orderItems.reduce((s, i) => s + ((i.originalPrice || i.price) * i.quantity), 0);
+        const offerDiscount = orderItems.reduce((s, i) => s + ((i.offerDiscount || 0) * i.quantity), 0);
+        const subtotal      = orderItems.reduce((s, i) => s + (i.price * i.quantity), 0);
+        const couponDiscount = orderItems.reduce((s, i) => s + (i.couponDiscount || 0), 0);
+        const couponCode    = typeof order !== 'undefined' ? order.couponCode : null;
 
-const discount =
-typeof order !== 'undefined'
-? order.discountAmount
-: 0;
-
-const tax =
-typeof order !== 'undefined'
-? order.taxAmount
-: 0;
-
-const shipping =
-typeof order !== 'undefined'
-? order.deliveryCharge
-: 0;
-
-const grandTotal =
-typeof order !== 'undefined'
-? order.finalAmount
-: 0;
+        function fmt(n) { return '₹' + Number(n).toLocaleString('en-IN'); }
     %>
 
     <main class="os-page" id="osPage">
@@ -171,42 +141,15 @@ typeof order !== 'undefined'
                     <div class="os-items-list">
 
                         <% if (orderItems.length > 0) { %>
-
                             <% orderItems.forEach(item => { %>
                                 <div class="os-item-row">
                                     <div class="os-item-info">
-                                        <span class="os-item-name">
-                                            <%= item.productName %> &times; <%= item.quantity %>
-                                        </span>
-                                        <span class="os-item-variant">
-                                            <%= item.variantName %>
-                                        </span>
+                                        <span class="os-item-name"><%= item.productName %> &times; <%= item.quantity %></span>
+                                        <span class="os-item-variant"><%= item.variantName %></span>
                                     </div>
-                                    <span class="os-item-price">
-                                        ₹<%= (item.price * item.quantity).toLocaleString('en-IN') %>
-                                    </span>
+                                    <span class="os-item-price"><%= fmt(item.finalPrice || (item.price * item.quantity)) %></span>
                                 </div>
                             <% }) %>
-
-                        <% } else { %>
-
-                            <!-- Demo fallback items -->
-                            <div class="os-item-row">
-                                <div class="os-item-info">
-                                    <span class="os-item-name">iPhone 17 Pro &times; 1</span>
-                                    <span class="os-item-variant">Titanium Black, 256GB</span>
-                                </div>
-                                <span class="os-item-price">₹1,29,900</span>
-                            </div>
-
-                            <div class="os-item-row">
-                                <div class="os-item-info">
-                                    <span class="os-item-name">AirPods Pro &times; 1</span>
-                                    <span class="os-item-variant">USB-C</span>
-                                </div>
-                                <span class="os-item-price included">Included</span>
-                            </div>
-
                         <% } %>
 
                     </div>
@@ -214,33 +157,51 @@ typeof order !== 'undefined'
                     <!-- Breakdown -->
                     <div class="os-breakdown">
 
+                        <!-- MRP Total -->
                         <div class="os-breakdown-row">
-                            <span>Subtotal</span>
-                            <span>₹<%= subtotal.toLocaleString('en-IN') %></span>
+                            <span>MRP Total</span>
+                            <span><%= fmt(mrpTotal) %></span>
                         </div>
 
+                        <!-- Offer Discount (only if applicable) -->
+                        <% if (offerDiscount > 0) { %>
                         <div class="os-breakdown-row">
+                            <span>Offer Discount</span>
+                            <span class="os-discount">−<%= fmt(offerDiscount) %></span>
+                        </div>
+                        <% } %>
 
-    <span>Shipping</span>
+                        <!-- Subtotal (post-offer) -->
+                        <div class="os-breakdown-row" style="padding-top: 10px; border-top: 1px dashed rgba(0,0,0,0.08); margin-top: 4px; font-weight: 600;">
+                            <span>Subtotal</span>
+                            <span><%= fmt(subtotal) %></span>
+                        </div>
 
-    <span class="<%= shipping === 0 ? 'os-free' : '' %>">
+                        <!-- Coupon Discount (only if applied) -->
+                        <% if (couponDiscount > 0) { %>
+                        <div class="os-breakdown-row">
+                            <span style="display:flex; align-items:center; gap:6px;">
+                                Coupon
+                                <% if (couponCode) { %>
+                                    <span style="background:rgba(5,150,105,0.1); color:#059669; padding:2px 7px; border-radius:4px; font-size:11px; font-weight:700; text-transform:uppercase;"><%= couponCode %></span>
+                                <% } %>
+                            </span>
+                            <span class="os-discount">−<%= fmt(couponDiscount) %></span>
+                        </div>
+                        <% } %>
 
-        <%= shipping === 0
-            ? 'Free'
-            : `₹${shipping.toLocaleString('en-IN')}` %>
-
-    </span>
-
-</div>
-
+                        <!-- Tax -->
                         <div class="os-breakdown-row">
                             <span>Tax</span>
-                            <span>₹<%= tax.toLocaleString('en-IN') %></span>
+                            <span><%= fmt(tax) %></span>
                         </div>
 
+                        <!-- Shipping -->
                         <div class="os-breakdown-row">
-                            <span>Discount</span>
-                            <span class="os-discount">−₹<%= discount.toLocaleString('en-IN') %></span>
+                            <span>Shipping</span>
+                            <span class="<%= shipping === 0 ? 'os-free' : '' %>">
+                                <%= shipping === 0 ? 'Free' : fmt(shipping) %>
+                            </span>
                         </div>
 
                     </div>

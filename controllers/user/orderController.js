@@ -313,7 +313,17 @@ export const downloadInvoice = async (req, res) => {
     const order = await Order.findOne({ userId, orderId }).lean();
     if (!order) return res.redirect("/orders");
 
-const activeItems = order.items;
+    const activeItems = order.items.filter(i =>
+        i.itemStatus !== "Cancelled" &&
+        i.itemStatus !== "Returned"  &&
+        i.itemReturnStatus !== "Approved"
+    );
+
+    const mrpTotal       = activeItems.reduce((s, i) => s + ((i.originalPrice || i.price) * i.quantity), 0);
+    const offerDiscount  = activeItems.reduce((s, i) => s + ((i.offerDiscount || 0) * i.quantity), 0);
+    const subtotal       = activeItems.reduce((s, i) => s + (i.price * i.quantity), 0);
+    const couponDiscount = activeItems.reduce((s, i) => s + (i.couponDiscount || 0), 0);
+    const refundAmount   = order.refundAmount || 0;
 
     /* ── Page height calculation ── */
     const MARGIN        = 50;
@@ -322,8 +332,8 @@ const activeItems = order.items;
     const shippingH     = 150;
     const itemsHeaderH  = 70;
     const itemRowH      = 45;
-    const itemsH        = activeItems.length * itemRowH + 20;
-    const summaryCardsH = 195;   /* slightly taller to fit order status row */
+    const itemsH        = order.items.length * itemRowH + 20;
+    const summaryCardsH = refundAmount > 0 ? 320 : 195;   /* taller if refund summary exists */
     const footerH       = 80;
 
     const totalHeight =
@@ -332,7 +342,7 @@ const activeItems = order.items;
 
     const doc = new PDFDocument({
       margin:         0,
-      size:           [612, totalHeight],
+      size:           [842, totalHeight],
       autoFirstPage:  true,
       bufferPages:    true,
     });
@@ -345,14 +355,14 @@ const activeItems = order.items;
     /* ── HEADER ── */
     doc.fontSize(34).fillColor("#603763").font("Helvetica-Bold").text("iStore", 50, 50);
     doc.fontSize(12).fillColor("#666").font("Helvetica").text("Premium Apple Technology", 50, 90);
-    doc.fontSize(24).fillColor("#1A1C1D").font("Helvetica-Bold").text("INVOICE", 400, 50);
-    doc.fontSize(12).fillColor("#603763").font("Helvetica-Bold").text(`Invoice #${order.orderId}`, 400, 82);
+    doc.fontSize(24).fillColor("#1A1C1D").font("Helvetica-Bold").text("INVOICE", 650, 50);
+    doc.fontSize(12).fillColor("#603763").font("Helvetica-Bold").text(`Invoice #${order.orderId}`, 650, 82);
 
     /* ── INFO CARDS (Customer + Order Details) ── */
     const startY = 140;
 
     /* Customer card */
-    doc.rect(50, startY, 240, 105).fillAndStroke("#FBF8FC", "#E6D7EC");
+    doc.rect(50, startY, 350, 105).fillAndStroke("#FBF8FC", "#E6D7EC");
     doc.fillColor("#603763").fontSize(13).font("Helvetica-Bold").text("Customer", 65, startY + 15);
     doc.fillColor("#1A1C1D").fontSize(11).font("Helvetica")
       .text(order.shippingAddress?.fullName   || "", 65, startY + 40)
@@ -363,27 +373,27 @@ const activeItems = order.items;
       );
 
     /* Order Details card */
-    doc.rect(320, startY, 240, 105).fillAndStroke("#FBF8FC", "#E6D7EC");
-    doc.fillColor("#603763").fontSize(13).font("Helvetica-Bold").text("Order Details", 335, startY + 15);
+    doc.rect(440, startY, 350, 105).fillAndStroke("#FBF8FC", "#E6D7EC");
+    doc.fillColor("#603763").fontSize(13).font("Helvetica-Bold").text("Order Details", 455, startY + 15);
     doc.fillColor("#1A1C1D").fontSize(11).font("Helvetica")
-      .text(`Order: ${order.orderId}`, 335, startY + 40)
-      .text(`Date: ${new Date(order.createdAt).toLocaleDateString("en-IN")}`, 335, startY + 58);
+      .text(`Order: ${order.orderId}`, 455, startY + 40)
+      .text(`Date: ${new Date(order.createdAt).toLocaleDateString("en-IN")}`, 455, startY + 58);
 
     /* Order status badge inside Order Details card */
     const orderStyle = getOrderStatusStyle(order.orderStatus);
-    doc.roundedRect(335, startY + 76, 110, 20, 8)
+    doc.roundedRect(455, startY + 76, 110, 20, 8)
        .fillAndStroke(orderStyle.bg, orderStyle.bg);
     doc.fillColor(orderStyle.text).fontSize(10).font("Helvetica-Bold")
-       .text(orderStyle.label, 340, startY + 82, { width: 100, align: "center" });
+       .text(orderStyle.label, 460, startY + 82, { width: 100, align: "center" });
 
     /* ── SHIPPING ADDRESS ── */
     const shippingY = 270;
-    doc.roundedRect(50, shippingY, 510, 130, 12).fillAndStroke("#FBF8FC", "#E6D7EC");
+    doc.roundedRect(50, shippingY, 742, 130, 12).fillAndStroke("#FBF8FC", "#E6D7EC");
     doc.fillColor("#603763").fontSize(14).font("Helvetica-Bold")
        .text("Shipping Address", 65, shippingY + 15);
     doc.fillColor("#1A1C1D").fontSize(11).font("Helvetica")
        .text(order.shippingAddress?.fullName || "", 65, shippingY + 40);
-    doc.moveTo(300, shippingY + 30).lineTo(300, shippingY + 110).strokeColor("#E6D7EC").stroke();
+    doc.moveTo(420, shippingY + 30).lineTo(420, shippingY + 110).strokeColor("#E6D7EC").stroke();
     doc
       .text(order.shippingAddress?.addressLine1 || "", 65,  shippingY + 58)
       .text(
@@ -394,50 +404,64 @@ const activeItems = order.items;
         `${order.shippingAddress?.country || ""} - ${order.shippingAddress?.pincode || ""}`,
         65, shippingY + 94
       )
-      .text(`Phone: ${order.shippingAddress?.phoneNumber || ""}`, 320, shippingY + 40);
+      .text(`Phone: ${order.shippingAddress?.phoneNumber || ""}`, 440, shippingY + 40);
 
     /* ── ITEMS HEADING ── */
-    doc.fontSize(18).fillColor("#603763").font("Helvetica-Bold").text("Order Items", 240, 430);
+    doc.fontSize(18).fillColor("#603763").font("Helvetica-Bold").text("Order Items", 360, 430);
 
     /* ── TABLE HEADER ── */
     const tableTop = 470;
-    doc.rect(50, tableTop, 510, 28).fill("#3e037d");
-    doc.fillColor("#FFFFFF").fontSize(11).font("Helvetica-Bold")
-      .text("Product",  60,  tableTop + 8)
-      .text("Status",   260, tableTop + 8)
-      .text("Qty",      360, tableTop + 8)
-      .text("Price",    410, tableTop + 8)
-      .text("Total",    490, tableTop + 8);
+    doc.rect(50, tableTop, 742, 28).fill("#3e037d");
+    doc.fillColor("#FFFFFF").fontSize(10).font("Helvetica-Bold")
+      .text("Product",  60,  tableTop + 9)
+      .text("Status",   250, tableTop + 9)
+      .text("Qty",      340, tableTop + 9)
+      .text("MRP",      380, tableTop + 9)
+      .text("Offer",    460, tableTop + 9)
+      .text("Coupon",   540, tableTop + 9)
+      .text("Tax",      620, tableTop + 9)
+      .text("Total",    690, tableTop + 9);
 
-    doc.rect(50, tableTop, 510, activeItems.length * itemRowH + 20)
+    doc.rect(50, tableTop, 742, order.items.length * itemRowH + 20)
        .strokeColor("#E6D7EC").stroke();
 
     /* ── TABLE ROWS ── */
     let y = tableTop + 35;
 
-    activeItems.forEach((item, index) => {
-      const rowTotal   = item.price * item.quantity;
+    order.items.forEach((item, index) => {
       const itemStyle  = getOrderStatusStyle(item.itemStatus || order.orderStatus);
 
+      // Calculations for breakdown
+      const itemQty = item.quantity;
+      const itemMRP = (item.originalPrice || item.price) * itemQty;
+      const itemOffer = (item.offerDiscount || 0) * itemQty;
+      const itemCoupon = item.couponDiscount || 0;
+      const itemTax = Math.round(item.finalPrice * 0.02);
+      const itemTotal = item.finalPrice + itemTax;
+
       if (index % 2 === 0) {
-        doc.rect(50, y - 4, 510, itemRowH - 2).fill("#FBF8FC");
+        doc.rect(50, y - 4, 742, itemRowH - 2).fill("#FBF8FC");
       }
 
-      doc.fillColor("#1A1C1D").font("Helvetica").fontSize(10)
+      doc.fillColor("#1A1C1D").font("Helvetica").fontSize(9)
         /* Product name + variant */
         .text(item.productName, 60, y, { width: 180, ellipsis: true })
         .text(item.variantName || "", 60, y + 13, { width: 180, ellipsis: true });
 
       /* Item status badge */
-      doc.roundedRect(258, y - 1, 90, 18, 7)
+      doc.roundedRect(248, y - 2, 80, 17, 6)
          .fillAndStroke(itemStyle.bg, itemStyle.bg);
-      doc.fillColor(itemStyle.text).fontSize(9).font("Helvetica-Bold")
-         .text(itemStyle.label, 260, y + 5, { width: 86, align: "center" });
+      doc.fillColor(itemStyle.text).fontSize(8).font("Helvetica-Bold")
+         .text(itemStyle.label, 250, y + 4, { width: 76, align: "center" });
 
-      doc.fillColor("#1A1C1D").font("Helvetica").fontSize(10)
-        .text(item.quantity.toString(),                       365, y)
-        .text(`Rs.${item.price.toLocaleString("en-IN")}`,    410, y)
-        .text(`Rs.${rowTotal.toLocaleString("en-IN")}`,      490, y);
+      doc.fillColor("#1A1C1D").font("Helvetica").fontSize(9)
+        .text(itemQty.toString(), 340, y)
+        .text(`Rs.${itemMRP.toLocaleString("en-IN")}`, 380, y)
+        .text(`-Rs.${itemOffer.toLocaleString("en-IN")}`, 460, y)
+        .text(`-Rs.${itemCoupon.toLocaleString("en-IN")}`, 540, y)
+        .text(`+Rs.${itemTax.toLocaleString("en-IN")}`, 620, y)
+        .font("Helvetica-Bold")
+        .text(`Rs.${itemTotal.toLocaleString("en-IN")}`, 690, y);
 
       y += itemRowH;
     });
@@ -445,8 +469,8 @@ const activeItems = order.items;
     /* ── SUMMARY CARDS ── */
     const summaryY = y + 30;
 
-    /* Payment Information card — now includes Order Status row */
-    doc.roundedRect(50, summaryY, 240, 170, 12).fillAndStroke("#FBF8FC", "#E6D7EC");
+    /* Payment Information card */
+    doc.roundedRect(50, summaryY, 350, 170, 12).fillAndStroke("#FBF8FC", "#E6D7EC");
     doc.fillColor("#603763").fontSize(13).font("Helvetica-Bold")
        .text("Payment Information", 65, summaryY + 15);
 
@@ -456,7 +480,7 @@ const activeItems = order.items;
     doc.fillColor("#1A1C1D").fontSize(11).font("Helvetica-Bold")
        .text(order.paymentMethod, 160, summaryY + 47);
 
-    /* Payment Status — colored badge */
+    /* Payment Status */
     const payStyle = getPaymentStatusStyle(order.paymentStatus);
     doc.fillColor("#7A7A7A").fontSize(10).font("Helvetica")
        .text("Payment", 65, summaryY + 73);
@@ -465,7 +489,7 @@ const activeItems = order.items;
     doc.fillColor(payStyle.text).fontSize(9).font("Helvetica-Bold")
        .text(order.paymentStatus, 157, summaryY + 76, { width: 76, align: "center" });
 
-    /* Order Status — colored badge */
+    /* Order Status */
     doc.fillColor("#7A7A7A").fontSize(10).font("Helvetica")
        .text("Order Status", 65, summaryY + 100);
     doc.roundedRect(155, summaryY + 97, 100, 17, 6)
@@ -479,7 +503,7 @@ const activeItems = order.items;
     doc.fillColor("#1A1C1D").fontSize(10).font("Helvetica")
        .text(order.orderId, 145, summaryY + 128, { width: 130 });
 
-    /* Delivered date if available */
+    /* Delivered date */
     if (order.deliveredDate) {
       doc.fillColor("#7A7A7A").fontSize(10).font("Helvetica")
          .text("Delivered", 65, summaryY + 148);
@@ -491,52 +515,79 @@ const activeItems = order.items;
     }
 
     /* Payment Summary card */
-    doc.roundedRect(320, summaryY, 240, 170, 12).fillAndStroke("#FBF8FC", "#E6D7EC");
+    doc.roundedRect(440, summaryY, 350, 170, 12).fillAndStroke("#FBF8FC", "#E6D7EC");
     doc.fillColor("#603763").fontSize(13).font("Helvetica-Bold")
-       .text("Payment Summary", 335, summaryY + 15);
+       .text("Payment Summary", 455, summaryY + 15);
 
-    const summaryRows = [
-      {
-        label: "Subtotal",
-        value: `Rs.${order.subtotal.toLocaleString("en-IN")}`,
-      },
-      {
-        label: "Offer Discount",
-        value: `Rs.${(order.offerDiscount || 0).toLocaleString("en-IN")}`,
-      },
-      {
-        label: "Coupon Discount",
-        value: `Rs.${(order.couponDiscount || 0).toLocaleString("en-IN")}`,
-      },
-      {
-        label: "Tax",
-        value: `Rs.${order.taxAmount.toLocaleString("en-IN")}`,
-      },
-      {
-        label: "Shipping",
-        value: `Rs.${order.deliveryCharge.toLocaleString("en-IN")}`,
-      },
-    ];
+    const summaryRows = [];
+    summaryRows.push({ label: "MRP Total", value: `Rs.${mrpTotal.toLocaleString("en-IN")}` });
+    
+    if (offerDiscount > 0) {
+      summaryRows.push({ label: "Offer Discount", value: `- Rs.${offerDiscount.toLocaleString("en-IN")}` });
+    }
+    
+    summaryRows.push({ label: "Subtotal", value: `Rs.${subtotal.toLocaleString("en-IN")}` });
+    
+    if (couponDiscount > 0) {
+      summaryRows.push({ label: `Coupon ${order.couponCode ? '(' + order.couponCode + ')' : ''}`, value: `- Rs.${couponDiscount.toLocaleString("en-IN")}` });
+    }
+    
+    summaryRows.push({ label: "Tax", value: `Rs.${order.taxAmount.toLocaleString("en-IN")}` });
+    summaryRows.push({ label: "Shipping", value: order.deliveryCharge === 0 ? "Free" : `Rs.${order.deliveryCharge.toLocaleString("en-IN")}` });
 
     summaryRows.forEach((row, i) => {
-      const rowY = summaryY + 48 + i * 22;
-      doc.fillColor("#7A7A7A").fontSize(10).font("Helvetica").text(row.label, 335, rowY);
-      doc.fillColor("#1A1C1D").fontSize(10).font("Helvetica").text(row.value, 490, rowY);
+      const rowY = summaryY + 44 + i * 16;
+      doc.fillColor("#7A7A7A").fontSize(9).font("Helvetica").text(row.label, 455, rowY);
+      doc.fillColor("#1A1C1D").fontSize(9).font("Helvetica").text(row.value, 710, rowY, { align: "right", width: 60 });
     });
 
     /* Divider + Total */
-    doc.moveTo(335, summaryY + 142).lineTo(548, summaryY + 142).strokeColor("#E6D7EC").stroke();
+    doc.moveTo(455, summaryY + 142).lineTo(775, summaryY + 142).strokeColor("#E6D7EC").stroke();
     doc.fillColor("#603763").fontSize(13).font("Helvetica-Bold")
-       .text("Total", 335, summaryY + 150)
-       .text(`Rs.${order.finalAmount.toLocaleString("en-IN")}`, 450, summaryY + 150);
+       .text("Total", 455, summaryY + 150)
+       .text(`Rs.${order.finalAmount.toLocaleString("en-IN")}`, 690, summaryY + 150, { align: "right", width: 80 });
+
+    /* ── REFUND SUMMARY (if applicable) ── */
+    if (refundAmount > 0) {
+      const refundY = summaryY + 185;
+      doc.roundedRect(440, refundY, 350, 120, 12).fillAndStroke("#F9FAFB", "#F3F4F6");
+      doc.fillColor("#603763").fontSize(13).font("Helvetica-Bold")
+         .text("Refund Summary", 455, refundY + 15);
+         
+      const totalPaid = order.pricingSnapshot?.originalFinalAmount || (order.finalAmount + refundAmount);
+      const mathDiff = totalPaid - order.finalAmount;
+      
+      const refRows = [
+        { label: "Original Order Paid", value: `Rs.${totalPaid.toLocaleString("en-IN")}` },
+        { label: "Revised Order Value", value: `- Rs.${order.finalAmount.toLocaleString("en-IN")}` }
+      ];
+      
+      if (mathDiff > refundAmount) {
+        refRows.push({ label: "Adjustment Cap", value: `+ Rs.${(mathDiff - refundAmount).toLocaleString("en-IN")}` });
+      }
+      
+      refRows.forEach((row, i) => {
+        const rowY = refundY + 40 + i * 16;
+        doc.fillColor("#4B5563").fontSize(9).font("Helvetica").text(row.label, 455, rowY);
+        doc.fillColor("#4B5563").fontSize(9).font("Helvetica").text(row.value, 710, rowY, { align: "right", width: 60 });
+      });
+      
+      doc.moveTo(455, refundY + 92).lineTo(775, refundY + 92).strokeColor("#D1D5DB").stroke();
+      doc.fillColor("#111827").fontSize(11).font("Helvetica-Bold")
+         .text("Refund Amount", 455, refundY + 100)
+         .text(`Rs.${refundAmount.toLocaleString("en-IN")}`, 690, refundY + 100, { align: "right", width: 80 });
+         
+      doc.fillColor("#10B981").fontSize(8).font("Helvetica-Oblique")
+         .text("Credited to your iStore Wallet", 455, refundY + 115);
+    }
 
     /* ── FOOTER ── */
-    const footerY = summaryY + 195;
-    doc.moveTo(50, footerY).lineTo(560, footerY).strokeColor("#E6D7EC").stroke();
+    const footerY = refundAmount > 0 ? summaryY + 320 : summaryY + 195;
+    doc.moveTo(50, footerY).lineTo(792, footerY).strokeColor("#E6D7EC").stroke();
     doc.fontSize(11).fillColor("#7A7A7A").font("Helvetica")
-       .text("Thank you for shopping with iStore.", 0, footerY + 15, { align: "center" });
+       .text("Thank you for shopping with iStore.", 0, footerY + 15, { align: "center", width: 842 });
     doc.fontSize(9).fillColor("#A0A0A0")
-       .text("Order generated electronically by iStore", 0, footerY + 32, { align: "center" });
+       .text("Order generated electronically by iStore", 0, footerY + 32, { align: "center", width: 842 });
 
     doc.end();
 

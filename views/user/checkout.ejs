@@ -856,7 +856,40 @@
                     }).then(r => r.json());
 
                     if (!data.success) {
-                        return Swal.fire({ icon: 'error', title: 'Coupon Error', text: data.message, confirmButtonColor: '#603763' });
+                        const msg = data.message || '';
+                        let title = 'Coupon Error';
+                        let icon  = 'error';
+                        let html  = `<span style="color:#6B7280;">${msg}</span>`;
+
+                        if (msg.toLowerCase().includes('maximum usage limit') || msg.toLowerCase().includes('already used')) {
+                            title = '🚫 Usage Limit Reached';
+                            icon  = 'warning';
+                            html  = `<span style="color:#6B7280;">You've already used this coupon the maximum number of times allowed. Try a different coupon from the list below.</span>`;
+                        } else if (msg.toLowerCase().includes('expired')) {
+                            title = '⏰ Coupon Expired';
+                            icon  = 'warning';
+                            html  = `<span style="color:#6B7280;">This coupon is no longer valid. Check the available coupons for active offers.</span>`;
+                        } else if (msg.toLowerCase().includes('minimum purchase')) {
+                            title = '🛒 Minimum Not Met';
+                            icon  = 'info';
+                            html  = `<span style="color:#6B7280;">${msg} is required to use this coupon. Add more items to your cart.</span>`;
+                        } else if (msg.toLowerCase().includes('limit reached')) {
+                            title = '🚫 Coupon Fully Redeemed';
+                            icon  = 'warning';
+                            html  = `<span style="color:#6B7280;">This coupon has been fully redeemed by all users and is no longer available.</span>`;
+                        } else if (msg.toLowerCase().includes('inactive') || msg.toLowerCase().includes('invalid')) {
+                            title = '❌ Invalid Coupon';
+                            icon  = 'error';
+                            html  = `<span style="color:#6B7280;">This coupon code doesn't exist or is no longer active. Please check the code and try again.</span>`;
+                        }
+
+                        return Swal.fire({
+                            icon,
+                            title,
+                            html,
+                            confirmButtonColor: '#603763',
+                            confirmButtonText: 'Got it',
+                        });
                     }
 
                     document.getElementById('coCouponCode').textContent    = data.couponCode;

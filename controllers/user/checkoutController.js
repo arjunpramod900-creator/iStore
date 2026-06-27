@@ -243,7 +243,7 @@ export const applyCoupon = async (req, res) => {
     const totals = await calculateCheckoutTotals({ cartItems: cart.items, couponCode, userId });
 
     if (!totals.coupon) {
-      return res.json({ success: false, message: "Invalid coupon" });
+      return res.json({ success: false, message: totals.couponError || "Invalid coupon" });
     }
 
     req.session.appliedCoupon = {

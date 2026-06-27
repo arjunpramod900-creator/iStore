@@ -40,6 +40,7 @@ export const calculateCheckoutTotals = async ({
 
     let couponDiscount = 0;
     let coupon         = null;
+    let couponError    = null;
 
     if (couponCode && userId) {
         const couponResult = await validateCoupon(
@@ -51,6 +52,8 @@ export const calculateCheckoutTotals = async ({
         if (couponResult.success) {
             couponDiscount = couponResult.discount;
             coupon         = couponResult.coupon;
+        } else {
+            couponError = couponResult.message;
         }
     }
 
@@ -79,5 +82,6 @@ export const calculateCheckoutTotals = async ({
         taxAmount,
         finalAmount,
         coupon,
+        couponError,
     };
 };

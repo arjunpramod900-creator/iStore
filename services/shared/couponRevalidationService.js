@@ -98,30 +98,47 @@ export const revalidateCouponOnMutation = async (order, mutatedItem, mutationTyp
         }
     }
 
+    // Capture previous final amount before recalculating
+    const previousFinalAmount = order.finalAmount || 0;
+
     // 4. Recalculate Order totals (excluding mutated items)
-    order.subtotal = activeSubtotal;
-    order.finalAmount = activeSubtotal - order.couponDiscount + order.taxAmount + order.deliveryCharge;
+    //    Update offerDiscount to reflect only active items — excluding the cancelled item's offer.
+    const activeOfferDiscount = activeItems.reduce(
+        (sum, item) => sum + ((item.offerDiscount || 0) * item.quantity), 0
+    );
 
-    // 5. Compute refund amount for the mutated item
-    let refundAmount = 0;
-    const itemPreRevocationValue = mutatedItem.finalPrice;
-    const itemFullValue = mutatedItem.price * mutatedItem.quantity;
-
-    if (mutationType === "cancelled" || mutationType === "returned") {
-        if (couponRevoked) {
-            refundAmount = itemFullValue;
-        } else {
-            refundAmount = itemPreRevocationValue;
-        }
+    const discountedSubtotal = activeSubtotal - order.couponDiscount;
+    const newTaxAmount = Math.floor(discountedSubtotal * 0.02);
+    
+    let newDeliveryCharge = order.deliveryCharge || 0;
+    // Recalculate standard delivery if applicable
+    if (newDeliveryCharge === 0 || newDeliveryCharge === 99) {
+        newDeliveryCharge = discountedSubtotal >= 5000 ? 0 : 99;
     }
 
-    // Never refund more than original snapshot
-    // But since the item is removed, we just give back its calculated refundAmount.
+    order.subtotal      = activeSubtotal;
+    order.offerDiscount = activeOfferDiscount;
+    order.taxAmount     = newTaxAmount;
+    order.deliveryCharge = newDeliveryCharge;
+    order.finalAmount   = discountedSubtotal + newTaxAmount + newDeliveryCharge;
+
+    // 5. Compute refund amount for the mutated item
+    //    The refund is strictly the difference between what the order cost before cancellation 
+    //    and what it costs now. This perfectly handles:
+    //    - Refunding the tax paid on the cancelled item
+    //    - Recovering the lost coupon discount from the refund if the coupon is revoked, 
+    //      closing the loophole where users get unearned discounts on remaining items.
+    let refundAmount = 0;
+
+    if (mutationType === "cancelled" || mutationType === "returned") {
+        refundAmount = previousFinalAmount - order.finalAmount;
+        if (refundAmount < 0) refundAmount = 0; // Cap at 0 to avoid charging user
+    }
 
     // 6. API Response Message
     let message = "";
     if (couponRevoked && coupon) {
-        message = `Coupon ${couponCode} has been revoked as order total dropped below ₹${coupon.minPurchase}. Refund of ₹${refundAmount} will be processed.`;
+        message = `Coupon ${couponCode} revoked as order total dropped below ₹${coupon.minPurchase}. The lost discount on remaining items was deducted from your refund. Refund of ₹${refundAmount} will be processed.`;
     } else {
         message = `Item ${mutationType}. Refund of ₹${refundAmount} will be processed.`;
     }

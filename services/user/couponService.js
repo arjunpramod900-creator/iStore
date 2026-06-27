@@ -81,15 +81,10 @@ async (
         userId,
     });
 
-    if (
-        usageCount >=
-        coupon.userUsageLimit
-    ) {
-
+    if (usageCount >= coupon.userUsageLimit) {
         return {
             success: false,
-            message:
-            "Coupon already used",
+            message: `You have reached the maximum usage limit (${coupon.userUsageLimit}) for this coupon.`,
         };
     }
 
