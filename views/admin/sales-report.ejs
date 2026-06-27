@@ -22,12 +22,25 @@
   const chartData      = safeReport.chartData      || [];
   const categoriesData = safeReport.topCategories  || [];
   const paymentsData   = safeReport.paymentMethods || { cod: 0, razorpay: 0, wallet: 0 };
+  const paymentCounts  = safeReport.paymentCounts  || { cod: 0, razorpay: 0, wallet: 0 };
   const topProducts    = safeReport.topProducts    || [];
   const recentOrders   = safeReport.recentOrders   || [];
 
-  const totalRevenue = safeReport.totalOrderAmount || 0;
-  const totalCount   = safeReport.totalSalesCount  || 0;
-  const aov          = totalCount > 0 ? Math.round(totalRevenue / totalCount) : 0;
+  // Revenue figures — all sourced directly from the service
+  const grossRevenue        = safeReport.grossRevenue       || 0;
+  const totalRefundAmount   = safeReport.totalRefundAmount  || 0;
+  const netRevenue          = safeReport.netRevenue         || 0;
+  const totalDiscount       = safeReport.totalDiscount      || 0;
+  const totalOfferDiscount  = safeReport.totalOfferDiscount || 0;
+  const totalCouponDiscount = safeReport.totalCouponDiscount|| 0;
+
+  // Counts & rates
+  const totalSalesCount     = safeReport.totalSalesCount    || 0;
+  const totalReturnedCount  = safeReport.totalReturnedCount || 0;
+  const totalCompletedOrders= safeReport.totalCompletedOrders || 0;
+
+  // avgOrderValue now comes pre-computed from the service
+  const avgOrderValue = safeReport.avgOrderValue || 0;
 
   /* Friendly chart title per filter */
   const chartTitles = {
@@ -41,11 +54,13 @@
 
   function badgeClass(s) {
     const map = {
-      DELIVERED:   "badge-delivered",
-      PROCESSING:  "badge-processing",
-      PENDING:     "badge-pending",
-      CANCELLED:   "badge-cancelled",
-      RETURNED:    "badge-returned",
+      DELIVERED:        "badge-delivered",
+      PROCESSING:       "badge-processing",
+      PENDING:          "badge-pending",
+      CANCELLED:        "badge-cancelled",
+      RETURNED:         "badge-returned",
+      SHIPPED:          "badge-processing",
+      "OUT FOR DELIVERY": "badge-processing",
     };
     return map[(s || "").toUpperCase()] || "badge-pending";
   }
@@ -77,45 +92,51 @@
   <section class="stats-grid">
 
     <div class="stat-card">
-      <div class="stat-header"><span class="stat-label">TOTAL ORDERS</span></div>
-      <span class="stat-value"><%= totalCount %></span>
-      <div class="stat-sub">Total Delivered Orders</div>
+      <div class="stat-header"><span class="stat-label">TOTAL ORDERS SOLD</span></div>
+      <span class="stat-value"><%= totalSalesCount.toLocaleString("en-IN") %></span>
+      <div class="stat-sub">Delivered orders in period</div>
     </div>
 
     <div class="stat-card">
-      <div class="stat-header"><span class="stat-label">TOTAL SALES REVENUE</span></div>
-      <span class="stat-value">₹<%= totalRevenue.toLocaleString("en-IN") %></span>
-      <div class="stat-sub">Gross revenue across all categories</div>
+      <div class="stat-header"><span class="stat-label">GROSS REVENUE</span></div>
+      <span class="stat-value">₹<%= grossRevenue.toLocaleString("en-IN") %></span>
+      <div class="stat-sub">Total collected from delivered orders</div>
     </div>
 
     <div class="stat-card">
       <div class="stat-header"><span class="stat-label">TOTAL REFUNDS</span></div>
-      <span class="stat-value">₹<%= (safeReport.totalRefundAmount || 0).toLocaleString("en-IN") %></span>
-      <div class="stat-sub">Refunded to customers</div>
+      <span class="stat-value">₹<%= totalRefundAmount.toLocaleString("en-IN") %></span>
+      <div class="stat-sub">Refunded for <%= totalReturnedCount %> returned order<%= totalReturnedCount !== 1 ? 's' : '' %></div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-header"><span class="stat-label">NET REVENUE</span></div>
+      <span class="stat-value">₹<%= netRevenue.toLocaleString("en-IN") %></span>
+      <div class="stat-sub">Gross revenue minus refunds</div>
     </div>
 
     <div class="stat-card">
       <div class="stat-header"><span class="stat-label">TOTAL DISCOUNT</span></div>
-      <span class="stat-value">₹<%= (safeReport.totalDiscount || 0).toLocaleString("en-IN") %></span>
-      <div class="stat-sub">Discounts Given</div>
+      <span class="stat-value">₹<%= totalDiscount.toLocaleString("en-IN") %></span>
+      <div class="stat-sub">Offer: ₹<%= totalOfferDiscount.toLocaleString("en-IN") %> · Coupon: ₹<%= totalCouponDiscount.toLocaleString("en-IN") %></div>
     </div>
 
     <div class="stat-card">
-      <div class="stat-header"><span class="stat-label">COUPON DEDUCTION</span></div>
-      <span class="stat-value">₹<%= (safeReport.totalCouponDeduction || 0).toLocaleString("en-IN") %></span>
-      <div class="stat-sub">Coupon Savings</div>
+      <div class="stat-header"><span class="stat-label">COUPON SAVINGS</span></div>
+      <span class="stat-value">₹<%= totalCouponDiscount.toLocaleString("en-IN") %></span>
+      <div class="stat-sub">Coupon deductions applied</div>
     </div>
 
     <div class="stat-card">
-      <div class="stat-header"><span class="stat-label">AVG ORDER VALUE (AOV)</span></div>
-      <span class="stat-value">₹<%= aov.toLocaleString("en-IN") %></span>
-      <div class="stat-sub">Average cart value per transaction</div>
+      <div class="stat-header"><span class="stat-label">AVG ORDER VALUE</span></div>
+      <span class="stat-value">₹<%= avgOrderValue.toLocaleString("en-IN") %></span>
+      <div class="stat-sub">Gross revenue ÷ delivered orders</div>
     </div>
 
     <div class="stat-card">
       <div class="stat-header"><span class="stat-label">RETURN RATE</span></div>
-      <span class="stat-value"><%= safeReport.returnRate || 0 %>%</span>
-      <div class="stat-sub">Percentage of orders returned</div>
+      <span class="stat-value"><%= safeReport.returnRate || "0.0" %>%</span>
+      <div class="stat-sub">Returns ÷ (delivered + returned)</div>
     </div>
 
   </section>
@@ -139,7 +160,7 @@
   <!-- REPORT PERIOD -->
   <div class="report-period">
     <strong>Report Period:</strong>
-    <%= startDate %> — <%= endDate %>
+    <%= safeReport.resolvedStartDate %> — <%= safeReport.resolvedEndDate %>
   </div>
 
   <!-- REVENUE CHART -->
@@ -149,7 +170,7 @@
       <div class="chart-legend">
         <div class="legend-item">
           <div class="legend-dot current"></div>
-          <span>Revenue (₹)</span>
+          <span>Net Revenue (₹)</span>
         </div>
       </div>
     </div>
@@ -170,7 +191,7 @@
             <div class="progress-item">
               <div class="progress-info">
                 <span><%= cat._id %></span>
-                <span>₹<%= cat.revenue.toLocaleString("en-IN") %></span>
+                <span>₹<%= (cat.revenue || 0).toLocaleString("en-IN") %> &nbsp;<em style="color:var(--text-muted);font-size:11px;font-style:normal;">(<%= cat.percentage %>%)</em></span>
               </div>
               <div class="progress-bar-bg">
                 <div class="progress-bar-fill fill-purple-gradient" style="width:<%= cat.percentage %>%"></div>
@@ -191,15 +212,19 @@
           <i data-lucide="banknote" class="pay-icon"></i>
           <span class="pay-label">COD</span>
           <span class="pay-value"><%= paymentsData.cod %>%</span>
+          <span style="font-size:11px;color:var(--text-muted);"><%= paymentCounts.cod %> order<%= paymentCounts.cod !== 1 ? 's' : '' %></span>
         </div>
         <div class="pay-card">
           <i data-lucide="credit-card" class="pay-icon"></i>
           <span class="pay-label">Razorpay</span>
           <span class="pay-value"><%= paymentsData.razorpay %>%</span>
+          <span style="font-size:11px;color:var(--text-muted);"><%= paymentCounts.razorpay %> order<%= paymentCounts.razorpay !== 1 ? 's' : '' %></span>
         </div>
         <div class="pay-card wide">
+          <i data-lucide="wallet" class="pay-icon"></i>
           <span class="pay-label">Wallet</span>
           <span class="pay-value"><%= paymentsData.wallet %>%</span>
+          <span style="font-size:11px;color:var(--text-muted);"><%= paymentCounts.wallet %> order<%= paymentCounts.wallet !== 1 ? 's' : '' %></span>
         </div>
       </div>
     </div>
@@ -210,13 +235,14 @@
   <div class="bottom-grid">
     <div class="table-card">
       <div class="table-header">
-        <h2>Sales by Product</h2>
+        <h2>Top Products by Revenue</h2>
         <a href="/admin/products" class="table-link">View All Products →</a>
       </div>
       <div class="table-responsive">
         <table class="stbl">
           <thead>
             <tr>
+              <th>#</th>
               <th>Product</th>
               <th class="td-center">Units Sold</th>
               <th class="td-right">Revenue</th>
@@ -224,20 +250,21 @@
           </thead>
           <tbody>
             <% if (topProducts.length > 0) { %>
-              <% topProducts.forEach(product => { %>
+              <% topProducts.forEach((product, idx) => { %>
                 <tr>
+                  <td style="color:var(--text-muted);font-size:12px;"><%= idx + 1 %></td>
                   <td>
                     <div class="prod-cell">
                       <div class="prod-icon"><i data-lucide="package" size="18"></i></div>
                       <span class="prod-name"><%= product.name %></span>
                     </div>
                   </td>
-                  <td class="td-center"><%= product.units %></td>
-                  <td class="td-right">₹<%= product.revenue.toLocaleString("en-IN") %></td>
+                  <td class="td-center"><%= (product.units || 0).toLocaleString("en-IN") %></td>
+                  <td class="td-right">₹<%= (product.revenue || 0).toLocaleString("en-IN") %></td>
                 </tr>
               <% }) %>
             <% } else { %>
-              <tr><td colspan="3" style="color:var(--text-muted);padding:24px;">No product sales for this period.</td></tr>
+              <tr><td colspan="4" style="color:var(--text-muted);padding:24px;">No product sales for this period.</td></tr>
             <% } %>
           </tbody>
         </table>
@@ -245,7 +272,7 @@
     </div>
   </div>
 
-  <!-- RECENT SALES TABLE -->
+  <!-- RECENT ORDERS TABLE -->
   <div class="table-card">
     <div class="table-header">
       <h2>Recent Orders</h2>
@@ -268,7 +295,7 @@
             <th>#</th>
             <th>Order ID</th>
             <th>Customer</th>
-            <th class="td-right">Amount</th>
+            <th class="td-right">Amount Paid</th>
             <th>Status</th>
             <th class="hide-mobile">Date</th>
           </tr>
@@ -286,7 +313,7 @@
                   </div>
                 </td>
                 <td class="td-right" style="font-weight:700;">
-                  ₹<%= order.finalAmount.toLocaleString("en-IN") %>
+                  ₹<%= (order.displayAmount || 0).toLocaleString("en-IN") %>
                 </td>
                 <td>
                   <span class="badge <%= badgeClass(order.orderStatus) %>">
@@ -294,7 +321,7 @@
                   </span>
                 </td>
                 <td class="hide-mobile" style="color:var(--text-muted);font-size:12px;">
-                  <%= new Date(order.createdAt).toLocaleDateString("en-IN") %>
+                  <%= new Date(order.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) %>
                 </td>
               </tr>
             <% }) %>
@@ -307,7 +334,7 @@
 
     <div class="pagination-footer">
       <span class="pagination-info">
-        Showing <%= recentOrders.length %> of <%= totalCount.toLocaleString() %> orders
+        Showing <%= recentOrders.length %> most recent orders in period
       </span>
       <div class="pagination-controls">
         <button class="page-btn" type="button"><i data-lucide="chevron-left" size="14"></i></button>
@@ -413,7 +440,6 @@
     }
 
     if (valid) {
-      /* Submit the parent form */
       startInput.closest("form").submit();
     }
   });
@@ -438,7 +464,7 @@
     grad.addColorStop(0, "rgba(96,55,99,0.22)");
     grad.addColorStop(1, "rgba(96,55,99,0)");
 
-    /* Choose bar chart for daily (hourly), line for everything else */
+    /* Bar chart for hourly (daily), line for everything else */
     const useBar = (filterType === "daily");
 
     new Chart(ctx, {
@@ -446,7 +472,7 @@
       data: {
         labels: serverLabels,
         datasets: [{
-          label: "Revenue (₹)",
+          label: "Net Revenue (₹)",
           data:  serverData,
           borderColor:          "#603763",
           borderWidth:          useBar ? 0 : 2.5,
@@ -478,7 +504,7 @@
             callbacks: {
               label: ctx => {
                 const v = ctx.parsed.y;
-                return " Revenue: ₹" + new Intl.NumberFormat("en-IN").format(v);
+                return " Net Revenue: ₹" + new Intl.NumberFormat("en-IN").format(v);
               },
             },
           },
@@ -490,7 +516,6 @@
               color:  "#4D444C",
               font:   { family: "Inter", size: 11, weight: "600" },
               padding: 8,
-              /* For daily (24 hours), show every 2nd label to avoid crowding */
               maxTicksLimit: filterType === "daily" ? 12 : undefined,
             },
           },

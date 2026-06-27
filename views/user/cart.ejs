@@ -31,14 +31,16 @@
     <%- include('../partials/user/header', { page: 'cart' }) %>
 
     <%
+        const discountedSubtotal = cart.subtotal - (cart.offerDiscount || 0);
+
         const shipping =
-        cart.subtotal >= 5000 ? 0 : 99
+        discountedSubtotal >= 5000 ? 0 : 99;
 
         const estimatedTax =
-        Math.floor(cart.subtotal * 0.02)
+        Math.floor(discountedSubtotal * 0.02);
 
         const finalTotal =
-        cart.subtotal + shipping + estimatedTax
+        discountedSubtotal + shipping + estimatedTax;
     %>
 
     <main class="cart-page">

@@ -1,34 +1,43 @@
 /**
  * SINGLE ITEM REFUND
+ *
+ * Calculates how much to refund for one cancelled/returned item.
+ * Reads exclusively from pricingSnapshot — never from mutable order totals.
+ * Does NOT modify any order fields.
  */
 export const calculateItemRefund = (order, item) => {
 
-    const itemBase = item.price * item.quantity;
+const itemBase = item.price * item.quantity;
 
-    /* Active subtotal BEFORE cancelling this item */
-    const activeSubtotal =
-        order.items.reduce(
-            (total, i) =>
-                total +
-                (
-                    ["Cancelled", "Returned"].includes(i.itemStatus)
-                        ? 0
-                        : i.price * i.quantity
-                ),
-            0
-        ) || itemBase;
+/*
+    Immutable calculation.
 
-    const itemRatio = itemBase / activeSubtotal;
+    Refund percentage is always calculated from the
+    ORIGINAL order subtotal stored in pricingSnapshot.
+
+    Therefore the refund for an item never changes,
+    regardless of how many other items are cancelled
+    or returned later.
+*/
+const originalSubtotal =
+    order.pricingSnapshot?.originalSubtotal ??
+    order.subtotal ??
+    itemBase;
+
+const itemRatio =
+    originalSubtotal > 0
+        ? itemBase / originalSubtotal
+        : 0;
 
     /* Original values from pricing snapshot */
-    const originalCoupon =
-        order.pricingSnapshot?.originalCouponDiscount || 0;
+const originalCoupon =
+    order.pricingSnapshot?.originalCouponDiscount ?? 0;
 
-    const originalTax =
-        order.pricingSnapshot?.originalTaxAmount || 0;
+const originalTax =
+    order.pricingSnapshot?.originalTaxAmount ?? 0;
 
-    const originalDelivery =
-        order.pricingSnapshot?.originalDeliveryCharge || 0;
+const originalDelivery =
+    order.pricingSnapshot?.originalDeliveryCharge ?? 0;
 
     const proportionalCoupon =
         Math.round(originalCoupon * itemRatio);
@@ -72,143 +81,48 @@ export const calculateItemRefund = (order, item) => {
 
 /**
  * FULL ORDER REFUND
+ *
+ * Returns the original finalAmount from pricingSnapshot.
+ * Falls back to order.finalAmount for older orders without a snapshot.
+ * Does NOT modify any order fields.
  */
 export const calculateFullOrderRefund = (order) => {
 
+    const refundAmount =
+        order.pricingSnapshot?.originalFinalAmount ??
+        order.finalAmount ??
+        0;
+
     return {
 
-        refundAmount:
-            order.finalAmount || 0,
+        refundAmount,
 
         breakdown: {
 
             subtotal:
                 order.pricingSnapshot?.originalSubtotal
-                || order.subtotal,
+                ?? order.subtotal,
 
             offerDiscount:
                 order.pricingSnapshot?.originalOfferDiscount
-                || order.offerDiscount,
+                ?? order.offerDiscount,
 
             couponDiscount:
                 order.pricingSnapshot?.originalCouponDiscount
-                || order.couponDiscount,
+                ?? order.couponDiscount,
 
             taxAmount:
                 order.pricingSnapshot?.originalTaxAmount
-                || order.taxAmount,
+                ?? order.taxAmount,
 
             deliveryCharge:
                 order.pricingSnapshot?.originalDeliveryCharge
-                || order.deliveryCharge,
+                ?? order.deliveryCharge,
 
             finalAmount:
-                order.pricingSnapshot?.originalFinalAmount
-                || order.finalAmount,
+                refundAmount,
 
         },
-
-    };
-
-};
-
-
-/**
- * RECALCULATE ORDER TOTALS AFTER PARTIAL CANCELLATION
- */
-export const recalculateOrderTotals = (
-    order,
-    activeItems
-) => {
-
-    const newSubtotal =
-        activeItems.reduce(
-            (total, item) =>
-                total +
-                item.price * item.quantity,
-            0
-        );
-
-    const originalSubtotal =
-        order.pricingSnapshot?.originalSubtotal ||
-        order.items.reduce(
-            (total, item) =>
-                total +
-                item.price * item.quantity,
-            0
-        );
-
-    const ratio =
-        originalSubtotal > 0
-            ? newSubtotal / originalSubtotal
-            : 0;
-
-    const remainingCouponDiscount =
-        Math.round(
-            (
-                order.pricingSnapshot?.originalCouponDiscount
-                || 0
-            ) * ratio
-        );
-
-    const discountedSubtotal =
-        Math.max(
-            0,
-            newSubtotal - remainingCouponDiscount
-        );
-
-    /*
-        Tax should shrink proportionally,
-        not be recalculated from current tax rate.
-    */
-    const remainingTax =
-        Math.round(
-            (
-                order.pricingSnapshot?.originalTaxAmount
-                || 0
-            ) * ratio
-        );
-
-    /*
-        Delivery should NEVER increase.
-    */
-    let deliveryCharge =
-        order.pricingSnapshot?.originalDeliveryCharge
-        || 0;
-
-    if (activeItems.length === 0) {
-        deliveryCharge = 0;
-    }
-
-    const finalAmount =
-        Math.max(
-            0,
-            discountedSubtotal +
-            remainingTax +
-            deliveryCharge
-        );
-
-    return {
-
-        subtotal:
-            newSubtotal,
-
-        taxAmount:
-            remainingTax,
-
-        deliveryCharge,
-
-        couponDiscount:
-            remainingCouponDiscount,
-
-        discountAmount:
-            (
-                order.pricingSnapshot?.originalOfferDiscount
-                || order.offerDiscount
-            ) +
-            remainingCouponDiscount,
-
-        finalAmount,
 
     };
 

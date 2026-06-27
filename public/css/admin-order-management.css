@@ -534,9 +534,10 @@ table.adm-table {
     flex-shrink: 0;
 }
 
-.adm-pay-badge--paid    { background: var(--pay-paid-bg);    color: var(--pay-paid-text); }
-.adm-pay-badge--pending { background: var(--pay-pending-bg); color: var(--pay-pending-text); }
-.adm-pay-badge--failed  { background: var(--pay-failed-bg);  color: var(--pay-failed-text); }
+.adm-pay-badge--paid     { background: var(--pay-paid-bg);    color: var(--pay-paid-text); }
+.adm-pay-badge--pending  { background: var(--pay-pending-bg); color: var(--pay-pending-text); }
+.adm-pay-badge--failed   { background: var(--pay-failed-bg);  color: var(--pay-failed-text); }
+.adm-pay-badge--refunded { background: #ede9fe;               color: #6d28d9; }
 
 /* ── Status badge ── */
 .adm-status-badge {

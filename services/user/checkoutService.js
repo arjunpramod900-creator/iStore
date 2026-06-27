@@ -133,16 +133,58 @@ const buildOrderItems = async (cartItems) => {
     for (const item of cartItems) {
         const offerData = await calculateItemOffer(item.productId, item.variantId, item.quantity);
         orderItems.push({
-            productId: item.productId._id, variantId: item.variantId._id,
-            productName: item.productId.name,
+            productId:    item.productId._id,
+            variantId:    item.variantId._id,
+            productName:  item.productId.name,
             productImage: item.variantId.images?.[0] || item.productId.thumbnail,
-            variantName: [item.variantId.color, item.variantId.storage].filter(Boolean).join(" • "),
-            quantity: item.quantity, originalPrice: item.price,
-            finalPrice: offerData.finalPrice, offerDiscount: offerData.offerDiscount,
-            price: offerData.finalPrice,
+            variantName:  [item.variantId.color, item.variantId.storage].filter(Boolean).join(" • "),
+            quantity:     item.quantity,
+            /* per-unit prices — spec-compliant */
+            originalPrice: offerData.originalPrice,          // variant.price (MRP)
+            price:         offerData.finalPrice,             // post-offer per-unit price
+            offerDiscount: offerData.originalPrice - offerData.finalPrice,  // per-unit offer saving
+            /* line total = price × qty (couponDiscount applied later) */
+            finalPrice:    offerData.finalPrice * item.quantity,
+            couponDiscount: 0,  // will be overwritten by applyProportionalCoupon
         });
     }
     return orderItems;
+};
+
+/* =========================================
+   PROPORTIONAL COUPON DISTRIBUTOR
+   Mutates orderItems in place.
+   ─────────────────────────────────────────
+   subtotal        = Order.subtotal (post-offer, pre-coupon)
+   totalCoupon     = total couponDiscount to spread
+   For each item:
+     share = (item.price × item.quantity / subtotal) × totalCoupon
+     item.couponDiscount = Math.floor(share)    // floor avoids over-distribution
+     item.finalPrice     = (item.price × item.quantity) - item.couponDiscount
+   Rounding remainder is added to the largest-share item.
+========================================= */
+const applyProportionalCoupon = (orderItems, subtotal, totalCoupon) => {
+    if (!totalCoupon || totalCoupon <= 0 || !subtotal) return;
+
+    let distributed = 0;
+    let maxShare = -1;
+    let maxIdx   = 0;
+
+    orderItems.forEach((item, idx) => {
+        const lineTotal = item.price * item.quantity;
+        const share     = Math.floor((lineTotal / subtotal) * totalCoupon);
+        item.couponDiscount = share;
+        item.finalPrice     = lineTotal - share;
+        distributed        += share;
+        if (share > maxShare) { maxShare = share; maxIdx = idx; }
+    });
+
+    /* Give rounding remainder to the largest-share item */
+    const remainder = totalCoupon - distributed;
+    if (remainder > 0) {
+        orderItems[maxIdx].couponDiscount += remainder;
+        orderItems[maxIdx].finalPrice     -= remainder;
+    }
 };
 
 const revalidateStock = (cartItems) => {
@@ -526,9 +568,10 @@ export const placeOrderCODService = async (
 
     try {
 
-        const orderItems = await buildOrderItems(
-            cart.items
-        );
+        const orderItems = await buildOrderItems(cart.items);
+
+        /* Apply proportional coupon distribution across items */
+        applyProportionalCoupon(orderItems, totals.subtotal, totals.couponDiscount);
 
         orderItems.forEach(item => {
             item.itemStatus = "Pending";
@@ -543,70 +586,41 @@ export const placeOrderCODService = async (
             items: orderItems,
 
             shippingAddress: {
-                fullName: address.fullName,
-                phoneNumber: address.phoneNumber,
+                fullName:     address.fullName,
+                phoneNumber:  address.phoneNumber,
                 addressLine1: address.addressLine1,
-                city: address.city,
-                state: address.state,
-                country: address.country,
-                pincode: address.pincode,
+                city:         address.city,
+                state:        address.state,
+                country:      address.country,
+                pincode:      address.pincode,
             },
 
             paymentMethod: "COD",
-
             paymentStatus: "Pending",
+            orderStatus:   "Pending",
 
-            orderStatus: "Pending",
-
-            subtotal: totals.subtotal,
-
-            offerDiscount: totals.offerDiscount,
-
+            subtotal:       totals.subtotal,        // post-offer, pre-coupon
+            offerDiscount:  totals.offerDiscount,
             couponDiscount: totals.couponDiscount,
-
-            discountAmount:
-                totals.offerDiscount +
-                totals.couponDiscount,
-
-            taxAmount: totals.taxAmount,
-
+            discountAmount: totals.offerDiscount + totals.couponDiscount,
+            taxAmount:      totals.taxAmount,
             deliveryCharge: totals.deliveryCharge,
+            finalAmount:    totals.finalAmount,
 
-            finalAmount: totals.finalAmount,
-
-            couponId: totals.coupon?._id || null,
-
+            couponId:   totals.coupon?._id  || null,
             couponCode: totals.coupon?.code || null,
 
-            /* ========= PRICING SNAPSHOT ========= */
             pricingSnapshot: {
-
-                originalSubtotal:
-                    totals.subtotal,
-
-                originalOfferDiscount:
-                    totals.offerDiscount,
-
-                originalCouponDiscount:
-                    totals.couponDiscount,
-
-                originalTaxAmount:
-                    totals.taxAmount,
-
-                originalDeliveryCharge:
-                    totals.deliveryCharge,
-
-                originalFinalAmount:
-                    totals.finalAmount,
-
+                originalSubtotal:       totals.subtotal,
+                originalOfferDiscount:  totals.offerDiscount,
+                originalCouponDiscount: totals.couponDiscount,
+                originalTaxAmount:      totals.taxAmount,
+                originalDeliveryCharge: totals.deliveryCharge,
+                originalFinalAmount:    totals.finalAmount,
             },
 
-            estimatedDelivery: new Date(
-                Date.now() + 5 * 24 * 60 * 60 * 1000
-            ),
-
+            estimatedDelivery: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
             retryCount: 0,
-
         });
 
         if (totals.coupon) {
@@ -769,9 +783,10 @@ export const placeOrderWalletService = async (
 
     try {
 
-        const orderItems = await buildOrderItems(
-            cart.items
-        );
+        const orderItems = await buildOrderItems(cart.items);
+
+        /* Apply proportional coupon distribution across items */
+        applyProportionalCoupon(orderItems, totals.subtotal, totals.couponDiscount);
 
         orderItems.forEach(item => {
             item.itemStatus = "Pending";
@@ -786,72 +801,42 @@ export const placeOrderWalletService = async (
             items: orderItems,
 
             shippingAddress: {
-                fullName: address.fullName,
-                phoneNumber: address.phoneNumber,
+                fullName:     address.fullName,
+                phoneNumber:  address.phoneNumber,
                 addressLine1: address.addressLine1,
-                city: address.city,
-                state: address.state,
-                country: address.country,
-                pincode: address.pincode,
+                city:         address.city,
+                state:        address.state,
+                country:      address.country,
+                pincode:      address.pincode,
             },
 
-            paymentMethod: "WALLET",
+            paymentMethod:  "WALLET",
+            paymentStatus:  "Paid",
+            orderStatus:    "Pending",
 
-            paymentStatus: "Paid",
-
-            orderStatus: "Pending",
-
-            subtotal: totals.subtotal,
-
-            offerDiscount: totals.offerDiscount,
-
+            subtotal:       totals.subtotal,
+            offerDiscount:  totals.offerDiscount,
             couponDiscount: totals.couponDiscount,
-
-            discountAmount:
-                totals.offerDiscount +
-                totals.couponDiscount,
-
-            taxAmount: totals.taxAmount,
-
+            discountAmount: totals.offerDiscount + totals.couponDiscount,
+            taxAmount:      totals.taxAmount,
             deliveryCharge: totals.deliveryCharge,
-
-            finalAmount: totals.finalAmount,
-
+            finalAmount:    totals.finalAmount,
             walletAmountUsed: totals.finalAmount,
 
-            couponId: totals.coupon?._id || null,
-
+            couponId:   totals.coupon?._id  || null,
             couponCode: totals.coupon?.code || null,
 
-            /* ========= PRICING SNAPSHOT ========= */
             pricingSnapshot: {
-
-                originalSubtotal:
-                    totals.subtotal,
-
-                originalOfferDiscount:
-                    totals.offerDiscount,
-
-                originalCouponDiscount:
-                    totals.couponDiscount,
-
-                originalTaxAmount:
-                    totals.taxAmount,
-
-                originalDeliveryCharge:
-                    totals.deliveryCharge,
-
-                originalFinalAmount:
-                    totals.finalAmount,
-
+                originalSubtotal:       totals.subtotal,
+                originalOfferDiscount:  totals.offerDiscount,
+                originalCouponDiscount: totals.couponDiscount,
+                originalTaxAmount:      totals.taxAmount,
+                originalDeliveryCharge: totals.deliveryCharge,
+                originalFinalAmount:    totals.finalAmount,
             },
 
-            estimatedDelivery: new Date(
-                Date.now() + 5 * 24 * 60 * 60 * 1000
-            ),
-
+            estimatedDelivery: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
             retryCount: 0,
-
         });
 
         /* Record coupon usage only after successful order creation */
@@ -1057,9 +1042,10 @@ const existingPendingOrder = await Order.findOne({
             };
         }
 
-        const orderItems = await buildOrderItems(
-            cart.items
-        );
+        const orderItems = await buildOrderItems(cart.items);
+
+        /* Apply proportional coupon distribution across items */
+        applyProportionalCoupon(orderItems, totals.subtotal, totals.couponDiscount);
 
         orderItems.forEach(item => {
             item.itemStatus = "Pending";
@@ -1074,79 +1060,44 @@ const existingPendingOrder = await Order.findOne({
             items: orderItems,
 
             shippingAddress: {
-                fullName: address.fullName,
-                phoneNumber: address.phoneNumber,
+                fullName:     address.fullName,
+                phoneNumber:  address.phoneNumber,
                 addressLine1: address.addressLine1,
-                city: address.city,
-                state: address.state,
-                country: address.country,
-                pincode: address.pincode,
+                city:         address.city,
+                state:        address.state,
+                country:      address.country,
+                pincode:      address.pincode,
             },
 
             paymentMethod: "RAZORPAY",
-
             paymentStatus: "Pending",
+            orderStatus:   "Pending",
 
-            orderStatus: "Pending",
+            razorpayOrderId: razorpayResponse.razorpayOrder.id,
 
-            razorpayOrderId:
-                razorpayResponse.razorpayOrder.id,
-
-            subtotal: totals.subtotal,
-
-            offerDiscount: totals.offerDiscount,
-
+            subtotal:       totals.subtotal,
+            offerDiscount:  totals.offerDiscount,
             couponDiscount: totals.couponDiscount,
-
-            discountAmount:
-                totals.offerDiscount +
-                totals.couponDiscount,
-
-            taxAmount: totals.taxAmount,
-
+            discountAmount: totals.offerDiscount + totals.couponDiscount,
+            taxAmount:      totals.taxAmount,
             deliveryCharge: totals.deliveryCharge,
+            finalAmount:    totals.finalAmount,
 
-            finalAmount: totals.finalAmount,
+            couponId:   totals.coupon?._id  || null,
+            couponCode: totals.coupon?.code || null,
 
-            couponId:
-                totals.coupon?._id || null,
-
-            couponCode:
-                totals.coupon?.code || null,
-
-            /* ===== SNAPSHOT ===== */
             pricingSnapshot: {
-
-                originalSubtotal:
-                    totals.subtotal,
-
-                originalOfferDiscount:
-                    totals.offerDiscount,
-
-                originalCouponDiscount:
-                    totals.couponDiscount,
-
-                originalTaxAmount:
-                    totals.taxAmount,
-
-                originalDeliveryCharge:
-                    totals.deliveryCharge,
-
-                originalFinalAmount:
-                    totals.finalAmount,
-
+                originalSubtotal:       totals.subtotal,
+                originalOfferDiscount:  totals.offerDiscount,
+                originalCouponDiscount: totals.couponDiscount,
+                originalTaxAmount:      totals.taxAmount,
+                originalDeliveryCharge: totals.deliveryCharge,
+                originalFinalAmount:    totals.finalAmount,
             },
 
-            paymentExpiresAt: new Date(
-                Date.now() + PAYMENT_EXPIRY_MS
-            ),
-
-            estimatedDelivery: new Date(
-                Date.now() + 5 * 24 * 60 * 60 * 1000
-            ),
-
+            paymentExpiresAt:  new Date(Date.now() + PAYMENT_EXPIRY_MS),
+            estimatedDelivery: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
             retryCount: 0,
-
         });
 
         /*
@@ -1401,7 +1352,45 @@ export const loadRetryCheckoutService = async (userId, orderId) => {
 
     const addresses = await Address.find({ userId }).sort({ isDefault: -1, createdAt: -1 }).lean();
 
-    return { success: true, order, addresses };
+    const availableCoupons = await Coupon.find({
+        isDeleted: false, isActive: true,
+        startDate: { $lte: new Date() }, endDate: { $gte: new Date() },
+    }).sort({ createdAt: -1 }).lean();
+
+    return { success: true, order, addresses, availableCoupons };
+};
+
+/* =========================================
+   APPLY COUPON ON RETRY
+   Validates a coupon against the order's subtotal
+   (no cart involved in retry mode).
+========================================= */
+export const applyRetryCouponService = async (userId, orderId, couponCode) => {
+    const { validateCoupon } = await import("./couponService.js");
+
+    const order = await Order.findOne({ userId, orderId }).lean();
+    if (!order) return { success: false, message: "Order not found" };
+
+    // Use the offer-discounted subtotal as the base for coupon validation
+    const base = (order.subtotal || 0) - (order.offerDiscount || 0);
+
+    const result = await validateCoupon(couponCode, base, userId);
+    if (!result.success) return { success: false, message: result.message };
+
+    const couponDiscount  = result.discount;
+    const discounted      = base - couponDiscount;
+    const deliveryCharge  = order.deliveryCharge ?? (discounted >= 5000 ? 0 : 99);
+    const taxAmount       = Math.floor(discounted * 0.02);
+    const finalAmount     = discounted + deliveryCharge + taxAmount;
+
+    return {
+        success: true,
+        couponCode:     result.coupon.code,
+        couponDiscount,
+        deliveryCharge,
+        taxAmount,
+        finalAmount,
+    };
 };
 
 /* =========================================
@@ -1414,6 +1403,7 @@ export const retryOrderPaymentService = async ({
     orderId,
     addressId,
     paymentMethod,
+    couponCode = null,
 }) => {
 
     const order = await Order.findOne({
@@ -1516,6 +1506,33 @@ export const retryOrderPaymentService = async ({
     });
 
     /* =====================================
+       APPLY COUPON (if provided)
+       Recalculate finalAmount before payment
+    ===================================== */
+    let payAmount = order.finalAmount; // default: original amount
+
+    if (couponCode) {
+        const { validateCoupon } = await import("./couponService.js");
+        const base = (order.subtotal || 0) - (order.offerDiscount || 0);
+        const couponResult = await validateCoupon(couponCode, base, userId);
+
+        if (couponResult.success) {
+            const couponDiscount  = couponResult.discount;
+            const discounted      = base - couponDiscount;
+            const deliveryCharge  = order.deliveryCharge ?? (discounted >= 5000 ? 0 : 99);
+            const taxAmount       = Math.floor(discounted * 0.02);
+            payAmount             = discounted + deliveryCharge + taxAmount;
+
+            // Persist the updated pricing on the order
+            order.couponDiscount  = couponDiscount;
+            order.couponCode      = couponCode.toUpperCase();
+            order.taxAmount       = taxAmount;
+            order.deliveryCharge  = deliveryCharge;
+            order.finalAmount     = payAmount;
+        }
+    }
+
+    /* =====================================
        COD
     ===================================== */
 
@@ -1558,7 +1575,7 @@ export const retryOrderPaymentService = async ({
 
         const walletResponse = await debitWallet({
             userId,
-            amount: order.finalAmount,
+            amount: payAmount,
             transactionType: "OrderPayment",
             description:
                 `Wallet payment for retry order ${order.orderId}`,
@@ -1578,7 +1595,7 @@ export const retryOrderPaymentService = async ({
 
         order.orderStatus = "Pending";
 
-        order.walletAmountUsed = order.finalAmount;
+        order.walletAmountUsed = payAmount;
 
         order.paymentId = null;
 
@@ -1609,7 +1626,7 @@ export const retryOrderPaymentService = async ({
 
         const razorpayResponse =
             await createRazorpayOrder({
-                amount: order.finalAmount,
+                amount: payAmount,
             });
 
         if (!razorpayResponse.success) {

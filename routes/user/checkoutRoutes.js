@@ -13,6 +13,8 @@ import {
   applyCoupon,
   removeCoupon,
   markPaymentFailed,
+  applyRetryCoupon,
+  removeRetryCoupon,
 } from "../../controllers/user/checkoutController.js";
 
 const router = express.Router();
@@ -36,6 +38,8 @@ router.get(
   ...auth,
   loadRetryCheckoutPage
 );
+router.post("/orders/:orderId/retry/apply-coupon",  ...auth, applyRetryCoupon);
+router.post("/orders/:orderId/retry/remove-coupon", ...auth, removeRetryCoupon);
 
 /* =========================================
    RAZORPAY VERIFICATION

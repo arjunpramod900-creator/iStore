@@ -382,19 +382,17 @@
                                 </span>
                             </div>
 
-                            <!-- Coupon row — hidden in retry mode -->
-                            <% if (!isRetry) { %>
+                            <!-- Coupon discount row -->
                             <div
                                 class="co-breakdown-row co-discount"
                                 id="coDiscountRow"
-                                style="<%= currentCouponDiscount > 0 ? '' : 'display:none;' %>"
+                                style="<%= (couponDiscount || 0) > 0 ? '' : 'display:none;' %>"
                             >
                                 <span>Discount (<span id="coCouponCode"><%= appliedCoupon?.code || '-' %></span>)</span>
                                 <span class="co-discount-val" id="coDiscount">
-                                    −₹<%= currentCouponDiscount.toLocaleString('en-IN') %>
+                                    −₹<%= (couponDiscount || 0).toLocaleString('en-IN') %>
                                 </span>
                             </div>
-                            <% } %>
 
                             <div class="co-breakdown-row">
                                 <span>Estimated Tax</span>
@@ -424,8 +422,7 @@
                         </div>
                     </div>
 
-                    <!-- COUPONS CARD — hidden in retry mode (totals already finalised) -->
-                    <% if (!isRetry) { %>
+                    <!-- COUPONS CARD -->
                     <div class="co-coupons-card">
                         <h3 class="co-coupons-title">Available Coupons</h3>
 
@@ -471,13 +468,12 @@
                                 type="button"
                                 id="removeCouponBtn"
                                 class="co-coupon-manual-btn"
-                                style="<%= currentCouponDiscount > 0 ? 'display:inline-flex;' : 'display:none;' %>"
+                                style="<%= (couponDiscount || 0) > 0 ? 'display:inline-flex;' : 'display:none;' %>"
                             >
                                 Remove
                             </button>
                         </div>
                     </div>
-                    <% } %>
 
                 </aside>
 
@@ -807,9 +803,15 @@
         });
 
         /* =========================================
-           COUPON LOGIC (new mode only)
+           COUPON LOGIC
         ========================================= */
-        if (!isRetry) {
+        {
+            const applyEndpoint  = isRetry
+                ? `/orders/${retryOrderId}/retry/apply-coupon`
+                : '/checkout/apply-coupon';
+            const removeEndpoint = isRetry
+                ? `/orders/${retryOrderId}/retry/remove-coupon`
+                : '/checkout/remove-coupon';
 
             document.querySelectorAll('.co-coupon-apply-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
@@ -826,7 +828,7 @@
 
             document.getElementById('removeCouponBtn')?.addEventListener('click', async () => {
                 try {
-                    const data = await fetch('/checkout/remove-coupon', { method: 'POST' }).then(r => r.json());
+                    const data = await fetch(removeEndpoint, { method: 'POST' }).then(r => r.json());
                     if (!data.success) return Swal.fire({ icon: 'error', title: 'Coupon Error', text: data.message });
 
                     document.getElementById('couponInput').value         = '';
@@ -847,7 +849,7 @@
 
             async function applyCouponCode(code) {
                 try {
-                    const data = await fetch('/checkout/apply-coupon', {
+                    const data = await fetch(applyEndpoint, {
                         method:  'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body:    JSON.stringify({ couponCode: code }),

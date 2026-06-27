@@ -58,17 +58,14 @@
                     
 
                     function statusClass(status) {
-                        return status.toLowerCase().replace(/\s+/g, "-");
+                        return (status || "").toLowerCase().replace(/\s+/g, "-");
                     }
 
                     function payClass(status) {
-
-                        const s = status.toLowerCase();
-
-                        if (s === "paid") return "paid";
-
-                        if (s === "failed") return "failed";
-
+                        const s = (status || "").toLowerCase();
+                        if (s === "paid")     return "paid";
+                        if (s === "failed")   return "failed";
+                        if (s === "refunded") return "refunded";
                         return "pending";
                     }
                     %>
@@ -380,7 +377,7 @@
 
                             <span class="adm-total">
 
-                                ₹<%= row.finalAmount.toLocaleString("en-IN") %>
+                                ₹<%= (row.pricingSnapshot?.originalFinalAmount ?? row.finalAmount ?? 0).toLocaleString("en-IN") %>
 
                             </span>
 
@@ -469,13 +466,15 @@
                 <!-- Table footer: count + pagination -->
                 <div class="adm-table-footer">
                     <span class="adm-results-count" id="resultsCount">
-                        Showing 1 to <%= tableRows.length %> of <%= Number(totalCount).toLocaleString('en-IN') %> orders
+                        Showing <%= (currentPage - 1) * limit + 1 %> to <%= (currentPage - 1) * limit + tableRows.length %> of <%= Number(totalCount).toLocaleString('en-IN') %> orders
                     </span>
 
                     <nav class="adm-pagination" aria-label="Table pagination" id="admPagination">
+                        <% const q = '&search=' + encodeURIComponent(search) + '&status=' + encodeURIComponent(status) + '&sort=' + encodeURIComponent(sort); %>
+
                         <!-- Prev -->
                         <a
-                            href="<%= currentPage > 1 ? '/admin/orders?page=' + (currentPage - 1) + '&search=' + search + '&status=' + status + '&sort=' + sort : '#' %>"
+                            href="<%= currentPage > 1 ? '/admin/orders?page=' + (currentPage - 1) + q : '#' %>"
                             class="adm-page-btn adm-page-btn--arrow <%= currentPage <= 1 ? 'adm-page-btn--disabled' : '' %>"
                             id="admPaginPrev"
                             aria-label="Previous"
@@ -486,7 +485,7 @@
                         <!-- Pages -->
                         <% for (let p = 1; p <= totalPages; p++) { %>
                             <a
-                                href="/admin/orders?page=<%= p %>&search=<%= search %>&status=<%= status %>&sort=<%= sort %>"
+                                href="/admin/orders?page=<%= p %><%= q %>"
                                 class="adm-page-btn <%= p === currentPage ? 'active' : '' %>"
                                 id="admPage<%= p %>"
                                 aria-label="Page <%= p %>"
@@ -496,7 +495,7 @@
 
                         <!-- Next -->
                         <a
-                            href="<%= currentPage < totalPages ? '/admin/orders?page=' + (currentPage + 1) + '&search=' + search + '&status=' + status + '&sort=' + sort : '#'%>"
+                            href="<%= currentPage < totalPages ? '/admin/orders?page=' + (currentPage + 1) + q : '#' %>"
                             class="adm-page-btn adm-page-btn--arrow <%= currentPage >= totalPages ? 'adm-page-btn--disabled' : '' %>"
                             id="admPaginNext"
                             aria-label="Next"

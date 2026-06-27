@@ -163,11 +163,15 @@ export const retryOrderPay = async (req, res) => {
     const { orderId }                  = req.params;
     const { addressId, paymentMethod } = req.body;
 
+    // Pick up any coupon the user selected on the retry page
+    const couponCode = req.session.retryCoupon?.code || null;
+
     const response = await retryOrderPaymentService({
       userId,
       orderId,
       addressId,
       paymentMethod,
+      couponCode,
     });
 
     if (!response.success) {
@@ -181,6 +185,9 @@ export const retryOrderPay = async (req, res) => {
       }
       return res.status(400).json({ success: false, message: response.message });
     }
+
+    // Clear the retry coupon from session after a successful payment kick-off
+    delete req.session.retryCoupon;
 
     return res.json(response);
   } catch (error) {

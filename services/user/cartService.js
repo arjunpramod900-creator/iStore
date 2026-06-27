@@ -225,7 +225,7 @@ for (const item of cart.items) {
     offerData.badgeLabel;
 
     subtotal +=
-    offerData.finalPrice *
+    offerData.originalPrice *
     item.quantity;
 
     offerDiscount +=
@@ -572,7 +572,9 @@ if (
         itemBadgeLabel = offerData.badgeLabel;
     }
 
-    cartSubtotal += lineTotal;
+    cartSubtotal +=
+    offerData.originalPrice *
+    cartItem.quantity;
 
     offerDiscount +=
     offerData.offerDiscount;
@@ -581,23 +583,13 @@ if (
     cartItem.quantity;
 }
 
-  /* =========================================
-   SHIPPING
-========================================= */
+  const discountedSubtotal = cartSubtotal - offerDiscount;
 
-  const shipping = cartSubtotal >= 5000 ? 0 : 99;
+  const shipping = discountedSubtotal >= 5000 ? 0 : 99;
 
-  /* =========================================
-   TAX
-========================================= */
+  const estimatedTax = Math.floor(discountedSubtotal * 0.02);
 
-  const estimatedTax = Math.floor(cartSubtotal * 0.02);
-
-  /* =========================================
-   FINAL TOTAL
-========================================= */
-
-  const finalTotal = cartSubtotal + shipping + estimatedTax;
+  const finalTotal = discountedSubtotal + shipping + estimatedTax;
 
   await cart.save();
 
@@ -760,7 +752,7 @@ export const removeCartItemService = async ({
       );
 
     cartSubtotal +=
-      offerData.finalPrice *
+      offerData.originalPrice *
       item.quantity;
 
     offerDiscount +=
@@ -770,30 +762,13 @@ export const removeCartItemService = async ({
       item.quantity;
   }
 
-  /* =========================================
-     SHIPPING
-  ========================================= */
+  const discountedSubtotal = cartSubtotal - offerDiscount;
 
-  const shipping =
-    cartSubtotal >= 5000
-      ? 0
-      : 99;
+  const shipping = discountedSubtotal >= 5000 ? 0 : 99;
 
-  /* =========================================
-     TAX
-  ========================================= */
+  const estimatedTax = Math.floor(discountedSubtotal * 0.02);
 
-  const estimatedTax =
-    Math.floor(cartSubtotal * 0.02);
-
-  /* =========================================
-     FINAL TOTAL
-  ========================================= */
-
-  const finalTotal =
-    cartSubtotal +
-    shipping +
-    estimatedTax;
+  const finalTotal = discountedSubtotal + shipping + estimatedTax;
 
   const counts =
     await getCounts(userId);

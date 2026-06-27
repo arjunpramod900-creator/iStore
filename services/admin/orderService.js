@@ -3,10 +3,11 @@ import User from "../../models/User.js";
 import Variant from "../../models/Variant.js";
 import { creditWallet } from "../shared/walletService.js";
 import {
-    calculateItemRefund,
     calculateFullOrderRefund,
-    recalculateOrderTotals,
 } from "../shared/refundCalculator.js";
+import { revalidateCouponOnMutation } from "../shared/couponRevalidationService.js";
+import CouponUsage from "../../models/CouponUsage.js";
+import Coupon from "../../models/Coupon.js";
 
 /* ============================
    CONSTANTS
@@ -121,23 +122,18 @@ export const updateOrderStatusService = async (
     }
 
     /* ==========================
-   PAYMENT VALIDATION
-========================== */
-
-if (
-    order.paymentMethod === "RAZORPAY" &&
-    order.paymentStatus !== "Paid"
-) {
-
-    if (status !== "Cancelled") {
-
-        throw new Error(
-            "Cannot update order status until payment is completed."
-        );
-
+       PAYMENT VALIDATION
+    ========================== */
+    if (
+        order.paymentMethod === "RAZORPAY" &&
+        order.paymentStatus !== "Paid"
+    ) {
+        if (status !== "Cancelled") {
+            throw new Error(
+                "Cannot update order status until payment is completed."
+            );
+        }
     }
-
-}
 
     if (order.orderStatus === status) {
         throw new Error(
@@ -146,42 +142,19 @@ if (
     }
 
     const transitions = {
-
-        Pending: [
-            "Processing",
-            "Cancelled",
-        ],
-
-        Processing: [
-            "Shipped",
-            "Cancelled",
-        ],
-
-        Shipped: [
-            "Out for Delivery",
-        ],
-
-        "Out for Delivery": [
-            "Delivered",
-        ],
-
-        Delivered: [],
-
-        Cancelled: [],
-
-        Returned: [],
+        Pending:          ["Processing", "Cancelled"],
+        Processing:       ["Shipped",    "Cancelled"],
+        Shipped:          ["Out for Delivery"],
+        "Out for Delivery": ["Delivered"],
+        Delivered:        [],
+        Cancelled:        [],
+        Returned:         [],
     };
 
-    if (
-        !transitions[
-            order.orderStatus
-        ].includes(status)
-    ) {
-
+    if (!transitions[order.orderStatus].includes(status)) {
         throw new Error(
             `Cannot move from ${order.orderStatus} to ${status}`
         );
-
     }
 
     /* ==========================
@@ -202,14 +175,8 @@ if (
 
             bulkOperations.push({
                 updateOne: {
-                    filter: {
-                        _id: item.variantId,
-                    },
-                    update: {
-                        $inc: {
-                            stock: item.quantity,
-                        },
-                    },
+                    filter: { _id: item.variantId },
+                    update: { $inc: { stock: item.quantity } },
                 },
             });
 
@@ -217,84 +184,55 @@ if (
         }
 
         if (bulkOperations.length > 0) {
-
-            await Variant.bulkWrite(
-                bulkOperations,
-                {
-                    ordered: false,
-                }
-            );
-
+            await Variant.bulkWrite(bulkOperations, { ordered: false });
         }
 
         /* Refund only once */
         if (
-            ["RAZORPAY", "WALLET"].includes(
-                order.paymentMethod
-            ) &&
+            ["RAZORPAY", "WALLET"].includes(order.paymentMethod) &&
             !order.isRefundProcessed
         ) {
 
-            const {
-                refundAmount,
-            } = calculateFullOrderRefund(order);
+            const { refundAmount } = calculateFullOrderRefund(order);
 
             if (refundAmount > 0) {
 
                 await creditWallet({
                     userId: order.userId,
                     amount: refundAmount,
-                    transactionType:
-                        "AdminCancellationRefund",
-                    description:
-                        `Refund for admin-cancelled order ${order.orderId}`,
+                    transactionType: "AdminCancellationRefund",
+                    description: `Refund for admin-cancelled order ${order.orderId}`,
                     orderId: order._id,
                 });
 
-                order.refundAmount += refundAmount;
-
-                order.isRefundProcessed = true;
-
-                order.paymentStatus = "Refunded";
+                order.refundAmount      += refundAmount;
+                order.isRefundProcessed  = true;
+                order.paymentStatus      = "Refunded";
             }
         }
-        /*
-   COD cancelled before delivery
-*/
-if (order.paymentMethod === "COD") {
 
-    order.paymentStatus = "Cancelled";
-
-}
+        /* COD cancelled before delivery */
+        if (order.paymentMethod === "COD") {
+            order.paymentStatus = "Cancelled";
+        }
     }
 
     order.orderStatus = status;
 
     for (const item of order.items) {
-
-        if (
-            ![
-                "Cancelled",
-                "Returned",
-            ].includes(item.itemStatus)
-        ) {
-
+        if (!["Cancelled", "Returned"].includes(item.itemStatus)) {
             item.itemStatus = status;
         }
     }
 
-if (status === "Delivered") {
+    if (status === "Delivered") {
+        order.deliveredDate = new Date();
 
-    order.deliveredDate = new Date();
-
-    /*
-       COD payment collected at delivery
-    */
-    if (order.paymentMethod === "COD") {
-        order.paymentStatus = "Paid";
+        /* COD payment collected at delivery */
+        if (order.paymentMethod === "COD") {
+            order.paymentStatus = "Paid";
+        }
     }
-
-}
 
     await order.save();
 
@@ -315,9 +253,7 @@ export const handleReturnRequestService = async (
     }
 
     if (order.returnStatus !== "Requested") {
-        throw new Error(
-            "No pending return request"
-        );
+        throw new Error("No pending return request");
     }
 
     /* ==========================
@@ -325,11 +261,9 @@ export const handleReturnRequestService = async (
     ========================== */
     if (action === "approve") {
 
-        order.returnStatus = "Approved";
-
+        order.returnStatus    = "Approved";
         order.returnApprovedAt = new Date();
-
-        order.orderStatus = "Returned";
+        order.orderStatus     = "Returned";
 
         const bulkOperations = [];
 
@@ -344,46 +278,37 @@ export const handleReturnRequestService = async (
 
             bulkOperations.push({
                 updateOne: {
-                    filter: {
-                        _id: item.variantId,
-                    },
-                    update: {
-                        $inc: {
-                            stock: item.quantity,
-                        },
-                    },
+                    filter: { _id: item.variantId },
+                    update: { $inc: { stock: item.quantity } },
                 },
             });
 
-            item.itemStatus = "Returned";
-
+            item.itemStatus       = "Returned";
             item.itemReturnStatus = "Approved";
-
             item.returnApprovedAt = new Date();
         }
 
         if (bulkOperations.length > 0) {
+            await Variant.bulkWrite(bulkOperations, { ordered: false });
+        }
 
-            await Variant.bulkWrite(
-                bulkOperations,
-                {
-                    ordered: false,
-                }
-            );
-
+        if (order.couponId) {
+            const usage = await CouponUsage.findOneAndDelete({
+                couponId: order.couponId,
+                orderId: order._id,
+            });
+            if (usage) {
+                await Coupon.findByIdAndUpdate(order.couponId, { $inc: { usedCount: -1 } });
+            }
         }
 
         /* Refund only once */
         if (
-            ["RAZORPAY", "WALLET"].includes(
-                order.paymentMethod
-            ) &&
+            ["RAZORPAY", "WALLET"].includes(order.paymentMethod) &&
             !order.isRefundProcessed
         ) {
 
-            const {
-                refundAmount,
-            } = calculateFullOrderRefund(order);
+            const { refundAmount } = calculateFullOrderRefund(order);
 
             if (refundAmount > 0) {
 
@@ -391,38 +316,27 @@ export const handleReturnRequestService = async (
                     userId: order.userId,
                     amount: refundAmount,
                     transactionType: "ReturnRefund",
-                    description:
-                        `Refund for returned order ${order.orderId}`,
+                    description: `Refund for returned order ${order.orderId}`,
                     orderId: order._id,
                 });
 
-                order.refundAmount += refundAmount;
-
-                order.isRefundProcessed = true;
-
-                order.paymentStatus = "Refunded";
+                order.refundAmount      += refundAmount;
+                order.isRefundProcessed  = true;
+                order.paymentStatus      = "Refunded";
             }
         }
-        /*
-   COD already paid at delivery.
-   Returned order means money returned.
-*/
-if (
-    order.paymentMethod === "COD"
-) {
 
-    order.paymentStatus = "Refunded";
+        /* COD already paid at delivery — mark refunded */
+        if (order.paymentMethod === "COD") {
+            order.paymentStatus     = "Refunded";
 
-}
-
-
+        }
 
         await order.save();
 
         return {
             success: true,
-            message:
-                "Return approved and refund credited to wallet",
+            message: "Return approved and refund credited to wallet",
         };
     }
 
@@ -432,49 +346,33 @@ if (
     if (action === "reject") {
 
         order.returnStatus = "Rejected";
-
         order.returnReason = null;
 
         for (const item of order.items) {
-
-            if (
-                item.itemReturnStatus === "Requested"
-            ) {
-
+            if (item.itemReturnStatus === "Requested") {
                 item.itemReturnStatus = "Rejected";
             }
         }
-        /*
-   Rejected return means customer keeps product.
-   Delivered COD order remains paid.
-*/
-if (
-    order.paymentMethod === "COD" &&
-    order.deliveredDate
-) {
 
-    order.paymentStatus = "Paid";
-
-}
+        /* Rejected return — customer keeps product, remains paid */
+        if (order.paymentMethod === "COD" && order.deliveredDate) {
+            order.paymentStatus = "Paid";
+        }
 
         await order.save();
 
         return {
             success: true,
-            message:
-                "Return request rejected",
+            message: "Return request rejected",
         };
     }
 
-    throw new Error(
-        "Invalid action"
-    );
+    throw new Error("Invalid action");
 
 };
+
 /* ============================
    SINGLE ITEM RETURN — approve / reject
-   FIX: isRefundProcessed guard per item
-   to prevent double refund on retries
 ============================ */
 export const handleItemReturnRequestService = async (
     orderId,
@@ -495,9 +393,7 @@ export const handleItemReturnRequestService = async (
     }
 
     if (item.itemReturnStatus !== "Requested") {
-        throw new Error(
-            "No pending return request for this item"
-        );
+        throw new Error("No pending return request for this item");
     }
 
     /* =================================
@@ -505,41 +401,23 @@ export const handleItemReturnRequestService = async (
     ================================= */
     if (action === "approve") {
 
-        /* Already returned */
-        if (
-            item.itemStatus === "Returned"
-        ) {
-
-            throw new Error(
-                "Item already returned"
-            );
-
+        if (item.itemStatus === "Returned") {
+            throw new Error("Item already returned");
         }
 
         /* Restore stock */
         await Variant.findByIdAndUpdate(
             item.variantId,
-            {
-                $inc: {
-                    stock: item.quantity,
-                },
-            }
+            { $inc: { stock: item.quantity } }
         );
+
+        const { refundAmount, message: couponMsg } = await revalidateCouponOnMutation(order, item, "returned");
 
         /* Refund only once */
         if (
-            ["RAZORPAY", "WALLET"].includes(
-                order.paymentMethod
-            ) &&
+            ["RAZORPAY", "WALLET"].includes(order.paymentMethod) &&
             !item.isRefundProcessed
         ) {
-
-            const {
-                refundAmount,
-            } = calculateItemRefund(
-                order,
-                item
-            );
 
             if (refundAmount > 0) {
 
@@ -547,101 +425,51 @@ export const handleItemReturnRequestService = async (
                     userId: order.userId,
                     amount: refundAmount,
                     transactionType: "ReturnRefund",
-                    description:
-                        `Refund for returned item [${item._id}] "${item.productName}" in order ${order.orderId}`,
+                    description: `Refund for returned item [${item._id}] "${item.productName}" in order ${order.orderId}`,
                     orderId: order._id,
                     transactionId: String(item._id),
                 });
 
-                item.refundAmount =
-                    refundAmount;
-
-                item.isRefundProcessed =
-                    true;
-
-                    order.refundAmount += refundAmount;
+                item.refundAmount       = refundAmount;
+                item.isRefundProcessed  = true;
+                order.refundAmount     += refundAmount;
             }
         }
 
-        item.itemStatus =
-            "Returned";
+        item.itemStatus       = "Returned";
+        item.itemReturnStatus = "Approved";
+        item.returnApprovedAt = new Date();
 
-        item.itemReturnStatus =
-            "Approved";
+        /*
+         * NOTE: Invoice fields (subtotal, taxAmount, deliveryCharge,
+         * couponDiscount, discountAmount, finalAmount) are intentionally
+         * NOT modified here. The pricingSnapshot holds the permanent
+         * financial record. Refunds are tracked via order.refundAmount
+         * and item.refundAmount only.
+         */
 
-        item.returnApprovedAt =
-            new Date();
-
-        /* Remaining active items */
-        const activeItems =
-            order.items.filter(
-                i =>
-                    ![
-                        "Cancelled",
-                        "Returned",
-                    ].includes(
-                        i.itemStatus
-                    )
-            );
-
-        /* Recalculate order totals */
-        const updatedTotals =
-            recalculateOrderTotals(
-                order,
-                activeItems
-            );
-
-        order.subtotal =
-            updatedTotals.subtotal;
-
-        order.taxAmount =
-            updatedTotals.taxAmount;
-
-        order.deliveryCharge =
-            updatedTotals.deliveryCharge;
-
-        order.couponDiscount =
-            updatedTotals.couponDiscount;
-
-        order.discountAmount =
-            updatedTotals.discountAmount;
-
-        order.finalAmount =
-            updatedTotals.finalAmount;
-
-        /* Entire order resolved */
-        const allResolved =
-            order.items.every(
-                i =>
-                    [
-                        "Cancelled",
-                        "Returned",
-                    ].includes(
-                        i.itemStatus
-                    )
-            );
+        /* Check if entire order is now resolved */
+        const allResolved = order.items.every(
+            i => ["Cancelled", "Returned"].includes(i.itemStatus)
+        );
 
 if (allResolved) {
 
     order.orderStatus = "Returned";
-
     order.returnStatus = "Approved";
-
     order.returnApprovedAt = new Date();
 
-    if (
-        ["RAZORPAY", "WALLET"].includes(order.paymentMethod)
-    ) {
+    if (order.paymentMethod === "COD") {
         order.paymentStatus = "Refunded";
     }
+
 }
 
         await order.save();
 
         return {
             success: true,
-            message:
-                "Item return approved and refund credited to wallet",
+            message: "Item return approved and refund credited to wallet. " + (couponMsg ? couponMsg : ""),
         };
     }
 
@@ -650,29 +478,20 @@ if (allResolved) {
     ================================= */
     if (action === "reject") {
 
-        item.itemReturnStatus =
-            "Rejected";
+        item.itemReturnStatus = "Rejected";
 
-            if (
-    order.paymentMethod === "COD" &&
-    order.deliveredDate
-) {
-
-    order.paymentStatus = "Paid";
-
-}
+        if (order.paymentMethod === "COD" && order.deliveredDate) {
+            order.paymentStatus = "Paid";
+        }
 
         await order.save();
 
         return {
             success: true,
-            message:
-                "Item return request rejected",
+            message: "Item return request rejected",
         };
     }
 
-    throw new Error(
-        "Invalid action"
-    );
+    throw new Error("Invalid action");
 
 };

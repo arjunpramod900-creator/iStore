@@ -4,10 +4,6 @@ export const getSalesReportService = async (filterType, startDate, endDate) => {
 
   const today = new Date();
 
-  /* ================================================
-     BUILD DATE RANGE per filter
-  ================================================ */
-
   let rangeStart;
   let rangeEnd;
 
@@ -19,7 +15,7 @@ export const getSalesReportService = async (filterType, startDate, endDate) => {
 
   } else if (filterType === "weekly") {
     rangeStart = new Date();
-    rangeStart.setDate(today.getDate() - 6); /* last 7 days including today */
+    rangeStart.setDate(today.getDate() - 6);
     rangeStart.setHours(0, 0, 0, 0);
     rangeEnd = new Date();
     rangeEnd.setHours(23, 59, 59, 999);
@@ -43,7 +39,7 @@ export const getSalesReportService = async (filterType, startDate, endDate) => {
     rangeEnd.setHours(23, 59, 59, 999);
 
   } else {
-    /* fallback: weekly */
+    // fallback — last 7 days
     rangeStart = new Date();
     rangeStart.setDate(today.getDate() - 6);
     rangeStart.setHours(0, 0, 0, 0);
@@ -51,55 +47,28 @@ export const getSalesReportService = async (filterType, startDate, endDate) => {
     rangeEnd.setHours(23, 59, 59, 999);
   }
 
-/* ================================================
-   MATCH STAGE
-   Include both Delivered and Returned orders
-   so revenue reflects actual sales.
-================================================ */
+  const dateRange = { $gte: rangeStart, $lte: rangeEnd };
 
-const matchStage = {
-  orderStatus: "Delivered",
-  createdAt: {
-    $gte: rangeStart,
-    $lte: rangeEnd
-  }
-};
-
-  /* Match for counts (all statuses in range) */
-  const matchAllStatuses = {
-    createdAt: { $gte: rangeStart, $lte: rangeEnd },
-  };
-
-  /* ================================================
-     CHART GROUPING FORMAT per filter
-     daily   → group by hour  (00:00 … 23:00)
-     weekly  → group by day   (Mon 12 Jun)
-     monthly → group by day   (01 … 31)
-     yearly  → group by month (Jan … Dec)
-     custom  → auto: ≤31 days → by day, else by month
-  ================================================ */
-
+  /* ─────────────────────────────────────────────────────
+     CHART FORMAT
+  ───────────────────────────────────────────────────── */
   let chartDateFormat;
-  let chartGroupType; /* "hour" | "day" | "month" */
+  let chartGroupType;
 
   if (filterType === "daily") {
     chartDateFormat = "%H:00";
     chartGroupType  = "hour";
-
   } else if (filterType === "weekly") {
-    chartDateFormat = "%d %b";   /* e.g. "11 Jun" */
+    chartDateFormat = "%d %b";
     chartGroupType  = "day";
-
   } else if (filterType === "monthly") {
-    chartDateFormat = "%d";       /* day number */
+    chartDateFormat = "%d";
     chartGroupType  = "day";
-
   } else if (filterType === "yearly") {
-    chartDateFormat = "%b";       /* e.g. "Jan" */
+    chartDateFormat = "%b";
     chartGroupType  = "month";
-
   } else {
-    /* custom — decide by range length */
+    // custom
     const diffDays = Math.ceil((rangeEnd - rangeStart) / (1000 * 60 * 60 * 24));
     if (diffDays <= 1) {
       chartDateFormat = "%H:00";
@@ -113,385 +82,388 @@ const matchStage = {
     }
   }
 
-  /* ================================================
-     SUMMARY REPORT
-  ================================================ */
+  /* ─────────────────────────────────────────────────────
+     SALES SUMMARY
+     grossRevenue      = total collected from ALL orders placed (Delivered + Returned)
+                         Uses pricingSnapshot.originalFinalAmount — immutable, never zeroed.
+     deliveredRevenue  = gross from Delivered orders only (used for AOV)
+     totalRefundAmount = money paid back for Returned orders
+     netRevenue        = grossRevenue − totalRefundAmount
+     totalDiscount     = offer + coupon savings on Delivered orders
+  ───────────────────────────────────────────────────── */
 
-const report = await Order.aggregate([
-  { $match: matchStage },
+  const totalSalesCount = await Order.countDocuments({
+    orderStatus: "Delivered",
+    createdAt:   dateRange,
+  });
 
-  {
-    $group: {
-      _id: null,
+  const totalReturnedCount = await Order.countDocuments({
+    orderStatus: "Returned",
+    createdAt:   dateRange,
+  });
 
-      totalSalesCount: {
-        $sum: {
-          $cond: [
-            { $eq: ["$orderStatus", "Delivered"] },
-            1,
-            0
-          ]
-        }
+  const totalCompletedOrders = totalSalesCount + totalReturnedCount;
+
+  // Single pass: gross from Delivered+Returned, delivered-only revenue for AOV, discounts
+  const deliveredSummary = await Order.aggregate([
+    {
+      $match: {
+        orderStatus: { $in: ["Delivered", "Returned"] },
+        createdAt:   dateRange,
       },
-
-      grossRevenue: {
-        $sum: {
-          $ifNull: [
-            "$pricingSnapshot.originalFinalAmount",
-            "$finalAmount"
-          ]
-        }
+    },
+    {
+      $group: {
+        _id: null,
+        // What customers paid across ALL completed orders (the revenue the store received)
+        grossRevenue: {
+          $sum: {
+            $ifNull: ["$pricingSnapshot.originalFinalAmount", "$finalAmount"],
+          },
+        },
+        // Revenue from Delivered-only orders — used for AOV so returns don't inflate it
+        deliveredRevenue: {
+          $sum: {
+            $cond: [
+              { $eq: ["$orderStatus", "Delivered"] },
+              { $ifNull: ["$pricingSnapshot.originalFinalAmount", "$finalAmount"] },
+              0,
+            ],
+          },
+        },
+        // Discounts given (on delivered orders only — returned ones never "kept" the discount)
+        totalOfferDiscount: {
+          $sum: {
+            $cond: [
+              { $eq: ["$orderStatus", "Delivered"] },
+              { $ifNull: ["$pricingSnapshot.originalOfferDiscount", "$offerDiscount"] },
+              0,
+            ],
+          },
+        },
+        totalCouponDiscount: {
+          $sum: {
+            $cond: [
+              { $eq: ["$orderStatus", "Delivered"] },
+              { $ifNull: ["$pricingSnapshot.originalCouponDiscount", "$couponDiscount"] },
+              0,
+            ],
+          },
+        },
       },
+    },
+  ]);
 
-      totalRefundAmount: {
-        $sum: "$refundAmount"
+  const refundSummary = await Order.aggregate([
+    {
+      $match: {
+        orderStatus: "Returned",
+        createdAt:   dateRange,
       },
-
-      totalDiscount: {
-        $sum: {
-          $add: [
-            {
-              $ifNull: [
-                "$pricingSnapshot.originalOfferDiscount",
-                "$offerDiscount"
-              ]
-            },
-            {
-              $ifNull: [
-                "$pricingSnapshot.originalCouponDiscount",
-                "$couponDiscount"
-              ]
-            }
-          ]
-        }
+    },
+    {
+      $group: {
+        _id: null,
+        // Use pricingSnapshot — works for COD and digital payments equally.
+        // order.refundAmount is 0 for COD returns (no digital transaction),
+        // but the revenue reversal should always equal what the customer originally paid.
+        refundAmount: {
+          $sum: { $ifNull: ["$pricingSnapshot.originalFinalAmount", "$finalAmount"] },
+        },
       },
+    },
+  ]);
 
-      totalCouponDeduction: {
-        $sum: {
-          $ifNull: [
-            "$pricingSnapshot.originalCouponDiscount",
-            "$couponDiscount"
-          ]
-        }
-      }
-    }
-  }
-]);
+  const grossRevenue        = deliveredSummary[0]?.grossRevenue        || 0;
+  const deliveredRevenue    = deliveredSummary[0]?.deliveredRevenue     || 0;
+  const totalRefundAmount   = refundSummary[0]?.refundAmount           || 0;
+  const netRevenue          = grossRevenue - totalRefundAmount;
+  const totalOfferDiscount  = deliveredSummary[0]?.totalOfferDiscount  || 0;
+  const totalCouponDiscount = deliveredSummary[0]?.totalCouponDiscount || 0;
+  const totalDiscount       = totalOfferDiscount + totalCouponDiscount;
 
+  // AOV = delivered revenue ÷ delivered order count (excludes returned orders)
+  const avgOrderValue = totalSalesCount > 0
+    ? Math.round(deliveredRevenue / totalSalesCount)
+    : 0;
 
-const refundReport = await Order.aggregate([
-  {
-    $match: {
-      orderStatus: "Returned",
-      createdAt: {
-        $gte: rangeStart,
-        $lte: rangeEnd
-      }
-    }
-  },
-  {
-    $group: {
-      _id: null,
-      totalRefundAmount: {
-        $sum: "$refundAmount"
+  // Return rate: returned / (delivered + returned) × 100
+  const returnRate = totalCompletedOrders > 0
+    ? ((totalReturnedCount / totalCompletedOrders) * 100).toFixed(1)
+    : "0.0";
+
+  /* ─────────────────────────────────────────────────────
+     REVENUE CHART
+     Net revenue per time bucket: delivered gross − refunds.
+     Clamped to 0 — chart never goes negative.
+  ───────────────────────────────────────────────────── */
+  const rawChart = await Order.aggregate([
+    {
+      $match: {
+        orderStatus: { $in: ["Delivered", "Returned"] },
+        createdAt:   dateRange,
       },
-      returnedOrders: {
-        $sum: 1
-      }
-    }
-  }
-]);
-  /* ================================================
-     REVENUE CHART — fill ALL buckets so graph
-     has no gaps (e.g. days with zero revenue still show)
-  ================================================ */
-
-const rawChart = await Order.aggregate([
-  { $match: matchStage },
-
-  {
-    $group: {
-      _id: {
-        $dateToString: {
-          format: chartDateFormat,
-          date: "$createdAt",
-          timezone: "Asia/Kolkata"
-        }
+    },
+    {
+      $group: {
+        _id: {
+          $dateToString: {
+            format:   chartDateFormat,
+            date:     "$createdAt",
+            timezone: "Asia/Kolkata",
+          },
+        },
+        grossRevenue: {
+          $sum: {
+            $cond: [
+              { $eq: ["$orderStatus", "Delivered"] },
+              { $ifNull: ["$pricingSnapshot.originalFinalAmount", "$finalAmount"] },
+              0,
+            ],
+          },
+        },
+        refundAmount: {
+          $sum: {
+            $cond: [
+              { $eq: ["$orderStatus", "Returned"] },
+              // pricingSnapshot — same logic as summary: works for COD + digital
+              { $ifNull: ["$pricingSnapshot.originalFinalAmount", "$finalAmount"] },
+              0,
+            ],
+          },
+        },
       },
-
-      grossRevenue: {
-        $sum: {
-          $ifNull: [
-            "$pricingSnapshot.originalFinalAmount",
-            "$finalAmount"
-          ]
-        }
+    },
+    {
+      $project: {
+        // Clamp to 0 so chart bars/lines are never negative
+        revenue: {
+          $max: [0, { $subtract: ["$grossRevenue", "$refundAmount"] }],
+        },
       },
+    },
+    { $sort: { _id: 1 } },
+  ]);
 
-      refunds: {
-        $sum: "$refundAmount"
-      }
-    }
-  },
-
-  {
-    $project: {
-      revenue: {
-        $subtract: [
-          "$grossRevenue",
-          "$refunds"
-        ]
-      }
-    }
-  },
-
-  {
-    $sort: {
-      _id: 1
-    }
-  }
-]);
-
-  /* Build a lookup map from db results */
-  const revenueMap = {};
+  const revenueMap  = {};
   rawChart.forEach(item => { revenueMap[item._id] = item.revenue; });
 
-  /* Generate full label set so chart never has gaps */
-  const allLabels = generateLabels(filterType, rangeStart, rangeEnd, chartGroupType);
+  const chartLabels = generateLabels(filterType, rangeStart, rangeEnd, chartGroupType);
+  const chartData   = chartLabels.map(label => revenueMap[label] || 0);
 
-  const chartLabels = allLabels;
-  const chartData   = allLabels.map(label => revenueMap[label] || 0);
-
-  /* ================================================
-     TOP PRODUCTS
-  ================================================ */
-
-const topProducts = await Order.aggregate([
-  { $match: matchStage },
-
-  { $unwind: "$items" },
-
-  {
-    $match: {
-      "items.itemStatus": {
-        $nin: ["Returned", "Cancelled"]
-      }
-    }
-  },
-
-  {
-    $group: {
-      _id: "$items.productId",
-
-      name: {
-        $first: "$items.productName"
+  /* ─────────────────────────────────────────────────────
+     TOP PRODUCTS — Delivered orders only
+     units   = total quantity of items delivered
+     revenue = sum of item finalPrice for delivered items
+  ───────────────────────────────────────────────────── */
+  const topProducts = await Order.aggregate([
+    {
+      $match: {
+        orderStatus: "Delivered",
+        createdAt:   dateRange,
       },
-
-      units: {
-        $sum: "$items.quantity"
+    },
+    { $unwind: "$items" },
+    { $match: { "items.itemStatus": { $ne: "Cancelled" } } },
+    {
+      $group: {
+        _id:     "$items.productId",
+        name:    { $first: "$items.productName" },
+        units:   { $sum: "$items.quantity" },
+        revenue: {
+          $sum: {
+            $ifNull: [
+              "$items.finalPrice",
+              { $multiply: ["$items.price", "$items.quantity"] },
+            ],
+          },
+        },
       },
+    },
+    { $sort: { revenue: -1 } },
+    { $limit: 10 },
+  ]);
 
-      revenue: {
-        $sum: {
-          $multiply: [
-            "$items.quantity",
-            "$items.price"
-          ]
-        }
-      }
-    }
-  },
-
-  {
-    $sort: {
-      revenue: -1
-    }
-  },
-
-  {
-    $limit: 10
-  }
-]);
-
-  /* ================================================
+  /* ─────────────────────────────────────────────────────
      TOP CATEGORIES
-  ================================================ */
+     Revenue = item finalPrice (post-offer-discount) minus item refunds.
+     Only non-cancelled items across Delivered+Returned orders.
+  ───────────────────────────────────────────────────── */
+  const topCategoriesRaw = await Order.aggregate([
+    {
+      $match: {
+        orderStatus: { $in: ["Delivered", "Returned"] },
+        createdAt:   dateRange,
+      },
+    },
+    { $unwind: "$items" },
+    {
+      $match: {
+        "items.itemStatus": { $ne: "Cancelled" },
+      },
+    },
+    {
+      $lookup: {
+        from:         "products",
+        localField:   "items.productId",
+        foreignField: "_id",
+        as:           "product",
+      },
+    },
+    { $unwind: { path: "$product", preserveNullAndEmptyArrays: false } },
+    {
+      $lookup: {
+        from:         "categories",
+        localField:   "product.categoryId",
+        foreignField: "_id",
+        as:           "category",
+      },
+    },
+    { $unwind: { path: "$category", preserveNullAndEmptyArrays: false } },
+    {
+      $group: {
+        _id: "$category.name",
 
-const topCategories = await Order.aggregate([
-  { $match: matchStage },
+        // Revenue from SOLD (non-returned) items only — always positive
+        revenue: {
+          $sum: {
+            $cond: [
+              { $ne: ["$items.itemStatus", "Returned"] },
+              { $ifNull: ["$items.finalPrice", { $multiply: ["$items.price", "$items.quantity"] }] },
+              0,
+            ],
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        _id:     1,
+        revenue: 1,
+      },
+    },
+    { $sort: { revenue: -1 } },
+    { $limit: 10 },
+  ]);
 
-  { $unwind: "$items" },
+  const totalCategoryRevenue = topCategoriesRaw.reduce(
+    (sum, cat) => sum + (cat.revenue || 0), 0
+  );
 
-  {
-    $match: {
-      "items.itemStatus": {
-        $nin: ["Returned", "Cancelled"]
-      }
-    }
-  },
-
-  {
-    $lookup: {
-      from: "products",
-      localField: "items.productId",
-      foreignField: "_id",
-      as: "product"
-    }
-  },
-
-  {
-    $unwind: "$product"
-  },
-
-  {
-    $lookup: {
-      from: "categories",
-      localField: "product.categoryId",
-      foreignField: "_id",
-      as: "category"
-    }
-  },
-
-  {
-    $unwind: "$category"
-  },
-
-  {
-    $group: {
-      _id: "$category.name",
-
-      revenue: {
-        $sum: {
-          $multiply: [
-            "$items.quantity",
-            "$items.price"
-          ]
-        }
-      }
-    }
-  },
-
-  {
-    $sort: {
-      revenue: -1
-    }
-  },
-
-  {
-    $limit: 10
-  }
-]);
-
-  const totalCategoryRevenue = topCategories.reduce((sum, c) => sum + c.revenue, 0);
-
-  const categoriesWithPercentage = topCategories.map(cat => ({
+  const topCategories = topCategoriesRaw.map(cat => ({
     ...cat,
     percentage: totalCategoryRevenue > 0
       ? Math.round((cat.revenue / totalCategoryRevenue) * 100)
       : 0,
   }));
 
-  /* ================================================
+  /* ─────────────────────────────────────────────────────
      PAYMENT METHODS
-  ================================================ */
-
-  const paymentStats = await Order.aggregate([
-    { $match: matchStage },
-    { $group: { _id: "$paymentMethod", count: { $sum: 1 } } },
+     Percentage and raw count breakdown (Delivered + Returned).
+  ───────────────────────────────────────────────────── */
+  const paymentStatsRaw = await Order.aggregate([
+    {
+      $match: {
+        orderStatus: { $in: ["Delivered", "Returned"] },
+        createdAt:   dateRange,
+      },
+    },
+    {
+      $group: {
+        _id:   "$paymentMethod",
+        count: { $sum: 1 },
+      },
+    },
   ]);
 
-  const totalPayments = paymentStats.reduce((sum, item) => sum + item.count, 0);
+  const totalPaymentOrders = paymentStatsRaw.reduce((s, i) => s + i.count, 0);
 
   const paymentMethods = { cod: 0, razorpay: 0, wallet: 0 };
+  const paymentCounts  = { cod: 0, razorpay: 0, wallet: 0 };
 
-  paymentStats.forEach(item => {
-    const pct = totalPayments > 0 ? Math.round((item.count / totalPayments) * 100) : 0;
-    if (item._id === "COD")      paymentMethods.cod      = pct;
-    if (item._id === "RAZORPAY") paymentMethods.razorpay = pct;
-    if (item._id === "WALLET")   paymentMethods.wallet   = pct;
+  paymentStatsRaw.forEach(item => {
+    const pct = totalPaymentOrders > 0
+      ? Math.round((item.count / totalPaymentOrders) * 100)
+      : 0;
+    if (item._id === "COD")      { paymentMethods.cod      = pct; paymentCounts.cod      = item.count; }
+    if (item._id === "RAZORPAY") { paymentMethods.razorpay = pct; paymentCounts.razorpay = item.count; }
+    if (item._id === "WALLET")   { paymentMethods.wallet   = pct; paymentCounts.wallet   = item.count; }
   });
 
-  /* ================================================
-     RETURN RATE
-     Use matchAllStatuses (not just Delivered) so
-     returned orders are included in the denominator
-  ================================================ */
-
-  const totalOrdersInRange = await Order.countDocuments(matchAllStatuses);
-
-  const returnedOrders = await Order.countDocuments({
-    ...matchAllStatuses,
-    orderStatus: "Returned",
-  });
-
-  const returnRate = totalOrdersInRange > 0
-    ? ((returnedOrders / totalOrdersInRange) * 100).toFixed(1)
-    : 0;
-
-  /* ================================================
-     RECENT ORDERS (all statuses in range)
-  ================================================ */
-
-  const recentOrders = await Order
-    .find(matchAllStatuses)
+  /* ─────────────────────────────────────────────────────
+     RECENT ORDERS
+     Latest 10 orders across ALL statuses in the date range.
+     displayAmount = what the customer originally paid (immutable
+     snapshot), so returned orders never show ₹0.
+  ───────────────────────────────────────────────────── */
+  const recentOrderDocs = await Order
+    .find({ createdAt: dateRange })
     .sort({ createdAt: -1 })
     .limit(10)
     .lean();
 
-  /* ================================================
+  const recentOrders = recentOrderDocs.map(order => ({
+    ...order,
+    displayAmount:
+      order.pricingSnapshot?.originalFinalAmount ??
+      order.finalAmount ??
+      0,
+  }));
+
+  /* ─────────────────────────────────────────────────────
      RETURN
-  ================================================ */
+  ───────────────────────────────────────────────────── */
+  return {
+    // Order counts
+    totalSalesCount,          // delivered orders (true sales)
+    totalReturnedCount,       // returned orders
+    totalCompletedOrders,     // delivered + returned
 
-const grossRevenue =
-    report[0]?.grossRevenue || 0;
+    // Revenue
+    grossRevenue,             // sum paid on delivered orders
+    totalRefundAmount,        // total refunded for returned orders
+    netRevenue,               // grossRevenue − totalRefundAmount
+    totalOrderAmount: netRevenue,
 
-const refundedRevenue =
-    refundReport[0]?.totalRefundAmount || 0;
+    // Discounts
+    totalDiscount,            // total offer + coupon savings
+    totalOfferDiscount,       // offer portion
+    totalCouponDiscount,      // coupon portion
+    totalCouponDeduction: totalCouponDiscount,
 
-const netRevenue = grossRevenue;
+    // Averages / rates
+    avgOrderValue,            // gross revenue per delivered order
+    returnRate,               // % of completed orders returned
 
-return {
-
-    totalSalesCount:
-        report[0]?.totalSalesCount || 0,
-
-    grossRevenue,
-
-    totalRefundAmount:
-        refundedRevenue,
-
-    totalOrderAmount:
-        netRevenue,
-
-    totalDiscount:
-        report[0]?.totalDiscount || 0,
-
-    totalCouponDeduction:
-        report[0]?.totalCouponDeduction || 0,
-
+    // Chart
     chartLabels,
     chartData,
-    topProducts,
-    topCategories: categoriesWithPercentage,
-    paymentMethods,
-    returnRate,
-    recentOrders,
-    resolvedStartDate: rangeStart.toLocaleDateString("en-IN"),
-    resolvedEndDate: rangeEnd.toLocaleDateString("en-IN"),
-};
+
+    // Tables
+    topProducts,              // { name, units, returnedUnits, revenue }
+    topCategories,            // { _id, revenue, percentage }
+    paymentMethods,           // { cod, razorpay, wallet } percentages
+    paymentCounts,            // { cod, razorpay, wallet } raw counts
+
+    // Recent orders
+    recentOrders,             // includes displayAmount
+
+    // Formatted date labels for the view
+    resolvedStartDate: rangeStart.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
+    resolvedEndDate:   rangeEnd.toLocaleDateString("en-IN",   { day: "2-digit", month: "short", year: "numeric" }),
+  };
 };
 
-/* ================================================
-   HELPER — generate complete label array so the
-   chart always shows every bucket even with 0 revenue
-================================================ */
-
+/* ─────────────────────────────────────────────────────
+   LABEL GENERATOR
+   Returns an ordered array of axis labels matching the
+   MongoDB $dateToString format strings used above.
+───────────────────────────────────────────────────── */
 function generateLabels(filterType, rangeStart, rangeEnd, chartGroupType) {
 
   const labels = [];
 
   if (chartGroupType === "hour") {
-    /* 00:00 → 23:00 */
     for (let h = 0; h < 24; h++) {
       labels.push(`${String(h).padStart(2, "0")}:00`);
     }
@@ -499,21 +471,26 @@ function generateLabels(filterType, rangeStart, rangeEnd, chartGroupType) {
   }
 
   if (chartGroupType === "month") {
-    /* Jan → Dec (or partial range) */
     const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-    const start = new Date(rangeStart.getFullYear(), rangeStart.getMonth(), 1);
-    const end   = new Date(rangeEnd.getFullYear(),   rangeEnd.getMonth(),   1);
-    const cur   = new Date(start);
-    while (cur <= end) {
-      labels.push(monthNames[cur.getMonth()]);
-      cur.setMonth(cur.getMonth() + 1);
+    if (filterType === "yearly") {
+      // Full year — always show all 12 months
+      for (let m = 0; m < 12; m++) {
+        labels.push(monthNames[m]);
+      }
+    } else {
+      // Custom range spanning multiple months
+      const start = new Date(rangeStart.getFullYear(), rangeStart.getMonth(), 1);
+      const end   = new Date(rangeEnd.getFullYear(),   rangeEnd.getMonth(),   1);
+      const cur   = new Date(start);
+      while (cur <= end) {
+        labels.push(monthNames[cur.getMonth()]);
+        cur.setMonth(cur.getMonth() + 1);
+      }
     }
     return labels;
   }
 
-  /* chartGroupType === "day" */
   if (filterType === "monthly") {
-    /* 01, 02, … last day of month */
     const daysInMonth = new Date(rangeStart.getFullYear(), rangeStart.getMonth() + 1, 0).getDate();
     for (let d = 1; d <= daysInMonth; d++) {
       labels.push(String(d).padStart(2, "0"));
@@ -521,7 +498,7 @@ function generateLabels(filterType, rangeStart, rangeEnd, chartGroupType) {
     return labels;
   }
 
-  /* weekly or custom day-level — iterate actual dates */
+  // Day-by-day (weekly or short custom range)
   const cur = new Date(rangeStart);
   cur.setHours(0, 0, 0, 0);
   const end = new Date(rangeEnd);

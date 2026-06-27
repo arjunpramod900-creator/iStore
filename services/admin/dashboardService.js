@@ -160,12 +160,20 @@ export const getDashboardDataService = async (filter = "weekly") => {
      RECENT ORDERS (filtered, all statuses)
   ================================================ */
 
-  const recentOrders = await Order
+  const recentOrderDocs = await Order
     .find(matchAllStatuses)
     .populate("userId", "fullName")
     .sort({ createdAt: -1 })
     .limit(8)
     .lean();
+
+  const recentOrders = recentOrderDocs.map(order => ({
+    ...order,
+    displayAmount:
+      order.pricingSnapshot?.originalFinalAmount ??
+      order.finalAmount ??
+      0,
+  }));
 
   /* ================================================
      TOP SELLING PRODUCTS (filtered)

@@ -198,7 +198,7 @@
                           <span class="customer-name"><%= order.userId?.fullName || "Customer" %></span>
                         </div>
                       </td>
-                      <td class="td-amount">₹<%= order.finalAmount.toLocaleString("en-IN") %></td>
+                      <td class="td-amount">₹<%= order.displayAmount.toLocaleString("en-IN") %></td>
                       <td>
                         <span class="order-badge <%= statusClass(order.orderStatus) %>">
                           <%= order.orderStatus %>

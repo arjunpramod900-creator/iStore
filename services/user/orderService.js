@@ -4,8 +4,11 @@ import { creditWallet } from "../shared/walletService.js";
 import {
     calculateItemRefund,
     calculateFullOrderRefund,
-    recalculateOrderTotals,
+
 } from "../shared/refundCalculator.js";
+import { revalidateCouponOnMutation } from "../shared/couponRevalidationService.js";
+import CouponUsage from "../../models/CouponUsage.js";
+import Coupon from "../../models/Coupon.js";
 
 /* =========================================
    LOAD ORDERS
@@ -135,6 +138,16 @@ export const cancelOrderService = async (userId, orderId, reason) => {
 
     }
 
+    if (order.couponId) {
+        const usage = await CouponUsage.findOneAndDelete({
+            couponId: order.couponId,
+            orderId: order._id,
+        });
+        if (usage) {
+            await Coupon.findByIdAndUpdate(order.couponId, { $inc: { usedCount: -1 } });
+        }
+    }
+
     /* Wallet refund only once */
     if (
         ["RAZORPAY", "WALLET"].includes(order.paymentMethod) &&
@@ -241,14 +254,13 @@ export const cancelOrderItemService = async (
         }
     );
 
+    const { refundAmount, message: couponMsg } = await revalidateCouponOnMutation(order, item, "cancelled");
+
     /* Refund only for prepaid orders */
     if (
         ["RAZORPAY", "WALLET"].includes(order.paymentMethod) &&
         !item.isRefundProcessed
     ) {
-
-        const { refundAmount } =
-            calculateItemRefund(order, item);
 
         if (refundAmount > 0) {
 
@@ -273,26 +285,6 @@ export const cancelOrderItemService = async (
     item.cancelReason =
         reason || "Item cancelled by customer";
 
-    /* Remaining active items */
-    const activeItems = order.items.filter(
-        i =>
-            String(i._id) !== String(item._id) &&
-            !["Cancelled", "Returned"].includes(i.itemStatus)
-    );
-
-    /* Recalculate totals */
-    const updatedTotals =
-        recalculateOrderTotals(
-            order,
-            activeItems
-        );
-
-    order.subtotal = updatedTotals.subtotal;
-    order.taxAmount = updatedTotals.taxAmount;
-    order.deliveryCharge = updatedTotals.deliveryCharge;
-    order.couponDiscount = updatedTotals.couponDiscount;
-    order.discountAmount = updatedTotals.discountAmount;
-    order.finalAmount = updatedTotals.finalAmount;
 
     /* Entire order finished? */
     const allResolved = order.items.every(
@@ -314,12 +306,12 @@ export const cancelOrderItemService = async (
     await order.save();
 
     return {
-        success: true,
-        message:
-            order.paymentMethod === "COD"
-                ? "Product cancelled successfully"
-                : "Product cancelled and refund credited to wallet",
-    };
+            success: true,
+            message:
+                order.paymentMethod === "COD"
+                    ? "Product cancelled successfully. " + (couponMsg ? couponMsg : "")
+                    : "Product cancelled and refund credited to wallet. " + (couponMsg ? couponMsg : ""),
+        };
 
 };
 

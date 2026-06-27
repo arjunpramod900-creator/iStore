@@ -3,14 +3,16 @@ import { calculateItemOffer } from "./offerService.js";
 
 /* =========================================
    CALCULATE CHECKOUT TOTALS
-   
-   NOTE on item.price:
-   cart.item.price = original variant price (NOT offer-discounted).
-   offerService calculates the discount separately.
-   So: subtotal = sum of (item.price × qty)  ← original prices
-       offerDiscount = sum of per-item offer savings
-       discountedSubtotal = subtotal - offerDiscount - couponDiscount
-   This is correct — no double deduction.
+
+   Definitions (spec-compliant):
+   ─────────────────────────────
+   originalSubtotal  = sum(variant.price × qty)       ← pre-offer, for pricingSnapshot
+   offerDiscount     = sum(offerData.offerDiscount)   ← total line savings
+   subtotal          = originalSubtotal − offerDiscount
+                     = sum(finalPrice × qty)           ← post-offer, pre-coupon
+                     = what Order.subtotal stores
+   couponDiscount    = applied on subtotal
+   finalAmount       = subtotal − couponDiscount + delivery + tax
 ========================================= */
 export const calculateCheckoutTotals = async ({
     cartItems,
@@ -19,8 +21,8 @@ export const calculateCheckoutTotals = async ({
     deliveryType = "standard",
 }) => {
 
-    let subtotal      = 0;
-    let offerDiscount = 0;
+    let originalSubtotal = 0; // sum of original prices × qty
+    let offerDiscount    = 0; // total offer savings (line-level, qty already baked in)
 
     for (const item of cartItems) {
         const offer = await calculateItemOffer(
@@ -29,12 +31,12 @@ export const calculateCheckoutTotals = async ({
             item.quantity,
         );
 
-        subtotal      += item.price * item.quantity;  /* original price × qty */
-        offerDiscount += offer.offerDiscount;          /* per-item offer saving */
+        originalSubtotal += item.price * item.quantity; // item.price = original cart price
+        offerDiscount    += offer.offerDiscount;        // already × qty from offerService
     }
 
-    /* Subtotal after offers — used as base for coupon validation */
-    const offerDiscountedSubtotal = subtotal - offerDiscount;
+    /* Post-offer subtotal — this is what Order.subtotal stores */
+    const subtotal = originalSubtotal - offerDiscount;
 
     let couponDiscount = 0;
     let coupon         = null;
@@ -42,7 +44,7 @@ export const calculateCheckoutTotals = async ({
     if (couponCode && userId) {
         const couponResult = await validateCoupon(
             couponCode,
-            offerDiscountedSubtotal,
+            subtotal,   // coupon validated against post-offer subtotal
             userId,
         );
 
@@ -52,7 +54,7 @@ export const calculateCheckoutTotals = async ({
         }
     }
 
-    const discountedSubtotal = offerDiscountedSubtotal - couponDiscount;
+    const discountedSubtotal = subtotal - couponDiscount;
 
     /* DELIVERY */
     let deliveryCharge;
@@ -62,14 +64,15 @@ export const calculateCheckoutTotals = async ({
         deliveryCharge = discountedSubtotal >= 5000 ? 0 : 99;
     }
 
-    /* TAX — 2% on discounted subtotal */
+    /* TAX — 2% on post-coupon subtotal */
     const taxAmount = Math.floor(discountedSubtotal * 0.02);
 
     /* FINAL */
     const finalAmount = discountedSubtotal + deliveryCharge + taxAmount;
 
     return {
-        subtotal,
+        originalSubtotal,  // pre-offer total (for pricingSnapshot label if needed)
+        subtotal,          // post-offer, pre-coupon  ← stored as Order.subtotal
         offerDiscount,
         couponDiscount,
         deliveryCharge,

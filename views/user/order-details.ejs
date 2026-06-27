@@ -298,7 +298,20 @@
                                         <%= item.productName %>
                                         <% if (item.quantity > 1) { %> × <%= item.quantity %><% } %>
                                     </p>
-                                    <p class="od-item-variant"><%= item.variantName %></p>
+                                    <p class="od-item-variant" style="margin-bottom: 6px;"><%= item.variantName %></p>
+
+                                    <!-- ITEM DISCOUNT BREAKDOWN -->
+                                    <div class="od-item-discount-breakdown" style="font-size: 12px; color: #6B7280; margin-bottom: 8px; line-height: 1.6;">
+                                        <% if (item.originalPrice && item.originalPrice > item.price) { %>
+                                            <span style="display: block;">MRP: <span style="text-decoration: line-through;"><%= fmt(item.originalPrice * item.quantity) %></span></span>
+                                        <% } %>
+                                        <% if (item.offerDiscount > 0) { %>
+                                            <span style="display: block;">Offer Discount: −<%= fmt(item.offerDiscount * item.quantity) %></span>
+                                        <% } %>
+                                        <% if (item.couponDiscount > 0) { %>
+                                            <span style="display: block; color: #059669; font-weight: 600;">Coupon Discount: −<%= fmt(item.couponDiscount) %></span>
+                                        <% } %>
+                                    </div>
 
                                     <span class="od-item-stock od-item-stock--<%= (item.itemStatus || 'Active').toLowerCase() %>">
                                         <i data-lucide="<%=
@@ -328,7 +341,12 @@
                                 </div>
 
                                 <div class="od-item-right">
-                                    <span class="od-item-price"><%= fmt(price) %></span>
+                                    <div class="od-item-pricing" style="text-align: right; margin-bottom: 12px;">
+                                        <% if (item.couponDiscount > 0) { %>
+                                            <span style="text-decoration: line-through; color: #9CA3AF; font-size: 13px; display: block; margin-bottom: 2px;"><%= fmt(item.price * item.quantity) %></span>
+                                        <% } %>
+                                        <span class="od-item-price"><%= fmt(item.finalPrice || (item.price * item.quantity)) %></span>
+                                    </div>
 
                                     <%
                                       /* Hide cancel/return buttons when payment is unverified
@@ -397,14 +415,40 @@
                     <section class="od-summary-card" id="odSummaryCard">
                         <h2 class="od-summary-title">Order Summary</h2>
                         <div class="od-summary-rows">
+                            <!-- MRP Total (Pre-Offer) -->
                             <div class="od-summary-row">
-                                <span class="od-summary-row-label">Subtotal</span>
-                                <span class="od-summary-row-value"><%= fmt(subtotal) %></span>
+                                <span class="od-summary-row-label">MRP Total</span>
+                                <span class="od-summary-row-value"><%= fmt((order.subtotal || 0) + (order.offerDiscount || 0)) %></span>
                             </div>
+                            
+                            <!-- Offer Discount -->
+                            <% if (order.offerDiscount > 0) { %>
                             <div class="od-summary-row">
-                                <span class="od-summary-row-label">Discount</span>
-                                <span class="od-summary-row-value discount">−<%= fmt(discount) %></span>
+                                <span class="od-summary-row-label">Offer Discount</span>
+                                <span class="od-summary-row-value discount">−<%= fmt(order.offerDiscount) %></span>
                             </div>
+                            <% } %>
+                        
+                            <!-- Post-Offer Subtotal -->
+                            <div class="od-summary-row" style="padding-top: 10px; border-top: 1px dashed #E5E7EB; margin-top: 6px; margin-bottom: 6px;">
+                                <span class="od-summary-row-label" style="font-weight: 600; color: #374151;">Subtotal</span>
+                                <span class="od-summary-row-value" style="font-weight: 600; color: #374151;"><%= fmt(order.subtotal) %></span>
+                            </div>
+                        
+                            <!-- Coupon Discount -->
+                            <% if (order.couponDiscount > 0) { %>
+                            <div class="od-summary-row">
+                                <span class="od-summary-row-label" style="display:flex; align-items:center; gap: 6px;">
+                                    Coupon 
+                                    <% if (order.couponCode) { %>
+                                        <span style="background: rgba(5,150,105,0.1); color: #059669; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase;"><%= order.couponCode %></span>
+                                    <% } %>
+                                </span>
+                                <span class="od-summary-row-value" style="color: #059669; font-weight: 600;">−<%= fmt(order.couponDiscount) %></span>
+                            </div>
+                            <% } %>
+                        
+                            <!-- Tax and Delivery -->
                             <div class="od-summary-row">
                                 <span class="od-summary-row-label">Tax</span>
                                 <span class="od-summary-row-value"><%= fmt(tax) %></span>

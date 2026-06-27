@@ -6,6 +6,7 @@ import {
   verifyRazorpayPaymentService,
   loadRetryCheckoutService,
   markPaymentFailedService,
+  applyRetryCouponService,
 } from "../../services/user/checkoutService.js";
 
 import { calculateCheckoutTotals } from "../../services/shared/pricingService.js";
@@ -80,21 +81,32 @@ export const loadRetryCheckoutPage = async (req, res) => {
 
     const order = response.order;
 
+    // Restore any coupon the user already applied in this session
+    const appliedCoupon   = req.session.retryCoupon || null;
+    const couponDiscount  = appliedCoupon?.discount || 0;
+
+    // Recalculate totals if a coupon was already applied
+    const base            = (order.subtotal || 0) - (order.offerDiscount || 0);
+    const discounted      = base - couponDiscount;
+    const deliveryCharge  = order.deliveryCharge ?? (discounted >= 5000 ? 0 : 99);
+    const taxAmount       = Math.floor(discounted * 0.02);
+    const grandTotal      = discounted + deliveryCharge + taxAmount;
+
     res.render("user/checkout", {
       page:             "orders",
-      mode:             "retry",        /* ← tells the template which UI to show */
-      cart:             null,           /* not used in retry mode */
+      mode:             "retry",
+      cart:             null,
       order,
       addresses:        response.addresses,
-      availableCoupons: [],             /* hidden in retry mode */
+      availableCoupons: response.availableCoupons,
       subtotal:         order.subtotal,
       offerDiscount:    order.offerDiscount  || 0,
-      couponDiscount:   order.couponDiscount || 0,
-      appliedCoupon:    null,           /* hidden in retry mode */
+      couponDiscount,
+      appliedCoupon,
       totalItems:       order.items?.length || 0,
-      taxAmount:        order.taxAmount,
-      deliveryCharge:   order.deliveryCharge,
-      finalAmount:      order.finalAmount,
+      taxAmount,
+      deliveryCharge,
+      finalAmount:      grandTotal,
       razorpayKey:      process.env.RAZORPAY_KEY_ID,
     });
 
@@ -370,4 +382,67 @@ export const markPaymentFailed = async (req, res) => {
 
     }
 
+};
+
+/* =========================================
+   APPLY COUPON — retry mode
+   Uses the order's subtotal, not the cart.
+========================================= */
+export const applyRetryCoupon = async (req, res) => {
+  try {
+    const userId         = req.session.userId;
+    const { orderId }    = req.params;
+    const { couponCode } = req.body;
+
+    const result = await applyRetryCouponService(userId, orderId, couponCode);
+
+    if (!result.success) {
+      return res.json({ success: false, message: result.message });
+    }
+
+    // Store in session so the page reload restores it
+    req.session.retryCoupon = {
+      code:     result.couponCode,
+      discount: result.couponDiscount,
+    };
+
+    return res.json({
+      success:        true,
+      couponCode:     result.couponCode,
+      couponDiscount: result.couponDiscount,
+      taxAmount:      result.taxAmount,
+      deliveryCharge: result.deliveryCharge,
+      finalAmount:    result.finalAmount,
+    });
+
+  } catch (error) {
+    console.log("Apply Retry Coupon Error:", error);
+    return res.json({ success: false, message: "Failed to apply coupon" });
+  }
+};
+
+/* =========================================
+   REMOVE COUPON — retry mode
+========================================= */
+export const removeRetryCoupon = async (req, res) => {
+  try {
+    delete req.session.retryCoupon;
+
+    const userId  = req.session.userId;
+    const orderId = req.params.orderId;
+    const Order   = (await import("../../models/Order.js")).default;
+    const order   = await Order.findOne({ userId, orderId }).lean();
+    if (!order) return res.json({ success: false, message: "Order not found" });
+
+    const base           = (order.subtotal || 0) - (order.offerDiscount || 0);
+    const deliveryCharge = order.deliveryCharge ?? (base >= 5000 ? 0 : 99);
+    const taxAmount      = Math.floor(base * 0.02);
+    const finalAmount    = base + deliveryCharge + taxAmount;
+
+    return res.json({ success: true, taxAmount, deliveryCharge, finalAmount });
+
+  } catch (error) {
+    console.log("Remove Retry Coupon Error:", error);
+    return res.json({ success: false, message: "Failed to remove coupon" });
+  }
 };
