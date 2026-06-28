@@ -151,6 +151,7 @@ export const cancelOrderService = async (userId, orderId, reason) => {
     /* Wallet refund only once */
     if (
         ["RAZORPAY", "WALLET"].includes(order.paymentMethod) &&
+        order.paymentStatus === "Paid" &&
         !order.isRefundProcessed
     ) {
 
@@ -178,6 +179,8 @@ export const cancelOrderService = async (userId, orderId, reason) => {
 
     order.cancelReason =
         reason || "Order cancelled by customer";
+        
+    order.isStockRestored = true;
 
     await order.save();
 
@@ -259,6 +262,7 @@ export const cancelOrderItemService = async (
     /* Refund only for prepaid orders */
     if (
         ["RAZORPAY", "WALLET"].includes(order.paymentMethod) &&
+        order.paymentStatus === "Paid" &&
         !item.isRefundProcessed
     ) {
 
@@ -301,6 +305,8 @@ export const cancelOrderItemService = async (
         ) {
             order.paymentStatus = "Refunded";
         }
+        
+        order.isStockRestored = true;
     }
 
     await order.save();

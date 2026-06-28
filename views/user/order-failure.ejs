@@ -27,11 +27,12 @@
         });
         const paymentMethod = order.paymentMethod || 'RAZORPAY';
         const orderItems    = order.items || [];
-        const subtotal      = order.subtotal      || 0;
-        const discount      = order.discountAmount || 0;
-        const tax           = order.taxAmount      || 0;
-        const shipping      = order.deliveryCharge || 0;
-        const grandTotal    = order.finalAmount    || 0;
+        const subtotal       = order.subtotal       || 0;
+        const offerDiscount  = order.offerDiscount  || 0;
+        const couponDiscount = order.couponDiscount || 0;
+        const tax            = order.taxAmount      || 0;
+        const shipping       = order.deliveryCharge || 0;
+        const grandTotal     = order.finalAmount    || 0;
 
         const addr = order.shippingAddress || {};
         const shippingAddr = addr.fullName
@@ -151,26 +152,48 @@
                     </div>
 
                     <div class="of-breakdown">
+                        
+                        <!-- MRP Total -->
                         <div class="of-breakdown-row">
-                            <span>Subtotal</span>
-                            <span>₹<%= subtotal.toLocaleString('en-IN') %></span>
+                            <span>MRP Total</span>
+                            <span>₹<%= (subtotal + offerDiscount).toLocaleString('en-IN') %></span>
                         </div>
+
+                        <!-- Offer Discount -->
+                        <% if (offerDiscount > 0) { %>
+                        <div class="of-breakdown-row">
+                            <span>Offer Discount</span>
+                            <span class="of-discount">−₹<%= offerDiscount.toLocaleString('en-IN') %></span>
+                        </div>
+                        <% } %>
+
+                        <!-- Post-Offer Subtotal -->
+                        <div class="of-breakdown-row" style="padding-top: 10px; border-top: 1px dashed #E5E7EB; margin-top: 6px; margin-bottom: 6px;">
+                            <span style="font-weight: 600; color: #374151;">Subtotal</span>
+                            <span style="font-weight: 600; color: #374151;">₹<%= subtotal.toLocaleString('en-IN') %></span>
+                        </div>
+
+                        <!-- Coupon Discount -->
+                        <% if (couponDiscount > 0) { %>
+                        <div class="of-breakdown-row">
+                            <span>Coupon (<%= order.couponCode || '-' %>)</span>
+                            <span class="of-discount">−₹<%= couponDiscount.toLocaleString('en-IN') %></span>
+                        </div>
+                        <% } %>
+
+                        <!-- Estimated Tax -->
+                        <div class="of-breakdown-row">
+                            <span>Estimated Tax</span>
+                            <span>₹<%= tax.toLocaleString('en-IN') %></span>
+                        </div>
+
+                        <!-- Shipping -->
                         <div class="of-breakdown-row">
                             <span>Shipping</span>
                             <span class="<%= shipping === 0 ? 'of-free' : '' %>">
                                 <%= shipping === 0 ? 'Free' : `₹${shipping.toLocaleString('en-IN')}` %>
                             </span>
                         </div>
-                        <div class="of-breakdown-row">
-                            <span>Tax</span>
-                            <span>₹<%= tax.toLocaleString('en-IN') %></span>
-                        </div>
-                        <% if (discount > 0) { %>
-                        <div class="of-breakdown-row">
-                            <span>Discount</span>
-                            <span class="of-discount">−₹<%= discount.toLocaleString('en-IN') %></span>
-                        </div>
-                        <% } %>
                     </div>
 
                     <div class="of-total-row">

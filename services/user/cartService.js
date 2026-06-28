@@ -381,6 +381,13 @@ if (
   } else {
 
   /* NEW ITEM */
+    if (quantity > variant.stock) {
+      return {
+        success: false,
+        message: `Only ${variant.stock} units available`,
+      };
+    }
+
     cart.items.push({
       productId,
 

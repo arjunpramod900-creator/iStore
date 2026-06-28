@@ -150,12 +150,29 @@
         const payStatus   = order.paymentStatus;
         const items       = order.items || [];
 
+        const activeItems = items.filter(i =>
+            i.itemStatus !== "Cancelled" &&
+            i.itemStatus !== "Returned"  &&
+            i.itemReturnStatus !== "Approved"
+        );
+        const summaryMRP          = activeItems.reduce((s, i) => s + ((i.originalPrice || i.price) * i.quantity), 0);
+        const summaryOfferDisc    = activeItems.reduce((s, i) => s + ((i.offerDiscount || 0) * i.quantity), 0);
+        const summarySubtotal     = activeItems.reduce((s, i) => s + (i.price * i.quantity), 0);
+        const summaryCouponDisc   = activeItems.reduce((s, i) => s + (i.couponDiscount || 0), 0);
+        const summaryHasOffer     = summaryOfferDisc > 0;
+        const summaryHasCoupon    = summaryCouponDisc > 0;
+
         const pricing = {
-            subtotal: order.subtotal,
-            shipping: order.deliveryCharge,
-            discount: order.discountAmount,
-            tax:      order.taxAmount,
-            total:    order.finalAmount
+            mrp:      summaryMRP,
+            offer:    summaryOfferDisc,
+            hasOffer: summaryHasOffer,
+            subtotal: summarySubtotal,
+            coupon:   summaryCouponDisc,
+            hasCoupon: summaryHasCoupon,
+            tax:      order.taxAmount || 0,
+            shipping: order.deliveryCharge || 0,
+            total:    order.finalAmount || 0,
+            refund:   order.refundAmount || 0
         };
 
         const timeline = [
@@ -532,35 +549,98 @@
                     <div class="aod-pricing-card">
                         <h2 class="aod-pricing-title">Pricing Summary</h2>
                         <div class="aod-pricing-rows">
+                            <!-- MRP Total -->
                             <div class="aod-pricing-row">
-                                <span class="aod-pricing-label">Subtotal</span>
-                                <span class="aod-pricing-value"><%= fmt(pricing.subtotal || 0) %></span>
+                                <span class="aod-pricing-label">MRP Total</span>
+                                <span class="aod-pricing-value"><%= fmt(pricing.mrp) %></span>
                             </div>
+
+                            <!-- Offer Discount -->
+                            <% if (pricing.hasOffer) { %>
+                            <div class="aod-pricing-row">
+                                <span class="aod-pricing-label">Offer Discount</span>
+                                <span class="aod-pricing-value discount">−<%= fmt(pricing.offer) %></span>
+                            </div>
+                            <% } %>
+
+                            <!-- Subtotal -->
+                            <div class="aod-pricing-row" style="padding-top: 10px; border-top: 1px dashed #E5E7EB; margin-top: 6px; margin-bottom: 6px;">
+                                <span class="aod-pricing-label" style="font-weight: 600; color: #374151;">Subtotal</span>
+                                <span class="aod-pricing-value" style="font-weight: 600; color: #374151;"><%= fmt(pricing.subtotal) %></span>
+                            </div>
+
+                            <!-- Coupon -->
+                            <% if (pricing.hasCoupon) { %>
+                            <div class="aod-pricing-row">
+                                <span class="aod-pricing-label" style="display:flex; align-items:center; gap: 6px;">
+                                    Coupon
+                                    <% if (order.couponCode) { %>
+                                        <span style="background: rgba(5,150,105,0.1); color: #059669; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase;"><%= order.couponCode %></span>
+                                    <% } %>
+                                </span>
+                                <span class="aod-pricing-value" style="color: #059669; font-weight: 600;">−<%= fmt(pricing.coupon) %></span>
+                            </div>
+                            <% } %>
+
+                            <!-- Tax -->
+                            <div class="aod-pricing-row">
+                                <span class="aod-pricing-label">Tax (GST)</span>
+                                <span class="aod-pricing-value"><%= fmt(pricing.tax) %></span>
+                            </div>
+
+                            <!-- Shipping -->
                             <div class="aod-pricing-row">
                                 <span class="aod-pricing-label">Shipping</span>
-                                <% if (!pricing.shipping || pricing.shipping === 0) { %>
+                                <% if (pricing.shipping === 0) { %>
                                     <span class="aod-pricing-value free">FREE</span>
                                 <% } else { %>
                                     <span class="aod-pricing-value"><%= fmt(pricing.shipping) %></span>
                                 <% } %>
                             </div>
-                            <% if (pricing.discount && pricing.discount > 0) { %>
-                            <div class="aod-pricing-row">
-                                <span class="aod-pricing-label">Discount</span>
-                                <span class="aod-pricing-value discount">−<%= fmt(pricing.discount) %></span>
-                            </div>
-                            <% } %>
-                            <div class="aod-pricing-row">
-                                <span class="aod-pricing-label">Tax (GST)</span>
-                                <span class="aod-pricing-value"><%= fmt(pricing.tax || 0) %></span>
-                            </div>
                         </div>
                         <div class="aod-pricing-total">
                             <span class="aod-pricing-total-label">Order Total</span>
-                            <span class="aod-pricing-total-value"><%= fmt(pricing.total || 0) %></span>
+                            <span class="aod-pricing-total-value"><%= fmt(pricing.total) %></span>
                         </div>
                     </div>
                 </div>
+
+                <% if (pricing.refund > 0) { 
+                    const totalPaid = order.pricingSnapshot?.originalFinalAmount || (order.finalAmount + pricing.refund);
+                    const mathDiff = totalPaid - order.finalAmount;
+                %>
+                <!-- Refund Summary -->
+                <div class="aod-card" id="aodRefundCard">
+                    <div class="aod-pricing-card" style="background-color: #F9FAFB; border-color: #F3F4F6;">
+                        <h2 class="aod-pricing-title" style="color: #4B5563;">Refund Summary</h2>
+                        <div class="aod-pricing-rows" style="border: none;">
+                            <div class="aod-pricing-row" style="margin-bottom: 8px;">
+                                <span class="aod-pricing-label" style="color: #6B7280; font-size: 13px;">Original Order Paid</span>
+                                <span class="aod-pricing-value" style="color: #4B5563; font-weight: 500;"><%= fmt(totalPaid) %></span>
+                            </div>
+                            <div class="aod-pricing-row" style="margin-bottom: 8px;">
+                                <span class="aod-pricing-label" style="color: #6B7280; font-size: 13px;">Revised Order Value</span>
+                                <span class="aod-pricing-value" style="color: #4B5563; font-weight: 500;">− <%= fmt(order.finalAmount) %></span>
+                            </div>
+                            <% if (mathDiff > pricing.refund) { %>
+                            <div class="aod-pricing-row" style="margin-bottom: 8px;">
+                                <span class="aod-pricing-label" style="color: #D97706; font-size: 13px;">Adjustment Cap</span>
+                                <span class="aod-pricing-value" style="color: #D97706; font-weight: 500;">+ <%= fmt(mathDiff - pricing.refund) %></span>
+                            </div>
+                            <% } %>
+                        </div>
+                        <div class="aod-pricing-total" style="border-top-color: #E5E7EB; margin-top: 6px; padding-top: 14px;">
+                            <span class="aod-pricing-total-label" style="color: #111827; font-size: 15px;">Refund Amount</span>
+                            <span class="aod-pricing-total-value" style="color: #111827; font-size: 17px;"><%= fmt(pricing.refund) %></span>
+                        </div>
+                        <div style="text-align: right; margin-top: 6px;">
+                            <span style="font-size: 12px; color: #059669; font-weight: 500; font-style: italic;">
+                                <i data-lucide="check-circle" size="12" style="display:inline; vertical-align:text-bottom; margin-right:2px;"></i>Credited to user wallet
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <% } %>
 
                 <!-- Customer Details -->
                 <div class="aod-card" id="aodCustomerCard">

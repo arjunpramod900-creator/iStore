@@ -187,9 +187,10 @@ export const updateOrderStatusService = async (
             await Variant.bulkWrite(bulkOperations, { ordered: false });
         }
 
-        /* Refund only once */
+        /* Refund only once — and only if payment was actually captured */
         if (
             ["RAZORPAY", "WALLET"].includes(order.paymentMethod) &&
+            order.paymentStatus === "Paid" &&
             !order.isRefundProcessed
         ) {
 
@@ -215,6 +216,8 @@ export const updateOrderStatusService = async (
         if (order.paymentMethod === "COD") {
             order.paymentStatus = "Cancelled";
         }
+
+        order.isStockRestored = true;
     }
 
     order.orderStatus = status;

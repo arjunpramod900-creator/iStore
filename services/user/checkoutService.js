@@ -4,6 +4,7 @@ import Order from "../../models/Order.js";
 import Coupon from "../../models/Coupon.js";
 import CouponUsage from "../../models/CouponUsage.js";
 import Variant from "../../models/Variant.js";
+import Product from "../../models/Product.js";
 
 import { calculateCheckoutTotals } from "../shared/pricingService.js";
 import { debitWallet, creditWallet } from "../shared/walletService.js";
@@ -53,6 +54,27 @@ const validItems = cart.items.filter(item => {
     );
 
 });
+
+const stockMessages = [];
+
+/* Track items that will be removed */
+for (const item of cart.items) {
+    if (!item.productId || !item.variantId) {
+        stockMessages.push("A product was removed from checkout (unavailable)");
+        continue;
+    }
+    if (item.productId.isDeleted || !item.productId.isActive) {
+        stockMessages.push(`${item.productId.name} is no longer available`);
+    } else if (!item.productId.categoryId || item.productId.categoryId.isDeleted || !item.productId.categoryId.isActive) {
+        stockMessages.push(`${item.productId.name} category is unavailable`);
+    } else if (item.variantId.isDeleted || !item.variantId.isActive) {
+        stockMessages.push(`${item.productId.name} variant is unavailable`);
+    } else if (item.variantId.stock <= 0) {
+        stockMessages.push(`${item.productId.name} is out of stock`);
+    } else if (item.quantity > item.variantId.stock) {
+        stockMessages.push(`${item.productId.name} quantity adjusted to available stock`);
+    }
+}
 
 /* =========================================
 
@@ -117,6 +139,7 @@ if (validItems.length !== cart.items.length) {
         couponDiscount: totals.couponDiscount, totalItems,
         taxAmount: totals.taxAmount, deliveryCharge: totals.deliveryCharge,
         finalAmount: totals.finalAmount,
+        stockMessages,
     };
 };
 
@@ -934,30 +957,23 @@ export const createRazorpayCheckoutService = async (
         };
     }
 
-    /* Prevent multiple unpaid Razorpay orders */
-const existingPendingOrder = await Order.findOne({
-    userId,
-    paymentMethod: "RAZORPAY",
-    paymentStatus: {
-        $in: ["Pending","Failed"]
-    },
-    isStockRestored: false
-});
+    /* Lazy cleanup of any expired pending orders */
+    const existingPendingOrders = await Order.find({
+        userId,
+        paymentMethod: "RAZORPAY",
+        paymentStatus: {
+            $in: ["Pending","Failed"]
+        },
+        isStockRestored: false
+    });
 
-    if (existingPendingOrder) {
-
+    for (const pendingOrder of existingPendingOrders) {
         if (
-            existingPendingOrder.paymentExpiresAt &&
-            new Date() > existingPendingOrder.paymentExpiresAt &&
-            !existingPendingOrder.isStockRestored
+            pendingOrder.paymentExpiresAt &&
+            new Date() > pendingOrder.paymentExpiresAt &&
+            !pendingOrder.isStockRestored
         ) {
-            await restoreStockForExpiredOrder(existingPendingOrder);
-        } else {
-            return {
-                success: false,
-                message:
-                    "You already have a pending payment. Complete or retry it from Orders.",
-            };
+            await restoreStockForExpiredOrder(pendingOrder);
         }
     }
 
@@ -1491,6 +1507,31 @@ export const retryOrderPaymentService = async ({
             country: address.country,
             pincode: address.pincode,
         };
+    }
+
+    /* =====================================
+       AVAILABILITY RE-CHECK
+       Stock is already held, but verify products/variants
+       haven't been deactivated or deleted by admin.
+    ===================================== */
+    for (const item of order.items) {
+        if (["Cancelled", "Returned"].includes(item.itemStatus)) continue;
+
+        const variant = await Variant.findById(item.variantId);
+        const product = variant
+            ? await Product.findById(item.productId).populate("categoryId")
+            : null;
+
+        if (
+            !product || product.isDeleted || !product.isActive ||
+            !product.categoryId || product.categoryId.isDeleted || !product.categoryId.isActive ||
+            !variant || variant.isDeleted || !variant.isActive
+        ) {
+            return {
+                success: false,
+                message: `"${item.productName}" is no longer available. Please cancel this order and place a new one.`,
+            };
+        }
     }
 
     /* Restore active item statuses */

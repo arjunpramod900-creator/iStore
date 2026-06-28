@@ -291,14 +291,92 @@
             <th>#</th>
             <th>Order ID</th>
             <th>Customer</th>
+            <th>Products</th>
             <th class="td-right">Amount Paid</th>
+            <th style="text-align: center;">Payment</th>
             <th>Status</th>
             <th class="hide-mobile">Date</th>
           </tr>
         </thead>
         <tbody>
           <% if (recentOrders.length > 0) { %>
-            <% recentOrders.forEach((order, index) => { %>
+            <% recentOrders.forEach((order, index) => { 
+                const totalRows = (order.items && order.items.length) ? order.items.length + (order.refundAmount > 0 ? 1 : 0) : 1;
+            %>
+              <% if (order.items && order.items.length > 0) { %>
+                <% order.items.forEach((item, itemIdx) => { 
+                    const itemTax = Math.round((item.finalPrice || 0) * 0.02);
+                    const itemTotal = (item.finalPrice || (item.price * item.quantity)) + (order.taxAmount > 0 ? itemTax : 0);
+                    
+                    let itemPayStatus = order.paymentStatus || 'Pending';
+                    let itemPayClass = badgeClass(order.paymentStatus);
+                    if (item.itemStatus === 'Cancelled' || item.itemStatus === 'Returned') {
+                        if (order.paymentMethod !== 'COD' || order.paymentStatus === 'Paid') {
+                            itemPayStatus = 'Refunded';
+                            itemPayClass = 'badge-returned'; 
+                        } else {
+                            itemPayStatus = 'Cancelled';
+                            itemPayClass = 'badge-cancelled';
+                        }
+                    }
+                    const itemStatus = item.itemStatus || order.orderStatus;
+                %>
+                <tr style="<%= itemIdx > 0 ? 'border-top: none;' : '' %>">
+                  <% if (itemIdx === 0) { %>
+                    <td rowspan="<%= totalRows %>" style="border-right: 1px solid #f1f3f5; vertical-align: top; padding-top: 24px;"><%= index + 1 %></td>
+                    <td rowspan="<%= totalRows %>" style="border-right: 1px solid #f1f3f5; vertical-align: top; padding-top: 24px; font-weight:700; color:#603763;"><%= order.orderId %></td>
+                    <td rowspan="<%= totalRows %>" style="border-right: 1px solid #f1f3f5; vertical-align: top; padding-top: 24px;">
+                      <div class="prod-cell">
+                        <div class="prod-icon round"><i data-lucide="user" size="15"></i></div>
+                        <span class="prod-name"><%= order.shippingAddress?.fullName || "Customer" %></span>
+                      </div>
+                    </td>
+                  <% } %>
+
+                  <td style="border-bottom: <%= itemIdx === order.items.length - 1 && !order.refundAmount ? 'none' : '1px solid #f8f9fa' %>;">
+                    <div style="font-weight: 600; color: #2C1421;"><%= item.productName %></div>
+                    <div style="font-size: 11px; color: #6c757d; margin-top: 2px;"><%= item.variantName ? item.variantName + ' (x' + item.quantity + ')' : 'Qty: ' + item.quantity %></div>
+                  </td>
+
+                  <td class="td-right" style="border-bottom: <%= itemIdx === order.items.length - 1 && !order.refundAmount ? 'none' : '1px solid #f8f9fa' %>; font-weight:700;">
+                    ₹<%= itemTotal.toLocaleString("en-IN") %>
+                  </td>
+
+                  <td style="text-align: center; border-bottom: <%= itemIdx === order.items.length - 1 && !order.refundAmount ? 'none' : '1px solid #f8f9fa' %>;">
+                    <span class="badge <%= itemPayClass || badgeClass(itemPayStatus) %>"><%= itemPayStatus %></span>
+                  </td>
+
+                  <td style="border-bottom: <%= itemIdx === order.items.length - 1 && !order.refundAmount ? 'none' : '1px solid #f8f9fa' %>;">
+                    <span class="badge <%= badgeClass(itemStatus) %>">
+                      <%= itemStatus %>
+                    </span>
+                  </td>
+
+                  <% if (itemIdx === 0) { %>
+                    <td rowspan="<%= totalRows %>" class="hide-mobile" style="border-left: 1px solid #f1f3f5; vertical-align: top; padding-top: 24px; color:var(--text-muted); font-size:12px;">
+                      <%= new Date(order.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) %>
+                    </td>
+                  <% } %>
+                </tr>
+                <% }) %>
+
+                <% if (order.refundAmount > 0) { %>
+                <tr style="background-color: #fafafa;">
+                    <td style="border-top: 1px dashed #e5e7eb;">
+                        <span style="font-weight: 600; color: #4B5563; font-size: 12px;">Refund Processed</span>
+                        <span style="display: block; font-size: 10px; color: #10B981; font-style: italic; margin-top: 2px;">Credited to Wallet</span>
+                    </td>
+                    <td class="td-right" style="border-top: 1px dashed #e5e7eb; font-weight: 700; color: #111827;">
+                        ₹<%= order.refundAmount.toLocaleString("en-IN") %>
+                    </td>
+                    <td colspan="2" style="border-top: 1px dashed #e5e7eb; text-align: center;">
+                        <span class="badge" style="background: rgba(16, 185, 129, 0.1); color: #059669;">Refunded</span>
+                    </td>
+                </tr>
+                <% } %>
+                <tr style="height: 12px; background: transparent;"><td colspan="8" style="padding: 0; border: none; border-bottom: 2px solid #f1f3f5;"></td></tr>
+
+              <% } else { %>
               <tr>
                 <td><%= index + 1 %></td>
                 <td style="font-weight:700;color:#603763;"><%= order.orderId %></td>
@@ -308,8 +386,12 @@
                     <span class="prod-name"><%= order.shippingAddress?.fullName || "Customer" %></span>
                   </div>
                 </td>
+                <td style="color:#6c757d; font-size:12px;">No items found</td>
                 <td class="td-right" style="font-weight:700;">
                   ₹<%= (order.displayAmount || 0).toLocaleString("en-IN") %>
+                </td>
+                <td style="text-align: center;">
+                    <span class="badge <%= badgeClass(order.paymentStatus) %>"><%= order.paymentStatus || 'Pending' %></span>
                 </td>
                 <td>
                   <span class="badge <%= badgeClass(order.orderStatus) %>">
@@ -320,9 +402,10 @@
                   <%= new Date(order.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) %>
                 </td>
               </tr>
+              <% } %>
             <% }) %>
           <% } else { %>
-            <tr><td colspan="6" style="color:var(--text-muted);padding:24px;">No orders found for this period.</td></tr>
+            <tr><td colspan="8" style="color:var(--text-muted);padding:24px;">No orders found for this period.</td></tr>
           <% } %>
         </tbody>
       </table>

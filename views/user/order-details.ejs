@@ -359,12 +359,10 @@
                                     </div>
 
                                     <%
-                                      /* Hide cancel/return buttons when payment is unverified
-                                         — order isn't confirmed yet */
+                                      /* Allow cancel even when payment is unverified so user can clear blocked stock */
                                     %>
 
                                     <% if (
-                                        !isRetryable &&
                                         ["Pending","Processing"].includes(order.orderStatus) &&
                                         item.itemStatus !== "Cancelled"
                                     ) { %>
@@ -631,8 +629,8 @@
                         </button>
                         <% } %>
 
-                        <!-- Cancel order — hidden for failed/pending payments (use retry instead) -->
-                        <% if (!isRetryable && ["pending","processing"].includes(status)) { %>
+                        <!-- Cancel order -->
+                        <% if (["pending","processing"].includes(status)) { %>
                         <div class="od-btn-cancel-wrap">
                             <button class="od-btn-cancel" id="btnCancelOrder" data-id="<%= orderId %>">
                                 Cancel Order

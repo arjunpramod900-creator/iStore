@@ -50,6 +50,7 @@ export const loadCheckoutPage = async (req, res) => {
       deliveryCharge:   response.deliveryCharge,
       finalAmount:      response.finalAmount,
       razorpayKey:      process.env.RAZORPAY_KEY_ID,
+      stockMessages:    response.stockMessages || [],
     });
 
   } catch (error) {

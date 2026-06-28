@@ -299,150 +299,109 @@
 
                         <tbody id="ordersTableBody">
 
-                    <% orders.forEach((row, idx) => { %>
+                    <% orders.forEach((row, idx) => { 
+                        const totalRows = row.items.length + (row.refundAmount > 0 ? 1 : 0);
+                    %>
 
-                    <tr
-                    data-order-id="<%= row.orderId %>"
-                    data-status="<%= row.orderStatus.toLowerCase() %>"
-                    data-payment="<%= row.paymentStatus.toLowerCase() %>"
-                    id="orderRow<%= idx %>"
-                    >
+                        <% row.items.forEach((item, itemIdx) => { 
+                            const itemTax = Math.round((item.finalPrice || 0) * 0.02);
+                            const itemTotal = (item.finalPrice || (item.price * item.quantity)) + (row.taxAmount > 0 ? itemTax : 0);
+                            
+                            // Determine item payment status
+                            let itemPayStatus = row.paymentStatus;
+                            let itemPayClass = payClass(row.paymentStatus);
+                            if (item.itemStatus === 'Cancelled' || item.itemStatus === 'Returned') {
+                                if (row.paymentMethod !== 'COD' || row.paymentStatus === 'Paid') {
+                                    itemPayStatus = 'Refunded';
+                                    itemPayClass = 'refunded';
+                                } else {
+                                    itemPayStatus = 'Cancelled';
+                                    itemPayClass = 'failed';
+                                }
+                            }
+                            
+                            // Determine item order status
+                            const itemStatus = item.itemStatus || row.orderStatus;
+                            const itemStatusCls = statusClass(itemStatus);
+                        %>
+                        <tr data-order-id="<%= row.orderId %>" data-status="<%= itemStatus.toLowerCase() %>" data-payment="<%= itemPayStatus.toLowerCase() %>" <%= itemIdx === 0 ? `id="orderRow${idx}"` : '' %> style="<%= itemIdx > 0 ? 'border-top: none;' : '' %>">
 
-                        <!-- ORDER ID -->
-
-                        <td>
-
-                            <a
-                            href="/admin/orders/<%= row._id %>"
-                            class="adm-order-id-link">
-
-                                <%= row.orderId %>
-
-                            </a>
-
-                        </td>
-
-                        <!-- CUSTOMER -->
-
-                        <td>
-
-                            <div class="adm-customer-cell">
-
-                                <div class="adm-cust-avatar">
-
-                                    <%= row.userId?.fullName
-                                        ?.split(" ")
-                                        .map(word => word[0])
-                                        .join("")
-                                        .slice(0,2)
-                                        .toUpperCase() || "U" %>
-
+                            <% if (itemIdx === 0) { %>
+                            <!-- ORDER ID -->
+                            <td rowspan="<%= totalRows %>" style="border-right: 1px solid #f3f4f6; vertical-align: top; padding-top: 24px;">
+                                <a href="/admin/orders/<%= row._id %>" class="adm-order-id-link"><%= row.orderId %></a>
+                            </td>
+                            <!-- CUSTOMER -->
+                            <td rowspan="<%= totalRows %>" style="border-right: 1px solid #f3f4f6; vertical-align: top; padding-top: 24px;">
+                                <div class="adm-customer-cell">
+                                    <div class="adm-cust-avatar">
+                                        <%= row.userId?.fullName?.split(" ").map(word => word[0]).join("").slice(0,2).toUpperCase() || "U" %>
+                                    </div>
+                                    <span class="adm-cust-name"><%= row.userId?.fullName || "Unknown User" %></span>
                                 </div>
-
-                                <span class="adm-cust-name">
-
-                                    <%= row.userId?.fullName || "Unknown User" %>
-
-                                </span>
-
-                            </div>
-
-                        </td>
-
-                        <!-- PRODUCTS -->
-
-                        <td>
-
-                            <span class="adm-product-main">
-
-                                <%= row.items?.[0]?.productName || "Product" %>
-
-                            </span>
-
-                            <% if(row.items.length > 1) { %>
-
-                                <span class="adm-product-more">
-
-                                    +<%= row.items.length - 1 %> more items
-
-                                </span>
-
+                            </td>
                             <% } %>
 
-                        </td>
+                            <!-- PRODUCT -->
+                            <td style="border-bottom: <%= itemIdx === row.items.length - 1 && row.refundAmount === 0 ? 'none' : '1px solid #f9fafb' %>">
+                                <span class="adm-product-main"><%= item.productName %></span>
+                                <% if (item.variantName) { %>
+                                    <span class="adm-product-more" style="display:block; margin-top:2px; font-weight: 500;"><%= item.variantName %> (x<%= item.quantity %>)</span>
+                                <% } else { %>
+                                    <span class="adm-product-more" style="display:block; margin-top:2px; font-weight: 500;">Qty: <%= item.quantity %></span>
+                                <% } %>
+                            </td>
 
-                        <!-- TOTAL -->
+                            <!-- TOTAL -->
+                            <td class="right" style="border-bottom: <%= itemIdx === row.items.length - 1 && row.refundAmount === 0 ? 'none' : '1px solid #f9fafb' %>">
+                                <span class="adm-total">₹<%= itemTotal.toLocaleString("en-IN") %></span>
+                            </td>
 
-                        <td class="right">
+                            <!-- PAYMENT -->
+                            <td class="center" style="border-bottom: <%= itemIdx === row.items.length - 1 && row.refundAmount === 0 ? 'none' : '1px solid #f9fafb' %>">
+                                <span class="adm-pay-badge adm-pay-badge--<%= itemPayClass || payClass(itemPayStatus) %>"><%= itemPayStatus %></span>
+                            </td>
 
-                            <span class="adm-total">
+                            <!-- STATUS -->
+                            <td class="center" style="border-bottom: <%= itemIdx === row.items.length - 1 && row.refundAmount === 0 ? 'none' : '1px solid #f9fafb' %>">
+                                <span class="adm-status-badge adm-status-badge--<%= itemStatusCls %>"><%= itemStatus %></span>
+                            </td>
 
-                                ₹<%= (row.pricingSnapshot?.originalFinalAmount ?? row.finalAmount ?? 0).toLocaleString("en-IN") %>
+                            <% if (itemIdx === 0) { %>
+                            <!-- DATE -->
+                            <td rowspan="<%= totalRows %>" style="border-left: 1px solid #f3f4f6; vertical-align: top; padding-top: 24px;">
+                                <span class="adm-date">
+                                    <%= new Date(row.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) %>
+                                </span>
+                            </td>
+                            <!-- ACTION -->
+                            <td rowspan="<%= totalRows %>" style="border-left: 1px solid #f3f4f6; vertical-align: top; padding-top: 24px;">
+                                <a href="/admin/orders/<%= row._id %>" class="adm-view-link">View Details</a>
+                            </td>
+                            <% } %>
+                        </tr>
+                        <% }) %>
 
-                            </span>
+                        <% if (row.refundAmount > 0) { %>
+                        <tr style="background-color: rgba(249, 250, 251, 0.5);">
+                            <!-- Products column alignment for Refund -->
+                            <td style="border-top: 1px dashed #e5e7eb;">
+                                <span style="font-weight: 600; color: #4B5563; font-size: 13px;">Refund Processed</span>
+                                <span style="display: block; font-size: 11px; color: #10B981; font-style: italic; margin-top: 2px;">Credited to Wallet</span>
+                            </td>
+                            <!-- Refund Amount -->
+                            <td class="right" style="border-top: 1px dashed #e5e7eb;">
+                                <span style="font-weight: 700; color: #111827;">₹<%= row.refundAmount.toLocaleString("en-IN") %></span>
+                            </td>
+                            <!-- Empty Payment & Status spanning -->
+                            <td colspan="2" style="border-top: 1px dashed #e5e7eb; text-align: center;">
+                                <span class="adm-pay-badge" style="background: rgba(16, 185, 129, 0.1); color: #059669;">Refunded</span>
+                            </td>
+                        </tr>
+                        <% } %>
 
-                        </td>
-
-                        <!-- PAYMENT -->
-
-                        <td class="center">
-
-                            <span class="adm-pay-badge adm-pay-badge--<%= payClass(row.paymentStatus) %>">
-
-                                <%= row.paymentStatus %>
-
-                            </span>
-
-                        </td>
-
-                        <!-- STATUS -->
-
-                        <td class="center">
-
-                            <span class="adm-status-badge adm-status-badge--<%= statusClass(row.orderStatus) %>">
-
-                                <%= row.orderStatus %>
-
-                            </span>
-
-                        </td>
-
-                        <!-- DATE -->
-
-                        <td>
-
-                            <span class="adm-date">
-
-                                <%= new Date(row.createdAt)
-                                    .toLocaleDateString(
-                                        "en-IN",
-                                        {
-                                            day: "2-digit",
-                                            month: "short",
-                                            year: "numeric"
-                                        }
-                                    ) %>
-
-                            </span>
-
-                        </td>
-
-                        <!-- ACTION -->
-
-                        <td>
-
-                            <a
-                            href="/admin/orders/<%= row._id %>"
-                            class="adm-view-link">
-
-                                View Details
-
-                            </a>
-
-                        </td>
-
-                    </tr>
-
+                        <!-- Spacer row to maintain visually distinct orders -->
+                        <tr style="height: 12px; background: transparent;"><td colspan="8" style="padding: 0; border: none; border-bottom: 2px solid #f3f4f6;"></td></tr>
                     <% }) %>
 
                     <% if(orders.length === 0) { %>

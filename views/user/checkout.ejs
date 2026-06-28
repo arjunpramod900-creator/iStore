@@ -365,11 +365,48 @@
 
                         <!-- BREAKDOWN -->
                         <div class="co-summary-breakdown">
+                            
+                            <!-- MRP Total -->
                             <div class="co-breakdown-row">
-                                <span>Subtotal</span>
-                                <span id="coSubtotal">₹<%= subtotal.toLocaleString('en-IN') %></span>
+                                <span>MRP Total</span>
+                                <span id="coMrpTotal">₹<%= (subtotal + (offerDiscount || 0)).toLocaleString('en-IN') %></span>
                             </div>
 
+                            <!-- Offer Discount -->
+                            <% if ((offerDiscount || 0) > 0) { %>
+                            <div class="co-breakdown-row co-discount">
+                                <span>Offer Discount</span>
+                                <span class="co-discount-val" id="coOfferDiscount">
+                                    −₹<%= (offerDiscount || 0).toLocaleString('en-IN') %>
+                                </span>
+                            </div>
+                            <% } %>
+
+                            <!-- Post-Offer Subtotal -->
+                            <div class="co-breakdown-row" style="padding-top: 10px; border-top: 1px dashed #E5E7EB; margin-top: 6px; margin-bottom: 6px;">
+                                <span style="font-weight: 600; color: #374151;">Subtotal</span>
+                                <span id="coSubtotal" style="font-weight: 600; color: #374151;">₹<%= subtotal.toLocaleString('en-IN') %></span>
+                            </div>
+
+                            <!-- Coupon discount row -->
+                            <div
+                                class="co-breakdown-row co-discount"
+                                id="coDiscountRow"
+                                style="<%= (couponDiscount || 0) > 0 ? '' : 'display:none;' %>"
+                            >
+                                <span>Coupon (<span id="coCouponCode"><%= appliedCoupon?.code || '-' %></span>)</span>
+                                <span class="co-discount-val" id="coDiscount">
+                                    −₹<%= (couponDiscount || 0).toLocaleString('en-IN') %>
+                                </span>
+                            </div>
+
+                            <!-- Estimated Tax -->
+                            <div class="co-breakdown-row">
+                                <span>Estimated Tax</span>
+                                <span id="coTax">₹<%= taxAmount.toLocaleString('en-IN') %></span>
+                            </div>
+
+                            <!-- Shipping -->
                             <div class="co-breakdown-row">
                                 <span>Shipping</span>
                                 <span
@@ -382,22 +419,6 @@
                                 </span>
                             </div>
 
-                            <!-- Coupon discount row -->
-                            <div
-                                class="co-breakdown-row co-discount"
-                                id="coDiscountRow"
-                                style="<%= (couponDiscount || 0) > 0 ? '' : 'display:none;' %>"
-                            >
-                                <span>Discount (<span id="coCouponCode"><%= appliedCoupon?.code || '-' %></span>)</span>
-                                <span class="co-discount-val" id="coDiscount">
-                                    −₹<%= (couponDiscount || 0).toLocaleString('en-IN') %>
-                                </span>
-                            </div>
-
-                            <div class="co-breakdown-row">
-                                <span>Estimated Tax</span>
-                                <span id="coTax">₹<%= taxAmount.toLocaleString('en-IN') %></span>
-                            </div>
                         </div>
 
                         <!-- TOTAL -->
@@ -694,6 +715,27 @@
 
     <script>
         lucide.createIcons();
+
+        /* =========================================
+           STOCK MESSAGES
+        ========================================= */
+        const stockMessages = <%- JSON.stringify(typeof stockMessages !== 'undefined' ? stockMessages : []) %>;
+        
+        if (stockMessages && stockMessages.length > 0) {
+            stockMessages.forEach((msg, index) => {
+                setTimeout(() => {
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'warning',
+                        title: msg,
+                        showConfirmButton: false,
+                        timer: 4000,
+                        timerProgressBar: true,
+                    });
+                }, index * 500); // Stagger the toasts slightly
+            });
+        }
 
         /* =========================================
            MODE — set once, used throughout
