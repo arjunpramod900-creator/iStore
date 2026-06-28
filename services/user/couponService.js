@@ -118,6 +118,9 @@ async (
         coupon.discountValue;
     }
 
+    /* CRITICAL FIX: never let the coupon discount exceed the cart subtotal */
+    discount = Math.min(discount, subtotal);
+
     return {
 
         success: true,

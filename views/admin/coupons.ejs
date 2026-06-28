@@ -770,10 +770,22 @@ function validateDiscountValue(prefix) {
     setError(el, err, "Percentage discount cannot exceed 100%");
     return false;
   }
-  if (type === "FIXED" && n > 10000000) {
-    setError(el, err, "Discount value seems too high");
-    return false;
+  
+  if (type === "FIXED") {
+    if (n > 10000000) {
+      setError(el, err, "Discount value seems too high");
+      return false;
+    }
+    
+    // Check against min purchase
+    const minEl = document.getElementById(prefix + '-minPurchase');
+    const minVal = parseFloat(minEl.value) || 0;
+    if (minVal > 0 && n > minVal) {
+      setError(el, err, "Fixed discount cannot exceed minimum purchase");
+      return false;
+    }
   }
+  
   setSuccess(el, err); return true;
 }
 
@@ -789,29 +801,74 @@ function validateMaxDiscount(prefix) {
 function validateMinPurchase(prefix) {
   const el  = document.getElementById(prefix + '-minPurchase');
   const err = prefix + '-minPurchase-error';
-  if (el.value === "") { setSuccess(el, err); return true; }
-  const n = parseFloat(el.value);
-  if (isNaN(n) || n < 0) { setError(el, err, "Minimum purchase cannot be negative"); return false; }
-  setSuccess(el, err); return true;
+  
+  let isValid = true;
+  if (el.value === "") { 
+    setSuccess(el, err); 
+  } else {
+    const n = parseFloat(el.value);
+    if (isNaN(n) || n < 0) { 
+      setError(el, err, "Minimum purchase cannot be negative"); 
+      isValid = false; 
+    } else {
+      setSuccess(el, err);
+    }
+  }
+  
+  // Trigger re-validation of discountValue if it's FIXED and already filled
+  const type = document.getElementById(prefix + '-discountType').value;
+  const discEl = document.getElementById(prefix + '-discountValue');
+  if (type === 'FIXED' && discEl.value && (discEl.classList.contains("input-error") || discEl.classList.contains("input-success"))) {
+    validateDiscountValue(prefix);
+  }
+  
+  return isValid;
 }
 
 function validateTotalUsageLimit(prefix) {
   /* 0 = unlimited, so empty/0 is valid */
   const el  = document.getElementById(prefix + '-totalUsageLimit');
   const err = prefix + '-totalUsageLimit-error';
-  if (el.value === "") { setSuccess(el, err); return true; }
-  const n = parseInt(el.value);
-  if (isNaN(n) || n < 0) { setError(el, err, "Usage limit cannot be negative"); return false; }
-  setSuccess(el, err); return true;
+  
+  let isValid = true;
+  if (el.value === "") { 
+    setSuccess(el, err); 
+  } else {
+    const n = parseInt(el.value);
+    if (isNaN(n) || n < 0) { 
+      setError(el, err, "Usage limit cannot be negative"); 
+      isValid = false; 
+    } else {
+      setSuccess(el, err);
+    }
+  }
+
+  // Re-evaluate user usage limit if it's already populated/touched
+  const userEl = document.getElementById(prefix + '-userUsageLimit');
+  if (userEl && userEl.value && (userEl.classList.contains("input-error") || userEl.classList.contains("input-success"))) {
+    validateUserUsageLimit(prefix);
+  }
+  
+  return isValid;
 }
 
 function validateUserUsageLimit(prefix) {
   const el  = document.getElementById(prefix + '-userUsageLimit');
   const err = prefix + '-userUsageLimit-error';
   const val = el.value;
+  
   if (!val) { setError(el, err, "Limit per user is required"); return false; }
   const n = parseInt(val);
   if (isNaN(n) || n < 1) { setError(el, err, "Limit per user must be at least 1"); return false; }
+  
+  const totalEl = document.getElementById(prefix + '-totalUsageLimit');
+  const totalVal = parseInt(totalEl.value) || 0;
+  
+  if (totalVal > 0 && n > totalVal) {
+    setError(el, err, `Cannot exceed total usage limit (${totalVal})`);
+    return false;
+  }
+  
   setSuccess(el, err); return true;
 }
 

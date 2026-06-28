@@ -445,53 +445,60 @@
 
                     <!-- COUPONS CARD -->
                     <div class="co-coupons-card">
-                        <h3 class="co-coupons-title">Available Coupons</h3>
-
-                        <div class="co-coupon-list">
-                            <% if (availableCoupons && availableCoupons.length > 0) { %>
-                                <% availableCoupons.forEach(coupon => { %>
-                                <div class="co-coupon">
-                                    <div class="co-coupon-info">
-                                        <span class="co-coupon-code"><%= coupon.code %></span>
-                                        <span class="co-coupon-desc">
-                                            <% if (coupon.discountType === "PERCENTAGE") { %>
-                                                <%= coupon.discountValue %>% OFF
-                                            <% } else { %>
-                                                ₹<%= coupon.discountValue.toLocaleString("en-IN") %> OFF
-                                            <% } %>
-                                            <% if (coupon.minPurchase > 0) { %>
-                                                • Min ₹<%= coupon.minPurchase.toLocaleString("en-IN") %>
-                                            <% } %>
-                                        </span>
+                        
+                        <details class="co-coupons-dropdown" style="margin-bottom: 16px;">
+                            <summary class="co-coupons-summary" style="cursor: pointer; display: flex; align-items: center; justify-content: space-between; padding: 12px; background: rgba(76, 0, 128, 0.04); border-radius: var(--co-radius-sm); border: 1px solid rgba(76, 0, 128, 0.1);">
+                                <span class="co-coupons-title" style="margin: 0; font-size: 14px; color: var(--co-accent);">View Available Coupons (<%= availableCoupons ? availableCoupons.length : 0 %>)</span>
+                                <i data-lucide="chevron-down" size="18" style="color: var(--co-accent);"></i>
+                            </summary>
+                            <div class="co-coupon-list" style="margin-top: 12px; max-height: 300px; overflow-y: auto;">
+                                <% if (availableCoupons && availableCoupons.length > 0) { %>
+                                    <% availableCoupons.forEach(coupon => { %>
+                                    <div class="co-coupon">
+                                        <div class="co-coupon-info">
+                                            <span class="co-coupon-code"><%= coupon.code %></span>
+                                            <span class="co-coupon-desc">
+                                                <% if (coupon.discountType === "PERCENTAGE") { %>
+                                                    <%= coupon.discountValue %>% OFF
+                                                <% } else { %>
+                                                    ₹<%= coupon.discountValue.toLocaleString("en-IN") %> OFF
+                                                <% } %>
+                                                <% if (coupon.minPurchase > 0) { %>
+                                                    • Min ₹<%= coupon.minPurchase.toLocaleString("en-IN") %>
+                                                <% } %>
+                                            </span>
+                                        </div>
+                                        <button class="co-coupon-apply-btn" data-code="<%= coupon.code %>">Apply</button>
                                     </div>
-                                    <button class="co-coupon-apply-btn" data-code="<%= coupon.code %>">Apply</button>
-                                </div>
-                                <% }) %>
-                            <% } else { %>
-                                <div class="co-coupon">
-                                    <div class="co-coupon-info">
-                                        <span class="co-coupon-desc">No coupons available right now</span>
+                                    <% }) %>
+                                <% } else { %>
+                                    <div class="co-coupon">
+                                        <div class="co-coupon-info">
+                                            <span class="co-coupon-desc">No coupons available right now</span>
+                                        </div>
                                     </div>
-                                </div>
-                            <% } %>
-                        </div>
+                                <% } %>
+                            </div>
+                        </details>
 
-                        <div class="co-coupon-manual">
-                            <input
-                                type="text"
-                                id="couponInput"
-                                class="co-coupon-input"
-                                placeholder="Enter promo code"
-                                value="<%= appliedCoupon?.code || '' %>"
-                            >
-                            <button class="co-coupon-manual-btn" id="applyCouponBtn">Apply</button>
+                        <div class="co-coupon-manual" style="flex-wrap: wrap;">
+                            <div style="display: flex; gap: 10px; width: 100%;">
+                                <input
+                                    type="text"
+                                    id="couponInput"
+                                    class="co-coupon-input"
+                                    placeholder="Enter promo code"
+                                    value="<%= appliedCoupon?.code || '' %>"
+                                >
+                                <button class="co-coupon-manual-btn" id="applyCouponBtn">Apply</button>
+                            </div>
                             <button
                                 type="button"
                                 id="removeCouponBtn"
                                 class="co-coupon-manual-btn"
-                                style="<%= (couponDiscount || 0) > 0 ? 'display:inline-flex;' : 'display:none;' %>"
+                                style="width: 100%; background: #FFF0F0; color: #DC2626; border: 1.5px solid #FCA5A5; margin-top: 8px; <%= (couponDiscount || 0) > 0 ? 'display:block;' : 'display:none;' %>"
                             >
-                                Remove
+                                Remove Applied Coupon
                             </button>
                         </div>
                     </div>
@@ -884,6 +891,10 @@
                     const shippingEl = document.getElementById('coShipping');
                     shippingEl.textContent = data.deliveryCharge === 0 ? 'Free' : `₹${data.deliveryCharge.toLocaleString('en-IN')}`;
                     shippingEl.classList.toggle('co-free', data.deliveryCharge === 0);
+
+                    if (typeof showToast === 'function') {
+                        showToast('info', 'Coupon Removed');
+                    }
                 } catch {
                     Swal.fire({ icon: 'error', title: 'Something went wrong' });
                 }
@@ -939,9 +950,13 @@
                     document.getElementById('coDiscount').textContent      = `−₹${data.couponDiscount.toLocaleString('en-IN')}`;
                     document.getElementById('coTax').textContent           = `₹${data.taxAmount.toLocaleString('en-IN')}`;
                     document.getElementById('coGrandTotal').textContent    = `₹${data.finalAmount.toLocaleString('en-IN')}`;
-                    document.getElementById('removeCouponBtn').style.display = 'inline-flex';
+                    document.getElementById('removeCouponBtn').style.display = 'block';
 
-                    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Coupon Applied', showConfirmButton: false, timer: 2000 });
+                    if (typeof showToast === 'function') {
+                        showToast('success', 'Coupon Applied Successfully');
+                    } else {
+                        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Coupon Applied', showConfirmButton: false, timer: 2000 });
+                    }
                 } catch {
                     Swal.fire({ icon: 'error', title: 'Something went wrong', text: 'Please try again later.' });
                 }

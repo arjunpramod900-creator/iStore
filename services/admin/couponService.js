@@ -87,29 +87,29 @@ async (couponData) => {
   }
 
   if (
-
-    Number(
-      couponData.discountValue
-    ) < 0
-
-    ||
-
-    Number(
-      couponData.minPurchase
-    ) < 0
-
-    ||
-
-    Number(
-      couponData.maxDiscount
-    ) < 0
-
+    Number(couponData.discountValue) < 0 ||
+    Number(couponData.minPurchase) < 0 ||
+    Number(couponData.maxDiscount) < 0
   ) {
+    throw new Error("Invalid coupon values");
+  }
 
-    throw new Error(
-      "Invalid coupon values"
-    );
+  if (
+    couponData.discountType === "FIXED" &&
+    Number(couponData.discountValue) > Number(couponData.minPurchase)
+  ) {
+    throw new Error("Fixed discount value cannot exceed the minimum purchase amount");
+  }
 
+  const totalLimit = Number(couponData.totalUsageLimit) || 0;
+  const userLimit = Number(couponData.userUsageLimit) || 1;
+
+  if (userLimit < 1) {
+    throw new Error("Limit per user must be at least 1");
+  }
+
+  if (totalLimit > 0 && userLimit > totalLimit) {
+    throw new Error(`Limit per user (${userLimit}) cannot exceed total usage limit (${totalLimit})`);
   }
 
   return await Coupon.create({
@@ -258,22 +258,36 @@ async (
   }
 
   if (
-
-    couponData.discountType ===
-    "PERCENTAGE"
-
-    &&
-
-    Number(
-      couponData.discountValue
-    ) > 90
-
+    couponData.discountType === "PERCENTAGE" &&
+    Number(couponData.discountValue) > 90
   ) {
+    throw new Error("Percentage discount cannot exceed 90%");
+  }
 
-    throw new Error(
-      "Percentage discount cannot exceed 90%"
-    );
+  if (
+    Number(couponData.discountValue) < 0 ||
+    Number(couponData.minPurchase) < 0 ||
+    Number(couponData.maxDiscount) < 0
+  ) {
+    throw new Error("Invalid coupon values");
+  }
 
+  if (
+    couponData.discountType === "FIXED" &&
+    Number(couponData.discountValue) > Number(couponData.minPurchase)
+  ) {
+    throw new Error("Fixed discount value cannot exceed the minimum purchase amount");
+  }
+
+  const totalLimit = Number(couponData.totalUsageLimit) || 0;
+  const userLimit = Number(couponData.userUsageLimit) || 1;
+
+  if (userLimit < 1) {
+    throw new Error("Limit per user must be at least 1");
+  }
+
+  if (totalLimit > 0 && userLimit > totalLimit) {
+    throw new Error(`Limit per user (${userLimit}) cannot exceed total usage limit (${totalLimit})`);
   }
 
   coupon.code =
