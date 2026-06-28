@@ -508,10 +508,6 @@
                 showCancelButton: true,
                 confirmButtonText: "Delete",
                 cancelButtonText: "Cancel",
-                background: "#FFFFFF",
-                color: "#2D004F",
-                customClass: { popup: "swal-popup-istore", confirmButton: "swal-confirm-istore", cancelButton: "swal-cancel-istore" },
-                buttonsStyling: false
             }).then((result) => {
                 if (result.isConfirmed) {
                     gsap.to(cardToDelete, {
@@ -553,15 +549,7 @@
                         title: "Default Updated!",
                         text: "This address is now your default delivery address.",
                         icon: "success",
-                        iconColor: "#4C0080",
                         confirmButtonText: "Got it",
-                        background: "#FFFFFF",
-                        color: "#2D004F",
-                        customClass: {
-                            popup: "swal-popup-istore",
-                            confirmButton: "swal-confirm-istore-success"
-                        },
-                        buttonsStyling: false
                     }).then(() => {
                         window.location.reload();
                     });
@@ -571,10 +559,6 @@
                         text: data.message || "Could not set default address.",
                         icon: "error",
                         confirmButtonText: "OK",
-                        background: "#FFFFFF",
-                        color: "#2D004F",
-                        customClass: { popup: "swal-popup-istore", confirmButton: "swal-confirm-istore" },
-                        buttonsStyling: false
                     });
                     btn.disabled = false;
                     btn.textContent = "Deliver Here";
@@ -585,10 +569,6 @@
                     text: "Could not reach the server. Please try again.",
                     icon: "error",
                     confirmButtonText: "OK",
-                    background: "#FFFFFF",
-                    color: "#2D004F",
-                    customClass: { popup: "swal-popup-istore", confirmButton: "swal-confirm-istore" },
-                    buttonsStyling: false
                 });
                 btn.disabled = false;
                 btn.textContent = "Deliver Here";
@@ -822,15 +802,7 @@
                                 title: "Address Saved!",
                                 text: data.message || "Your new address has been added successfully.",
                                 icon: "success",
-                                iconColor: "#4C0080",
                                 confirmButtonText: "Great",
-                                background: "#FFFFFF",
-                                color: "#2D004F",
-                                customClass: {
-                                    popup: "swal-popup-istore",
-                                    confirmButton: "swal-confirm-istore-success"
-                                },
-                                buttonsStyling: false
                             }).then(() => {
                                 /* 3. Reload page to show new address in the grid */
                                 window.location.href = data.redirectTo || "/addresses";
@@ -844,10 +816,6 @@
                         text: data.message || "Something went wrong. Please try again.",
                         icon: "error",
                         confirmButtonText: "OK",
-                        background: "#FFFFFF",
-                        color: "#2D004F",
-                        customClass: { popup: "swal-popup-istore", confirmButton: "swal-confirm-istore" },
-                        buttonsStyling: false
                     });
                 }
             } catch (err) {
@@ -856,10 +824,6 @@
                     text: "Unable to save address. Please check your connection and try again.",
                     icon: "error",
                     confirmButtonText: "OK",
-                    background: "#FFFFFF",
-                    color: "#2D004F",
-                    customClass: { popup: "swal-popup-istore", confirmButton: "swal-confirm-istore" },
-                    buttonsStyling: false
                 });
             } finally {
                 saveBtn.disabled = false;
@@ -917,14 +881,9 @@
                 title: "Update Address?",
                 text: "Save changes to this address?",
                 icon: "question",
-                iconColor: "#4C0080",
                 showCancelButton: true,
                 confirmButtonText: "Update",
                 cancelButtonText: "Cancel",
-                background: "#FFFFFF",
-                color: "#2D004F",
-                customClass: { popup: "swal-popup-istore", confirmButton: "swal-confirm-istore-success", cancelButton: "swal-cancel-istore" },
-                buttonsStyling: false
             }).then(async (result) => {
                 if (!result.isConfirmed) return;
 
@@ -956,15 +915,7 @@
                                     title: "Address Updated!",
                                     text: data.message || "Your address has been updated successfully.",
                                     icon: "success",
-                                    iconColor: "#4C0080",
                                     confirmButtonText: "Done",
-                                    background: "#FFFFFF",
-                                    color: "#2D004F",
-                                    customClass: {
-                                        popup: "swal-popup-istore",
-                                        confirmButton: "swal-confirm-istore-success"
-                                    },
-                                    buttonsStyling: false
                                 }).then(() => {
                                     /* 3. Reload to reflect updated address in grid */
                                     window.location.href = data.redirectTo || "/addresses";
@@ -977,10 +928,6 @@
                             text: data.message || "Something went wrong. Please try again.",
                             icon: "error",
                             confirmButtonText: "OK",
-                            background: "#FFFFFF",
-                            color: "#2D004F",
-                            customClass: { popup: "swal-popup-istore", confirmButton: "swal-confirm-istore" },
-                            buttonsStyling: false
                         });
                     }
                 } catch (err) {
@@ -989,10 +936,7 @@
                         text: "Unable to update address. Please check your connection and try again.",
                         icon: "error",
                         confirmButtonText: "OK",
-                        background: "#FFFFFF",
-                        color: "#2D004F",
                         customClass: { popup: "swal-popup-istore", confirmButton: "swal-confirm-istore" },
-                        buttonsStyling: false
                     });
                 } finally {
                     updateBtn.disabled = false;

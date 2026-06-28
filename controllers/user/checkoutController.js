@@ -82,12 +82,12 @@ export const loadRetryCheckoutPage = async (req, res) => {
 
     const order = response.order;
 
-    // Restore any coupon the user already applied in this session
+    // Restore any new coupon applied in this session, otherwise fallback to the order's existing coupon
     const appliedCoupon   = req.session.retryCoupon || null;
-    const couponDiscount  = appliedCoupon?.discount || 0;
+    const couponDiscount  = appliedCoupon ? appliedCoupon.discount : (order.couponDiscount || 0);
 
-    // Recalculate totals if a coupon was already applied
-    const base            = (order.subtotal || 0) - (order.offerDiscount || 0);
+    // Recalculate totals (order.subtotal is already post-offer discount)
+    const base            = order.subtotal || 0;
     const discounted      = base - couponDiscount;
     const deliveryCharge  = order.deliveryCharge ?? (discounted >= 5000 ? 0 : 99);
     const taxAmount       = Math.floor(discounted * 0.02);
@@ -427,7 +427,8 @@ export const applyRetryCoupon = async (req, res) => {
 ========================================= */
 export const removeRetryCoupon = async (req, res) => {
   try {
-    delete req.session.retryCoupon;
+    // Set code: false to explicitly indicate removal instead of just deleting
+    req.session.retryCoupon = { code: false, discount: 0 };
 
     const userId  = req.session.userId;
     const orderId = req.params.orderId;
@@ -435,7 +436,8 @@ export const removeRetryCoupon = async (req, res) => {
     const order   = await Order.findOne({ userId, orderId }).lean();
     if (!order) return res.json({ success: false, message: "Order not found" });
 
-    const base           = (order.subtotal || 0) - (order.offerDiscount || 0);
+    // order.subtotal already has the offer discount applied
+    const base           = order.subtotal || 0;
     const deliveryCharge = order.deliveryCharge ?? (base >= 5000 ? 0 : 99);
     const taxAmount      = Math.floor(base * 0.02);
     const finalAmount    = base + deliveryCharge + taxAmount;

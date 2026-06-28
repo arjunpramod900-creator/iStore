@@ -765,7 +765,6 @@
             const display    = document.getElementById('countdownDisplay');
             const warnSwal   = Swal.mixin({
                 icon:               'warning',
-                confirmButtonColor: '#4C0080',
                 allowOutsideClick:  false,
             });
 
@@ -940,7 +939,6 @@
                             icon,
                             title,
                             html,
-                            confirmButtonColor: '#603763',
                             confirmButtonText: 'Got it',
                         });
                     }
@@ -976,7 +974,7 @@
             if (!addressId) {
                 btn.disabled    = false;
                 btn.textContent = isRetry ? 'Confirm Payment' : 'Place Order';
-                Swal.fire({ icon: 'warning', title: 'Select Address', text: 'Please select a delivery address.', confirmButtonColor: '#4C0080' });
+                Swal.fire({ icon: 'warning', title: 'Select Address', text: 'Please select a delivery address.' });
                 return;
             }
 
@@ -1009,7 +1007,7 @@
 
                 /* Expired reservation */
                 if (data.expired) {
-                    Swal.fire({ icon: 'error', title: 'Reservation Expired', text: data.message, confirmButtonColor: '#4C0080' })
+                    Swal.fire({ icon: 'error', title: 'Reservation Expired', text: data.message })
                         .then(() => { window.location.href = '/orders'; });
                     return;
                 }
@@ -1017,7 +1015,7 @@
                 if (!data.success) {
                     btn.disabled    = false;
                     btn.textContent = isRetry ? 'Confirm Payment' : 'Place Order';
-                    Swal.fire({ icon: 'error', title: isRetry ? 'Payment Failed' : 'Order Failed', text: data.message, confirmButtonColor: '#4C0080' });
+                    Swal.fire({ icon: 'error', title: isRetry ? 'Payment Failed' : 'Order Failed', text: data.message });
                     return;
                 }
 
@@ -1041,7 +1039,7 @@
             } catch {
                 btn.disabled    = false;
                 btn.textContent = isRetry ? 'Confirm Payment' : 'Place Order';
-                Swal.fire({ icon: 'error', title: 'Something Went Wrong', text: 'Please try again later.', confirmButtonColor: '#4C0080' });
+                Swal.fire({ icon: 'error', title: 'Something Went Wrong', text: 'Please try again later.' });
             }
         });
 
@@ -1070,7 +1068,7 @@
                 name:        'iStore',
                 description: isRetry ? 'Order Payment — Retry' : 'Order Payment',
                 order_id:    razorpayOrder.id,
-                theme:       { color: '#603763' },
+                theme:       { },
 
                 handler: async function (response) {
                     try {
@@ -1226,7 +1224,7 @@ rzp.on('payment.failed', async function () {
                     return Swal.fire({ toast: true, position: 'top', icon: 'warning', title: data.message, showConfirmButton: false, timer: 3000 });
                 }
 
-                await Swal.fire({ icon: 'success', title: 'Address Added', text: data.message, confirmButtonColor: '#603763' });
+                await Swal.fire({ icon: 'success', title: 'Address Added', text: data.message });
                 window.location.reload();
             } catch {
                 Swal.fire({ icon: 'error', title: 'Something went wrong', text: 'Please try again.' });
@@ -1250,7 +1248,7 @@ rzp.on('payment.failed', async function () {
                     return Swal.fire({ toast: true, position: 'top', icon: 'warning', title: data.message, showConfirmButton: false, timer: 3000 });
                 }
 
-                await Swal.fire({ icon: 'success', title: 'Address Updated', text: data.message, confirmButtonColor: '#603763' });
+                await Swal.fire({ icon: 'success', title: 'Address Updated', text: data.message });
                 window.location.reload();
             } catch {
                 Swal.fire({ icon: 'error', title: 'Something went wrong', text: 'Please try again.' });

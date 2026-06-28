@@ -156,18 +156,56 @@
         const paymentMethod = order.paymentMethod || "COD";
         const paymentStatus = order.paymentStatus || "Pending";
 
-        /* Compute summary figures from ACTIVE items only (exclude cancelled/returned) */
-        const activeItems = items.filter(i =>
-            i.itemStatus !== "Cancelled" &&
-            i.itemStatus !== "Returned"  &&
-            i.itemReturnStatus !== "Approved"
-        );
-        const summaryMRP          = activeItems.reduce((s, i) => s + ((i.originalPrice || i.price) * i.quantity), 0);
-        const summaryOfferDisc    = activeItems.reduce((s, i) => s + ((i.offerDiscount || 0) * i.quantity), 0);
-        const summarySubtotal     = activeItems.reduce((s, i) => s + (i.price * i.quantity), 0);
-        const summaryCouponDisc   = activeItems.reduce((s, i) => s + (i.couponDiscount || 0), 0);
+        /* Compute summary figures from ALL items to show the original pristine order state */
+        const summaryOfferDisc    = order.pricingSnapshot?.originalOfferDiscount ?? items.reduce((s, i) => s + ((i.offerDiscount || 0) * i.quantity), 0);
+        const summarySubtotal     = order.pricingSnapshot?.originalSubtotal ?? items.reduce((s, i) => s + (i.price * i.quantity), 0);
+        const summaryMRP          = order.pricingSnapshot?.originalSubtotal ? (summarySubtotal + summaryOfferDisc) : items.reduce((s, i) => s + ((i.originalPrice || i.price) * i.quantity), 0);
+        const summaryCouponDisc   = order.pricingSnapshot?.originalCouponDiscount ?? items.reduce((s, i) => s + (i.couponDiscount || 0), 0);
         const summaryHasOffer     = summaryOfferDisc > 0;
         const summaryHasCoupon    = summaryCouponDisc > 0;
+        
+        /* Fetch original tax, delivery and total for the summary card using the snapshot */
+        const summaryTax          = order.pricingSnapshot?.originalTaxAmount ?? tax;
+        const summaryDelivery     = order.pricingSnapshot?.originalDeliveryCharge ?? delivery;
+        const summaryTotal        = order.pricingSnapshot?.originalFinalAmount ?? total;
+
+        /* Compute revised summary figures from CURRENT order state */
+        const revisedMRP          = (order.subtotal || 0) + (order.offerDiscount || 0);
+        const revisedOfferDisc    = order.offerDiscount || 0;
+        const revisedSubtotal     = order.subtotal || 0;
+        const revisedCouponDisc   = order.couponDiscount || 0;
+        const revisedHasOffer     = revisedOfferDisc > 0;
+        const revisedHasCoupon    = revisedCouponDisc > 0;
+        
+        // Revised summary should show if the finalAmount is less than the original finalAmount AND there are still active items
+        const originalFinalAmount = order.pricingSnapshot?.originalFinalAmount || (order.finalAmount + (order.refundAmount || 0));
+        const hasActiveItems      = items.some(i => i.itemStatus !== "Cancelled" && i.itemStatus !== "Returned" && i.itemReturnStatus !== "Approved");
+        const isRevised           = (order.finalAmount < originalFinalAmount) && hasActiveItems;
+        
+        const hasCancelledItems   = items.some(i => ["Cancelled", "Returned"].includes(i.itemStatus));
+
+        // Determine if this is a legacy full-order refund where individual item refunds aren't tracked
+        const isLegacyRefund = (order.paymentStatus === "Refunded" || (order.isRefundProcessed && order.refundAmount > 0)) && 
+                               items.every(i => !i.isRefundProcessed);
+
+        /* Pre-calculate exact tax share for each item to ensure it sums perfectly to order.taxAmount */
+        const totalItemsFinalPrice = items.reduce((sum, i) => sum + (i.finalPrice || (i.price * i.quantity)), 0);
+        let remainingTaxToDistribute = order.taxAmount || 0;
+        
+        items.forEach((item, idx) => {
+            const itemFinalPrice = item.finalPrice || (item.price * item.quantity);
+            if (totalItemsFinalPrice > 0 && remainingTaxToDistribute > 0) {
+                if (idx === items.length - 1) {
+                    item.computedTax = remainingTaxToDistribute;
+                } else {
+                    const share = Math.round((itemFinalPrice / totalItemsFinalPrice) * (order.taxAmount || 0));
+                    item.computedTax = Math.min(share, remainingTaxToDistribute);
+                    remainingTaxToDistribute -= item.computedTax;
+                }
+            } else {
+                item.computedTax = 0;
+            }
+        });
 
         /* REFACTOR: Determine if order is eligible for Retry */
         const isRetryable = 
@@ -321,6 +359,9 @@
                                         <% if (item.couponDiscount > 0) { %>
                                             <span style="display: block; color: #059669; font-weight: 600;">Coupon Discount: −<%= fmt(item.couponDiscount) %></span>
                                         <% } %>
+                                        <% if (order.taxAmount > 0 && item.computedTax > 0) { %>
+                                            <span style="display: block;">Tax (2% GST): +<%= fmt(item.computedTax) %></span>
+                                        <% } %>
                                     </div>
 
                                     <span class="od-item-stock od-item-stock--<%= (item.itemStatus || 'Active').toLowerCase() %>">
@@ -352,10 +393,15 @@
 
                                 <div class="od-item-right">
                                     <div class="od-item-pricing" style="text-align: right; margin-bottom: 12px;">
-                                        <% if (item.couponDiscount > 0) { %>
-                                            <span style="text-decoration: line-through; color: #9CA3AF; font-size: 13px; display: block; margin-bottom: 2px;"><%= fmt(item.price * item.quantity) %></span>
+                                        <% 
+                                           const itemTotal = (item.finalPrice || (item.price * item.quantity)) + (item.computedTax || 0);
+                                        %>
+                                        <% if (item.couponDiscount > 0 || item.offerDiscount > 0) { %>
+                                            <span style="text-decoration: line-through; color: #9CA3AF; font-size: 13px; display: block; margin-bottom: 2px;">
+                                                <%= fmt((item.originalPrice || item.price) * item.quantity) %>
+                                            </span>
                                         <% } %>
-                                        <span class="od-item-price"><%= fmt(item.finalPrice || (item.price * item.quantity)) %></span>
+                                        <span class="od-item-price"><%= fmt(itemTotal) %></span>
                                     </div>
 
                                     <%
@@ -460,10 +506,77 @@
                             <!-- Tax -->
                             <div class="od-summary-row">
                                 <span class="od-summary-row-label">Tax</span>
-                                <span class="od-summary-row-value"><%= fmt(tax) %></span>
+                                <span class="od-summary-row-value"><%= fmt(summaryTax) %></span>
                             </div>
 
                             <!-- Delivery -->
+                            <div class="od-summary-row">
+                                <span class="od-summary-row-label">Delivery</span>
+                                <% if (summaryDelivery === 0) { %>
+                                    <span class="od-summary-row-value free">Free</span>
+                                <% } else { %>
+                                    <span class="od-summary-row-value"><%= fmt(summaryDelivery) %></span>
+                                <% } %>
+                            </div>
+
+                        </div>
+                        <div class="od-summary-total">
+                            <span class="od-summary-total-label">Total</span>
+                            <span class="od-summary-total-value"><%= fmt(summaryTotal) %></span>
+                        </div>
+                    </section>
+
+                    <!-- REVISED ORDER SUMMARY — for all partially cancelled orders (including failed payments) -->
+                    <% if (isRevised) { %>
+                    <section class="od-summary-card" id="odRevisedSummaryCard" style="margin-top: 16px;">
+                        <h2 class="od-summary-title">Revised Order Summary</h2>
+                        <div class="od-summary-rows">
+
+                            <div class="od-summary-row">
+                                <span class="od-summary-row-label">MRP Total</span>
+                                <span class="od-summary-row-value"><%= fmt(revisedMRP) %></span>
+                            </div>
+
+                            <% if (revisedHasOffer) { %>
+                            <div class="od-summary-row">
+                                <span class="od-summary-row-label">Offer Discount</span>
+                                <span class="od-summary-row-value discount">−<%= fmt(revisedOfferDisc) %></span>
+                            </div>
+                            <% } %>
+
+                            <div class="od-summary-row" style="padding-top: 10px; border-top: 1px dashed #E5E7EB; margin-top: 6px; margin-bottom: 6px;">
+                                <span class="od-summary-row-label" style="font-weight: 600; color: #374151;">Subtotal</span>
+                                <span class="od-summary-row-value" style="font-weight: 600; color: #374151;"><%= fmt(revisedSubtotal) %></span>
+                            </div>
+
+                            <% if (revisedHasCoupon) { %>
+                            <div class="od-summary-row">
+                                <span class="od-summary-row-label" style="display:flex; align-items:center; gap: 6px;">
+                                    Coupon
+                                    <% if (order.couponCode) { %>
+                                        <span style="background: rgba(5,150,105,0.1); color: #059669; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase;"><%= order.couponCode %></span>
+                                    <% } %>
+                                </span>
+                                <span class="od-summary-row-value" style="color: #059669; font-weight: 600;">−<%= fmt(revisedCouponDisc) %></span>
+                            </div>
+                            <% } else if (order.couponCode) { %>
+                            <div class="od-summary-row" style="flex-direction: column; align-items: flex-start; gap: 4px;">
+                                <div style="display:flex; justify-content:space-between; width: 100%;">
+                                    <span class="od-summary-row-label" style="display:flex; align-items:center; gap: 6px;">
+                                        Coupon
+                                        <span style="background: rgba(239,68,68,0.1); color: #EF4444; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; text-decoration: line-through;"><%= order.couponCode %></span>
+                                    </span>
+                                    <span class="od-summary-row-value" style="color: #EF4444; font-weight: 600;">Not Applicable</span>
+                                </div>
+                                <span style="font-size: 11px; color: #6B7280; font-style: italic;">(Order value no longer meets minimum purchase requirement)</span>
+                            </div>
+                            <% } %>
+
+                            <div class="od-summary-row">
+                                <span class="od-summary-row-label">Tax</span>
+                                <span class="od-summary-row-value"><%= fmt(tax) %></span>
+                            </div>
+
                             <div class="od-summary-row">
                                 <span class="od-summary-row-label">Delivery</span>
                                 <% if (delivery === 0) { %>
@@ -475,10 +588,11 @@
 
                         </div>
                         <div class="od-summary-total">
-                            <span class="od-summary-total-label">Total</span>
+                            <span class="od-summary-total-label">Revised Total</span>
                             <span class="od-summary-total-value"><%= fmt(total) %></span>
                         </div>
                     </section>
+                    <% } %>
 
                     <!-- REFUND SUMMARY — only for paid orders with cancellations -->
                     <% if (refundAmount > 0 && !isRetryable) { %>
@@ -488,32 +602,62 @@
                             <%= paymentMethod === "COD" ? "Payment Adjustment" : "Refund Summary" %>
                         </div>
                         
-                        <!-- Detailed Breakdown of Refund Calculation -->
-                        <div style="margin: 12px 16px; padding: 12px; background: #F9FAFB; border-radius: 8px; font-size: 13px; color: #4B5563; border: 1px solid #F3F4F6;">
-                            <div style="display:flex; justify-content:space-between; margin-bottom: 6px;">
-                                <span>Original Order Value Paid</span>
-                                <span><%= fmt(order.pricingSnapshot?.originalFinalAmount || (total + refundAmount)) %></span>
-                            </div>
-                            <div style="display:flex; justify-content:space-between; margin-bottom: 6px;">
-                                <span>Revised Order Value</span>
-                                <span style="color: #059669;">−<%= fmt(total) %></span>
-                            </div>
+                        <!-- Detailed Breakdown of Refund Calculation (Per-Item) -->
+                        <div style="margin: 12px 16px; padding: 12px; background: #F9FAFB; border-radius: 8px; border: 1px solid #F3F4F6;">
                             
+                            <!-- Header row -->
+                            <div style="display:grid; grid-template-columns: 1fr auto auto; gap: 8px; padding-bottom: 8px; border-bottom: 1px dashed #E5E7EB; margin-bottom: 8px;">
+                                <span style="font-size: 11px; font-weight: 700; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.5px;">Item</span>
+                                <span style="font-size: 11px; font-weight: 700; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.5px; text-align:right;">Status</span>
+                                <span style="font-size: 11px; font-weight: 700; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.5px; text-align:right; min-width:80px;">Refund</span>
+                            </div>
+
                             <% 
-                                const original = order.pricingSnapshot?.originalFinalAmount || (total + refundAmount);
-                                const mathDiff = original - total;
-                                if (mathDiff > refundAmount) { 
+                                const refundableItems = order.items.filter(i => 
+                                    i.itemStatus === "Cancelled" || 
+                                    i.itemStatus === "Returned" || 
+                                    i.itemReturnStatus === "Approved"
+                                );
+                                
+                                refundableItems.forEach(item => {
+                                    const isCancelled = item.itemStatus === "Cancelled";
+                                    const itemRefund  = item.refundAmount || 0;
+                                    const hadRefund   = item.isRefundProcessed && itemRefund > 0;
                             %>
-                            <div style="display:flex; justify-content:space-between; margin-bottom: 6px; color: #B45309;" title="Refund was capped at 0 as the revised order value exceeded what was paid.">
-                                <span>Adjustment Cap</span>
-                                <span>+<%= fmt(mathDiff - refundAmount) %></span>
+                            <div style="display:grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center; padding: 8px 0; border-bottom: 1px solid #F3F4F6;">
+                                <!-- Product name -->
+                                <div>
+                                    <div style="font-size: 13px; font-weight: 600; color: #374151; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px;" title="<%= item.productName || 'Item' %>"><%= item.productName || "Item" %></div>
+                                    <% if (item.variantName || item.variantValue) { %>
+                                    <div style="font-size: 11px; color: #9CA3AF; margin-top: 2px;"><%= [item.variantName, item.variantValue].filter(Boolean).join(" · ") %></div>
+                                    <% } %>
+                                </div>
+
+                                <!-- Status badge -->
+                                <div>
+                                    <% if (isCancelled) { %>
+                                    <span style="font-size: 10px; font-weight: 700; background: rgba(239,68,68,0.08); color: #DC2626; padding: 3px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; white-space:nowrap;">Cancelled</span>
+                                    <% } else { %>
+                                    <span style="font-size: 10px; font-weight: 700; background: rgba(234,179,8,0.08); color: #B45309; padding: 3px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; white-space:nowrap;">Returned</span>
+                                    <% } %>
+                                </div>
+
+                                <!-- Refund amount -->
+                                <div style="text-align:right; min-width:80px;">
+                                    <% if (hadRefund) { %>
+                                    <span style="font-size: 13px; font-weight: 700; color: #059669;"><%= fmt(itemRefund) %></span>
+                                    <% } else if (isLegacyRefund) { %>
+                                    <span style="font-size: 12px; font-weight: 600; color: #059669;">Refunded</span>
+                                    <div style="font-size: 9px; color: #059669; margin-top: 2px;">Included below</div>
+                                    <% } else { %>
+                                    <span style="font-size: 12px; font-weight: 600; color: #9CA3AF;">No refund</span>
+                                    <% } %>
+                                </div>
                             </div>
-                            <% } %>
-                            
-                            <div style="border-top: 1px dashed #D1D5DB; margin: 8px 0;"></div>
-                            
-                            <div style="display:flex; justify-content:space-between; font-weight: 600; color: #111827;">
-                                <span><%= paymentMethod === "COD" ? "Adjusted Amount" : "Refund Amount" %></span>
+                            <% }); %>
+
+                            <div style="display:flex; justify-content:space-between; font-weight: 600; color: #111827; margin-top: 12px; padding-top: 4px;">
+                                <span><%= paymentMethod === "COD" ? "Total Adjustment" : "Total Refunded" %></span>
                                 <span><%= fmt(refundAmount) %></span>
                             </div>
                         </div>

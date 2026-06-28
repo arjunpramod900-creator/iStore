@@ -98,7 +98,7 @@ export const updateProfile = async (req, res) => {
 
       updateData,
 
-      { new: true },
+      { returnDocument: 'after' },
     );
 
     /* =========================

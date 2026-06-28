@@ -293,7 +293,7 @@ const deductStockAtomically = async (cartItems) => {
         const updated = await Variant.findOneAndUpdate(
             { _id: item.variantId._id, stock: { $gte: item.quantity } },
             { $inc: { stock: -item.quantity } },
-            { new: true },
+            { returnDocument: 'after' },
         );
         if (!updated) {
             for (const done of decremented)
@@ -1387,8 +1387,8 @@ export const applyRetryCouponService = async (userId, orderId, couponCode) => {
     const order = await Order.findOne({ userId, orderId }).lean();
     if (!order) return { success: false, message: "Order not found" };
 
-    // Use the offer-discounted subtotal as the base for coupon validation
-    const base = (order.subtotal || 0) - (order.offerDiscount || 0);
+    // order.subtotal is already the post-offer discount subtotal, use it as the base
+    const base = order.subtotal || 0;
 
     const result = await validateCoupon(couponCode, base, userId);
     if (!result.success) return { success: false, message: result.message };
@@ -1419,7 +1419,7 @@ export const retryOrderPaymentService = async ({
     orderId,
     addressId,
     paymentMethod,
-    couponCode = null,
+    couponCode = undefined,
 }) => {
 
     const order = await Order.findOne({
@@ -1552,24 +1552,41 @@ export const retryOrderPaymentService = async ({
     ===================================== */
     let payAmount = order.finalAmount; // default: original amount
 
-    if (couponCode) {
-        const { validateCoupon } = await import("./couponService.js");
-        const base = (order.subtotal || 0) - (order.offerDiscount || 0);
-        const couponResult = await validateCoupon(couponCode, base, userId);
+    if (couponCode !== undefined) {
+        if (couponCode === false) {
+            // Coupon was explicitly removed by the user on the retry page
+            const base           = order.subtotal || 0;
+            const deliveryCharge = order.deliveryCharge ?? (base >= 5000 ? 0 : 99);
+            const taxAmount      = Math.floor(base * 0.02);
+            payAmount            = base + deliveryCharge + taxAmount;
 
-        if (couponResult.success) {
-            const couponDiscount  = couponResult.discount;
-            const discounted      = base - couponDiscount;
-            const deliveryCharge  = order.deliveryCharge ?? (discounted >= 5000 ? 0 : 99);
-            const taxAmount       = Math.floor(discounted * 0.02);
-            payAmount             = discounted + deliveryCharge + taxAmount;
+            // Persist the removed coupon state
+            order.couponDiscount = 0;
+            order.couponCode     = null;
+            order.taxAmount      = taxAmount;
+            order.deliveryCharge = deliveryCharge;
+            order.finalAmount    = payAmount;
+        } else {
+            // A new coupon was explicitly applied by the user on the retry page
+            const { validateCoupon } = await import("./couponService.js");
+            // Use the offer-discounted subtotal directly (no double subtraction)
+            const base = order.subtotal || 0;
+            const couponResult = await validateCoupon(couponCode, base, userId);
 
-            // Persist the updated pricing on the order
-            order.couponDiscount  = couponDiscount;
-            order.couponCode      = couponCode.toUpperCase();
-            order.taxAmount       = taxAmount;
-            order.deliveryCharge  = deliveryCharge;
-            order.finalAmount     = payAmount;
+            if (couponResult.success) {
+                const couponDiscount  = couponResult.discount;
+                const discounted      = base - couponDiscount;
+                const deliveryCharge  = order.deliveryCharge ?? (discounted >= 5000 ? 0 : 99);
+                const taxAmount       = Math.floor(discounted * 0.02);
+                payAmount             = discounted + deliveryCharge + taxAmount;
+
+                // Persist the updated pricing on the order
+                order.couponDiscount  = couponDiscount;
+                order.couponCode      = couponCode.toUpperCase();
+                order.taxAmount       = taxAmount;
+                order.deliveryCharge  = deliveryCharge;
+                order.finalAmount     = payAmount;
+            }
         }
     }
 

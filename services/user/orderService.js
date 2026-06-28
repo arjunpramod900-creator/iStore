@@ -187,9 +187,9 @@ export const cancelOrderService = async (userId, orderId, reason) => {
     return {
         success: true,
         message:
-            order.paymentMethod === "COD"
-                ? "Order cancelled successfully"
-                : "Order cancelled and refund credited to wallet",
+            (order.paymentStatus === "Paid" || order.paymentStatus === "Refunded") && order.paymentMethod !== "COD"
+                ? "Order cancelled and refund credited to wallet"
+                : "Order cancelled successfully",
     };
 
 };
@@ -314,9 +314,9 @@ export const cancelOrderItemService = async (
     return {
             success: true,
             message:
-                order.paymentMethod === "COD"
-                    ? "Product cancelled successfully. " + (couponMsg ? couponMsg : "")
-                    : "Product cancelled and refund credited to wallet. " + (couponMsg ? couponMsg : ""),
+                (order.paymentStatus === "Paid" || order.paymentStatus === "Refunded") && order.paymentMethod !== "COD"
+                    ? "Product cancelled and refund credited to wallet. " + (couponMsg ? couponMsg : "")
+                    : "Product cancelled successfully. " + (couponMsg ? couponMsg : ""),
         };
 
 };

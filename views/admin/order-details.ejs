@@ -150,6 +150,25 @@
         const payStatus   = order.paymentStatus;
         const items       = order.items || [];
 
+        /* Pre-calculate exact tax share for each item to ensure it sums perfectly to order.taxAmount */
+        const totalItemsFinalPrice = items.reduce((sum, i) => sum + (i.finalPrice || (i.price * i.quantity)), 0);
+        let remainingTaxToDistribute = order.taxAmount || 0;
+        
+        items.forEach((item, idx) => {
+            const itemFinalPrice = item.finalPrice || (item.price * item.quantity);
+            if (totalItemsFinalPrice > 0 && remainingTaxToDistribute > 0) {
+                if (idx === items.length - 1) {
+                    item.computedTax = remainingTaxToDistribute;
+                } else {
+                    const share = Math.round((itemFinalPrice / totalItemsFinalPrice) * (order.taxAmount || 0));
+                    item.computedTax = Math.min(share, remainingTaxToDistribute);
+                    remainingTaxToDistribute -= item.computedTax;
+                }
+            } else {
+                item.computedTax = 0;
+            }
+        });
+
         const activeItems = items.filter(i =>
             i.itemStatus !== "Cancelled" &&
             i.itemStatus !== "Returned"  &&
@@ -292,31 +311,54 @@
                         <tbody>
                             <% items.forEach((item, idx) => {
                                 const img      = item.productImage || "/images/product-placeholder.png";
-                                const rowTotal = item.price * item.quantity;
+                                const itemTotal = (item.finalPrice || (item.price * item.quantity)) + (item.computedTax || 0);
                             %>
                             <tr>
-                                <td>
+                                <td style="vertical-align: top;">
                                     <div class="aod-prod-cell">
                                         <div class="aod-prod-thumb">
                                             <img src="<%= img %>" alt="<%= item.productName %>" loading="lazy">
                                         </div>
                                         <div class="aod-prod-info">
                                             <span class="aod-prod-name"><%= item.productName %></span>
-                                            <span class="aod-prod-sku">Item #<%= idx + 1 %></span>
+                                            <span class="aod-prod-sku" style="margin-bottom: 6px;">Item #<%= idx + 1 %></span>
+                                            
+                                            <!-- ITEM DISCOUNT BREAKDOWN -->
+                                            <div style="font-size: 11px; color: #6B7280; line-height: 1.5;">
+                                                <% if (item.originalPrice && item.originalPrice > item.price) { %>
+                                                    <span style="display: block;">MRP: <span style="text-decoration: line-through;"><%= fmt(item.originalPrice * item.quantity) %></span></span>
+                                                <% } %>
+                                                <% if (item.offerDiscount > 0) { %>
+                                                    <span style="display: block;">Offer: −<%= fmt(item.offerDiscount * item.quantity) %></span>
+                                                <% } %>
+                                                <% if (item.couponDiscount > 0) { %>
+                                                    <span style="display: block; color: #059669; font-weight: 600;">Coupon: −<%= fmt(item.couponDiscount) %></span>
+                                                <% } %>
+                                                <% if (order.taxAmount > 0 && item.computedTax > 0) { %>
+                                                    <span style="display: block;">Tax (2% GST): +<%= fmt(item.computedTax) %></span>
+                                                <% } %>
+                                            </div>
                                         </div>
                                     </div>
                                 </td>
-                                <td>
+                                <td style="vertical-align: top; padding-top: 16px;">
                                     <div class="aod-variant-cell">
                                         <% if (item.variantName) { %>
                                             <span class="aod-variant-specs"><%= item.variantName %></span>
                                         <% } %>
                                     </div>
                                 </td>
-                                <td class="center"><span class="aod-qty"><%= item.quantity %></span></td>
-                                <td class="right"><span class="aod-price"><%= fmt(item.price) %></span></td>
-                                <td class="right"><span class="aod-total"><%= fmt(rowTotal) %></span></td>
-<td class="center">
+                                <td class="center" style="vertical-align: top; padding-top: 16px;"><span class="aod-qty"><%= item.quantity %></span></td>
+                                <td class="right" style="vertical-align: top; padding-top: 16px;"><span class="aod-price"><%= fmt(item.price) %></span></td>
+                                <td class="right" style="vertical-align: top; padding-top: 16px;">
+                                    <% if (item.couponDiscount > 0 || item.offerDiscount > 0) { %>
+                                        <span style="text-decoration: line-through; color: #9CA3AF; font-size: 11px; display: block; margin-bottom: 2px;">
+                                            <%= fmt((item.originalPrice || item.price) * item.quantity) %>
+                                        </span>
+                                    <% } %>
+                                    <span class="aod-total" style="font-weight: 700;"><%= fmt(itemTotal) %></span>
+                                </td>
+<td class="center" style="vertical-align: top; padding-top: 16px;">
 
     <% if (item.itemStatus === "Cancelled") { %>
 
@@ -605,38 +647,89 @@
                     </div>
                 </div>
 
-                <% if (pricing.refund > 0) { 
-                    const totalPaid = order.pricingSnapshot?.originalFinalAmount || (order.finalAmount + pricing.refund);
-                    const mathDiff = totalPaid - order.finalAmount;
+                <%
+                    // Collect all items that were cancelled or returned
+                    const refundableItems = items.filter(i =>
+                        i.itemStatus === "Cancelled" ||
+                        i.itemStatus === "Returned"  ||
+                        i.itemReturnStatus === "Approved"
+                    );
+
+                    // Total refund across all items (from order-level accumulator)
+                    const totalRefund = order.refundAmount || 0;
+
+                    // Show the Refund Summary card if any items were cancelled/returned
+                    const showRefundCard = refundableItems.length > 0;
+                    
+                    // Determine if this is a legacy full-order refund where individual item refunds aren't tracked
+                    const isLegacyRefund = (order.paymentStatus === "Refunded" || (order.isRefundProcessed && order.refundAmount > 0)) && 
+                                           items.every(i => !i.isRefundProcessed);
                 %>
-                <!-- Refund Summary -->
+                <% if (showRefundCard) { %>
+                <!-- Refund Summary — per-item breakdown -->
                 <div class="aod-card" id="aodRefundCard">
                     <div class="aod-pricing-card" style="background-color: #F9FAFB; border-color: #F3F4F6;">
                         <h2 class="aod-pricing-title" style="color: #4B5563;">Refund Summary</h2>
-                        <div class="aod-pricing-rows" style="border: none;">
-                            <div class="aod-pricing-row" style="margin-bottom: 8px;">
-                                <span class="aod-pricing-label" style="color: #6B7280; font-size: 13px;">Original Order Paid</span>
-                                <span class="aod-pricing-value" style="color: #4B5563; font-weight: 500;"><%= fmt(totalPaid) %></span>
-                            </div>
-                            <div class="aod-pricing-row" style="margin-bottom: 8px;">
-                                <span class="aod-pricing-label" style="color: #6B7280; font-size: 13px;">Revised Order Value</span>
-                                <span class="aod-pricing-value" style="color: #4B5563; font-weight: 500;">− <%= fmt(order.finalAmount) %></span>
-                            </div>
-                            <% if (mathDiff > pricing.refund) { %>
-                            <div class="aod-pricing-row" style="margin-bottom: 8px;">
-                                <span class="aod-pricing-label" style="color: #D97706; font-size: 13px;">Adjustment Cap</span>
-                                <span class="aod-pricing-value" style="color: #D97706; font-weight: 500;">+ <%= fmt(mathDiff - pricing.refund) %></span>
-                            </div>
-                            <% } %>
+
+                        <!-- Header row -->
+                        <div style="display:grid; grid-template-columns: 1fr auto auto; gap: 8px; padding: 6px 0 10px; border-bottom: 1px dashed #E5E7EB; margin-bottom: 10px;">
+                            <span style="font-size: 11px; font-weight: 700; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.5px;">Item</span>
+                            <span style="font-size: 11px; font-weight: 700; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.5px; text-align:right;">Type</span>
+                            <span style="font-size: 11px; font-weight: 700; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.5px; text-align:right; min-width:90px;">Refund</span>
                         </div>
-                        <div class="aod-pricing-total" style="border-top-color: #E5E7EB; margin-top: 6px; padding-top: 14px;">
-                            <span class="aod-pricing-total-label" style="color: #111827; font-size: 15px;">Refund Amount</span>
-                            <span class="aod-pricing-total-value" style="color: #111827; font-size: 17px;"><%= fmt(pricing.refund) %></span>
+
+                        <!-- Per-item rows -->
+                        <% refundableItems.forEach(item => {
+                            const isCancelled = item.itemStatus === "Cancelled";
+                            const isReturned  = item.itemStatus === "Returned" || item.itemReturnStatus === "Approved";
+                            const itemRefund  = item.refundAmount || 0;
+                            const hadRefund   = item.isRefundProcessed && itemRefund > 0;
+                        %>
+                        <div style="display:grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center; padding: 8px 0; border-bottom: 1px solid #F3F4F6;">
+                            <!-- Product name + variant -->
+                            <div>
+                                <div style="font-size: 13px; font-weight: 600; color: #374151;"><%= item.productName || "Item" %></div>
+                                <% if (item.variantName || item.variantValue) { %>
+                                <div style="font-size: 11px; color: #9CA3AF; margin-top: 2px;"><%= [item.variantName, item.variantValue].filter(Boolean).join(" · ") %></div>
+                                <% } %>
+                            </div>
+
+                            <!-- Status badge -->
+                            <div>
+                                <% if (isCancelled) { %>
+                                <span style="font-size: 10px; font-weight: 700; background: rgba(239,68,68,0.08); color: #DC2626; padding: 3px 8px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.5px; white-space:nowrap;">Cancelled</span>
+                                <% } else { %>
+                                <span style="font-size: 10px; font-weight: 700; background: rgba(234,179,8,0.08); color: #B45309; padding: 3px 8px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.5px; white-space:nowrap;">Returned</span>
+                                <% } %>
+                            </div>
+
+                            <!-- Refund amount or "No refund" -->
+                            <div style="text-align:right; min-width:90px;">
+                                <% if (hadRefund) { %>
+                                <span style="font-size: 13px; font-weight: 700; color: #059669;"><%= fmt(itemRefund) %></span>
+                                <div style="font-size: 10px; color: #059669; margin-top: 2px;">Credited to wallet</div>
+                                <% } else if (isLegacyRefund) { %>
+                                <span style="font-size: 13px; font-weight: 700; color: #059669;">Refunded</span>
+                                <div style="font-size: 10px; color: #059669; margin-top: 2px;">Included in total</div>
+                                <% } else { %>
+                                <span style="font-size: 12px; font-weight: 600; color: #9CA3AF;">No refund</span>
+                                <div style="font-size: 10px; color: #9CA3AF; margin-top: 2px;">Order wasn't paid</div>
+                                <% } %>
+                            </div>
                         </div>
-                        <div style="text-align: right; margin-top: 6px;">
-                            <span style="font-size: 12px; color: #059669; font-weight: 500; font-style: italic;">
-                                <i data-lucide="check-circle" size="12" style="display:inline; vertical-align:text-bottom; margin-right:2px;"></i>Credited to user wallet
-                            </span>
+                        <% }); %>
+
+                        <!-- Total row -->
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding-top: 14px; margin-top: 4px;">
+                            <span style="font-size: 15px; font-weight: 700; color: #111827;">Total Refunded</span>
+                            <div style="text-align:right;">
+                                <span style="font-size: 17px; font-weight: 800; color: #111827;"><%= fmt(totalRefund) %></span>
+                                <% if (totalRefund > 0) { %>
+                                <div style="font-size: 12px; color: #059669; font-weight: 500; margin-top: 3px; font-style: italic;">
+                                    <i data-lucide="check-circle" size="12" style="display:inline; vertical-align:text-bottom; margin-right:2px;"></i>Credited to user wallet
+                                </div>
+                                <% } %>
+                            </div>
                         </div>
                     </div>
                 </div>

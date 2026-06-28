@@ -166,7 +166,11 @@
                             day: "numeric", month: "short", year: "numeric",
                         });
 
-                        const total = "₹" + Number(order.finalAmount || 0).toLocaleString("en-IN");
+                        const activeItemsCount = order.items.filter(i => i.itemStatus !== "Cancelled" && i.itemStatus !== "Returned" && i.itemReturnStatus !== "Approved").length;
+                        const displayAmount = (activeItemsCount === 0 && order.pricingSnapshot?.originalFinalAmount) 
+                            ? order.pricingSnapshot.originalFinalAmount 
+                            : (order.finalAmount || 0);
+                        const total = "₹" + Number(displayAmount).toLocaleString("en-IN");
 
                         const items     = order.items || [];
                         const itemNames = items.map(i => i.productName || "Product").join(", ");

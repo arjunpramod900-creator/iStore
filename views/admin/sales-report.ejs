@@ -20,6 +20,8 @@
 
   const chartLabels    = safeReport.chartLabels    || [];
   const chartData      = safeReport.chartData      || [];
+  const grossChartData = safeReport.grossChartData || [];
+  const netChartData   = safeReport.netChartData   || [];
   const categoriesData = safeReport.topCategories  || [];
   const paymentsData   = safeReport.paymentMethods || { cod: 0, razorpay: 0, wallet: 0 };
   const paymentCounts  = safeReport.paymentCounts  || { cod: 0, razorpay: 0, wallet: 0 };
@@ -167,12 +169,16 @@
   <div class="chart-card">
     <div class="chart-card-header">
       <h2 class="chart-card-title"><%= chartTitle %></h2>
-      <div class="chart-legend">
-        <div class="legend-item">
-          <div class="legend-dot current"></div>
-          <span>Net Revenue (₹)</span>
+        <div class="chart-legend">
+          <div class="legend-item">
+            <div class="legend-dot current" style="background:#603763;"></div>
+            <span>Gross Revenue (₹)</span>
+          </div>
+          <div class="legend-item" style="margin-left:16px;">
+            <div class="legend-dot" style="background:#059669;"></div>
+            <span>Net Revenue (₹)</span>
+          </div>
         </div>
-      </div>
     </div>
     <div class="chart-canvas-wrapper">
       <canvas id="revenueChart"></canvas>
@@ -310,12 +316,17 @@
                     
                     let itemPayStatus = order.paymentStatus || 'Pending';
                     let itemPayClass = badgeClass(order.paymentStatus);
+                    
+                    const isLegacyRefund = (order.paymentStatus === "Refunded" || (order.isRefundProcessed && order.refundAmount > 0)) && 
+                                           order.items.every(i => !i.isRefundProcessed);
+                                           
                     if (item.itemStatus === 'Cancelled' || item.itemStatus === 'Returned') {
-                        if (order.paymentMethod !== 'COD' || order.paymentStatus === 'Paid') {
+                        const hadRefund = item.isRefundProcessed && (item.refundAmount > 0);
+                        if (hadRefund || isLegacyRefund) {
                             itemPayStatus = 'Refunded';
                             itemPayClass = 'badge-returned'; 
                         } else {
-                            itemPayStatus = 'Cancelled';
+                            itemPayStatus = 'Unpaid';
                             itemPayClass = 'badge-cancelled';
                         }
                     }
@@ -532,16 +543,22 @@
   });
 
   /* ── Revenue Chart ── */
-  const serverLabels = <%- JSON.stringify(chartLabels) %>;
-  const serverData   = <%- JSON.stringify(chartData) %>;
-  const filterType   = "<%= filter %>";
+  const serverLabels   = <%- JSON.stringify(chartLabels) %>;
+  const grossRevenue   = <%- JSON.stringify(grossChartData) %>;
+  const netRevenue     = <%- JSON.stringify(netChartData) %>;
+  const filterType     = "<%= filter %>";
 
   document.addEventListener("DOMContentLoaded", function () {
 
     const ctx  = document.getElementById("revenueChart").getContext("2d");
-    const grad = ctx.createLinearGradient(0, 0, 0, 280);
-    grad.addColorStop(0, "rgba(96,55,99,0.22)");
-    grad.addColorStop(1, "rgba(96,55,99,0)");
+
+    const grossGrad = ctx.createLinearGradient(0, 0, 0, 280);
+    grossGrad.addColorStop(0, "rgba(96,55,99,0.22)");
+    grossGrad.addColorStop(1, "rgba(96,55,99,0)");
+
+    const netGrad = ctx.createLinearGradient(0, 0, 0, 280);
+    netGrad.addColorStop(0, "rgba(5,150,105,0.15)");
+    netGrad.addColorStop(1, "rgba(5,150,105,0)");
 
     /* Bar chart for hourly (daily), line for everything else */
     const useBar = (filterType === "daily");
@@ -550,21 +567,38 @@
       type: useBar ? "bar" : "line",
       data: {
         labels: serverLabels,
-        datasets: [{
-          label: "Net Revenue (₹)",
-          data:  serverData,
-          borderColor:          "#603763",
-          borderWidth:          useBar ? 0 : 2.5,
-          backgroundColor:      useBar ? "rgba(96,55,99,0.55)" : grad,
-          fill:                 !useBar,
-          tension:              0.4,
-          borderRadius:         useBar ? 8 : 0,
-          pointBackgroundColor: "#FFFFFF",
-          pointBorderColor:     "#603763",
-          pointBorderWidth:     2,
-          pointRadius:          useBar ? 0 : 4,
-          pointHoverRadius:     useBar ? 0 : 6,
-        }],
+        datasets: [
+          {
+            label:                "Gross Revenue (₹)",
+            data:                 grossRevenue,
+            borderColor:          "#603763",
+            borderWidth:          useBar ? 0 : 2.5,
+            backgroundColor:      useBar ? "rgba(96,55,99,0.55)" : grossGrad,
+            fill:                 !useBar,
+            tension:              0.4,
+            borderRadius:         useBar ? 8 : 0,
+            pointBackgroundColor: "#FFFFFF",
+            pointBorderColor:     "#603763",
+            pointBorderWidth:     2,
+            pointRadius:          useBar ? 0 : 4,
+            pointHoverRadius:     useBar ? 0 : 6,
+          },
+          {
+            label:                "Net Revenue (₹)",
+            data:                 netRevenue,
+            borderColor:          "#059669",
+            borderWidth:          useBar ? 0 : 2.5,
+            backgroundColor:      useBar ? "rgba(5,150,105,0.40)" : netGrad,
+            fill:                 !useBar,
+            tension:              0.4,
+            borderRadius:         useBar ? 8 : 0,
+            pointBackgroundColor: "#FFFFFF",
+            pointBorderColor:     "#059669",
+            pointBorderWidth:     2,
+            pointRadius:          useBar ? 0 : 4,
+            pointHoverRadius:     useBar ? 0 : 6,
+          },
+        ],
       },
       options: {
         responsive: true,
@@ -581,9 +615,10 @@
             padding:    12,
             cornerRadius: 10,
             callbacks: {
-              label: ctx => {
-                const v = ctx.parsed.y;
-                return " Net Revenue: ₹" + new Intl.NumberFormat("en-IN").format(v);
+              label: (ctx) => {
+                const v     = ctx.parsed.y;
+                const label = ctx.dataset.label || "";
+                return " " + label.replace(" (₹)", "") + ": ₹" + new Intl.NumberFormat("en-IN").format(v);
               },
             },
           },

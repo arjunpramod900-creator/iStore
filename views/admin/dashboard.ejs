@@ -15,11 +15,13 @@
   <%- include('../partials/admin/sidebar') %>
 
   <%
-    const d           = dashboardData || {};
-    const chartLabels = d.chartLabels || [];
-    const chartData   = d.chartData   || [];
-    const chartTitle  = d.chartTitle  || "Revenue Trends";
-    const rangeLabel  = d.rangeLabel  || "";
+    const d              = dashboardData || {};
+    const chartLabels    = d.chartLabels    || [];
+    const chartData      = d.chartData      || [];
+    const grossChartData = d.grossChartData || [];
+    const netChartData   = d.netChartData   || [];
+    const chartTitle     = d.chartTitle     || "Revenue Trends";
+    const rangeLabel     = d.rangeLabel     || "";
 
     /* status badge helper */
     function statusClass(s) {
@@ -45,17 +47,6 @@
         <h1>Dashboard</h1>
         <p class="range-label"><%= rangeLabel %></p>
       </div>
-
-      <nav class="date-filter">
-        <a href="/admin/dashboard?filter=daily"
-          class="filter-link <%= filter === 'daily'   ? 'active-filter' : '' %>">Daily</a>
-        <a href="/admin/dashboard?filter=weekly"
-          class="filter-link <%= filter === 'weekly'  ? 'active-filter' : '' %>">Weekly</a>
-        <a href="/admin/dashboard?filter=monthly"
-          class="filter-link <%= filter === 'monthly' ? 'active-filter' : '' %>">Monthly</a>
-        <a href="/admin/dashboard?filter=yearly"
-          class="filter-link <%= filter === 'yearly'  ? 'active-filter' : '' %>">Yearly</a>
-      </nav>
     </header>
 
     <!-- ── KPI GRID ── -->
@@ -142,15 +133,32 @@
           <h2><%= chartTitle %></h2>
           <p class="chart-subtitle"><%= rangeLabel %></p>
         </div>
+
+        <!-- Filter tabs moved here from the page header -->
+        <nav class="chart-filter-tabs">
+          <a href="/admin/dashboard?filter=daily"
+            class="chart-filter-tab <%= filter === 'daily'   ? 'active' : '' %>">Today</a>
+          <a href="/admin/dashboard?filter=weekly"
+            class="chart-filter-tab <%= filter === 'weekly'  ? 'active' : '' %>">Last 7 Days</a>
+          <a href="/admin/dashboard?filter=monthly"
+            class="chart-filter-tab <%= filter === 'monthly' ? 'active' : '' %>">This Month</a>
+          <a href="/admin/dashboard?filter=yearly"
+            class="chart-filter-tab <%= filter === 'yearly'  ? 'active' : '' %>">This Year</a>
+        </nav>
+
         <div class="chart-legend">
           <div class="legend-item">
-            <div class="legend-dot current"></div>
-            <span>Revenue (₹)</span>
+            <div class="legend-dot current" style="background:#603763;"></div>
+            <span>Gross Revenue (₹)</span>
+          </div>
+          <div class="legend-item" style="margin-left:16px;">
+            <div class="legend-dot" style="background:#059669;"></div>
+            <span>Net Revenue (₹)</span>
           </div>
         </div>
       </div>
 
-      <% if (chartData.length === 0 || chartData.every(v => v === 0)) { %>
+      <% if (grossChartData.length === 0 || grossChartData.every(v => v === 0)) { %>
         <div class="chart-empty">
           <i data-lucide="bar-chart-2" size="40"></i>
           <p>No revenue data for this period</p>
@@ -365,17 +373,24 @@
     lucide.createIcons();
 
     /* ── Chart ── */
-    const chartLabels  = <%- JSON.stringify(chartLabels) %>;
-    const chartRevenue = <%- JSON.stringify(chartData) %>;
-    const filterType   = "<%= filter %>";
+    const chartLabels    = <%- JSON.stringify(chartLabels) %>;
+    const grossRevenue   = <%- JSON.stringify(grossChartData) %>;
+    const netRevenue     = <%- JSON.stringify(netChartData) %>;
+    const filterType     = "<%= filter %>";
 
     const ctx = document.getElementById("revenueChart");
 
-    if (ctx && chartRevenue.length > 0) {
+    if (ctx && grossRevenue.length > 0) {
 
-      const gradient = ctx.getContext("2d").createLinearGradient(0, 0, 0, 300);
-      gradient.addColorStop(0, "rgba(96,55,99,0.22)");
-      gradient.addColorStop(1, "rgba(96,55,99,0)");
+      const c2d = ctx.getContext("2d");
+
+      const grossGradient = c2d.createLinearGradient(0, 0, 0, 320);
+      grossGradient.addColorStop(0, "rgba(96,55,99,0.20)");
+      grossGradient.addColorStop(1, "rgba(96,55,99,0)");
+
+      const netGradient = c2d.createLinearGradient(0, 0, 0, 320);
+      netGradient.addColorStop(0, "rgba(5,150,105,0.15)");
+      netGradient.addColorStop(1, "rgba(5,150,105,0)");
 
       const useBar = filterType === "daily";
 
@@ -383,21 +398,38 @@
         type: useBar ? "bar" : "line",
         data: {
           labels: chartLabels,
-          datasets: [{
-            label: "Revenue (₹)",
-            data:  chartRevenue,
-            borderColor:          "#603763",
-            borderWidth:          useBar ? 0 : 2.5,
-            backgroundColor:      useBar ? "rgba(96,55,99,0.55)" : gradient,
-            fill:                 !useBar,
-            tension:              0.4,
-            borderRadius:         useBar ? 8 : 0,
-            pointBackgroundColor: "#FFFFFF",
-            pointBorderColor:     "#603763",
-            pointBorderWidth:     2,
-            pointRadius:          useBar ? 0 : 4,
-            pointHoverRadius:     useBar ? 0 : 7,
-          }],
+          datasets: [
+            {
+              label:                "Gross Revenue (₹)",
+              data:                 grossRevenue,
+              borderColor:          "#603763",
+              borderWidth:          useBar ? 0 : 2.5,
+              backgroundColor:      useBar ? "rgba(96,55,99,0.55)" : grossGradient,
+              fill:                 !useBar,
+              tension:              0.4,
+              borderRadius:         useBar ? 8 : 0,
+              pointBackgroundColor: "#FFFFFF",
+              pointBorderColor:     "#603763",
+              pointBorderWidth:     2,
+              pointRadius:          useBar ? 0 : 4,
+              pointHoverRadius:     useBar ? 0 : 7,
+            },
+            {
+              label:                "Net Revenue (₹)",
+              data:                 netRevenue,
+              borderColor:          "#059669",
+              borderWidth:          useBar ? 0 : 2.5,
+              backgroundColor:      useBar ? "rgba(5,150,105,0.40)" : netGradient,
+              fill:                 !useBar,
+              tension:              0.4,
+              borderRadius:         useBar ? 8 : 0,
+              pointBackgroundColor: "#FFFFFF",
+              pointBorderColor:     "#059669",
+              pointBorderWidth:     2,
+              pointRadius:          useBar ? 0 : 4,
+              pointHoverRadius:     useBar ? 0 : 7,
+            },
+          ],
         },
         options: {
           responsive: true,

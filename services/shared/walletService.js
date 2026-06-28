@@ -14,7 +14,7 @@ export const createWallet = async (userId) => {
             },
         },
         {
-            new: true,
+            returnDocument: 'after',
             upsert: true,
         }
     );
@@ -119,7 +119,7 @@ export const creditWallet = async ({
                 },
             },
             {
-                new: true,
+                returnDocument: 'after',
             }
         );
 
@@ -240,7 +240,7 @@ export const debitWallet = async ({
                 },
             },
             {
-                new: true,
+                returnDocument: 'after',
             }
         );
 

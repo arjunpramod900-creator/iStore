@@ -44,12 +44,14 @@
         const shipping   = typeof order !== 'undefined' ? order.deliveryCharge : 0;
         const grandTotal = typeof order !== 'undefined' ? order.finalAmount    : 0;
 
-        /* Compute summary from ALL items (order just placed, nothing cancelled yet) */
-        const mrpTotal      = orderItems.reduce((s, i) => s + ((i.originalPrice || i.price) * i.quantity), 0);
-        const offerDiscount = orderItems.reduce((s, i) => s + ((i.offerDiscount || 0) * i.quantity), 0);
-        const subtotal      = orderItems.reduce((s, i) => s + (i.price * i.quantity), 0);
-        const couponDiscount = orderItems.reduce((s, i) => s + (i.couponDiscount || 0), 0);
-        const couponCode    = typeof order !== 'undefined' ? order.couponCode : null;
+        /* Compute summary from ACTIVE items (important if order was retried after cancellations) */
+        const activeItems = orderItems.filter(i => !['Cancelled', 'Returned'].includes(i.itemStatus));
+        
+        const mrpTotal       = activeItems.reduce((s, i) => s + ((i.originalPrice || i.price) * i.quantity), 0);
+        const offerDiscount  = activeItems.reduce((s, i) => s + ((i.offerDiscount || 0) * i.quantity), 0);
+        const subtotal       = activeItems.reduce((s, i) => s + (i.price * i.quantity), 0);
+        const couponDiscount = typeof order !== 'undefined' ? (order.couponDiscount || 0) : 0;
+        const couponCode     = typeof order !== 'undefined' ? order.couponCode : null;
 
         function fmt(n) { return '₹' + Number(n).toLocaleString('en-IN'); }
     %>
@@ -140,8 +142,8 @@
                     <!-- Items list -->
                     <div class="os-items-list">
 
-                        <% if (orderItems.length > 0) { %>
-                            <% orderItems.forEach(item => { %>
+                        <% if (activeItems.length > 0) { %>
+                            <% activeItems.forEach(item => { %>
                                 <div class="os-item-row">
                                     <div class="os-item-info">
                                         <span class="os-item-name"><%= item.productName %> &times; <%= item.quantity %></span>

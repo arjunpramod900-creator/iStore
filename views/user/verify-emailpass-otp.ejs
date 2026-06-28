@@ -175,7 +175,6 @@
                             icon: "success",
                             title: "Email Updated!",
                             text: "Your email address has been changed successfully.",
-                            confirmButtonColor: "#4C0080",
                             confirmButtonText: "Go to Profile",
                         });
                         window.location.href = "/profile";
@@ -184,7 +183,6 @@
                             icon: "success",
                             title: "Password Updated!",
                             text: "Your password has been changed successfully. Please log in again.",
-                            confirmButtonColor: "#4C0080",
                             confirmButtonText: "OK",
                         });
                         window.location.href = "/profile";
@@ -289,7 +287,6 @@
                     icon: "error",
                     title: "Failed to Resend",
                     text: error.response?.data?.message || "Could not resend OTP. Please try again.",
-                    confirmButtonColor: "#4C0080",
                 });
             }
         });

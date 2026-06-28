@@ -66,6 +66,13 @@ backdrop:
 }
 
 /* ==================================
+   APPLY GLOBAL MIXIN
+================================== */
+if (typeof Swal !== "undefined") {
+  window.Swal = Swal.mixin(premiumAlertConfig);
+}
+
+/* ==================================
    LOADING ALERT
 ================================== */
 

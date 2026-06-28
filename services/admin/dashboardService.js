@@ -78,7 +78,7 @@ export const getDashboardDataService = async (filter = "weekly") => {
 
   const revenueResult = await Order.aggregate([
     { $match: matchDelivered },
-    { $group: { _id: null, totalRevenue: { $sum: "$finalAmount" } } },
+    { $group: { _id: null, totalRevenue: { $sum: { $ifNull: ["$pricingSnapshot.originalFinalAmount", "$finalAmount"] } } } },
   ]);
 
   /* ================================================
@@ -135,26 +135,72 @@ export const getDashboardDataService = async (filter = "weekly") => {
   });
 
   /* ================================================
-     REVENUE CHART — no gaps
+     REVENUE CHART — two separate queries so dates are correct:
+       Delivered orders  → bucketed by createdAt        (day revenue was earned)
+       Returned orders   → bucketed by returnApprovedAt (day refund was processed)
   ================================================ */
 
-  const rawChart = await Order.aggregate([
-    { $match: matchDelivered },
+  // Query 1: Gross Revenue — Delivered orders, grouped by order creation date
+  const rawGrossChart = await Order.aggregate([
+    {
+      $match: {
+        orderStatus: "Delivered",
+        createdAt: { $gte: rangeStart, $lte: rangeEnd },
+      },
+    },
     {
       $group: {
-        _id:     { $dateToString: { format: chartDateFormat, date: "$createdAt", timezone: "Asia/Kolkata" } },
-        revenue: { $sum: "$finalAmount" },
+        _id: { $dateToString: { format: chartDateFormat, date: "$createdAt", timezone: "Asia/Kolkata" } },
+        grossRevenue: {
+          $sum: { $ifNull: ["$pricingSnapshot.originalFinalAmount", "$finalAmount"] },
+        },
       },
     },
     { $sort: { _id: 1 } },
   ]);
 
-  /* Build a map then fill all buckets */
-  const revenueMap = {};
-  rawChart.forEach(item => { revenueMap[item._id] = item.revenue; });
+  // Query 2: Refunds — Returned orders, grouped by returnApprovedAt (when refund was processed)
+  const rawRefundChart = await Order.aggregate([
+    {
+      $match: {
+        orderStatus: "Returned",
+        $or: [
+          { returnApprovedAt: { $gte: rangeStart, $lte: rangeEnd } },
+          { returnApprovedAt: null, createdAt: { $gte: rangeStart, $lte: rangeEnd } },
+        ],
+      },
+    },
+    {
+      $group: {
+        _id: {
+          $dateToString: {
+            format:   chartDateFormat,
+            date:     { $ifNull: ["$returnApprovedAt", "$createdAt"] },
+            timezone: "Asia/Kolkata",
+          },
+        },
+        refundAmount: {
+          $sum: { $ifNull: ["$pricingSnapshot.originalFinalAmount", "$finalAmount"] },
+        },
+      },
+    },
+    { $sort: { _id: 1 } },
+  ]);
 
-  const chartLabels = generateChartLabels(filter, rangeStart, rangeEnd, chartGroupType);
-  const chartData   = chartLabels.map(label => revenueMap[label] || 0);
+  /* Build separate maps then compute per-bucket net revenue */
+  const grossMap  = {};
+  const refundMap = {};
+  rawGrossChart.forEach(item  => { grossMap[item._id]  = item.grossRevenue || 0; });
+  rawRefundChart.forEach(item => { refundMap[item._id] = item.refundAmount  || 0; });
+
+  const chartLabels    = generateChartLabels(filter, rangeStart, rangeEnd, chartGroupType);
+  const grossChartData = chartLabels.map(label => grossMap[label]  || 0);
+  const netChartData   = chartLabels.map(label =>
+    Math.max(0, (grossMap[label] || 0) - (refundMap[label] || 0))
+  );
+
+  // Keep chartData as grossRevenue for backward compatibility
+  const chartData = grossChartData;
 
   /* ================================================
      RECENT ORDERS (filtered, all statuses)
@@ -271,6 +317,8 @@ export const getDashboardDataService = async (filter = "weekly") => {
     /* Chart */
     chartLabels,
     chartData,
+    grossChartData,
+    netChartData,
     chartTitle: chartTitles[filter] || "Revenue Trends",
 
     /* Tables */

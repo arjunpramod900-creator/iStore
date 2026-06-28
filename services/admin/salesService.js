@@ -193,14 +193,16 @@ export const getSalesReportService = async (filterType, startDate, endDate) => {
     : "0.0";
 
   /* ─────────────────────────────────────────────────────
-     REVENUE CHART
-     Net revenue per time bucket: delivered gross − refunds.
-     Clamped to 0 — chart never goes negative.
+     REVENUE CHART — two separate queries so dates are correct:
+       Delivered orders  → bucketed by createdAt        (day revenue was earned)
+       Returned orders   → bucketed by returnApprovedAt (day refund was processed)
   ───────────────────────────────────────────────────── */
-  const rawChart = await Order.aggregate([
+
+  // Query 1: Gross Revenue — Delivered orders, grouped by order creation date
+  const rawGrossChart = await Order.aggregate([
     {
       $match: {
-        orderStatus: { $in: ["Delivered", "Returned"] },
+        orderStatus: "Delivered",
         createdAt:   dateRange,
       },
     },
@@ -214,42 +216,56 @@ export const getSalesReportService = async (filterType, startDate, endDate) => {
           },
         },
         grossRevenue: {
-          $sum: {
-            $cond: [
-              { $eq: ["$orderStatus", "Delivered"] },
-              { $ifNull: ["$pricingSnapshot.originalFinalAmount", "$finalAmount"] },
-              0,
-            ],
-          },
-        },
-        refundAmount: {
-          $sum: {
-            $cond: [
-              { $eq: ["$orderStatus", "Returned"] },
-              // pricingSnapshot — same logic as summary: works for COD + digital
-              { $ifNull: ["$pricingSnapshot.originalFinalAmount", "$finalAmount"] },
-              0,
-            ],
-          },
-        },
-      },
-    },
-    {
-      $project: {
-        // Clamp to 0 so chart bars/lines are never negative
-        revenue: {
-          $max: [0, { $subtract: ["$grossRevenue", "$refundAmount"] }],
+          $sum: { $ifNull: ["$pricingSnapshot.originalFinalAmount", "$finalAmount"] },
         },
       },
     },
     { $sort: { _id: 1 } },
   ]);
 
-  const revenueMap  = {};
-  rawChart.forEach(item => { revenueMap[item._id] = item.revenue; });
+  // Query 2: Refunds — Returned orders, grouped by returnApprovedAt (when refund was processed)
+  const rawRefundChart = await Order.aggregate([
+    {
+      $match: {
+        orderStatus: "Returned",
+        // Match orders returned within the range (use returnApprovedAt if set, else createdAt)
+        $or: [
+          { returnApprovedAt: dateRange },
+          { returnApprovedAt: null, createdAt: dateRange },
+        ],
+      },
+    },
+    {
+      $group: {
+        _id: {
+          $dateToString: {
+            format:   chartDateFormat,
+            date:     { $ifNull: ["$returnApprovedAt", "$createdAt"] },
+            timezone: "Asia/Kolkata",
+          },
+        },
+        refundAmount: {
+          $sum: { $ifNull: ["$pricingSnapshot.originalFinalAmount", "$finalAmount"] },
+        },
+      },
+    },
+    { $sort: { _id: 1 } },
+  ]);
 
-  const chartLabels = generateLabels(filterType, rangeStart, rangeEnd, chartGroupType);
-  const chartData   = chartLabels.map(label => revenueMap[label] || 0);
+  /* Build separate maps then compute per-bucket net revenue */
+  const grossMap  = {};
+  const refundMap = {};
+  rawGrossChart.forEach(item  => { grossMap[item._id]  = item.grossRevenue || 0; });
+  rawRefundChart.forEach(item => { refundMap[item._id] = item.refundAmount  || 0; });
+
+  const chartLabels    = generateLabels(filterType, rangeStart, rangeEnd, chartGroupType);
+  const grossChartData = chartLabels.map(label => grossMap[label]  || 0);
+  const netChartData   = chartLabels.map(label =>
+    Math.max(0, (grossMap[label] || 0) - (refundMap[label] || 0))
+  );
+
+  // Keep chartData as grossChartData for any legacy references
+  const chartData = grossChartData;
 
   /* ─────────────────────────────────────────────────────
      TOP PRODUCTS — Delivered orders only
@@ -438,6 +454,8 @@ export const getSalesReportService = async (filterType, startDate, endDate) => {
     // Chart
     chartLabels,
     chartData,
+    grossChartData,
+    netChartData,
 
     // Tables
     topProducts,              // { name, units, returnedUnits, revenue }

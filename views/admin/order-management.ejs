@@ -310,12 +310,17 @@
                             // Determine item payment status
                             let itemPayStatus = row.paymentStatus;
                             let itemPayClass = payClass(row.paymentStatus);
+                            
+                            const isLegacyRefund = (row.paymentStatus === "Refunded" || (row.isRefundProcessed && row.refundAmount > 0)) && 
+                                                   row.items.every(i => !i.isRefundProcessed);
+                                                   
                             if (item.itemStatus === 'Cancelled' || item.itemStatus === 'Returned') {
-                                if (row.paymentMethod !== 'COD' || row.paymentStatus === 'Paid') {
+                                const hadRefund = item.isRefundProcessed && (item.refundAmount > 0);
+                                if (hadRefund || isLegacyRefund) {
                                     itemPayStatus = 'Refunded';
                                     itemPayClass = 'refunded';
                                 } else {
-                                    itemPayStatus = 'Cancelled';
+                                    itemPayStatus = 'Unpaid';
                                     itemPayClass = 'failed';
                                 }
                             }

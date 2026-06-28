@@ -214,8 +214,41 @@ body {
 .chart-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   margin-bottom: 32px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* Filter tabs inside the chart card */
+.chart-filter-tabs {
+  display: flex;
+  gap: 4px;
+  background: #F3F0F4;
+  border-radius: 10px;
+  padding: 4px;
+}
+
+.chart-filter-tab {
+  padding: 6px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6B6070;
+  text-decoration: none;
+  transition: all 0.18s ease;
+  white-space: nowrap;
+}
+
+.chart-filter-tab:hover {
+  color: #3D1F46;
+  background: rgba(96, 55, 99, 0.08);
+}
+
+.chart-filter-tab.active {
+  background: #fff;
+  color: #603763;
+  box-shadow: 0 1px 4px rgba(96, 55, 99, 0.18);
 }
 
 .chart-title h2 {

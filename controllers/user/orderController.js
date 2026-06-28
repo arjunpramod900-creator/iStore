@@ -163,8 +163,9 @@ export const retryOrderPay = async (req, res) => {
     const { orderId }                  = req.params;
     const { addressId, paymentMethod } = req.body;
 
-    // Pick up any coupon the user selected on the retry page
-    const couponCode = req.session.retryCoupon?.code || null;
+    // Pick up any coupon the user selected on the retry page.
+    // If explicitly removed, code will be `false`. If untouched, it will be `undefined`.
+    const couponCode = req.session.retryCoupon?.code;
 
     const response = await retryOrderPaymentService({
       userId,
@@ -313,16 +314,15 @@ export const downloadInvoice = async (req, res) => {
     const order = await Order.findOne({ userId, orderId }).lean();
     if (!order) return res.redirect("/orders");
 
-    const activeItems = order.items.filter(i =>
-        i.itemStatus !== "Cancelled" &&
-        i.itemStatus !== "Returned"  &&
-        i.itemReturnStatus !== "Approved"
-    );
-
-    const mrpTotal       = activeItems.reduce((s, i) => s + ((i.originalPrice || i.price) * i.quantity), 0);
-    const offerDiscount  = activeItems.reduce((s, i) => s + ((i.offerDiscount || 0) * i.quantity), 0);
-    const subtotal       = activeItems.reduce((s, i) => s + (i.price * i.quantity), 0);
-    const couponDiscount = activeItems.reduce((s, i) => s + (i.couponDiscount || 0), 0);
+    /* Compute summary figures from ALL items to show the original pristine order state */
+    const offerDiscount  = order.pricingSnapshot?.originalOfferDiscount ?? order.items.reduce((s, i) => s + ((i.offerDiscount || 0) * i.quantity), 0);
+    const subtotal       = order.pricingSnapshot?.originalSubtotal ?? order.items.reduce((s, i) => s + (i.price * i.quantity), 0);
+    const mrpTotal       = order.pricingSnapshot?.originalSubtotal ? (subtotal + offerDiscount) : order.items.reduce((s, i) => s + ((i.originalPrice || i.price) * i.quantity), 0);
+    const couponDiscount = order.pricingSnapshot?.originalCouponDiscount ?? order.items.reduce((s, i) => s + (i.couponDiscount || 0), 0);
+    
+    const summaryTax      = order.pricingSnapshot?.originalTaxAmount ?? order.taxAmount;
+    const summaryDelivery = order.pricingSnapshot?.originalDeliveryCharge ?? order.deliveryCharge;
+    const summaryTotal    = order.pricingSnapshot?.originalFinalAmount ?? order.finalAmount;
     const refundAmount   = order.refundAmount || 0;
 
     /* ── Page height calculation ── */
@@ -333,7 +333,14 @@ export const downloadInvoice = async (req, res) => {
     const itemsHeaderH  = 70;
     const itemRowH      = 45;
     const itemsH        = order.items.length * itemRowH + 20;
-    const summaryCardsH = refundAmount > 0 ? 320 : 195;   /* taller if refund summary exists */
+    const hasActiveItems = order.items.some(i => i.itemStatus !== "Cancelled" && i.itemStatus !== "Returned" && i.itemReturnStatus !== "Approved");
+    
+    const isRevised = (order.finalAmount < (order.pricingSnapshot?.originalFinalAmount || (order.finalAmount + refundAmount))) && hasActiveItems;
+
+    let summaryCardsH = 195;
+    if (refundAmount > 0 || isRevised) {
+        summaryCardsH = hasActiveItems ? 385 : 320;   /* taller if revised summary exists */
+    }
     const footerH       = 80;
 
     const totalHeight =
@@ -514,10 +521,17 @@ export const downloadInvoice = async (req, res) => {
          );
     }
 
+    /* ── REFUND / REVISION CHECK ── */
+    const originalFinalAmountForInvoice = order.pricingSnapshot?.originalFinalAmount || (order.finalAmount + refundAmount);
     /* Payment Summary card */
     doc.roundedRect(440, summaryY, 350, 170, 12).fillAndStroke("#FBF8FC", "#E6D7EC");
     doc.fillColor("#603763").fontSize(13).font("Helvetica-Bold")
-       .text("Payment Summary", 455, summaryY + 15);
+       .text(isRevised ? "Original Order Summary" : "Payment Summary", 455, summaryY + 15);
+
+    if (isRevised) {
+        doc.fillColor("#D32F2F").fontSize(8).font("Helvetica-Oblique")
+           .text("(Outdated — See Revised Summary)", 620, summaryY + 18, { width: 150, align: "right" });
+    }
 
     const summaryRows = [];
     summaryRows.push({ label: "MRP Total", value: `Rs.${mrpTotal.toLocaleString("en-IN")}` });
@@ -532,33 +546,33 @@ export const downloadInvoice = async (req, res) => {
       summaryRows.push({ label: `Coupon ${order.couponCode ? '(' + order.couponCode + ')' : ''}`, value: `- Rs.${couponDiscount.toLocaleString("en-IN")}` });
     }
     
-    summaryRows.push({ label: "Tax", value: `Rs.${order.taxAmount.toLocaleString("en-IN")}` });
-    summaryRows.push({ label: "Shipping", value: order.deliveryCharge === 0 ? "Free" : `Rs.${order.deliveryCharge.toLocaleString("en-IN")}` });
+    summaryRows.push({ label: "Tax", value: `Rs.${summaryTax.toLocaleString("en-IN")}` });
+    summaryRows.push({ label: "Shipping", value: summaryDelivery === 0 ? "Free" : `Rs.${summaryDelivery.toLocaleString("en-IN")}` });
 
     summaryRows.forEach((row, i) => {
       const rowY = summaryY + 44 + i * 16;
-      doc.fillColor("#7A7A7A").fontSize(9).font("Helvetica").text(row.label, 455, rowY);
-      doc.fillColor("#1A1C1D").fontSize(9).font("Helvetica").text(row.value, 710, rowY, { align: "right", width: 60 });
+      doc.fillColor(isRevised ? "#9CA3AF" : "#7A7A7A").fontSize(9).font("Helvetica").text(row.label, 455, rowY);
+      doc.fillColor(isRevised ? "#9CA3AF" : "#1A1C1D").fontSize(9).font(isRevised ? "Helvetica-Oblique" : "Helvetica").text(row.value, 710, rowY, { align: "right", width: 60 });
     });
 
     /* Divider + Total */
     doc.moveTo(455, summaryY + 142).lineTo(775, summaryY + 142).strokeColor("#E6D7EC").stroke();
-    doc.fillColor("#603763").fontSize(13).font("Helvetica-Bold")
+    doc.fillColor(isRevised ? "#9CA3AF" : "#603763").fontSize(13).font("Helvetica-Bold")
        .text("Total", 455, summaryY + 150)
-       .text(`Rs.${order.finalAmount.toLocaleString("en-IN")}`, 690, summaryY + 150, { align: "right", width: 80 });
+       .text(`Rs.${summaryTotal.toLocaleString("en-IN")}`, 690, summaryY + 150, { align: "right", width: 80 });
 
     /* ── REFUND SUMMARY (if applicable) ── */
+    let refundY = summaryY + 185;
+
     if (refundAmount > 0) {
-      const refundY = summaryY + 185;
       doc.roundedRect(440, refundY, 350, 120, 12).fillAndStroke("#F9FAFB", "#F3F4F6");
       doc.fillColor("#603763").fontSize(13).font("Helvetica-Bold")
          .text("Refund Summary", 455, refundY + 15);
          
-      const totalPaid = order.pricingSnapshot?.originalFinalAmount || (order.finalAmount + refundAmount);
-      const mathDiff = totalPaid - order.finalAmount;
+      const mathDiff = originalFinalAmountForInvoice - order.finalAmount;
       
       const refRows = [
-        { label: "Original Order Paid", value: `Rs.${totalPaid.toLocaleString("en-IN")}` },
+        { label: "Original Order Paid", value: `Rs.${originalFinalAmountForInvoice.toLocaleString("en-IN")}` },
         { label: "Revised Order Value", value: `- Rs.${order.finalAmount.toLocaleString("en-IN")}` }
       ];
       
@@ -581,8 +595,55 @@ export const downloadInvoice = async (req, res) => {
          .text("Credited to your iStore Wallet", 455, refundY + 115);
     }
 
+    /* ── REVISED SUMMARY (if applicable) ── */
+    if (isRevised) {
+      const activeItems = order.items.filter(i =>
+          i.itemStatus !== "Cancelled" &&
+          i.itemStatus !== "Returned"  &&
+          i.itemReturnStatus !== "Approved"
+      );
+      
+      if (activeItems.length > 0) {
+          const revMRP       = activeItems.reduce((s, i) => s + ((i.originalPrice || i.price) * i.quantity), 0);
+          const revOffer     = activeItems.reduce((s, i) => s + ((i.offerDiscount || 0) * i.quantity), 0);
+          const revSubtotal  = activeItems.reduce((s, i) => s + (i.price * i.quantity), 0);
+          const revCoupon    = activeItems.reduce((s, i) => s + (i.couponDiscount || 0), 0);
+
+          // If there's no Refund Summary, we can put Revised Summary on the left anyway (or right). We'll keep it left below Payment Info.
+          doc.roundedRect(50, refundY, 350, 170, 12).fillAndStroke("#FBF8FC", "#E6D7EC");
+          doc.fillColor("#603763").fontSize(13).font("Helvetica-Bold")
+             .text("Revised Summary", 65, refundY + 15);
+
+          const revRows = [];
+          revRows.push({ label: "MRP Total", value: `Rs.${revMRP.toLocaleString("en-IN")}` });
+          if (revOffer > 0) revRows.push({ label: "Offer Discount", value: `- Rs.${revOffer.toLocaleString("en-IN")}` });
+          revRows.push({ label: "Subtotal", value: `Rs.${revSubtotal.toLocaleString("en-IN")}` });
+          if (revCoupon > 0) {
+              revRows.push({ label: `Coupon`, value: `- Rs.${revCoupon.toLocaleString("en-IN")}` });
+          } else if (order.couponCode) {
+              revRows.push({ label: `Coupon (${order.couponCode})`, value: `Not Applicable` });
+          }
+          revRows.push({ label: "Tax", value: `Rs.${order.taxAmount.toLocaleString("en-IN")}` });
+          revRows.push({ label: "Shipping", value: order.deliveryCharge === 0 ? "Free" : `Rs.${order.deliveryCharge.toLocaleString("en-IN")}` });
+
+          revRows.forEach((row, i) => {
+            const rowY = refundY + 44 + i * 16;
+            doc.fillColor("#7A7A7A").fontSize(9).font("Helvetica").text(row.label, 65, rowY);
+            doc.fillColor("#1A1C1D").fontSize(9).font("Helvetica").text(row.value, 320, rowY, { align: "right", width: 60 });
+          });
+
+          doc.moveTo(65, refundY + 142).lineTo(385, refundY + 142).strokeColor("#E6D7EC").stroke();
+          doc.fillColor("#603763").fontSize(13).font("Helvetica-Bold")
+             .text("Revised Total", 65, refundY + 150)
+             .text(`Rs.${order.finalAmount.toLocaleString("en-IN")}`, 300, refundY + 150, { align: "right", width: 80 });
+      }
+    }
+
     /* ── FOOTER ── */
-    const footerY = refundAmount > 0 ? summaryY + 320 : summaryY + 195;
+    let footerY = summaryY + 195;
+    if (refundAmount > 0 || isRevised) {
+        footerY = hasActiveItems ? summaryY + 385 : summaryY + 320;
+    }
     doc.moveTo(50, footerY).lineTo(792, footerY).strokeColor("#E6D7EC").stroke();
     doc.fontSize(11).fillColor("#7A7A7A").font("Helvetica")
        .text("Thank you for shopping with iStore.", 0, footerY + 15, { align: "center", width: 842 });
