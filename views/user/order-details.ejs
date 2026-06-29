@@ -188,24 +188,8 @@
         const isLegacyRefund = (order.paymentStatus === "Refunded" || (order.isRefundProcessed && order.refundAmount > 0)) && 
                                items.every(i => !i.isRefundProcessed);
 
-        /* Pre-calculate exact tax share for each item to ensure it sums perfectly to order.taxAmount */
-        const totalItemsFinalPrice = items.reduce((sum, i) => sum + (i.finalPrice || (i.price * i.quantity)), 0);
-        let remainingTaxToDistribute = order.taxAmount || 0;
-        
-        items.forEach((item, idx) => {
-            const itemFinalPrice = item.finalPrice || (item.price * item.quantity);
-            if (totalItemsFinalPrice > 0 && remainingTaxToDistribute > 0) {
-                if (idx === items.length - 1) {
-                    item.computedTax = remainingTaxToDistribute;
-                } else {
-                    const share = Math.round((itemFinalPrice / totalItemsFinalPrice) * (order.taxAmount || 0));
-                    item.computedTax = Math.min(share, remainingTaxToDistribute);
-                    remainingTaxToDistribute -= item.computedTax;
-                }
-            } else {
-                item.computedTax = 0;
-            }
-        });
+        /* Item totals are shown post-offer only (pre-coupon, pre-tax).
+           Coupon and tax are displayed at the order level in the Order Summary. */
 
         /* REFACTOR: Determine if order is eligible for Retry */
         const isRetryable = 
@@ -348,19 +332,13 @@
                                     </p>
                                     <p class="od-item-variant" style="margin-bottom: 6px;"><%= item.variantName %></p>
 
-                                    <!-- ITEM DISCOUNT BREAKDOWN -->
+                                    <!-- ITEM DISCOUNT BREAKDOWN (offer only; coupon & tax shown in Order Summary) -->
                                     <div class="od-item-discount-breakdown" style="font-size: 12px; color: #6B7280; margin-bottom: 8px; line-height: 1.6;">
                                         <% if (item.originalPrice && item.originalPrice > item.price) { %>
                                             <span style="display: block;">MRP: <span style="text-decoration: line-through;"><%= fmt(item.originalPrice * item.quantity) %></span></span>
                                         <% } %>
                                         <% if (item.offerDiscount > 0) { %>
                                             <span style="display: block;">Offer Discount: −<%= fmt(item.offerDiscount * item.quantity) %></span>
-                                        <% } %>
-                                        <% if (item.couponDiscount > 0) { %>
-                                            <span style="display: block; color: #059669; font-weight: 600;">Coupon Discount: −<%= fmt(item.couponDiscount) %></span>
-                                        <% } %>
-                                        <% if (order.taxAmount > 0 && item.computedTax > 0) { %>
-                                            <span style="display: block;">Tax (2% GST): +<%= fmt(item.computedTax) %></span>
                                         <% } %>
                                     </div>
 
@@ -393,15 +371,12 @@
 
                                 <div class="od-item-right">
                                     <div class="od-item-pricing" style="text-align: right; margin-bottom: 12px;">
-                                        <% 
-                                           const itemTotal = (item.finalPrice || (item.price * item.quantity)) + (item.computedTax || 0);
-                                        %>
-                                        <% if (item.couponDiscount > 0 || item.offerDiscount > 0) { %>
+                                        <% if (item.offerDiscount > 0) { %>
                                             <span style="text-decoration: line-through; color: #9CA3AF; font-size: 13px; display: block; margin-bottom: 2px;">
                                                 <%= fmt((item.originalPrice || item.price) * item.quantity) %>
                                             </span>
                                         <% } %>
-                                        <span class="od-item-price"><%= fmt(itemTotal) %></span>
+                                        <span class="od-item-price"><%= fmt(item.price * item.quantity) %></span>
                                     </div>
 
                                     <%

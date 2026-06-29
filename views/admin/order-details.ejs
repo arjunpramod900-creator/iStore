@@ -150,24 +150,8 @@
         const payStatus   = order.paymentStatus;
         const items       = order.items || [];
 
-        /* Pre-calculate exact tax share for each item to ensure it sums perfectly to order.taxAmount */
-        const totalItemsFinalPrice = items.reduce((sum, i) => sum + (i.finalPrice || (i.price * i.quantity)), 0);
-        let remainingTaxToDistribute = order.taxAmount || 0;
-        
-        items.forEach((item, idx) => {
-            const itemFinalPrice = item.finalPrice || (item.price * item.quantity);
-            if (totalItemsFinalPrice > 0 && remainingTaxToDistribute > 0) {
-                if (idx === items.length - 1) {
-                    item.computedTax = remainingTaxToDistribute;
-                } else {
-                    const share = Math.round((itemFinalPrice / totalItemsFinalPrice) * (order.taxAmount || 0));
-                    item.computedTax = Math.min(share, remainingTaxToDistribute);
-                    remainingTaxToDistribute -= item.computedTax;
-                }
-            } else {
-                item.computedTax = 0;
-            }
-        });
+        /* Item totals are shown post-offer only (pre-coupon, pre-tax).
+           Coupon and tax are displayed at the order level in the Pricing Summary. */
 
         const activeItems = items.filter(i =>
             i.itemStatus !== "Cancelled" &&
@@ -193,6 +177,24 @@
             total:    finalAmount,
             refund:   order.refundAmount || 0
         };
+
+        /* ── Revised Order Summary ── */
+        const hasActiveItems = items.some(i =>
+            i.itemStatus !== "Cancelled" &&
+            i.itemStatus !== "Returned"  &&
+            i.itemReturnStatus !== "Approved"
+        );
+        const originalFinalAmount = order.pricingSnapshot?.originalFinalAmount || finalAmount;
+        const isRevised = (order.finalAmount < originalFinalAmount) && hasActiveItems;
+
+        const revisedMRP        = (order.subtotal || 0) + (order.offerDiscount || 0);
+        const revisedOffer      = order.offerDiscount || 0;
+        const revisedSubtotal   = order.subtotal || 0;
+        const revisedCoupon     = order.couponDiscount || 0;
+        const revisedCouponRevoked = order.pricingSnapshot && revisedCoupon === 0 && couponDiscount > 0;
+        const revisedTax        = order.taxAmount || 0;
+        const revisedDelivery   = order.deliveryCharge || 0;
+        const revisedTotal      = order.finalAmount || 0;
 
         const timeline = [
             {
@@ -311,7 +313,7 @@
                         <tbody>
                             <% items.forEach((item, idx) => {
                                 const img      = item.productImage || "/images/product-placeholder.png";
-                                const itemTotal = (item.finalPrice || (item.price * item.quantity)) + (item.computedTax || 0);
+                                const itemTotal = item.price * item.quantity;
                             %>
                             <tr>
                                 <td style="vertical-align: top;">
@@ -323,19 +325,13 @@
                                             <span class="aod-prod-name"><%= item.productName %></span>
                                             <span class="aod-prod-sku" style="margin-bottom: 6px;">Item #<%= idx + 1 %></span>
                                             
-                                            <!-- ITEM DISCOUNT BREAKDOWN -->
+                                            <!-- ITEM DISCOUNT BREAKDOWN (offer only; coupon & tax shown in Pricing Summary) -->
                                             <div style="font-size: 11px; color: #6B7280; line-height: 1.5;">
                                                 <% if (item.originalPrice && item.originalPrice > item.price) { %>
                                                     <span style="display: block;">MRP: <span style="text-decoration: line-through;"><%= fmt(item.originalPrice * item.quantity) %></span></span>
                                                 <% } %>
                                                 <% if (item.offerDiscount > 0) { %>
                                                     <span style="display: block;">Offer: −<%= fmt(item.offerDiscount * item.quantity) %></span>
-                                                <% } %>
-                                                <% if (item.couponDiscount > 0) { %>
-                                                    <span style="display: block; color: #059669; font-weight: 600;">Coupon: −<%= fmt(item.couponDiscount) %></span>
-                                                <% } %>
-                                                <% if (order.taxAmount > 0 && item.computedTax > 0) { %>
-                                                    <span style="display: block;">Tax (2% GST): +<%= fmt(item.computedTax) %></span>
                                                 <% } %>
                                             </div>
                                         </div>
@@ -351,7 +347,7 @@
                                 <td class="center" style="vertical-align: top; padding-top: 16px;"><span class="aod-qty"><%= item.quantity %></span></td>
                                 <td class="right" style="vertical-align: top; padding-top: 16px;"><span class="aod-price"><%= fmt(item.price) %></span></td>
                                 <td class="right" style="vertical-align: top; padding-top: 16px;">
-                                    <% if (item.couponDiscount > 0 || item.offerDiscount > 0) { %>
+                                    <% if (item.offerDiscount > 0) { %>
                                         <span style="text-decoration: line-through; color: #9CA3AF; font-size: 11px; display: block; margin-bottom: 2px;">
                                             <%= fmt((item.originalPrice || item.price) * item.quantity) %>
                                         </span>
@@ -418,6 +414,81 @@
                     </table>
                 </div>
 
+                <!-- Revised Order Summary (replaces Logistics — only when order was mutated) -->
+                <% if (isRevised) { %>
+                <div class="aod-card" id="aodRevisedSummaryCard" style="overflow: hidden; padding: 0;">
+
+                    <!-- Header strip -->
+                    <div style="background: linear-gradient(135deg, #603763 0%, #701A75 100%); padding: 16px 20px; display: flex; align-items: center; gap: 10px;">
+                        <div style="width: 32px; height: 32px; background: rgba(255,255,255,0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <i data-lucide="file-diff" size="16" style="color: #fff;"></i>
+                        </div>
+                        <div>
+                            <div style="font-size: 13px; font-weight: 700; color: #fff; letter-spacing: 0.02em;">Revised Order Summary</div>
+                            <div style="font-size: 11px; color: rgba(255,255,255,0.7); margin-top: 1px;">Reflects current order after changes</div>
+                        </div>
+                        <div style="margin-left: auto; background: rgba(255,255,255,0.2); color: #fff; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 20px; letter-spacing: 0.05em;">UPDATED</div>
+                    </div>
+
+                    <!-- Row section -->
+                    <div style="padding: 16px 20px; display: flex; flex-direction: column; gap: 0;">
+
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid #F9FAFB;">
+                            <span style="font-size: 13px; color: #6B7280;">MRP Total</span>
+                            <span style="font-size: 13px; font-weight: 500; color: #2C1421;"><%= fmt(revisedMRP) %></span>
+                        </div>
+
+                        <% if (revisedOffer > 0) { %>
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid #F9FAFB;">
+                            <span style="font-size: 13px; color: #6B7280;">Offer Discount</span>
+                            <span style="font-size: 13px; font-weight: 600; color: #EF4444;">−<%= fmt(revisedOffer) %></span>
+                        </div>
+                        <% } %>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #D0C3CC;">
+                            <span style="font-size: 13px; font-weight: 700; color: #2C1421;">Subtotal</span>
+                            <span style="font-size: 13px; font-weight: 700; color: #2C1421;"><%= fmt(revisedSubtotal) %></span>
+                        </div>
+
+                        <% if (revisedCouponRevoked) { %>
+                        <div style="padding: 10px 0; border-bottom: 1px solid #F9FAFB;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <span style="font-size: 13px; color: #6B7280;">Coupon</span>
+                                    <span style="background: #FEE2E2; color: #DC2626; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; letter-spacing: 0.05em;">REVOKED</span>
+                                </div>
+                                <span style="font-size: 13px; font-weight: 600; color: #DC2626;">Not Applicable</span>
+                            </div>
+                            <div style="font-size: 11px; color: #9CA3AF; margin-top: 4px; text-align: right;">Order value no longer meets minimum purchase requirement</div>
+                        </div>
+                        <% } else if (revisedCoupon > 0) { %>
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid #F9FAFB;">
+                            <span style="font-size: 13px; color: #6B7280;">Coupon</span>
+                            <span style="font-size: 13px; font-weight: 600; color: #059669;">−<%= fmt(revisedCoupon) %></span>
+                        </div>
+                        <% } %>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid #F9FAFB;">
+                            <span style="font-size: 13px; color: #6B7280;">Tax (GST)</span>
+                            <span style="font-size: 13px; font-weight: 500; color: #2C1421;"><%= fmt(revisedTax) %></span>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 9px 0;">
+                            <span style="font-size: 13px; color: #6B7280;">Shipping</span>
+                            <span style="font-size: 13px; font-weight: 700; color: #F59E0B;"><%= revisedDelivery === 0 ? 'FREE' : fmt(revisedDelivery) %></span>
+                        </div>
+
+                    </div>
+
+                    <!-- Total bar -->
+                    <div style="background: linear-gradient(135deg, #FFF0F8 0%, #FFE0F4 100%); border-top: 1px solid #EBB5EA; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 14px; font-weight: 700; color: #603763;">Revised Total</span>
+                        <span style="font-size: 18px; font-weight: 800; color: #701A75; letter-spacing: -0.03em;"><%= fmt(revisedTotal) %></span>
+                    </div>
+
+                </div>
+                <% } %>
+
                 <!-- Order Timeline -->
                 <div class="aod-card aod-timeline-card" id="aodTimelineCard">
                     <h2 class="aod-card-title">Order Timeline</h2>
@@ -441,50 +512,7 @@
                     </div>
                 </div>
 
-                <!-- Logistics -->
-                <div class="aod-card" id="aodLogisticsCard">
-                    <div class="aod-logistics-card">
-                        <h2 class="aod-section-title">Logistics</h2>
 
-                        <div class="aod-field">
-                            <span class="aod-field-label">Courier Partner</span>
-                            <span class="aod-field-value">Not Assigned</span>
-                        </div>
-
-                        <!-- FIX 6: hide copy button when no tracking number -->
-                        <div class="aod-field">
-                            <span class="aod-field-label">Tracking Number</span>
-                            <% if (hasTracking) { %>
-                            <div class="aod-tracking-box">
-                                <span class="aod-tracking-num" id="trackingNum"><%= order.trackingNumber %></span>
-                                <button class="aod-copy-btn" onclick="copyTracking()" aria-label="Copy tracking number" title="Copy">
-                                    <i data-lucide="copy" size="14"></i>
-                                </button>
-                            </div>
-                            <% } else { %>
-                            <span class="aod-field-value">—</span>
-                            <% } %>
-                        </div>
-
-                        <div class="aod-field">
-                            <span class="aod-field-label">Estimated Delivery</span>
-                            <span class="aod-field-value">
-                                <%= order.estimatedDelivery
-                                    ? new Date(order.estimatedDelivery).toLocaleDateString("en-IN")
-                                    : "Not Available" %>
-                            </span>
-                        </div>
-
-                        <% if (order.deliveredDate) { %>
-                        <div class="aod-field">
-                            <span class="aod-field-label">Delivered On</span>
-                            <span class="aod-field-value">
-                                <%= new Date(order.deliveredDate).toLocaleDateString("en-IN") %>
-                            </span>
-                        </div>
-                        <% } %>
-                    </div>
-                </div>
 
                 <!-- ── Return Section ──
                      Shows approve/reject only when status === "Requested".

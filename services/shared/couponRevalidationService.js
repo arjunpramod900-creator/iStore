@@ -1,12 +1,7 @@
 import Coupon from "../../models/Coupon.js";
 import CouponUsage from "../../models/CouponUsage.js";
 
-/**
- * Re-validates coupon and calculates refund when an item is cancelled or returned.
- * Mutates order object (active items' finalPrice, couponDiscount, finalAmount) in place.
- * Does NOT call .save() on the order.
- * Returns { refundAmount, message, couponRevoked }
- */
+
 export const revalidateCouponOnMutation = async (order, mutatedItem, mutationType) => {
     let activeSubtotal = 0;
     const activeItems = [];
@@ -127,11 +122,7 @@ export const revalidateCouponOnMutation = async (order, mutatedItem, mutationTyp
     order.finalAmount   = discountedSubtotal + newTaxAmount + newDeliveryCharge;
 
     // 5. Compute refund amount for the mutated item
-    //    The refund is strictly the difference between what the order cost before cancellation 
-    //    and what it costs now. This perfectly handles:
-    //    - Refunding the tax paid on the cancelled item
-    //    - Recovering the lost coupon discount from the refund if the coupon is revoked, 
-    //      closing the loophole where users get unearned discounts on remaining items.
+ 
     let refundAmount = 0;
 
     if (mutationType === "cancelled" || mutationType === "returned") {
