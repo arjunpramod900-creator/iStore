@@ -386,7 +386,17 @@ body {
   margin-top: 5px;
   padding-left: 2px;
 }
-.field-error.visible { display: block; }
+.field-error.visible { 
+  display: block; 
+  animation: fadeInShake 0.4s ease;
+}
+
+@keyframes fadeInShake {
+  0% { opacity: 0; transform: translateX(-6px); }
+  40% { transform: translateX(4px); }
+  70% { transform: translateX(-2px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
 
 .modal-form-input.input-error,
 .modal-form-textarea.input-error  { border-color: #e74c3c !important; }
@@ -541,6 +551,83 @@ body {
 }
 .modal-btn-save:hover  { transform: translateY(-2px); box-shadow: 0px 18px 42px rgba(96,55,99,0.3); }
 .modal-btn-save:active { transform: scale(.98); }
+
+/* ================================================
+   CROP DIALOG
+================================================ */
+
+.crop-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(44, 20, 33, 0.55);
+  backdrop-filter: blur(8px);
+  z-index: 2000;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.crop-overlay.open { display: flex; }
+
+.crop-dialog {
+  background: var(--bg-white);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 540px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0px 40px 80px rgba(46, 15, 47, 0.22);
+  animation: cropSlideIn 0.3s ease;
+}
+
+@keyframes cropSlideIn {
+  from { opacity: 0; transform: scale(0.95) translateY(10px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.crop-dialog-header {
+  padding: 22px 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.crop-dialog-header h3 {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  color: var(--text-main);
+}
+
+.crop-dialog-body {
+  padding: 24px 28px;
+  overflow: auto;
+  flex: 1;
+}
+
+.crop-image-wrap {
+  width: 100%;
+  max-height: 400px;
+  background: rgba(255, 240, 244, 0.3);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.crop-image-wrap img {
+  display: block;
+  max-width: 100%;
+}
+
+.crop-dialog-footer {
+  padding: 16px 28px 22px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 14px;
+  border-top: 1px solid var(--border-color);
+}
 
 /* ================================================
    RESPONSIVE

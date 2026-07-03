@@ -8,21 +8,11 @@ class="wishlist-toggle
 <%= wishlistVariantIds?.includes(product.variant?._id?.toString())
 ? 'active'
 : ''
-%>
-
-<%= product.variant.stock <= 0
-? 'disabled'
-: ''
 %>"
 
 data-product-id="<%= product._id %>"
 
 data-variant-id="<%= product.variant?._id %>"
-
-<%= product.variant.stock <= 0
-? "disabled"
-: ""
-%>
 
 >
 

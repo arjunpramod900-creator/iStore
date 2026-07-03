@@ -386,67 +386,57 @@
 
                         <div class="summary-list">
 
-                            <!-- SUBTOTAL -->
-
+                            <!-- MRP TOTAL -->
                             <div class="summary-item">
-
-                                <span class="summary-label">
-
-                                    Subtotal
-
-                                </span>
-
+                                <span class="summary-label">MRP Total</span>
                                 <span class="summary-value" id="cartSubtotal">
                                     ₹<%= cart.subtotal.toLocaleString() %>
                                 </span>
-
                             </div>
-                            <% if(cart.offerDiscount > 0){ %>
 
-                            <div class="summary-item">
-
-                                <span class="summary-label">
-
-                                    Offer Discount
-
-                                </span>
-
-                                <span
-                                    id="offerDiscountAmount"
-                                    class="summary-value"
-                                    style="color:#16a34a;font-weight:700;"
-                                >
-
+                            <div class="summary-item" id="offerDiscountRow" style="display: <%= cart.offerDiscount > 0 ? 'flex' : 'none' %>;">
+                                <span class="summary-label">Offer Discount</span>
+                                <span id="offerDiscountAmount" class="summary-value" style="color:#16a34a;font-weight:700;">
                                     - ₹<%= cart.offerDiscount.toLocaleString() %>
-
                                 </span>
-
                             </div>
 
-                            <% } %>
-                            <!-- SHIPPING -->
-
-                            <div class="summary-item">
-
-                                <span class="summary-label">
-
-                                    Shipping
-
+                            <div class="summary-item" id="cartPostDiscountRow" style="display: <%= cart.offerDiscount > 0 ? 'flex' : 'none' %>;">
+                                <span class="summary-label">Subtotal</span>
+                                <span id="cartPostDiscount" class="summary-value">
+                                    ₹<%= (cart.subtotal - cart.offerDiscount).toLocaleString() %>
                                 </span>
-
-                                <span
-    class="summary-value"
-    id="shippingAmount"
->
-
-    <%= shipping === 0
-        ? "Free"
-        : "₹" + shipping.toLocaleString()
-    %>
-
-</span>
-
                             </div>
+
+
+
+                                <!-- SHIPPING -->
+    
+                                <div class="summary-item">
+    
+                                    <span class="summary-label">
+    
+                                        Shipping
+    
+                                    </span>
+    
+                                    <span
+                                        class="summary-value"
+                                        id="shippingAmount"
+                                    >
+    
+    
+                                        <%= shipping === 0
+                                            ? "Free"
+                                            : "₹" + shipping.toLocaleString()
+                                        %>
+    
+                                    </span>
+    
+                                </div>
+
+
+                            
 
                             <!-- ITEMS -->
 

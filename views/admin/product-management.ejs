@@ -9,8 +9,10 @@
   <link rel="stylesheet" href="/css/admin-products.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 </head>
 <body>
 
@@ -588,6 +590,29 @@
   </div>
 
 
+  <!-- ============================================================
+       CROP MODAL (shared for product add/edit)
+  ============================================================ -->
+  <div class="crop-overlay" id="cropOverlay">
+    <div class="crop-dialog">
+      <div class="crop-dialog-header">
+        <h3>Crop Image</h3>
+        <button type="button" class="modal-close-btn" id="cropCloseBtn">
+          <i data-lucide="x" size="16"></i>
+        </button>
+      </div>
+      <div class="crop-dialog-body">
+        <div class="crop-image-wrap">
+          <img id="cropTargetImg" src="" alt="Crop preview">
+        </div>
+      </div>
+      <div class="crop-dialog-footer">
+        <button type="button" class="modal-btn-cancel" id="cropCancelBtn">Cancel</button>
+        <button type="button" class="modal-btn-save" id="cropApplyBtn">Apply Crop</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     lucide.createIcons();
 
@@ -885,49 +910,172 @@ function validateColor(prefix) {
     attachBlur("editColor",        () => validateColor("edit"));
 
     /* ================================================
+       CROPPER GLOBALS
+    ================================================ */
+    const ALLOWED_IMG_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+    const MAX_IMG_SIZE = 5 * 1024 * 1024;
+
+    const cropOverlay   = document.getElementById("cropOverlay");
+    const cropTargetImg = document.getElementById("cropTargetImg");
+    const cropApplyBtn  = document.getElementById("cropApplyBtn");
+    const cropCancelBtn = document.getElementById("cropCancelBtn");
+    const cropCloseBtn  = document.getElementById("cropCloseBtn");
+
+    let activeCropper  = null;
+    let cropCallback   = null;
+
+    function openCropDialog(imageSrc, callback, aspectRatio = 4/5) {
+      cropCallback = callback;
+      cropTargetImg.src = imageSrc;
+      cropOverlay.classList.add("open");
+
+      cropTargetImg.onload = function () {
+        if (activeCropper) activeCropper.destroy();
+        activeCropper = new Cropper(cropTargetImg, {
+          aspectRatio: aspectRatio,
+          viewMode: 1,
+          dragMode: "move",
+          autoCropArea: 0.85,
+          cropBoxResizable: true,
+          cropBoxMovable: true,
+          background: false,
+          responsive: true,
+          guides: false,
+          center: true,
+          highlight: false,
+        });
+      };
+    }
+
+    function closeCropDialog() {
+      cropOverlay.classList.remove("open");
+      if (activeCropper) { activeCropper.destroy(); activeCropper = null; }
+      cropCallback = null;
+    }
+
+    cropApplyBtn.addEventListener("click", () => {
+      if (!activeCropper || !cropCallback) return;
+      const canvas = activeCropper.getCroppedCanvas({
+        width: 1200,
+        height: 1200,
+        imageSmoothingEnabled: true,
+        imageSmoothingQuality: "high",
+      });
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
+      canvas.toBlob(blob => {
+        cropCallback(dataUrl, blob);
+      }, "image/jpeg", 0.92);
+    });
+
+    cropCancelBtn.addEventListener("click", closeCropDialog);
+    cropCloseBtn.addEventListener("click", closeCropDialog);
+
+    function validateImage(file, errId, slotId) {
+      const s = document.getElementById(errId);
+      const slot = document.getElementById(slotId);
+      if (!file) return false;
+      if (!ALLOWED_IMG_TYPES.includes(file.type)) {
+        if (s) { s.textContent = "Only JPG, PNG or WebP allowed"; s.classList.add("visible"); }
+        if (slot) slot.classList.add("input-error");
+        return false;
+      }
+      if (file.size > MAX_IMG_SIZE) {
+        if (s) { s.textContent = "File exceeds 5MB limit"; s.classList.add("visible"); }
+        if (slot) slot.classList.add("input-error");
+        return false;
+      }
+      if (s) { s.textContent = ""; s.classList.remove("visible"); }
+      if (slot) slot.classList.remove("input-error");
+      return true;
+    }
+
+    /* ================================================
        ADD PRODUCT — IMAGE PREVIEWS
     ================================================ */
 
     const addThumbnailInput   = document.getElementById("addThumbnailInput");
     const addThumbnailPreview = document.getElementById("addThumbnailPreview");
     const addPreviewImage     = document.getElementById("addPreviewImage");
+    let addThumbnailBlob      = null;
 
     addThumbnailInput.addEventListener("change", function () {
       const file = this.files[0];
-      if (!file) return;
+      if (!file || !validateImage(file, "add-thumbnail-error", "add-thumbnail-slot")) {
+        this.value = ""; return;
+      }
       const reader = new FileReader();
-      reader.onload = e => { addPreviewImage.src = e.target.result; addThumbnailPreview.style.display = "block"; };
+      reader.onload = e => {
+        openCropDialog(e.target.result, (dataUrl, blob) => {
+          addPreviewImage.src = dataUrl;
+          addThumbnailPreview.style.display = "block";
+          addThumbnailBlob = blob;
+          closeCropDialog();
+        }, 1); /* 1:1 for product thumbnail */
+      };
       reader.readAsDataURL(file);
-      /* clear thumbnail error as soon as file chosen */
-      const s = document.getElementById("add-thumbnail-error");
-      if (s) { s.textContent = ""; s.classList.remove("visible"); }
-      const slot = document.getElementById("add-thumbnail-slot");
-      if (slot) slot.classList.remove("input-error");
     });
 
     document.getElementById("addRemoveImageBtn").addEventListener("click", () => {
       addThumbnailInput.value = "";
       addPreviewImage.src     = "";
       addThumbnailPreview.style.display = "none";
+      addThumbnailBlob = null;
     });
 
     const addVariantImages      = document.getElementById("addVariantImages");
     const addVariantPreviewGrid = document.getElementById("addVariantPreviewGrid");
+    let addVariantBlobs         = [];
+    let pendingVariantFiles     = [];
 
     addVariantImages.addEventListener("change", function () {
-      addVariantPreviewGrid.innerHTML = "";
-      Array.from(this.files).forEach(file => {
-        const reader = new FileReader();
-        reader.onload = e => {
-          addVariantPreviewGrid.innerHTML += `
-            <div class="variant-preview-item"><img src="${e.target.result}" alt="Variant"></div>`;
-        };
-        reader.readAsDataURL(file);
-      });
-      /* clear variant images error */
+      pendingVariantFiles = Array.from(this.files);
+      if (!pendingVariantFiles.length) return;
+      
       const s = document.getElementById("add-variant-images-error");
-      if (s && this.files.length >= 3) { s.textContent = ""; s.classList.remove("visible"); }
+      const slot = document.getElementById("add-variant-images-slot"); // Might not exist, but safe
+      
+      if (pendingVariantFiles.length > 10) {
+        if (s) { s.textContent = "Maximum of 10 variant images allowed"; s.classList.add("visible"); }
+        this.value = ""; return;
+      }
+      
+      let valid = true;
+
+      for (let f of pendingVariantFiles) {
+        if (!ALLOWED_IMG_TYPES.includes(f.type) || f.size > MAX_IMG_SIZE) {
+          if (s) { s.textContent = "Invalid type or size > 5MB"; s.classList.add("visible"); }
+          valid = false; break;
+        }
+      }
+
+      if (!valid) { this.value = ""; return; }
+      if (s) { s.textContent = ""; s.classList.remove("visible"); }
+      
+      addVariantBlobs = [];
+      addVariantPreviewGrid.innerHTML = "";
+      processNextVariantImage();
     });
+
+    function processNextVariantImage() {
+      if (!pendingVariantFiles.length) {
+        /* done cropping all */
+        const s = document.getElementById("add-variant-images-error");
+        if (s && addVariantBlobs.length >= 3) { s.textContent = ""; s.classList.remove("visible"); }
+        return;
+      }
+      const file = pendingVariantFiles[0];
+      const reader = new FileReader();
+      reader.onload = e => {
+        openCropDialog(e.target.result, (dataUrl, blob) => {
+          addVariantPreviewGrid.innerHTML += `<div class="variant-preview-item"><img src="${dataUrl}" alt="Variant"></div>`;
+          addVariantBlobs.push(blob);
+          closeCropDialog();
+          pendingVariantFiles.shift();
+          processNextVariantImage();
+        }, 4/5); /* 4:5 for variant images */
+      };
+      reader.readAsDataURL(file);
+    }
 
     /* ================================================
        ADD PRODUCT — SUBMIT
@@ -947,13 +1095,29 @@ function validateColor(prefix) {
       const storageOk      = validateStorage("add");
       const ramOk          = validateRAM("add");
       const colorOk        = validateColor("add");
-      const thumbnailOk    = validateThumbnail("add", addThumbnailInput);
-      const variantImgOk   = validateVariantImages(addVariantImages);
+      
+      const thumbErr = document.getElementById("add-thumbnail-error");
+      const thumbSlot = document.getElementById("add-thumbnail-slot");
+      let thumbnailOk = true;
+      if (!addThumbnailBlob) {
+        if (thumbErr) { thumbErr.textContent = "Product thumbnail is required"; thumbErr.classList.add("visible"); }
+        if (thumbSlot) thumbSlot.classList.add("input-error");
+        thumbnailOk = false;
+      }
+
+      const varErr = document.getElementById("add-variant-images-error");
+      let variantImgOk = true;
+      if (addVariantBlobs.length < 3) {
+        if (varErr) { varErr.textContent = "Please upload at least 3 variant images"; varErr.classList.add("visible"); }
+        variantImgOk = false;
+      } else if (addVariantBlobs.length > 10) {
+        if (varErr) { varErr.textContent = "Maximum of 10 variant images allowed"; varErr.classList.add("visible"); }
+        variantImgOk = false;
+      }
 
       if (!nameOk || !categoryOk || !descriptionOk || !priceOk || !comparePriceOk ||
           !stockOk || !skuOk || !storageOk || !ramOk || !colorOk || !thumbnailOk || !variantImgOk) {
-        /* Scroll to first error */
-        const firstError = document.querySelector("#addProductForm .input-error, #addProductForm .upload-slot.input-error");
+        const firstError = document.querySelector("#addProductForm .input-error, #addProductForm .upload-slot.input-error, #addProductForm .field-error.visible");
         if (firstError) firstError.scrollIntoView({ behavior: "smooth", block: "center" });
         return;
       }
@@ -965,14 +1129,27 @@ function validateColor(prefix) {
       submitBtn.textContent  = "Saving...";
 
       try {
+        const formData = new FormData(e.target);
+        
+        // Remove raw files and inject cropped blobs
+        formData.delete("thumbnail");
+        formData.delete("variantImages");
+        
+        formData.append("thumbnail", addThumbnailBlob, "thumbnail.jpg");
+        addVariantBlobs.forEach((blob, index) => {
+          formData.append("variantImages", blob, `variant-${index}.jpg`);
+        });
+
         const response = await fetch("/admin/products/add", {
           method: "POST",
-          body: new FormData(e.target),
+          body: formData,
         });
         const data = await response.json();
         if (!data.success) {
           errorBox.textContent = data.message || "Failed to add product";
           errorBox.style.display = "block";
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Save Product";
           return;
         }
         closeModal(addModal);
@@ -982,7 +1159,6 @@ function validateColor(prefix) {
       } catch {
         errorBox.textContent   = "Something went wrong. Please try again.";
         errorBox.style.display = "block";
-      } finally {
         submitBtn.disabled    = false;
         submitBtn.textContent = "Save Product";
       }
@@ -1013,6 +1189,7 @@ function validateColor(prefix) {
         document.getElementById("editDescription").value  = product.description || "";
         document.getElementById("editPreviewImage").src   = product.thumbnail || "/images/default-product.png";
         document.getElementById("editThumbnailInput").value = "";
+        editThumbnailBlob = null;
         document.getElementById("editPrice").value        = variant.price || "";
         document.getElementById("editComparePrice").value = variant.comparePrice || "";
         document.getElementById("editStock").value        = variant.stock || "";
@@ -1033,11 +1210,20 @@ function validateColor(prefix) {
       }
     });
 
+    let editThumbnailBlob = null;
     document.getElementById("editThumbnailInput").addEventListener("change", function () {
       const file = this.files[0];
-      if (!file) return;
+      if (!file || !validateImage(file, null, null)) {
+        this.value = ""; return;
+      }
       const reader = new FileReader();
-      reader.onload = e => { document.getElementById("editPreviewImage").src = e.target.result; };
+      reader.onload = e => {
+        openCropDialog(e.target.result, (dataUrl, blob) => {
+          document.getElementById("editPreviewImage").src = dataUrl;
+          editThumbnailBlob = blob;
+          closeCropDialog();
+        }, 1);
+      };
       reader.readAsDataURL(file);
     });
 
@@ -1058,11 +1244,12 @@ function validateColor(prefix) {
       const storageOk      = validateStorage("edit");
       const ramOk          = validateRAM("edit");
       const colorOk        = validateColor("edit");
-      const thumbnailOk    = validateThumbnail("edit", document.getElementById("editThumbnailInput"));
+      // thumbnail is optional on edit
+      const thumbnailOk    = true; 
 
       if (!nameOk || !categoryOk || !descriptionOk || !priceOk || !comparePriceOk ||
-          !stockOk || !skuOk || !storageOk || !ramOk || !colorOk || !thumbnailOk) {
-        const firstError = document.querySelector("#editProductForm .input-error");
+          !stockOk || !skuOk || !storageOk || !ramOk || !colorOk) {
+        const firstError = document.querySelector("#editProductForm .input-error, #editProductForm .field-error.visible");
         if (firstError) firstError.scrollIntoView({ behavior: "smooth", block: "center" });
         return;
       }
@@ -1075,14 +1262,23 @@ function validateColor(prefix) {
       submitBtn.textContent  = "Updating...";
 
       try {
+        const formData = new FormData(e.target);
+        
+        if (editThumbnailBlob) {
+          formData.delete("thumbnail");
+          formData.append("thumbnail", editThumbnailBlob, "thumbnail-edit.jpg");
+        }
+
         const response = await fetch(`/admin/products/edit/${productId}`, {
           method: "POST",
-          body: new FormData(e.target),
+          body: formData,
         });
         const data = await response.json();
         if (!data.success) {
           errorBox.textContent   = data.message || "Failed to update product";
           errorBox.style.display = "block";
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Update Product";
           return;
         }
         closeModal(editModal);
@@ -1092,7 +1288,6 @@ function validateColor(prefix) {
       } catch {
         errorBox.textContent   = "Something went wrong. Please try again.";
         errorBox.style.display = "block";
-      } finally {
         submitBtn.disabled    = false;
         submitBtn.textContent = "Update Product";
       }

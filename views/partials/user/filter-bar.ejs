@@ -40,45 +40,33 @@
 
 
 
-        <!-- CATEGORY -->
-
-        <div class="filter-select-wrapper">
-
-            <i
-                data-lucide="layout-grid"
-                class="filter-icon"
-            ></i>
-
-            <select
-                name="category"
-                class="premium-filter-select"
-            >
-
-                <option value="">
-                    All Categories
-                </option>
-
+        <!-- MULTI CATEGORY SELECT -->
+        <div class="filter-select-wrapper custom-multi-select" style="position: relative;">
+            <i data-lucide="layout-grid" class="filter-icon"></i>
+            
+            <div class="multi-select-trigger premium-filter-select" id="multiSelectTrigger" style="cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
+                <% 
+                   const selectedNames = categories.filter(c => selectedCategories.includes(c._id.toString())).map(c => c.name);
+                   const placeholder = selectedNames.length > 0 ? (selectedNames.length === 1 ? selectedNames[0] : `${selectedNames.length} Selected`) : 'All Categories';
+                %>
+                <span id="multiSelectPlaceholder" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px;"><%= placeholder %></span>
+                <i data-lucide="chevron-down" style="width: 14px; height: 14px; margin-left: 8px;"></i>
+            </div>
+            
+            <div class="multi-select-dropdown" id="multiSelectDropdown" style="display: none; position: absolute; top: 110%; left: 0; width: 100%; min-width: 180px; background: #fff; border: 1px solid #E5E7EB; border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); z-index: 100; padding: 8px 0; max-height: 250px; overflow-y: auto;">
                 <% categories.forEach(categoryItem => { %>
-
-                    <option
-
-                        value="<%= categoryItem._id %>"
-
-                        <%= category === categoryItem._id.toString()
-                        ? "selected"
-                        : ""
-                        %>
-
-                    >
-
-                        <%= categoryItem.name %>
-
-                    </option>
-
+                    <label class="multi-select-option" style="display: flex; align-items: center; padding: 8px 16px; cursor: pointer; transition: background 0.2s;">
+                        <input 
+                            type="checkbox" 
+                            name="category" 
+                            value="<%= categoryItem._id %>" 
+                            <%= (typeof selectedCategories !== 'undefined' && selectedCategories.includes(categoryItem._id.toString())) ? "checked" : "" %>
+                            style="margin-right: 10px; accent-color: var(--primary);"
+                        >
+                        <span style="font-size: 14px; color: #374151;"><%= categoryItem.name %></span>
+                    </label>
                 <% }) %>
-
-            </select>
-
+            </div>
         </div>
 
         <!-- PRICE RANGE -->
@@ -232,3 +220,57 @@
     </form>
 
 </section>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const trigger = document.getElementById("multiSelectTrigger");
+        const dropdown = document.getElementById("multiSelectDropdown");
+        
+        if (trigger && dropdown) {
+            trigger.addEventListener("click", (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropdown.style.display = dropdown.style.display === "none" ? "block" : "none";
+            });
+            
+            // Close when clicking outside
+            document.addEventListener("click", (e) => {
+                if (!trigger.contains(e.target) && !dropdown.contains(e.target)) {
+                    dropdown.style.display = "none";
+                }
+            });
+            
+            // Optional: update placeholder text on checkbox change
+            const checkboxes = dropdown.querySelectorAll("input[type='checkbox']");
+            const placeholder = document.getElementById("multiSelectPlaceholder");
+            
+            checkboxes.forEach(cb => {
+                cb.addEventListener("change", () => {
+                    let checkedCount = 0;
+                    let lastCheckedName = "";
+                    checkboxes.forEach(box => {
+                        if (box.checked) {
+                            checkedCount++;
+                            lastCheckedName = box.nextElementSibling.textContent;
+                        }
+                    });
+                    
+                    if (checkedCount === 0) {
+                        placeholder.textContent = "All Categories";
+                    } else if (checkedCount === 1) {
+                        placeholder.textContent = lastCheckedName;
+                    } else {
+                        placeholder.textContent = `${checkedCount} Selected`;
+                    }
+                });
+            });
+            
+            // Highlight options on hover
+            const options = dropdown.querySelectorAll(".multi-select-option");
+            options.forEach(opt => {
+                opt.addEventListener("mouseenter", () => { opt.style.background = "#F3F4F6"; });
+                opt.addEventListener("mouseleave", () => { opt.style.background = "transparent"; });
+            });
+        }
+    });
+</script>

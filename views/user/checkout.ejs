@@ -400,6 +400,16 @@
                                 </span>
                             </div>
 
+                            <!-- Post-Coupon Subtotal -->
+                            <div
+                                class="co-breakdown-row"
+                                id="coPostCouponRow"
+                                style="<%= (couponDiscount || 0) > 0 ? 'padding-top: 10px; border-top: 1px dashed #E5E7EB; margin-top: 6px; margin-bottom: 6px;' : 'display:none;' %>"
+                            >
+                                <span style="font-weight: 600; color: #374151;">Amount after Coupon</span>
+                                <span id="coPostCouponSubtotal" style="font-weight: 600; color: #374151;">₹<%= (subtotal - (couponDiscount || 0)).toLocaleString('en-IN') %></span>
+                            </div>
+
                             <!-- Estimated Tax -->
                             <div class="co-breakdown-row">
                                 <span>Estimated Tax</span>
@@ -876,13 +886,19 @@
 
             document.getElementById('removeCouponBtn')?.addEventListener('click', async () => {
                 try {
-                    const data = await fetch(removeEndpoint, { method: 'POST' }).then(r => r.json());
+                    const deliveryType = document.querySelector('input[name="delivery"]:checked')?.value || 'standard';
+                    const data = await fetch(removeEndpoint, { 
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ deliveryType })
+                    }).then(r => r.json());
                     if (!data.success) return Swal.fire({ icon: 'error', title: 'Coupon Error', text: data.message });
 
                     document.getElementById('couponInput').value         = '';
                     document.getElementById('coCouponCode').textContent  = '-';
                     document.getElementById('coDiscount').textContent    = '−₹0';
                     document.getElementById('coDiscountRow').style.display = 'none';
+                    if (document.getElementById('coPostCouponRow')) document.getElementById('coPostCouponRow').style.display = 'none';
                     document.getElementById('coTax').textContent         = `₹${data.taxAmount.toLocaleString('en-IN')}`;
                     document.getElementById('coGrandTotal').textContent  = `₹${data.finalAmount.toLocaleString('en-IN')}`;
                     document.getElementById('removeCouponBtn').style.display = 'none';
@@ -901,10 +917,11 @@
 
             async function applyCouponCode(code) {
                 try {
+                    const deliveryType = document.querySelector('input[name="delivery"]:checked')?.value || 'standard';
                     const data = await fetch(applyEndpoint, {
                         method:  'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body:    JSON.stringify({ couponCode: code }),
+                        body:    JSON.stringify({ couponCode: code, deliveryType }),
                     }).then(r => r.json());
 
                     if (!data.success) {
@@ -945,6 +962,11 @@
 
                     document.getElementById('coCouponCode').textContent    = data.couponCode;
                     document.getElementById('coDiscountRow').style.display = 'flex';
+                    if (document.getElementById('coPostCouponRow')) {
+                        document.getElementById('coPostCouponRow').style.cssText = 'display: flex; padding-top: 10px; border-top: 1px dashed #E5E7EB; margin-top: 6px; margin-bottom: 6px;';
+                        const currentSubtotal = parseFloat(document.getElementById('coSubtotal').textContent.replace(/[^\d.-]/g, '')) || 0;
+                        document.getElementById('coPostCouponSubtotal').textContent = `₹${(currentSubtotal - data.couponDiscount).toLocaleString('en-IN')}`;
+                    }
                     document.getElementById('coDiscount').textContent      = `−₹${data.couponDiscount.toLocaleString('en-IN')}`;
                     document.getElementById('coTax').textContent           = `₹${data.taxAmount.toLocaleString('en-IN')}`;
                     document.getElementById('coGrandTotal').textContent    = `₹${data.finalAmount.toLocaleString('en-IN')}`;

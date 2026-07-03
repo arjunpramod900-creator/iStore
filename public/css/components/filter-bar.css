@@ -1,9 +1,9 @@
 .filter-bar-section {
   padding: 18px 32px 28px;
-
   max-width: 1440px;
-
   margin: 0 auto;
+  position: relative;
+  z-index: 50;
 }
 
 .filter-form {

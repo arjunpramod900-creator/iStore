@@ -563,6 +563,81 @@ body {
 
 /* =========================================
 
+   EMPTY WISHLIST STATE
+
+========================================= */
+
+.empty-wishlist {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 80px 32px 96px;
+  margin: 40px auto 0;
+  max-width: 520px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(
+    168deg,
+    rgba(243, 232, 255, 0.45) 0%,
+    rgba(255, 255, 255, 0.9) 50%,
+    rgba(243, 232, 255, 0.3) 100%
+  );
+  border: 1px solid rgba(96, 55, 99, 0.06);
+  box-shadow: 0 8px 40px rgba(45, 0, 79, 0.04);
+}
+
+.empty-wishlist i,
+.empty-wishlist svg {
+  width: 72px;
+  height: 72px;
+  color: var(--brand-purple);
+  opacity: 0.15;
+  margin-bottom: 28px;
+}
+
+.empty-wishlist h2 {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -1px;
+  color: var(--brand-purple-deep);
+  margin-bottom: 10px;
+}
+
+.empty-wishlist p {
+  font-size: 16px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  max-width: 340px;
+}
+
+.empty-wishlist .btn-add-all {
+  margin-top: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  height: 52px;
+  padding: 0 32px;
+  border-radius: 24px;
+  background: linear-gradient(90deg, #4c0080 0%, #6a0dad 100%);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: "Inter", sans-serif;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 6px 20px rgba(76, 0, 128, 0.15);
+}
+
+.empty-wishlist .btn-add-all:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(76, 0, 128, 0.22);
+}
+
+/* =========================================
+
    RESPONSIVE
 
 ========================================= */

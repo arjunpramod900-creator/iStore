@@ -780,8 +780,8 @@ function validateDiscountValue(prefix) {
     // Check against min purchase
     const minEl = document.getElementById(prefix + '-minPurchase');
     const minVal = parseFloat(minEl.value) || 0;
-    if (minVal > 0 && n > minVal) {
-      setError(el, err, "Fixed discount cannot exceed minimum purchase");
+    if (n > (minVal * 0.20)) {
+      setError(el, err, "Fixed discount cannot exceed 20% of minimum purchase");
       return false;
     }
   }

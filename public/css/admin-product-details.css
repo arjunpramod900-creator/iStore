@@ -807,15 +807,22 @@ body {
 
 /* Error message span */
 .vfield-error {
-  display: none;
-  color: #e74c3c;
-  font-size: 12px;
-  font-weight: 500;
-  padding-left: 2px;
-  animation: vErrFade 0.18s ease;
+    display: none;
+    color: #e74c3c;
+    font-size: 11px;
+    margin-top: 4px;
+    padding-left: 2px;
 }
-
-.vfield-error.visible { display: block; }
+.vfield-error.visible {
+    display: block;
+    animation: fadeInShake 0.4s ease;
+}
+@keyframes fadeInShake {
+  0% { opacity: 0; transform: translateX(-6px); }
+  40% { transform: translateX(4px); }
+  70% { transform: translateX(-2px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
 
 @keyframes vErrFade {
   from { opacity: 0; transform: translateY(-3px); }
@@ -981,95 +988,113 @@ body {
    IMAGE CROPPER
 ========================================= */
 
-.cropper-overlay {
+/* ================================================
+   CROP DIALOG
+================================================ */
+
+.crop-overlay {
+  display: none;
   position: fixed;
   inset: 0;
-  background: rgba(12, 8, 16, 0.78);
-  backdrop-filter: blur(18px);
-  z-index: 999999;
-  display: none;
+  background: rgba(44, 20, 33, 0.55);
+  backdrop-filter: blur(8px);
+  z-index: 99999;
   align-items: center;
   justify-content: center;
-  padding: 40px;
+  padding: 24px;
 }
+.crop-overlay.open { display: flex; }
 
-.cropper-overlay.active { display: flex; }
-
-.cropper-modal {
-  width: min(1100px, 96vw);
-  background: #ffffff;
-  border-radius: 34px;
-  overflow: hidden;
-  box-shadow: 0 40px 120px rgba(0, 0, 0, 0.28);
-  animation: cropperFade 0.25s ease;
-}
-
-@keyframes cropperFade {
-  from { opacity: 0; transform: translateY(20px) scale(0.96); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-.cropper-header {
-  height: 96px;
-  padding: 0 34px;
+.crop-dialog {
+  background: var(--white, #ffffff);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 540px;
+  max-height: 90vh;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0px 40px 80px rgba(46, 15, 47, 0.22);
+  animation: cropSlideIn 0.3s ease;
+}
+
+@keyframes cropSlideIn {
+  from { opacity: 0; transform: scale(0.95) translateY(10px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.crop-dialog-header {
+  padding: 22px 28px;
+  display: flex;
   justify-content: space-between;
-  border-bottom: 1px solid rgba(96, 55, 99, 0.08);
-  background: linear-gradient(to bottom, rgba(255,255,255,0.98), rgba(248,244,248,0.98));
-}
-
-.cropper-header h3 {
-  font-size: 34px;
-  font-weight: 700;
-  letter-spacing: -1.4px;
-  color: #24131f;
-}
-
-.cropper-close-btn {
-  width: 52px;
-  height: 52px;
-  border: none;
-  border-radius: 18px;
-  background: rgba(96, 55, 99, 0.08);
-  color: #24131f;
-  font-size: 28px;
-  cursor: pointer;
-  transition: 0.22s ease;
-}
-
-.cropper-close-btn:hover { background: rgba(96, 55, 99, 0.14); transform: scale(1.05); }
-
-.cropper-body { padding: 28px; background: #f7f3f8; }
-.cropper-body img { display: block; max-width: 100%; }
-
-.cropper-container {
-  width: 100% !important;
-  height: 72vh !important;
-  max-height: 760px;
-  border-radius: 26px;
-  overflow: hidden;
-  background: #eee8f1;
-}
-
-.cropper-view-box  { border-radius: 32px; outline: 2px solid rgba(255,255,255,0.96); outline-color: rgba(255,255,255,0.96); }
-.cropper-face      { background: rgba(255, 255, 255, 0.04); }
-.cropper-line,
-.cropper-point     { background-color: #ffffff; }
-.cropper-dashed    { border-color: rgba(255, 255, 255, 0.35); }
-
-.cropper-footer {
-  height: 110px;
-  padding: 0 34px;
-  display: flex;
   align-items: center;
+  border-bottom: 1px solid rgba(208, 195, 204, 0.1);
+}
+
+.crop-dialog-header h3 {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  color: #2c1421;
+}
+
+.modal-close-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #2c1421;
+  padding: 4px;
+}
+
+.crop-dialog-body {
+  padding: 24px 28px;
+  overflow: auto;
+  flex: 1;
+}
+
+.crop-image-wrap {
+  width: 100%;
+  max-height: 400px;
+  background: rgba(255, 240, 244, 0.3);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.crop-image-wrap img {
+  display: block;
+  max-width: 100%;
+}
+
+.crop-dialog-footer {
+  padding: 16px 28px 22px;
+  display: flex;
   justify-content: flex-end;
   gap: 14px;
-  border-top: 1px solid rgba(96, 55, 99, 0.08);
-  background: #ffffff;
+  border-top: 1px solid rgba(208, 195, 204, 0.1);
 }
 
-.cropper-footer .btn-detail { min-width: 160px; height: 58px; border-radius: 18px; font-size: 16px; font-weight: 700; }
+.modal-btn-cancel, .modal-btn-save {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.modal-btn-cancel {
+  background: transparent;
+  color: #4d444c;
+  border: 1px solid rgba(0,0,0,0.1);
+}
+.modal-btn-cancel:hover { background: rgba(0,0,0,0.03); }
+
+.modal-btn-save {
+  background: #603763;
+  color: #ffffff;
+  border: none;
+}
+.modal-btn-save:hover { background: #701a75; }
 
 /* =========================================
    FULLSCREEN IMAGE VIEWER

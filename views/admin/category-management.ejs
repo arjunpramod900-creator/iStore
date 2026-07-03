@@ -9,8 +9,10 @@
   <link rel="stylesheet" href="/css/admin-categories.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 </head>
 <body>
 
@@ -337,6 +339,7 @@
                 <img id="editPreviewImg" src="" alt="" style="display:none;">
                 <input type="file" name="image" id="editImageInput" accept="image/*">
               </div>
+              <span class="field-error" id="edit-image-error"></span>
               <div class="modal-image-actions">
                 <button type="button" class="modal-img-action modal-img-replace" id="editReplaceBtn">Replace</button>
                 <button type="button" class="modal-img-action modal-img-remove"  id="editRemoveBtn">Remove</button>
@@ -354,6 +357,29 @@
     </div>
   </div>
 
+
+  <!-- ============================================================
+       CROP MODAL (shared for add & edit)
+  ============================================================ -->
+  <div class="crop-overlay" id="cropOverlay">
+    <div class="crop-dialog">
+      <div class="crop-dialog-header">
+        <h3>Crop Category Image</h3>
+        <button type="button" class="modal-close-btn" id="cropCloseBtn">
+          <i data-lucide="x" size="16"></i>
+        </button>
+      </div>
+      <div class="crop-dialog-body">
+        <div class="crop-image-wrap">
+          <img id="cropTargetImg" src="" alt="Crop preview">
+        </div>
+      </div>
+      <div class="crop-dialog-footer">
+        <button type="button" class="modal-btn-cancel" id="cropCancelBtn">Cancel</button>
+        <button type="button" class="modal-btn-save" id="cropApplyBtn">Apply Crop</button>
+      </div>
+    </div>
+  </div>
 
   <script>
     lucide.createIcons();
@@ -441,21 +467,100 @@
       setSuccess(el, errorId); return true;
     }
 
-    function validateImageFile(file, errorId) {
-      const span    = errorId ? document.getElementById(errorId) : null;
-      const showErr = msg => { if (span) { span.textContent = msg; span.classList.add("visible"); } };
-      const clearErr = ()  => { if (span) { span.textContent = ""; span.classList.remove("visible"); } };
 
-      if (!file)                                                                     { showErr("Please upload a category image");        return false; }
-      if (!["image/jpeg","image/png","image/jpg","image/webp"].includes(file.type)) { showErr("Only JPG, PNG or WEBP allowed");          return false; }
-      if (file.size > 5 * 1024 * 1024)                                              { showErr("Image must be under 5MB");                return false; }
-      clearErr(); return true;
+    /* ================================================
+       CROPPER GLOBALS
+    ================================================ */
+    const ALLOWED_IMG_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+    const MAX_IMG_SIZE = 5 * 1024 * 1024;
+
+    const cropOverlay   = document.getElementById("cropOverlay");
+    const cropTargetImg = document.getElementById("cropTargetImg");
+    const cropApplyBtn  = document.getElementById("cropApplyBtn");
+    const cropCancelBtn = document.getElementById("cropCancelBtn");
+    const cropCloseBtn  = document.getElementById("cropCloseBtn");
+
+    let activeCropper  = null;
+    let cropCallback   = null;  /* called with the blob after crop */
+
+    function openCropDialog(imageSrc, callback) {
+      cropCallback = callback;
+      cropTargetImg.src = imageSrc;
+      cropOverlay.classList.add("open");
+
+      cropTargetImg.onload = function () {
+        if (activeCropper) activeCropper.destroy();
+        activeCropper = new Cropper(cropTargetImg, {
+          aspectRatio: 1,
+          viewMode: 1,
+          dragMode: "move",
+          autoCropArea: 0.85,
+          cropBoxResizable: true,
+          cropBoxMovable: true,
+          background: false,
+          responsive: true,
+          guides: false,
+          center: true,
+          highlight: false,
+        });
+      };
+    }
+
+    function closeCropDialog() {
+      cropOverlay.classList.remove("open");
+      if (activeCropper) { activeCropper.destroy(); activeCropper = null; }
+      cropCallback = null;
+    }
+
+    cropApplyBtn.addEventListener("click", () => {
+      if (!activeCropper || !cropCallback) return;
+      const canvas = activeCropper.getCroppedCanvas({
+        width: 800,
+        height: 800,
+        imageSmoothingEnabled: true,
+        imageSmoothingQuality: "high",
+      });
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
+      canvas.toBlob(blob => {
+        cropCallback(dataUrl, blob);
+        closeCropDialog();
+      }, "image/jpeg", 0.92);
+    });
+
+    cropCancelBtn.addEventListener("click", closeCropDialog);
+    cropCloseBtn.addEventListener("click", closeCropDialog);
+    cropOverlay.addEventListener("click", e => { if (e.target === cropOverlay) closeCropDialog(); });
+
+    /* helper: validate selected file before opening cropper */
+    function validateAndCrop(file, errorId, callback) {
+      const errSpan = errorId ? document.getElementById(errorId) : null;
+      const showErr = msg => { if (errSpan) { errSpan.textContent = msg; errSpan.classList.add("visible"); } else { toast(msg, "error"); } };
+      const clearErr = () => { if (errSpan) { errSpan.textContent = ""; errSpan.classList.remove("visible"); } };
+
+      if (!file) return false;
+
+      if (!ALLOWED_IMG_TYPES.includes(file.type)) {
+        showErr("Invalid file type. Only JPG, PNG or WebP images are allowed.");
+        return false;
+      }
+      if (file.size > MAX_IMG_SIZE) {
+        showErr("File is too large. Maximum size is 5 MB.");
+        return false;
+      }
+
+      clearErr();
+
+      const reader = new FileReader();
+      reader.onload = e => openCropDialog(e.target.result, callback);
+      reader.readAsDataURL(file);
+      return true;
     }
 
     /* ================================================
        ADD MODAL
     ================================================ */
     let addIsActive     = true;
+    let addCroppedBlob  = null;
     const addToggle     = document.getElementById("addToggle");
     const addImageInput = document.getElementById("addImageInput");
     const addPreviewImg = document.getElementById("addPreviewImg");
@@ -469,15 +574,18 @@
     addImageInput.addEventListener("change", function () {
       const file = this.files[0];
       if (!file) return;
-      if (!validateImageFile(file, "add-image-error")) { this.value = ""; return; }
-      const reader = new FileReader();
-      reader.onload = e => { addPreviewImg.src = e.target.result; addPreviewImg.style.display = "block"; };
-      reader.readAsDataURL(file);
+      const valid = validateAndCrop(file, "add-image-error", (dataUrl, blob) => {
+        addPreviewImg.src = dataUrl;
+        addPreviewImg.style.display = "block";
+        addCroppedBlob = blob;
+      });
+      if (!valid) this.value = "";
     });
 
     document.getElementById("addReplaceBtn").addEventListener("click", () => addImageInput.click());
     document.getElementById("addRemoveBtn").addEventListener("click",  () => {
-      addPreviewImg.src = ""; addPreviewImg.style.display = "none"; addImageInput.value = "";
+      addPreviewImg.src = ""; addPreviewImg.style.display = "none";
+      addImageInput.value = ""; addCroppedBlob = null;
     });
 
     document.getElementById("add-name").addEventListener("blur",  () => validateCatName("add-name", "add-name-error"));
@@ -489,15 +597,32 @@
       e.preventDefault();
       const nameOk  = validateCatName("add-name", "add-name-error");
       const descOk  = validateCatDesc("add-desc", "add-desc-error");
-      const imageOk = validateImageFile(addImageInput.files[0], "add-image-error");
-      if (!nameOk || !descOk || !imageOk) return;
+
+      /* image required for add — must have a cropped blob */
+      if (!addCroppedBlob) {
+        const imgErr = document.getElementById("add-image-error");
+        if (imgErr) { imgErr.textContent = "Please upload a category image"; imgErr.classList.add("visible"); }
+        if (!nameOk || !descOk) return;
+        return;
+      }
+
+      if (!nameOk || !descOk) return;
+
       Swal.fire({ title: "Saving Category...", allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-      this.submit();
+
+      const formData = new FormData(this);
+      formData.delete("image");
+      formData.append("image", addCroppedBlob, "category-cropped.jpg");
+
+      fetch(this.action, { method: "POST", body: formData })
+        .then(res => { if (res.redirected) { window.location.href = res.url; } else { window.location.href = "/admin/categories?success=added"; } })
+        .catch(() => { Swal.close(); toast("Something went wrong", "error"); });
     });
 
     function resetAddForm() {
       document.getElementById("addCategoryForm").reset();
       addPreviewImg.src = ""; addPreviewImg.style.display = "none";
+      addCroppedBlob = null;
       clearField(document.getElementById("add-name"), "add-name-error");
       clearField(document.getElementById("add-desc"), "add-desc-error");
       const imgErr = document.getElementById("add-image-error");
@@ -511,6 +636,7 @@
        EDIT MODAL
     ================================================ */
     let editIsActive       = true;
+    let editCroppedBlob    = null;
     const editToggle       = document.getElementById("editToggle");
     const editImageInput   = document.getElementById("editImageInput");
     const editPreviewImg   = document.getElementById("editPreviewImg");
@@ -525,20 +651,20 @@
     editImageInput.addEventListener("change", function () {
       const file = this.files[0];
       if (!file) return;
-      if (!validateImageFile(file, null)) { toast("Only JPG/PNG/WEBP under 5MB allowed", "error"); this.value = ""; return; }
-      const reader = new FileReader();
-      reader.onload = e => {
-        editPreviewImg.src = e.target.result;
+      const valid = validateAndCrop(file, "edit-image-error", (dataUrl, blob) => {
+        editPreviewImg.src = dataUrl;
         editPreviewImg.style.display = "block";
         editUploadPrompt.style.display = "none";
-      };
-      reader.readAsDataURL(file);
+        editCroppedBlob = blob;
+      });
+      if (!valid) { this.value = ""; }
     });
 
     document.getElementById("editReplaceBtn").addEventListener("click", () => editImageInput.click());
     document.getElementById("editRemoveBtn").addEventListener("click",  () => {
       editPreviewImg.src = ""; editPreviewImg.style.display = "none";
       editUploadPrompt.style.display = "flex"; editImageInput.value = "";
+      editCroppedBlob = null;
     });
 
     document.querySelectorAll(".edit-category-btn").forEach(btn => {
@@ -552,6 +678,8 @@
         document.getElementById("edit-name").value = name;
         document.getElementById("edit-desc").value = description;
         document.getElementById("editCategoryForm").action = `/admin/edit-category/${id}`;
+
+        editCroppedBlob = null;
 
         if (image) {
           editPreviewImg.src = image;
@@ -568,6 +696,9 @@
 
         clearField(document.getElementById("edit-name"), "edit-name-error");
         clearField(document.getElementById("edit-desc"), "edit-desc-error");
+        
+        const imgErr = document.getElementById("edit-image-error");
+        if (imgErr) { imgErr.textContent = ""; imgErr.classList.remove("visible"); }
 
         openModal(editModal);
       });
@@ -583,8 +714,22 @@
       const nameOk = validateCatName("edit-name", "edit-name-error");
       const descOk = validateCatDesc("edit-desc", "edit-desc-error");
       if (!nameOk || !descOk) return;
+
       Swal.fire({ title: "Updating Category...", allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-      this.submit();
+
+      /* If a new image was cropped, send it via fetch */
+      if (editCroppedBlob) {
+        const formData = new FormData(this);
+        formData.delete("image");
+        formData.append("image", editCroppedBlob, "category-cropped.jpg");
+
+        fetch(this.action, { method: "POST", body: formData })
+          .then(res => { if (res.redirected) { window.location.href = res.url; } else { window.location.href = "/admin/categories?success=updated"; } })
+          .catch(() => { Swal.close(); toast("Something went wrong", "error"); });
+      } else {
+        /* No new image — normal submit */
+        this.submit();
+      }
     });
 
     /* ================================================

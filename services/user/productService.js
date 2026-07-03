@@ -58,9 +58,15 @@ export const loadAllProductsService = async (
   }
 
   /* CATEGORY */
-
+  let selectedCategories = [];
   if (category) {
-    filter.categoryId = category;
+    if (Array.isArray(category)) {
+      selectedCategories = category;
+      filter.categoryId = { $in: category };
+    } else {
+      selectedCategories = [category];
+      filter.categoryId = category;
+    }
   }
 
   /* FETCH PRODUCTS */
@@ -88,8 +94,6 @@ export const loadAllProductsService = async (
       isDeleted: false,
 
       isActive: true,
-
-      stock: { $gt: 0 },
     })
 
       .sort({
@@ -236,6 +240,8 @@ for (const variant of variants) {
     search,
 
     category,
+    
+    selectedCategories,
 
     sort,
 

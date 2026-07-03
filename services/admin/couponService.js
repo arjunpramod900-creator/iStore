@@ -96,9 +96,9 @@ async (couponData) => {
 
   if (
     couponData.discountType === "FIXED" &&
-    Number(couponData.discountValue) > Number(couponData.minPurchase)
+    Number(couponData.discountValue) > Number(couponData.minPurchase) * 0.20
   ) {
-    throw new Error("Fixed discount value cannot exceed the minimum purchase amount");
+    throw new Error("Fixed discount value cannot exceed 20% of the minimum purchase amount");
   }
 
   const totalLimit = Number(couponData.totalUsageLimit) || 0;
@@ -274,9 +274,9 @@ async (
 
   if (
     couponData.discountType === "FIXED" &&
-    Number(couponData.discountValue) > Number(couponData.minPurchase)
+    Number(couponData.discountValue) > Number(couponData.minPurchase) * 0.20
   ) {
-    throw new Error("Fixed discount value cannot exceed the minimum purchase amount");
+    throw new Error("Fixed discount value cannot exceed 20% of the minimum purchase amount");
   }
 
   const totalLimit = Number(couponData.totalUsageLimit) || 0;

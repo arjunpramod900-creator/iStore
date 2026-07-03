@@ -106,13 +106,11 @@ export const revalidateCouponOnMutation = async (order, mutatedItem, mutationTyp
     const newTaxAmount = Math.floor(discountedSubtotal * 0.02);
     
     let newDeliveryCharge = order.deliveryCharge || 0;
-    // Recalculate standard delivery if applicable
-    if (newDeliveryCharge === 0 || newDeliveryCharge === 99) {
-        if (activeItems.length === 0) {
-            newDeliveryCharge = 0; // No items being shipped, so no delivery charge
-        } else {
-            newDeliveryCharge = discountedSubtotal >= 5000 ? 0 : 99;
-        }
+    // Refund all delivery fees (including express) if all items are cancelled
+    if (activeItems.length === 0) {
+        newDeliveryCharge = 0;
+    } else if (newDeliveryCharge === 0 || newDeliveryCharge === 99) {
+        newDeliveryCharge = discountedSubtotal >= 5000 ? 0 : 99;
     }
 
     order.subtotal      = activeSubtotal;

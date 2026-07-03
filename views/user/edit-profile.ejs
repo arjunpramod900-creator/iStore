@@ -9,8 +9,10 @@
     <link rel="stylesheet" href="/css/profile.css">
     <link rel="stylesheet" href="/css/edit-profile.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 </head>
 <body>
     <!-- Header -->
@@ -186,6 +188,27 @@ required>
         </div>
     </main>
 
+    <!-- Crop Modal -->
+    <div class="crop-modal-overlay" id="cropModal">
+        <div class="crop-modal">
+            <div class="crop-modal-header">
+                <h3>Crop Profile Photo</h3>
+                <button type="button" class="crop-modal-close" id="cropCancel">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="crop-modal-body">
+                <div class="crop-container">
+                    <img id="cropImage" src="" alt="Crop preview">
+                </div>
+            </div>
+            <div class="crop-modal-footer">
+                <button type="button" class="crop-btn crop-btn-cancel" id="cropCancelBtn">Cancel</button>
+                <button type="button" class="crop-btn crop-btn-confirm" id="cropConfirm">Apply Crop</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Footer -->
     <%- include("../partials/user/footer") %>
 
@@ -210,30 +233,166 @@ required>
     </script>
     <script>
 
-document
-.getElementById("profileUpload")
-.addEventListener("change", function (event) {
+/* =========================
+   IMAGE UPLOAD + CROP
+========================= */
 
-const file = event.target.files[0]
+const ALLOWED_TYPES = [
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+    "image/gif"
+]
 
-if (file) {
+const MAX_SIZE = 5 * 1024 * 1024 /* 5 MB */
 
-const reader = new FileReader()
+let cropper = null
+let croppedBlob = null
 
-reader.onload = function (e) {
+const profileUpload = document.getElementById("profileUpload")
+const cropModal = document.getElementById("cropModal")
+const cropImage = document.getElementById("cropImage")
+const cropConfirm = document.getElementById("cropConfirm")
+const cropCancel = document.getElementById("cropCancel")
+const cropCancelBtn = document.getElementById("cropCancelBtn")
 
-document
-.querySelector(".profile-img-main")
-.style.backgroundImage =
-`url(${e.target.result})`
+/* --- File select handler --- */
 
-}
+profileUpload.addEventListener("change", function (event) {
 
-reader.readAsDataURL(file)
+    const file = event.target.files[0]
 
-}
+    if (!file) return
+
+    /* TYPE VALIDATION */
+
+    if (!ALLOWED_TYPES.includes(file.type)) {
+
+        showUploadError(
+            "Invalid file type. Please upload a JPG, PNG, WebP or GIF image."
+        )
+
+        profileUpload.value = ""
+        return
+    }
+
+    /* SIZE VALIDATION */
+
+    if (file.size > MAX_SIZE) {
+
+        showUploadError(
+            "File is too large. Maximum size is 5 MB."
+        )
+
+        profileUpload.value = ""
+        return
+    }
+
+    /* CLEAR PREVIOUS ERROR */
+    clearUploadError()
+
+    /* OPEN CROP MODAL */
+    const reader = new FileReader()
+
+    reader.onload = function (e) {
+
+        cropImage.src = e.target.result
+
+        cropModal.classList.add("active")
+
+        document.body.style.overflow = "hidden"
+
+        /* Init cropper after image loads */
+        cropImage.onload = function () {
+
+            if (cropper) cropper.destroy()
+
+            cropper = new Cropper(cropImage, {
+                aspectRatio: 1,
+                viewMode: 1,
+                dragMode: "move",
+                autoCropArea: 0.85,
+                cropBoxResizable: true,
+                cropBoxMovable: true,
+                background: false,
+                responsive: true,
+                guides: false,
+                center: true,
+                highlight: false,
+            })
+
+        }
+
+    }
+
+    reader.readAsDataURL(file)
 
 })
+
+/* --- Confirm crop --- */
+
+cropConfirm.addEventListener("click", function () {
+
+    if (!cropper) return
+
+    const canvas = cropper.getCroppedCanvas({
+        width: 512,
+        height: 512,
+        imageSmoothingEnabled: true,
+        imageSmoothingQuality: "high",
+    })
+
+    /* Update preview */
+    const imgEl = document.querySelector(".profile-img-main")
+    imgEl.style.backgroundImage = `url(${canvas.toDataURL()})`
+    imgEl.classList.remove("profile-initials")
+
+    /* Hide initials */
+    const initSpan = imgEl.querySelector(".initials-text")
+    if (initSpan) initSpan.style.display = "none"
+
+    /* Store blob for form submission */
+    canvas.toBlob(function (blob) {
+        croppedBlob = blob
+    }, "image/jpeg", 0.92)
+
+    closeCropModal()
+
+})
+
+/* --- Cancel crop --- */
+
+cropCancel.addEventListener("click", closeCropModal)
+cropCancelBtn.addEventListener("click", closeCropModal)
+
+cropModal.addEventListener("click", function (e) {
+    if (e.target === cropModal) closeCropModal()
+})
+
+function closeCropModal() {
+    cropModal.classList.remove("active")
+    document.body.style.overflow = ""
+    if (cropper) {
+        cropper.destroy()
+        cropper = null
+    }
+    profileUpload.value = ""
+}
+
+/* --- Error helpers --- */
+
+function showUploadError(msg) {
+    clearUploadError()
+    const el = document.createElement("span")
+    el.className = "upload-error-text"
+    el.textContent = msg
+    document.querySelector(".profile-img-section").appendChild(el)
+}
+
+function clearUploadError() {
+    const existing = document.querySelector(".upload-error-text")
+    if (existing) existing.remove()
+}
 
 
 /* =========================
@@ -381,6 +540,44 @@ nameError.textContent =
 "Please enter a valid name"
 
 nameInput.focus()
+return
+
+}
+
+/* =========================
+   INJECT CROPPED BLOB
+========================= */
+
+if (croppedBlob) {
+
+    e.preventDefault()
+
+    const formData = new FormData(form)
+
+    /* Remove original file input */
+    formData.delete("profilePhoto")
+
+    /* Append cropped blob */
+    formData.append(
+        "profilePhoto",
+        croppedBlob,
+        "profile-cropped.jpg"
+    )
+
+    fetch(form.action, {
+        method: "POST",
+        body: formData,
+    })
+    .then(res => {
+        if (res.redirected) {
+            window.location.href = res.url
+        } else {
+            window.location.href = "/profile"
+        }
+    })
+    .catch(() => {
+        window.location.href = "/edit-profile"
+    })
 
 }
 

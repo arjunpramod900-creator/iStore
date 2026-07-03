@@ -230,7 +230,7 @@ export const verifyRazorpayPayment = async (req, res) => {
 export const applyCoupon = async (req, res) => {
   try {
     const userId         = req.session.userId;
-    const { couponCode } = req.body;
+    const { couponCode, deliveryType } = req.body;
 
     const cart = await Cart.findOne({ userId })
       .populate("items.productId")
@@ -241,7 +241,7 @@ export const applyCoupon = async (req, res) => {
       return res.json({ success: false, message: "Cart is empty" });
     }
 
-    const totals = await calculateCheckoutTotals({ cartItems: cart.items, couponCode, userId });
+    const totals = await calculateCheckoutTotals({ cartItems: cart.items, couponCode, userId, deliveryType });
 
     if (!totals.coupon) {
       return res.json({ success: false, message: totals.couponError || "Invalid coupon" });
@@ -275,6 +275,7 @@ export const applyCoupon = async (req, res) => {
 export const removeCoupon = async (req, res) => {
   try {
     const userId = req.session.userId;
+    const { deliveryType } = req.body;
     delete req.session.appliedCoupon;
 
     const cart = await Cart.findOne({ userId })
@@ -286,7 +287,7 @@ export const removeCoupon = async (req, res) => {
       return res.json({ success: false, message: "Cart is empty" });
     }
 
-    const totals = await calculateCheckoutTotals({ cartItems: cart.items, userId, couponCode: null });
+    const totals = await calculateCheckoutTotals({ cartItems: cart.items, userId, couponCode: null, deliveryType });
 
     return res.json({
       success:        true,

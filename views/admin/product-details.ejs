@@ -138,41 +138,6 @@
                 </div>
             </div>
 
-            <div class="analytic-card">
-                <div class="analytic-icon-wrapper">
-                    <i data-lucide="shopping-bag" size="20"></i>
-                </div>
-                <div class="analytic-info">
-                    <span class="analytic-label">Total Sales</span>
-                    <span class="analytic-value"><%= typeof totalSales !== 'undefined' ? totalSales : 0 %></span>
-                    <span class="analytic-subtext">Orders</span>
-                </div>
-            </div>
-
-            <div class="analytic-card">
-                <div class="analytic-icon-wrapper">
-                    <i data-lucide="refresh-cw" size="20"></i>
-                </div>
-                <div class="analytic-info">
-                    <span class="analytic-label">Total Returns</span>
-                    <span class="analytic-value"><%= typeof totalReturns !== 'undefined' ? totalReturns : 0 %></span>
-                    <span class="analytic-subtext">Returned</span>
-                </div>
-            </div>
-
-            <div class="analytic-card">
-                <div class="analytic-icon-wrapper">
-                    <i data-lucide="banknote" size="20"></i>
-                </div>
-                <div class="analytic-info">
-                    <span class="analytic-label">Revenue</span>
-                    <span class="analytic-value">
-                        ₹<%= typeof totalRevenue !== 'undefined' ? totalRevenue.toLocaleString() : '18,245,600' %>
-                    </span>
-                    <span class="analytic-subtext">Total Revenue</span>
-                </div>
-            </div>
-
         </section>
 
         <!-- =========================================
@@ -599,12 +564,6 @@
                             <div class="preview-price" id="previewPrice">₹1,19,900</div>
                         </div>
 
-                        <div class="preview-analytics">
-                            <div><span>Sales</span><strong>482</strong></div>
-                            <div><span>Returns</span><strong>12</strong></div>
-                            <div><span>Health</span><strong>98%</strong></div>
-                        </div>
-
                     </div>
 
                 </div>
@@ -624,26 +583,24 @@
              IMAGE CROPPER MODAL
         ========================================== -->
 
-        <div class="cropper-overlay" id="cropperOverlay">
-
-            <div class="cropper-modal">
-
-                <div class="cropper-header">
+        <div class="crop-overlay" id="cropperOverlay">
+            <div class="crop-dialog">
+                <div class="crop-dialog-header">
                     <h3>Crop Image</h3>
-                    <button type="button" id="closeCropperBtn" class="cropper-close-btn">×</button>
+                    <button type="button" class="modal-close-btn" id="closeCropperBtn">
+                        <i data-lucide="x" size="16"></i>
+                    </button>
                 </div>
-
-                <div class="cropper-body">
-                    <img id="cropperImage">
+                <div class="crop-dialog-body">
+                    <div class="crop-image-wrap">
+                        <img id="cropperImage" alt="Crop preview">
+                    </div>
                 </div>
-
-                <div class="cropper-footer">
-                    <button type="button" id="cancelCropBtn" class="btn-detail">Cancel</button>
-                    <button type="button" id="cropImageBtn" class="btn-detail btn-edit">Crop & Add</button>
+                <div class="crop-dialog-footer">
+                    <button type="button" class="modal-btn-cancel" id="cancelCropBtn">Cancel</button>
+                    <button type="button" class="modal-btn-save" id="cropImageBtn">Crop & Add</button>
                 </div>
-
             </div>
-
         </div>
 
 
@@ -1077,16 +1034,49 @@
         let cropper;
         let pendingFiles = [];
 
+        const ALLOWED_IMG_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+        const MAX_IMG_SIZE = 5 * 1024 * 1024;
+        const errImages = document.getElementById("err-images");
+
         imageInput.addEventListener("change", async (e) => {
             pendingFiles = Array.from(e.target.files);
             if (!pendingFiles.length) return;
+            
+            const currentTotal = (existingImages?.length || 0) + (selectedFiles?.length || 0);
+            if (currentTotal + pendingFiles.length > 10) {
+                errImages.textContent = `Maximum of 10 images allowed. You can only add ${10 - currentTotal} more.`;
+                errImages.classList.add("visible");
+                imageInput.value = "";
+                return;
+            }
+
+            const validFiles = [];
+            for (let file of pendingFiles) {
+                if (!ALLOWED_IMG_TYPES.includes(file.type)) {
+                    errImages.textContent = "Invalid file type. Only JPG, PNG or WebP allowed.";
+                    errImages.classList.add("visible");
+                    imageInput.value = "";
+                    return;
+                }
+                if (file.size > MAX_IMG_SIZE) {
+                    errImages.textContent = "File is too large. Maximum size is 5 MB.";
+                    errImages.classList.add("visible");
+                    imageInput.value = "";
+                    return;
+                }
+                validFiles.push(file);
+            }
+            
+            errImages.textContent = "";
+            errImages.classList.remove("visible");
+            pendingFiles = validFiles;
             openCropper(pendingFiles[0]);
         });
 
         function openCropper(file) {
             const reader = new FileReader();
             reader.onload = function(event) {
-                cropperOverlay.classList.add("active");
+                cropperOverlay.classList.add("open");
                 cropperImage.src = event.target.result;
                 setTimeout(() => {
                     if (cropper) cropper.destroy();
@@ -1115,7 +1105,7 @@
                 const croppedFile = new File([blob], `variant-${Date.now()}.jpg`, { type: "image/jpeg" });
                 selectedFiles.push(croppedFile);
                 renderImages();
-                cropperOverlay.classList.remove("active");
+                cropperOverlay.classList.remove("open");
                 cropper.destroy();
                 cropper = null;
                 pendingFiles.shift();
@@ -1124,7 +1114,7 @@
         });
 
         function closeCropper() {
-            cropperOverlay.classList.remove("active");
+            cropperOverlay.classList.remove("open");
             if (cropper) { cropper.destroy(); cropper = null; }
             imageInput.value = "";
         }
@@ -1290,16 +1280,14 @@ function validateColor() {
     if (val.length < 3)
         return [el, "SKU must be at least 3 characters"];
 
-    if (val.length > 50)
-        return [el, "SKU cannot exceed 50 characters"];
+    if (val.length > 40)
+        return [el, "SKU cannot exceed 40 characters"];
 
-    // First 3 characters must be alphabets
-    if (!/^[A-Z]{3}/.test(val))
-        return [el, "First 3 characters must be letters"];
+    if (!/^[A-Za-z]/.test(val))
+        return [el, "Must start with a letter"];
 
-    // Entire SKU can contain only uppercase letters, numbers and hyphens
-    if (!/^[A-Z0-9-]+$/.test(val))
-        return [el, "Only uppercase letters, numbers and hyphens are allowed"];
+    if (!/^[A-Za-z0-9\-_]+$/.test(val))
+        return [el, "Only letters, numbers, hyphens and underscores are allowed"];
 
     return [el, null];
 }
@@ -1343,6 +1331,10 @@ function validateColor() {
                         ? "Please upload at least one variant image"
                         : "A variant must have at least one image"
                 );
+                return false;
+            }
+            if (total > 10) {
+                showImageError("Maximum of 10 variant images allowed");
                 return false;
             }
             clearImageError();
@@ -1476,10 +1468,10 @@ function validateColor() {
                 }
 
             } catch (error) {
-                console.error(error);
+                console.error("Variant Save Error:", error);
                 document.getElementById("saveVariantBtn").disabled = false;
                 document.getElementById("saveVariantBtn").style.opacity = "";
-                Toast.fire({ icon: "error", title: "Something went wrong" });
+                Toast.fire({ icon: "error", title: error.message || "An unexpected error occurred" });
             }
 
         });

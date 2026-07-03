@@ -237,18 +237,27 @@ const updateCartUI = (
   }
 
 
-      const offerDiscountElement =
-    document.getElementById(
-        "offerDiscountAmount"
-    );
+      const offerDiscountElement = document.getElementById("offerDiscountAmount");
+      const offerDiscountRow = document.getElementById("offerDiscountRow");
+      const cartPostDiscount = document.getElementById("cartPostDiscount");
+      const cartPostDiscountRow = document.getElementById("cartPostDiscountRow");
 
-    if(
-        offerDiscountElement &&
-        typeof data.offerDiscount !== "undefined"
-    ){
-        offerDiscountElement.innerText =
-        `- ₹${data.offerDiscount.toLocaleString()}`;
-    }
+      if (typeof data.offerDiscount !== "undefined") {
+        if (data.offerDiscount > 0) {
+            if (offerDiscountRow) offerDiscountRow.style.display = "flex";
+            if (cartPostDiscountRow) cartPostDiscountRow.style.display = "flex";
+            
+            if (offerDiscountElement) {
+                offerDiscountElement.innerText = `- ₹${data.offerDiscount.toLocaleString()}`;
+            }
+            if (cartPostDiscount && typeof data.cartSubtotal !== "undefined") {
+                cartPostDiscount.innerText = `₹${(data.cartSubtotal - data.offerDiscount).toLocaleString()}`;
+            }
+        } else {
+            if (offerDiscountRow) offerDiscountRow.style.display = "none";
+            if (cartPostDiscountRow) cartPostDiscountRow.style.display = "none";
+        }
+      }
 
   /* =========================================
        TOTAL ITEMS
