@@ -33,7 +33,7 @@ const loadSignup = (req, res) => {
 };
 
 const loadLogin = (req, res) => {
-  res.render("user/login");
+  res.render("user/login", { error: req.query.error });
 };
 
 const loadForgotPassword = (req, res) => {

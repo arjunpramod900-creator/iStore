@@ -46,6 +46,7 @@ import {
   loadOrders,
   viewOrderDetails,
   updateOrderStatus,
+  updateItemStatus,
   handleReturnRequest,
   handleItemReturnRequest,
 } from "../../controllers/admin/adminOrderController.js";
@@ -418,6 +419,12 @@ router.patch(
   "/orders/:id/status",
   adminAuthMiddleware,
   updateOrderStatus
+);
+
+router.patch(
+  "/orders/:id/item/:itemId/status",
+  adminAuthMiddleware,
+  updateItemStatus
 );
 
 router.patch(

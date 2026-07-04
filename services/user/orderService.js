@@ -481,16 +481,7 @@ if (item.itemReturnStatus === "Rejected") {
 
     item.itemReturnReason = reason.trim();
 
-    /* Update order return status if needed */
-    const hasPendingRequest =
-        order.items.some(
-            i =>
-                i.itemReturnStatus === "Requested"
-        );
-
-    if (hasPendingRequest) {
-        order.returnStatus = "Requested";
-    }
+    /* (Intentionally NOT setting global order.returnStatus here to avoid locking the entire order in the admin UI) */
 
     await order.save();
 

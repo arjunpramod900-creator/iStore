@@ -224,7 +224,11 @@ export const updateOrderStatusService = async (
 
     for (const item of order.items) {
         if (!["Cancelled", "Returned"].includes(item.itemStatus)) {
-            item.itemStatus = status;
+            // Only push the item forward if it's a valid transition for that specific item
+            // (e.g. prevents downgrading a 'Shipped' item back to 'Processing')
+            if (transitions[item.itemStatus] && transitions[item.itemStatus].includes(status)) {
+                item.itemStatus = status;
+            }
         }
     }
 
@@ -239,6 +243,115 @@ export const updateOrderStatusService = async (
 
     await order.save();
 
+};
+
+/* ============================
+   UPDATE ITEM STATUS
+============================ */
+export const updateItemStatusService = async (
+    orderId,
+    itemId,
+    status
+) => {
+    const order = await Order.findById(orderId);
+    if (!order) throw new Error("Order not found");
+
+    const item = order.items.id(itemId);
+    if (!item) throw new Error("Item not found");
+
+    if (!allowedStatuses.includes(status)) {
+        throw new Error("Invalid status");
+    }
+
+    if (
+        order.paymentMethod === "RAZORPAY" &&
+        order.paymentStatus !== "Paid"
+    ) {
+        if (status !== "Cancelled") {
+            throw new Error("Cannot update item status until payment is completed.");
+        }
+    }
+
+    if (item.itemStatus === status) {
+        throw new Error(`Item already marked as ${status}`);
+    }
+
+    const transitions = {
+        Pending:          ["Processing", "Cancelled"],
+        Processing:       ["Shipped",    "Cancelled"],
+        Shipped:          ["Out for Delivery"],
+        "Out for Delivery": ["Delivered"],
+        Delivered:        [],
+        Cancelled:        [],
+        Returned:         [],
+    };
+
+    if (!transitions[item.itemStatus].includes(status)) {
+        throw new Error(`Cannot move item from ${item.itemStatus} to ${status}`);
+    }
+
+    if (status === "Cancelled") {
+        // Stock restoration
+        await Variant.findByIdAndUpdate(
+            item.variantId,
+            { $inc: { stock: item.quantity } }
+        );
+
+        // Refund logic
+        const { refundAmount } = await revalidateCouponOnMutation(order, item, "cancelled");
+
+        if (
+            ["RAZORPAY", "WALLET"].includes(order.paymentMethod) &&
+            order.paymentStatus === "Paid" &&
+            !item.isRefundProcessed
+        ) {
+            if (refundAmount > 0) {
+                await creditWallet({
+                    userId: order.userId,
+                    amount: refundAmount,
+                    transactionType: "AdminCancellationRefund",
+                    description: `Refund for admin-cancelled item "${item.productName}" in order ${order.orderId}`,
+                    orderId: order._id,
+                    transactionId: String(item._id),
+                });
+                
+                item.refundAmount = refundAmount;
+                order.refundAmount = (order.refundAmount || 0) + refundAmount;
+            }
+        }
+
+        item.isRefundProcessed = true;
+    }
+
+    item.itemStatus = status;
+
+    // Check if order status needs synchronization
+    const activeItems = order.items.filter(i => i.itemStatus !== "Cancelled" && i.itemStatus !== "Returned");
+    if (activeItems.length === 0) {
+        // If all items are Cancelled/Returned, order becomes Cancelled (or Returned)
+        const allReturned = order.items.every(i => i.itemStatus === "Returned" || i.itemStatus === "Cancelled");
+        const hasReturned = order.items.some(i => i.itemStatus === "Returned");
+        if (hasReturned && allReturned) {
+            order.orderStatus = "Returned";
+        } else {
+            order.orderStatus = "Cancelled";
+            if (order.paymentMethod === "COD") order.paymentStatus = "Cancelled";
+        }
+    } else {
+        // If all active items share the same status, sync the order status
+        const firstActiveStatus = activeItems[0].itemStatus;
+        const allSame = activeItems.every(i => i.itemStatus === firstActiveStatus);
+        
+        if (allSame) {
+            order.orderStatus = firstActiveStatus;
+            if (firstActiveStatus === "Delivered") {
+                order.deliveredDate = new Date();
+                if (order.paymentMethod === "COD") order.paymentStatus = "Paid";
+            }
+        }
+    }
+
+    await order.save();
 };
 
 /* ============================

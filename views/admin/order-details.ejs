@@ -399,11 +399,33 @@
             Return Rejected
         </span>
 
-    <% } else { %>
+    <% } else { 
+        /* Item is Active - Allow individual status update */
+        const itemStatus = item.itemStatus || "Pending";
+        const isItemUpdateLocked = ["Delivered", "Cancelled", "Returned"].includes(itemStatus) || isPaymentLocked || isReturnPending;
+    %>
 
-        <span class="aod-active-badge">
-            Active
-        </span>
+        <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-end;">
+            <select 
+                id="itemStatusSelect_<%= item._id %>" 
+                class="aod-status-select" 
+                style="padding: 4px 24px 4px 8px; font-size: 11px; height: 28px;"
+                <%= isItemUpdateLocked ? "disabled" : "" %>>
+                <option value="Pending"          <%= itemStatus === "Pending"          ? "selected" : "" %>>Pending</option>
+                <option value="Processing"       <%= itemStatus === "Processing"       ? "selected" : "" %>>Processing</option>
+                <option value="Shipped"          <%= itemStatus === "Shipped"          ? "selected" : "" %>>Shipped</option>
+                <option value="Out for Delivery" <%= itemStatus === "Out for Delivery" ? "selected" : "" %>>Out for Delivery</option>
+                <option value="Delivered"        <%= itemStatus === "Delivered"        ? "selected" : "" %>>Delivered</option>
+                <option value="Cancelled"        <%= itemStatus === "Cancelled"        ? "selected" : "" %>>Cancelled</option>
+            </select>
+            <button 
+                class="aod-update-btn" 
+                style="padding: 4px 12px; font-size: 10px; min-height: 24px;"
+                onclick="updateItemStatus('<%= item._id %>', this)"
+                <%= isItemUpdateLocked ? "disabled" : "" %>>
+                Update
+            </button>
+        </div>
 
     <% } %>
 
@@ -934,6 +956,56 @@
                 .catch(() => {
                     btn.disabled    = false;
                     btn.textContent = 'Update Status';
+                    Swal.fire({ icon: "error", title: "Network Error", text: "Could not reach the server." });
+                });
+            });
+        }
+
+        /* ── Individual Item Status Update ── */
+        function updateItemStatus(itemId, btn) {
+            const select = document.getElementById('itemStatusSelect_' + itemId);
+            const status = select.value;
+
+            Swal.fire({
+                title: 'Update Item Status?',
+                text: `Are you sure you want to change this item to ${status}?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#7A4E7C',
+                cancelButtonColor: '#6B7280',
+                confirmButtonText: 'Yes, update'
+            }).then((result) => {
+                if (!result.isConfirmed) return;
+
+                const origText = btn.textContent;
+                btn.disabled = true;
+                btn.textContent = 'Updating...';
+
+                fetch(`/admin/orders/<%= order._id %>/item/${itemId}/status`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            icon: "success",
+                            title: "Status Updated",
+                            text: data.message,
+                            confirmButtonColor: '#7A4E7C'
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        btn.disabled = false;
+                        btn.textContent = origText;
+                        Swal.fire({ icon: "error", title: "Update Failed", text: data.message });
+                    }
+                })
+                .catch(() => {
+                    btn.disabled = false;
+                    btn.textContent = origText;
                     Swal.fire({ icon: "error", title: "Network Error", text: "Could not reach the server." });
                 });
             });

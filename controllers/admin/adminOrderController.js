@@ -2,6 +2,7 @@ import {
   loadOrdersService,
   getOrderDetailsService,
   updateOrderStatusService,
+  updateItemStatusService,
   handleReturnRequestService,
   handleItemReturnRequestService,
 } from "../../services/admin/orderService.js";
@@ -106,6 +107,28 @@ async (req, res) => {
 
   }
 
+};
+/* ============================
+   UPDATE ITEM STATUS
+============================ */
+
+export const updateItemStatus = async (req, res) => {
+  try {
+    await updateItemStatusService(
+      req.params.id,
+      req.params.itemId,
+      req.body.status
+    );
+    res.json({
+      success: true,
+      message: "Item status updated successfully",
+    });
+  } catch (error) {
+    res.json({
+      success: false,
+      message: error.message,
+    });
+  }
 };
 /* ============================
    RETURN REQUEST

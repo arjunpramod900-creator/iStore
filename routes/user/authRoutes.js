@@ -87,10 +87,21 @@ router.get(
 
 router.get(
   "/auth/google/callback",
-  passport.authenticate("google", { failureRedirect: "/login" }),
-  (req, res) => {
-    req.session.userId = req.user._id;
-    res.redirect("/");
+  (req, res, next) => {
+    passport.authenticate("google", (err, user, info) => {
+      if (err) return next(err);
+      if (!user) {
+        if (info && info.message === "blocked") {
+          return res.redirect("/login?error=blocked");
+        }
+        return res.redirect("/login");
+      }
+      req.logIn(user, (err) => {
+        if (err) return next(err);
+        req.session.userId = user._id;
+        return res.redirect("/?login=success");
+      });
+    })(req, res, next);
   }
 );
 

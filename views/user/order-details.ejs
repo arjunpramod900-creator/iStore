@@ -342,7 +342,7 @@
                                         <% } %>
                                     </div>
 
-                                    <span class="od-item-stock od-item-stock--<%= (item.itemStatus || 'Active').toLowerCase() %>">
+                                    <span class="od-item-stock od-item-stock--<%= (item.itemStatus || 'Active').toLowerCase().replace(/\s+/g, '-') %>">
                                         <i data-lucide="<%=
                                             item.itemStatus === 'Cancelled' ? 'x-circle' :
                                             item.itemStatus === 'Returned'  ? 'rotate-ccw' :

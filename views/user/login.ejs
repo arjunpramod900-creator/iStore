@@ -368,5 +368,18 @@ loginForm.addEventListener("submit", async (e) => {
 <script src="/js/animations.js"></script>
 <script src="/js/tilt.js"></script>
 
+<% if (typeof error !== 'undefined' && error === 'blocked') { %>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    Swal.fire({
+      icon: "warning",
+      title: "Account Blocked",
+      text: "Your account has been blocked by admin",
+      confirmButtonColor: '#7A4E7C'
+    });
+  });
+</script>
+<% } %>
+
 </body>
 </html>

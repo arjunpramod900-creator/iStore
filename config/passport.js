@@ -34,6 +34,11 @@ passport.use(
           });
         }
 
+        /* PREVENT LOGIN IF BLOCKED */
+        if (user.isBlocked) {
+          return done(null, false, { message: "blocked" });
+        }
+
         /* LOGIN EXISTING USER */
 
         return done(null, user);

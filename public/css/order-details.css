@@ -799,6 +799,25 @@ body {
     color:#EA580C;
 }
 
+.od-item-stock--pending{
+    color:#D97706; /* Amber */
+}
+
+.od-item-stock--processing{
+    color:#2563EB; /* Blue */
+}
+
+.od-item-stock--shipped{
+    color:#7C3AED; /* Purple */
+}
+
+.od-item-stock--out-for-delivery{
+    color:#0891B2; /* Cyan */
+}
+
+.od-item-stock--delivered{
+    color:#059669; /* Emerald */
+}
 
 /* ============================================================
    REFUND SUMMARY
