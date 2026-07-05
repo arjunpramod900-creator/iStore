@@ -99,7 +99,7 @@
 
         /* Items to show in summary */
         const summaryItems = isRetry
-            ? (order.items || []).filter(i => i.itemStatus !== "Cancelled")
+            ? (order.items || []).filter(i => i.itemStatus !== ORDER_STATUS.CANCELLED)
             : (cart && cart.items ? cart.items : []);
 
         /* Order ID for retry endpoint */

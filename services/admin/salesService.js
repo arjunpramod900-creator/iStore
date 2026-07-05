@@ -1,4 +1,6 @@
 import Order from "../../models/Order.js";
+import { ORDER_STATUS, PAYMENT_STATUS, RETURN_STATUS } from "../../constants/orderEnums.js";
+
 
 export const getSalesReportService = async (filterType, startDate, endDate) => {
 
@@ -93,12 +95,12 @@ export const getSalesReportService = async (filterType, startDate, endDate) => {
   ───────────────────────────────────────────────────── */
 
   const totalSalesCount = await Order.countDocuments({
-    orderStatus: "Delivered",
+    orderStatus: ORDER_STATUS.DELIVERED,
     createdAt:   dateRange,
   });
 
   const totalReturnedCount = await Order.countDocuments({
-    orderStatus: "Returned",
+    orderStatus: ORDER_STATUS.RETURNED,
     createdAt:   dateRange,
   });
 
@@ -108,7 +110,7 @@ export const getSalesReportService = async (filterType, startDate, endDate) => {
   const deliveredSummary = await Order.aggregate([
     {
       $match: {
-        orderStatus: { $in: ["Delivered", "Returned"] },
+        orderStatus: { $in: [ORDER_STATUS.DELIVERED, ORDER_STATUS.RETURNED] },
         createdAt:   dateRange,
       },
     },
@@ -125,7 +127,7 @@ export const getSalesReportService = async (filterType, startDate, endDate) => {
         deliveredRevenue: {
           $sum: {
             $cond: [
-              { $eq: ["$orderStatus", "Delivered"] },
+              { $eq: ["$orderStatus", ORDER_STATUS.DELIVERED] },
               { $ifNull: ["$pricingSnapshot.originalFinalAmount", "$finalAmount"] },
               0,
             ],
@@ -135,7 +137,7 @@ export const getSalesReportService = async (filterType, startDate, endDate) => {
         totalOfferDiscount: {
           $sum: {
             $cond: [
-              { $eq: ["$orderStatus", "Delivered"] },
+              { $eq: ["$orderStatus", ORDER_STATUS.DELIVERED] },
               { $ifNull: ["$pricingSnapshot.originalOfferDiscount", "$offerDiscount"] },
               0,
             ],
@@ -144,7 +146,7 @@ export const getSalesReportService = async (filterType, startDate, endDate) => {
         totalCouponDiscount: {
           $sum: {
             $cond: [
-              { $eq: ["$orderStatus", "Delivered"] },
+              { $eq: ["$orderStatus", ORDER_STATUS.DELIVERED] },
               { $ifNull: ["$pricingSnapshot.originalCouponDiscount", "$couponDiscount"] },
               0,
             ],
@@ -157,7 +159,7 @@ export const getSalesReportService = async (filterType, startDate, endDate) => {
   const refundSummary = await Order.aggregate([
     {
       $match: {
-        orderStatus: "Returned",
+        orderStatus: ORDER_STATUS.RETURNED,
         createdAt:   dateRange,
       },
     },
@@ -202,7 +204,7 @@ export const getSalesReportService = async (filterType, startDate, endDate) => {
   const rawGrossChart = await Order.aggregate([
     {
       $match: {
-        orderStatus: "Delivered",
+        orderStatus: ORDER_STATUS.DELIVERED,
         createdAt:   dateRange,
       },
     },
@@ -227,7 +229,7 @@ export const getSalesReportService = async (filterType, startDate, endDate) => {
   const rawRefundChart = await Order.aggregate([
     {
       $match: {
-        orderStatus: "Returned",
+        orderStatus: ORDER_STATUS.RETURNED,
         // Match orders returned within the range (use returnApprovedAt if set, else createdAt)
         $or: [
           { returnApprovedAt: dateRange },
@@ -275,7 +277,7 @@ export const getSalesReportService = async (filterType, startDate, endDate) => {
   const topProducts = await Order.aggregate([
     {
       $match: {
-        orderStatus: "Delivered",
+        orderStatus: ORDER_STATUS.DELIVERED,
         createdAt:   dateRange,
       },
     },
@@ -308,7 +310,7 @@ export const getSalesReportService = async (filterType, startDate, endDate) => {
   const topCategoriesRaw = await Order.aggregate([
     {
       $match: {
-        orderStatus: { $in: ["Delivered", "Returned"] },
+        orderStatus: { $in: [ORDER_STATUS.DELIVERED, ORDER_STATUS.RETURNED] },
         createdAt:   dateRange,
       },
     },
@@ -380,7 +382,7 @@ export const getSalesReportService = async (filterType, startDate, endDate) => {
   const paymentStatsRaw = await Order.aggregate([
     {
       $match: {
-        orderStatus: { $in: ["Delivered", "Returned"] },
+        orderStatus: { $in: [ORDER_STATUS.DELIVERED, ORDER_STATUS.RETURNED] },
         createdAt:   dateRange,
       },
     },

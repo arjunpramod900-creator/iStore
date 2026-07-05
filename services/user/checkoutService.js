@@ -10,6 +10,8 @@ import { calculateCheckoutTotals } from "../shared/pricingService.js";
 import { debitWallet, creditWallet } from "../shared/walletService.js";
 import { createRazorpayOrder, verifyRazorpaySignature } from "./razorpayService.js";
 import { calculateItemOffer } from "../shared/offerService.js";
+import { ORDER_STATUS, PAYMENT_STATUS, RETURN_STATUS } from "../../constants/orderEnums.js";
+
 
 const PAYMENT_EXPIRY_MS = 30 * 60 * 1000; // 30 minutes
 const MAX_RETRY_COUNT = 5;
@@ -436,8 +438,8 @@ export const restoreStockForExpiredOrder = async (order) => {
            because stock has already been restored
         */
         if (
-            item.itemStatus === "Cancelled" ||
-            item.itemStatus === "Returned"
+            item.itemStatus === ORDER_STATUS.CANCELLED ||
+            item.itemStatus === ORDER_STATUS.RETURNED
         ) {
             continue;
         }
@@ -460,7 +462,7 @@ export const restoreStockForExpiredOrder = async (order) => {
 
         });
 
-        item.itemStatus = "Cancelled";
+        item.itemStatus = ORDER_STATUS.CANCELLED;
 
         item.cancelReason =
             item.cancelReason ||
@@ -480,13 +482,13 @@ export const restoreStockForExpiredOrder = async (order) => {
 
     }
 
-    order.orderStatus = "Cancelled";
+    order.orderStatus = ORDER_STATUS.CANCELLED;
 
     /*
        Failed because payment never completed.
        Do not mark Refunded.
     */
-    order.paymentStatus = "Failed";
+    order.paymentStatus = PAYMENT_STATUS.FAILED;
 
     order.cancelReason =
         order.cancelReason ||
@@ -597,7 +599,7 @@ export const placeOrderCODService = async (
         applyProportionalCoupon(orderItems, totals.subtotal, totals.couponDiscount);
 
         orderItems.forEach(item => {
-            item.itemStatus = "Pending";
+            item.itemStatus = ORDER_STATUS.PENDING;
         });
 
         const order = await Order.create({
@@ -619,8 +621,8 @@ export const placeOrderCODService = async (
             },
 
             paymentMethod: "COD",
-            paymentStatus: "Pending",
-            orderStatus:   "Pending",
+            paymentStatus: PAYMENT_STATUS.PENDING,
+            orderStatus: ORDER_STATUS.PENDING,
 
             subtotal:       totals.subtotal,        // post-offer, pre-coupon
             offerDiscount:  totals.offerDiscount,
@@ -812,7 +814,7 @@ export const placeOrderWalletService = async (
         applyProportionalCoupon(orderItems, totals.subtotal, totals.couponDiscount);
 
         orderItems.forEach(item => {
-            item.itemStatus = "Pending";
+            item.itemStatus = ORDER_STATUS.PENDING;
         });
 
         const order = await Order.create({
@@ -834,8 +836,8 @@ export const placeOrderWalletService = async (
             },
 
             paymentMethod:  "WALLET",
-            paymentStatus:  "Paid",
-            orderStatus:    "Pending",
+            paymentStatus: PAYMENT_STATUS.PAID,
+            orderStatus: ORDER_STATUS.PENDING,
 
             subtotal:       totals.subtotal,
             offerDiscount:  totals.offerDiscount,
@@ -1064,7 +1066,7 @@ export const createRazorpayCheckoutService = async (
         applyProportionalCoupon(orderItems, totals.subtotal, totals.couponDiscount);
 
         orderItems.forEach(item => {
-            item.itemStatus = "Pending";
+            item.itemStatus = ORDER_STATUS.PENDING;
         });
 
         const order = await Order.create({
@@ -1086,8 +1088,8 @@ export const createRazorpayCheckoutService = async (
             },
 
             paymentMethod: "RAZORPAY",
-            paymentStatus: "Pending",
-            orderStatus:   "Pending",
+            paymentStatus: PAYMENT_STATUS.PENDING,
+            orderStatus: ORDER_STATUS.PENDING,
 
             razorpayOrderId: razorpayResponse.razorpayOrder.id,
 
@@ -1192,9 +1194,9 @@ if (!isValid) {
         razorpayOrderId,
     });
 
-    if (order && order.paymentStatus !== "Paid") {
+    if (order && order.paymentStatus !== PAYMENT_STATUS.PAID) {
 
-        order.paymentStatus = "Failed";
+        order.paymentStatus = PAYMENT_STATUS.FAILED;
 
         await order.save();
 
@@ -1223,7 +1225,7 @@ if (!isValid) {
        Already verified (idempotency)
     ---------------------------------------- */
     if (
-        order.paymentStatus === "Paid" &&
+        order.paymentStatus === PAYMENT_STATUS.PAID &&
         order.razorpayPaymentId === razorpayPaymentId
     ) {
         return {
@@ -1234,7 +1236,7 @@ if (!isValid) {
 
     /* Prevent second payment on already-paid order */
     if (
-        order.paymentStatus === "Paid"
+        order.paymentStatus === PAYMENT_STATUS.PAID
     ) {
         return {
             success: false,
@@ -1285,7 +1287,7 @@ if (!isValid) {
     ---------------------------------------- */
     order.paymentMethod = "RAZORPAY";
 
-    order.paymentStatus = "Paid";
+    order.paymentStatus = PAYMENT_STATUS.PAID;
 
     order.paymentId = razorpayPaymentId;
 
@@ -1293,17 +1295,17 @@ if (!isValid) {
 
     order.razorpaySignature = razorpaySignature;
 
-    order.orderStatus = "Pending";
+    order.orderStatus = ORDER_STATUS.PENDING;
 
     order.paymentExpiresAt = null;
 
     order.items.forEach(item => {
 
         if (
-            item.itemStatus !== "Cancelled" &&
-            item.itemStatus !== "Returned"
+            item.itemStatus !== ORDER_STATUS.CANCELLED &&
+            item.itemStatus !== ORDER_STATUS.RETURNED
         ) {
-            item.itemStatus = "Pending";
+            item.itemStatus = ORDER_STATUS.PENDING;
         }
 
     });
@@ -1351,7 +1353,7 @@ export const loadRetryCheckoutService = async (userId, orderId) => {
         return { success: false, message: "Only Razorpay orders can be retried here" };
     }
 
-    if (order.paymentStatus === "Paid" || order.isStockRestored === true) {
+    if (order.paymentStatus === PAYMENT_STATUS.PAID || order.isStockRestored === true) {
         return { success: false, message: "This order cannot be retried" };
     }
 
@@ -1443,7 +1445,7 @@ export const retryOrderPaymentService = async ({
     }
 
     /* Block if already paid or stock restored */
-    if (order.paymentStatus === "Paid" || order.isStockRestored) {
+    if (order.paymentStatus === PAYMENT_STATUS.PAID || order.isStockRestored) {
         return {
             success: false,
             message: "This order cannot be retried",
@@ -1538,10 +1540,10 @@ export const retryOrderPaymentService = async ({
     order.items.forEach(item => {
 
         if (
-            item.itemStatus !== "Cancelled" &&
-            item.itemStatus !== "Returned"
+            item.itemStatus !== ORDER_STATUS.CANCELLED &&
+            item.itemStatus !== ORDER_STATUS.RETURNED
         ) {
-            item.itemStatus = "Pending";
+            item.itemStatus = ORDER_STATUS.PENDING;
         }
 
     });
@@ -1598,9 +1600,9 @@ export const retryOrderPaymentService = async ({
 
         order.paymentMethod = "COD";
 
-        order.paymentStatus = "Pending";
+        order.paymentStatus = PAYMENT_STATUS.PENDING;
 
-        order.orderStatus = "Pending";
+        order.orderStatus = ORDER_STATUS.PENDING;
 
         order.walletAmountUsed = 0;
 
@@ -1649,9 +1651,9 @@ export const retryOrderPaymentService = async ({
 
         order.paymentMethod = "WALLET";
 
-        order.paymentStatus = "Paid";
+        order.paymentStatus = PAYMENT_STATUS.PAID;
 
-        order.orderStatus = "Pending";
+        order.orderStatus = ORDER_STATUS.PENDING;
 
         order.walletAmountUsed = payAmount;
 
@@ -1696,7 +1698,7 @@ export const retryOrderPaymentService = async ({
 
         order.paymentMethod = "RAZORPAY";
 
-        order.paymentStatus = "Pending";
+        order.paymentStatus = PAYMENT_STATUS.PENDING;
 
         order.walletAmountUsed = 0;
 
@@ -1761,7 +1763,7 @@ export const retryRazorpayPaymentService = async (
     }
 
     /* Block if already paid or stock restored */
-    if (order.paymentStatus === "Paid" || order.isStockRestored) {
+    if (order.paymentStatus === PAYMENT_STATUS.PAID || order.isStockRestored) {
         return {
             success: false,
             message: "This order cannot be retried",
@@ -1816,7 +1818,7 @@ export const retryRazorpayPaymentService = async (
     /* Reset old payment info */
     order.paymentMethod = "RAZORPAY";
 
-    order.paymentStatus = "Pending";
+    order.paymentStatus = PAYMENT_STATUS.PENDING;
 
     order.paymentId = null;
 
@@ -1839,10 +1841,10 @@ export const retryRazorpayPaymentService = async (
     order.items.forEach(item => {
 
         if (
-            item.itemStatus !== "Cancelled" &&
-            item.itemStatus !== "Returned"
+            item.itemStatus !== ORDER_STATUS.CANCELLED &&
+            item.itemStatus !== ORDER_STATUS.RETURNED
         ) {
-            item.itemStatus = "Pending";
+            item.itemStatus = ORDER_STATUS.PENDING;
         }
 
     });
@@ -1881,11 +1883,11 @@ export const markPaymentFailedService = async (
     }
 
     /* Don't touch successful orders */
-    if (order.paymentStatus === "Paid") {
+    if (order.paymentStatus === PAYMENT_STATUS.PAID) {
         return;
     }
 
-    order.paymentStatus = "Failed";
+    order.paymentStatus = PAYMENT_STATUS.FAILED;
 
     await order.save();
 

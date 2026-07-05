@@ -15,6 +15,8 @@ import {
 
 import PDFDocument from "pdfkit";
 import Order from "../../models/Order.js";
+import { ORDER_STATUS, PAYMENT_STATUS, RETURN_STATUS } from "../../constants/orderEnums.js";
+
 
 /* =========================================
    LOAD ORDERS PAGE
@@ -284,7 +286,7 @@ export const loadOrderFailurePage = async (req, res) => {
     const order = response.order;
 
     /* REFACTOR: Allow both "Failed" and "Pending" orders to view this page */
-    if (order.paymentStatus === "Paid") {
+    if (order.paymentStatus === PAYMENT_STATUS.PAID) {
       return res.redirect(`/orders/${orderId}`);
     }
 
@@ -333,7 +335,7 @@ export const downloadInvoice = async (req, res) => {
     const itemsHeaderH  = 70;
     const itemRowH      = 45;
     const itemsH        = order.items.length * itemRowH + 20;
-    const hasActiveItems = order.items.some(i => i.itemStatus !== "Cancelled" && i.itemStatus !== "Returned" && i.itemReturnStatus !== "Approved");
+    const hasActiveItems = order.items.some(i => i.itemStatus !== ORDER_STATUS.CANCELLED && i.itemStatus !== ORDER_STATUS.RETURNED && i.itemReturnStatus !== RETURN_STATUS.APPROVED);
     
     const isRevised = (order.finalAmount < (order.pricingSnapshot?.originalFinalAmount || (order.finalAmount + refundAmount))) && hasActiveItems;
 
@@ -598,9 +600,9 @@ export const downloadInvoice = async (req, res) => {
     /* ── REVISED SUMMARY (if applicable) ── */
     if (isRevised) {
       const activeItems = order.items.filter(i =>
-          i.itemStatus !== "Cancelled" &&
-          i.itemStatus !== "Returned"  &&
-          i.itemReturnStatus !== "Approved"
+          i.itemStatus !== ORDER_STATUS.CANCELLED &&
+          i.itemStatus !== ORDER_STATUS.RETURNED  &&
+          i.itemReturnStatus !== RETURN_STATUS.APPROVED
       );
       
       if (activeItems.length > 0) {

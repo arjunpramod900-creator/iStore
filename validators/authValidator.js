@@ -40,6 +40,12 @@ export const signupSchema = z
       .min(6, "Password must be at least 6 characters")
       .max(50, "Password cannot exceed 50 characters"),
 
+    referralCode: z
+      .string()
+      .trim()
+      .optional()
+      .or(z.literal("")),
+
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {

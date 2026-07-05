@@ -179,13 +179,13 @@
         
         // Revised summary should show if the finalAmount is less than the original finalAmount AND there are still active items
         const originalFinalAmount = order.pricingSnapshot?.originalFinalAmount || (order.finalAmount + (order.refundAmount || 0));
-        const hasActiveItems      = items.some(i => i.itemStatus !== "Cancelled" && i.itemStatus !== "Returned" && i.itemReturnStatus !== "Approved");
+        const hasActiveItems      = items.some(i => i.itemStatus !== ORDER_STATUS.CANCELLED && i.itemStatus !== ORDER_STATUS.RETURNED && i.itemReturnStatus !== "Approved");
         const isRevised           = (order.finalAmount < originalFinalAmount) && hasActiveItems;
         
         const hasCancelledItems   = items.some(i => ["Cancelled", "Returned"].includes(i.itemStatus));
 
         // Determine if this is a legacy full-order refund where individual item refunds aren't tracked
-        const isLegacyRefund = (order.paymentStatus === "Refunded" || (order.isRefundProcessed && order.refundAmount > 0)) && 
+        const isLegacyRefund = (order.paymentStatus === PAYMENT_STATUS.REFUNDED || (order.isRefundProcessed && order.refundAmount > 0)) && 
                                items.every(i => !i.isRefundProcessed);
 
         /* Item totals are shown post-offer only (pre-coupon, pre-tax).
@@ -196,14 +196,14 @@
             paymentMethod === "RAZORPAY" && 
             paymentStatus !== "Paid" && 
             paymentStatus !== "Refunded" &&
-            order.orderStatus !== "Cancelled" &&
-            order.orderStatus !== "Returned" &&
+            order.orderStatus !== ORDER_STATUS.CANCELLED &&
+            order.orderStatus !== ORDER_STATUS.RETURNED &&
             !order.isStockRestored;
 
         const refundAmount = order.refundAmount || 0;
         const updatedTotal = total;
 
-        const deliveredItems = items.filter(i => i.itemStatus === "Delivered");
+        const deliveredItems = items.filter(i => i.itemStatus === ORDER_STATUS.DELIVERED);
         const allItemsReturnRequested = deliveredItems.length > 0 &&
             deliveredItems.every(i => ["Requested","Approved"].includes(i.itemReturnStatus));
 
@@ -230,11 +230,11 @@
                 <!-- TIMELINE -->
                 <section class="od-timeline-card">
                     <%
-                    const steps = ["Pending","Processing","Shipped","Out for Delivery","Delivered"];
+                    const steps = [ORDER_STATUS.PENDING, ORDER_STATUS.PROCESSING, ORDER_STATUS.SHIPPED, ORDER_STATUS.OUT_FOR_DELIVERY, ORDER_STATUS.DELIVERED];
                     const currentIndex = steps.indexOf(order.orderStatus);
                     %>
 
-                    <% if (order.orderStatus === "Cancelled") { %>
+                    <% if (order.orderStatus === ORDER_STATUS.CANCELLED) { %>
                         <div class="od-cancelled-banner">
                             <i data-lucide="x-circle" size="18"></i>
                             This order was cancelled
@@ -313,7 +313,7 @@
                                 const price = item.price * item.quantity;
                                 const itemReturnStatus = item.itemReturnStatus || "None";
                                 const canReturnItem =
-                                    item.itemStatus === "Delivered" &&
+                                    item.itemStatus === ORDER_STATUS.DELIVERED &&
                                     !["Requested","Approved"].includes(itemReturnStatus);
                             %>
 
@@ -351,17 +351,17 @@
                                         <%= item.itemStatus || "Active" %>
                                     </span>
 
-                                    <% if (itemReturnStatus === "Requested") { %>
+                                    <% if (itemReturnStatus === RETURN_STATUS.REQUESTED) { %>
                                     <span class="od-item-return-badge od-item-return-badge--requested">
                                         <i data-lucide="clock" size="11"></i>
                                         Return Pending Approval
                                     </span>
-                                    <% } else if (itemReturnStatus === "Approved") { %>
+                                    <% } else if (itemReturnStatus === RETURN_STATUS.APPROVED) { %>
                                     <span class="od-item-return-badge od-item-return-badge--approved">
                                         <i data-lucide="check-circle" size="11"></i>
                                         Return Approved
                                     </span>
-                                    <% } else if (itemReturnStatus === "Rejected") { %>
+                                    <% } else if (itemReturnStatus === RETURN_STATUS.REJECTED) { %>
                                     <span class="od-item-return-badge od-item-return-badge--rejected">
                                         <i data-lucide="x-circle" size="11"></i>
                                         Return Rejected
@@ -384,8 +384,8 @@
                                     %>
 
                                     <% if (
-                                        ["Pending","Processing"].includes(order.orderStatus) &&
-                                        item.itemStatus !== "Cancelled"
+                                        [ORDER_STATUS.PENDING, ORDER_STATUS.PROCESSING].includes(order.orderStatus) &&
+                                        item.itemStatus !== ORDER_STATUS.CANCELLED
                                     ) { %>
                                     <button
                                         class="od-item-cancel-btn"
@@ -406,7 +406,7 @@
                                     </button>
                                     <% } %>
 
-                                    <% if (item.itemStatus === "Cancelled") { %>
+                                    <% if (item.itemStatus === ORDER_STATUS.CANCELLED) { %>
                                     <span class="od-item-cancelled-label">Cancelled</span>
                                     <% } %>
                                 </div>
@@ -589,13 +589,13 @@
 
                             <% 
                                 const refundableItems = order.items.filter(i => 
-                                    i.itemStatus === "Cancelled" || 
-                                    i.itemStatus === "Returned" || 
-                                    i.itemReturnStatus === "Approved"
+                                    i.itemStatus === ORDER_STATUS.CANCELLED || 
+                                    i.itemStatus === ORDER_STATUS.RETURNED || 
+                                    i.itemReturnStatus === RETURN_STATUS.APPROVED
                                 );
                                 
                                 refundableItems.forEach(item => {
-                                    const isCancelled = item.itemStatus === "Cancelled";
+                                    const isCancelled = item.itemStatus === ORDER_STATUS.CANCELLED;
                                     const itemRefund  = item.refundAmount || 0;
                                     const hadRefund   = item.isRefundProcessed && itemRefund > 0;
                             %>
@@ -668,7 +668,7 @@
                     </div>
 
                     <!-- RETURN STATUS BADGES -->
-                    <% if (order.returnStatus === "Requested") { %>
+                    <% if (order.returnStatus === RETURN_STATUS.REQUESTED) { %>
                     <div class="od-info-card">
                         <div class="od-info-card-text">
                             <span class="od-item-return-badge od-item-return-badge--requested" style="font-size:13px;padding:8px 14px;">
@@ -679,7 +679,7 @@
                     </div>
                     <% } %>
 
-                    <% if (order.returnStatus === "Approved") { %>
+                    <% if (order.returnStatus === RETURN_STATUS.APPROVED) { %>
                     <div class="od-info-card">
                         <div class="od-info-card-text">
                             <span class="od-item-return-badge od-item-return-badge--approved" style="font-size:13px;padding:8px 14px;">
@@ -690,7 +690,7 @@
                     </div>
                     <% } %>
 
-                    <% if (order.returnStatus === "Rejected") { %>
+                    <% if (order.returnStatus === RETURN_STATUS.REJECTED) { %>
                     <div class="od-info-card">
                         <div class="od-info-card-text">
                             <span class="od-item-return-badge od-item-return-badge--rejected" style="font-size:13px;padding:8px 14px;">

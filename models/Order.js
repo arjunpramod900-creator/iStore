@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { ORDER_STATUS, PAYMENT_STATUS, RETURN_STATUS } from "../constants/orderEnums.js";
 
 const orderItemSchema = new mongoose.Schema({
   productId: {
@@ -68,16 +69,8 @@ const orderItemSchema = new mongoose.Schema({
 
   itemStatus: {
     type: String,
-    enum: [
-      "Pending",
-      "Processing",
-      "Shipped",
-      "Out for Delivery",
-      "Delivered",
-      "Cancelled",
-      "Returned",
-    ],
-    default: "Pending",
+    enum: Object.values(ORDER_STATUS),
+    default: ORDER_STATUS.PENDING,
   },
 
   cancelReason: {
@@ -87,8 +80,8 @@ const orderItemSchema = new mongoose.Schema({
 
   itemReturnStatus: {
     type: String,
-    enum: ["None", "Requested", "Approved", "Rejected"],
-    default: "None",
+    enum: Object.values(RETURN_STATUS),
+    default: RETURN_STATUS.NONE,
   },
 
   itemReturnReason: {
@@ -159,8 +152,8 @@ const orderSchema = new mongoose.Schema(
 
     paymentStatus: {
       type: String,
-      enum: ["Pending", "Paid", "Failed", "Refunded"],
-      default: "Pending",
+      enum: Object.values(PAYMENT_STATUS),
+      default: PAYMENT_STATUS.PENDING,
     },
 
     paymentId: {
@@ -258,16 +251,8 @@ const orderSchema = new mongoose.Schema(
 
     orderStatus: {
       type: String,
-      enum: [
-        "Pending",
-        "Processing",
-        "Shipped",
-        "Out for Delivery",
-        "Delivered",
-        "Cancelled",
-        "Returned",
-      ],
-      default: "Pending",
+      enum: Object.values(ORDER_STATUS),
+      default: ORDER_STATUS.PENDING,
     },
 
     cancelReason: {
@@ -282,8 +267,8 @@ const orderSchema = new mongoose.Schema(
 
     returnStatus: {
       type: String,
-      enum: ["None", "Requested", "Approved", "Rejected"],
-      default: "None",
+      enum: Object.values(RETURN_STATUS),
+      default: RETURN_STATUS.NONE,
     },
 
     returnApprovedAt: {

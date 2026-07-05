@@ -154,8 +154,8 @@
            Coupon and tax are displayed at the order level in the Pricing Summary. */
 
         const activeItems = items.filter(i =>
-            i.itemStatus !== "Cancelled" &&
-            i.itemStatus !== "Returned"  &&
+            i.itemStatus !== ORDER_STATUS.CANCELLED &&
+            i.itemStatus !== ORDER_STATUS.RETURNED  &&
             i.itemReturnStatus !== "Approved"
         );
         const subtotal       = order.pricingSnapshot?.originalSubtotal || order.subtotal || 0;
@@ -180,8 +180,8 @@
 
         /* ── Revised Order Summary ── */
         const hasActiveItems = items.some(i =>
-            i.itemStatus !== "Cancelled" &&
-            i.itemStatus !== "Returned"  &&
+            i.itemStatus !== ORDER_STATUS.CANCELLED &&
+            i.itemStatus !== ORDER_STATUS.RETURNED  &&
             i.itemReturnStatus !== "Approved"
         );
         const originalFinalAmount = order.pricingSnapshot?.originalFinalAmount || finalAmount;
@@ -213,16 +213,16 @@
 
         /* ── FIX 2: ret.exists only when status is actively "Requested" ── */
         const ret = {
-            exists:   order.returnStatus === "Requested",
-            approved: order.returnStatus === "Approved",
-            rejected: order.returnStatus === "Rejected",
+            exists:   order.returnStatus === RETURN_STATUS.REQUESTED,
+            approved: order.returnStatus === RETURN_STATUS.APPROVED,
+            rejected: order.returnStatus === RETURN_STATUS.REJECTED,
             reason:   order.returnReason,
             status:   order.returnStatus || "None"
         };
 
         /* ── FIX 4: lock status update if return is pending ── */
         const isLocked = ["Delivered","Cancelled","Returned"].includes(order.orderStatus);
-        const isReturnPending = order.returnStatus === "Requested";
+        const isReturnPending = order.returnStatus === RETURN_STATUS.REQUESTED;
         const isPaymentLocked =
     order.paymentMethod === "RAZORPAY" &&
     order.paymentStatus !== "Paid";
@@ -356,14 +356,14 @@
                                 </td>
 <td class="center" style="vertical-align: top; padding-top: 16px;">
 
-    <% if (item.itemStatus === "Cancelled") { %>
+    <% if (item.itemStatus === ORDER_STATUS.CANCELLED) { %>
 
         <span class="aod-return-status-badge aod-return-status-badge--rejected">
             <i data-lucide="x" size="10"></i>
             Cancelled
         </span>
 
-    <% } else if (item.itemReturnStatus === "Requested") { %>
+    <% } else if (item.itemReturnStatus === RETURN_STATUS.REQUESTED) { %>
 
         <div class="aod-item-return-actions">
 
@@ -385,14 +385,14 @@
 
         </div>
 
-    <% } else if (item.itemStatus === "Returned") { %>
+    <% } else if (item.itemStatus === ORDER_STATUS.RETURNED) { %>
 
         <span class="aod-return-status-badge aod-return-status-badge--approved">
             <i data-lucide="check" size="10"></i>
             Returned
         </span>
 
-    <% } else if (item.itemReturnStatus === "Rejected") { %>
+    <% } else if (item.itemReturnStatus === RETURN_STATUS.REJECTED) { %>
 
         <span class="aod-return-status-badge aod-return-status-badge--rejected">
             <i data-lucide="x" size="10"></i>
@@ -402,7 +402,7 @@
     <% } else { 
         /* Item is Active - Allow individual status update */
         const itemStatus = item.itemStatus || "Pending";
-        const isItemUpdateLocked = ["Delivered", "Cancelled", "Returned"].includes(itemStatus) || isPaymentLocked || isReturnPending;
+        const isItemUpdateLocked = [ORDER_STATUS.DELIVERED, ORDER_STATUS.CANCELLED, ORDER_STATUS.RETURNED].includes(itemStatus) || isPaymentLocked || isReturnPending;
     %>
 
         <div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-end;">
@@ -411,12 +411,12 @@
                 class="aod-status-select" 
                 style="padding: 4px 24px 4px 8px; font-size: 11px; height: 28px;"
                 <%= isItemUpdateLocked ? "disabled" : "" %>>
-                <option value="Pending"          <%= itemStatus === "Pending"          ? "selected" : "" %>>Pending</option>
-                <option value="Processing"       <%= itemStatus === "Processing"       ? "selected" : "" %>>Processing</option>
-                <option value="Shipped"          <%= itemStatus === "Shipped"          ? "selected" : "" %>>Shipped</option>
-                <option value="Out for Delivery" <%= itemStatus === "Out for Delivery" ? "selected" : "" %>>Out for Delivery</option>
-                <option value="Delivered"        <%= itemStatus === "Delivered"        ? "selected" : "" %>>Delivered</option>
-                <option value="Cancelled"        <%= itemStatus === "Cancelled"        ? "selected" : "" %>>Cancelled</option>
+                <option value="Pending"          <%= itemStatus === ORDER_STATUS.PENDING          ? "selected" : "" %>>Pending</option>
+                <option value="Processing"       <%= itemStatus === ORDER_STATUS.PROCESSING       ? "selected" : "" %>>Processing</option>
+                <option value="Shipped"          <%= itemStatus === ORDER_STATUS.SHIPPED          ? "selected" : "" %>>Shipped</option>
+                <option value="Out for Delivery" <%= itemStatus === ORDER_STATUS.OUT_FOR_DELIVERY ? "selected" : "" %>>Out for Delivery</option>
+                <option value="Delivered"        <%= itemStatus === ORDER_STATUS.DELIVERED        ? "selected" : "" %>>Delivered</option>
+                <option value="Cancelled"        <%= itemStatus === ORDER_STATUS.CANCELLED        ? "selected" : "" %>>Cancelled</option>
             </select>
             <button 
                 class="aod-update-btn" 
@@ -539,7 +539,7 @@
                 <!-- ── Return Section ──
                      Shows approve/reject only when status === "Requested".
                      Shows a read-only indicator when Approved or Rejected.
-                     Hidden entirely when returnStatus === "None".
+                     Hidden entirely when returnStatus === RETURN_STATUS.NONE.
                 ── -->
 
                 <!-- FIX 2 + FIX 3: Active return request — show action buttons -->
@@ -700,9 +700,9 @@
                 <%
                     // Collect all items that were cancelled or returned
                     const refundableItems = items.filter(i =>
-                        i.itemStatus === "Cancelled" ||
-                        i.itemStatus === "Returned"  ||
-                        i.itemReturnStatus === "Approved"
+                        i.itemStatus === ORDER_STATUS.CANCELLED ||
+                        i.itemStatus === ORDER_STATUS.RETURNED  ||
+                        i.itemReturnStatus === RETURN_STATUS.APPROVED
                     );
 
                     // Total refund across all items (from order-level accumulator)
@@ -712,7 +712,7 @@
                     const showRefundCard = refundableItems.length > 0;
                     
                     // Determine if this is a legacy full-order refund where individual item refunds aren't tracked
-                    const isLegacyRefund = (order.paymentStatus === "Refunded" || (order.isRefundProcessed && order.refundAmount > 0)) && 
+                    const isLegacyRefund = (order.paymentStatus === PAYMENT_STATUS.REFUNDED || (order.isRefundProcessed && order.refundAmount > 0)) && 
                                            items.every(i => !i.isRefundProcessed);
                 %>
                 <% if (showRefundCard) { %>
@@ -730,8 +730,8 @@
 
                         <!-- Per-item rows -->
                         <% refundableItems.forEach(item => {
-                            const isCancelled = item.itemStatus === "Cancelled";
-                            const isReturned  = item.itemStatus === "Returned" || item.itemReturnStatus === "Approved";
+                            const isCancelled = item.itemStatus === ORDER_STATUS.CANCELLED;
+                            const isReturned  = item.itemStatus === ORDER_STATUS.RETURNED || item.itemReturnStatus === RETURN_STATUS.APPROVED;
                             const itemRefund  = item.refundAmount || 0;
                             const hadRefund   = item.isRefundProcessed && itemRefund > 0;
                         %>
@@ -851,13 +851,13 @@
                             id="orderStatusSelect"
                             class="aod-status-select"
                             <%= statusUpdateLocked ? "disabled" : "" %>>
-                            <option value="Pending"          <%= orderStatus === "Pending"          ? "selected" : "" %>>Pending</option>
-                            <option value="Processing"       <%= orderStatus === "Processing"       ? "selected" : "" %>>Processing</option>
-                            <option value="Shipped"          <%= orderStatus === "Shipped"          ? "selected" : "" %>>Shipped</option>
-                            <option value="Out for Delivery" <%= orderStatus === "Out for Delivery" ? "selected" : "" %>>Out for Delivery</option>
-                            <option value="Delivered"        <%= orderStatus === "Delivered"        ? "selected" : "" %>>Delivered</option>
-                            <option value="Cancelled"        <%= orderStatus === "Cancelled"        ? "selected" : "" %>>Cancelled</option>
-                            <option value="Returned"         <%= orderStatus === "Returned"         ? "selected" : "" %>>Returned</option>
+                            <option value="Pending"          <%= orderStatus === ORDER_STATUS.PENDING          ? "selected" : "" %>>Pending</option>
+                            <option value="Processing"       <%= orderStatus === ORDER_STATUS.PROCESSING       ? "selected" : "" %>>Processing</option>
+                            <option value="Shipped"          <%= orderStatus === ORDER_STATUS.SHIPPED          ? "selected" : "" %>>Shipped</option>
+                            <option value="Out for Delivery" <%= orderStatus === ORDER_STATUS.OUT_FOR_DELIVERY ? "selected" : "" %>>Out for Delivery</option>
+                            <option value="Delivered"        <%= orderStatus === ORDER_STATUS.DELIVERED        ? "selected" : "" %>>Delivered</option>
+                            <option value="Cancelled"        <%= orderStatus === ORDER_STATUS.CANCELLED        ? "selected" : "" %>>Cancelled</option>
+                            <option value="Returned"         <%= orderStatus === ORDER_STATUS.RETURNED         ? "selected" : "" %>>Returned</option>
                         </select>
 
                         <button

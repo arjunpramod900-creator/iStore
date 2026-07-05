@@ -9,6 +9,8 @@ import {
 import { revalidateCouponOnMutation } from "../shared/couponRevalidationService.js";
 import CouponUsage from "../../models/CouponUsage.js";
 import Coupon from "../../models/Coupon.js";
+import { ORDER_STATUS, PAYMENT_STATUS, RETURN_STATUS } from "../../constants/orderEnums.js";
+
 
 /* =========================================
    LOAD ORDERS
@@ -89,7 +91,7 @@ export const cancelOrderService = async (userId, orderId, reason) => {
         };
     }
 
-    if (!["Pending", "Processing"].includes(order.orderStatus)) {
+    if (![ORDER_STATUS.PENDING, ORDER_STATUS.PROCESSING].includes(order.orderStatus)) {
         return {
             success: false,
             message: "Order can no longer be cancelled",
@@ -102,8 +104,8 @@ export const cancelOrderService = async (userId, orderId, reason) => {
     for (const item of order.items) {
 
         if (
-            item.itemStatus === "Cancelled" ||
-            item.itemStatus === "Returned"
+            item.itemStatus === ORDER_STATUS.CANCELLED ||
+            item.itemStatus === ORDER_STATUS.RETURNED
         ) {
             continue;
         }
@@ -121,7 +123,7 @@ export const cancelOrderService = async (userId, orderId, reason) => {
             },
         });
 
-        item.itemStatus = "Cancelled";
+        item.itemStatus = ORDER_STATUS.CANCELLED;
 
         item.cancelReason =
             reason || "Order cancelled by customer";
@@ -151,7 +153,7 @@ export const cancelOrderService = async (userId, orderId, reason) => {
     /* Wallet refund only once */
     if (
         ["RAZORPAY", "WALLET"].includes(order.paymentMethod) &&
-        order.paymentStatus === "Paid" &&
+        order.paymentStatus === PAYMENT_STATUS.PAID &&
         !order.isRefundProcessed
     ) {
 
@@ -171,11 +173,11 @@ export const cancelOrderService = async (userId, orderId, reason) => {
 
             order.refundAmount += refundAmount;
             order.isRefundProcessed = true;
-            order.paymentStatus = "Refunded";
+            order.paymentStatus = PAYMENT_STATUS.REFUNDED;
         }
     }
 
-    order.orderStatus = "Cancelled";
+    order.orderStatus = ORDER_STATUS.CANCELLED;
 
     order.cancelReason =
         reason || "Order cancelled by customer";
@@ -187,7 +189,7 @@ export const cancelOrderService = async (userId, orderId, reason) => {
     return {
         success: true,
         message:
-            (order.paymentStatus === "Paid" || order.paymentStatus === "Refunded") && order.paymentMethod !== "COD"
+            (order.paymentStatus === PAYMENT_STATUS.PAID || order.paymentStatus === PAYMENT_STATUS.REFUNDED) && order.paymentMethod !== "COD"
                 ? "Order cancelled and refund credited to wallet"
                 : "Order cancelled successfully",
     };
@@ -229,8 +231,8 @@ export const cancelOrderItemService = async (
     }
 
     if (
-        item.itemStatus === "Cancelled" ||
-        item.itemStatus === "Returned"
+        item.itemStatus === ORDER_STATUS.CANCELLED ||
+        item.itemStatus === ORDER_STATUS.RETURNED
     ) {
         return {
             success: false,
@@ -239,7 +241,7 @@ export const cancelOrderItemService = async (
     }
 
     if (
-        !["Pending", "Processing"].includes(order.orderStatus)
+        ![ORDER_STATUS.PENDING, ORDER_STATUS.PROCESSING].includes(order.orderStatus)
     ) {
         return {
             success: false,
@@ -262,7 +264,7 @@ export const cancelOrderItemService = async (
     /* Refund only for prepaid orders */
     if (
         ["RAZORPAY", "WALLET"].includes(order.paymentMethod) &&
-        order.paymentStatus === "Paid" &&
+        order.paymentStatus === PAYMENT_STATUS.PAID &&
         !item.isRefundProcessed
     ) {
 
@@ -284,7 +286,7 @@ export const cancelOrderItemService = async (
         }
     }
 
-    item.itemStatus = "Cancelled";
+    item.itemStatus = ORDER_STATUS.CANCELLED;
 
     item.cancelReason =
         reason || "Item cancelled by customer";
@@ -298,12 +300,12 @@ export const cancelOrderItemService = async (
 
     if (allResolved) {
 
-        order.orderStatus = "Cancelled";
+        order.orderStatus = ORDER_STATUS.CANCELLED;
 
         if (
             ["RAZORPAY", "WALLET"].includes(order.paymentMethod)
         ) {
-            order.paymentStatus = "Refunded";
+            order.paymentStatus = PAYMENT_STATUS.REFUNDED;
         }
         
         order.isStockRestored = true;
@@ -314,7 +316,7 @@ export const cancelOrderItemService = async (
     return {
             success: true,
             message:
-                (order.paymentStatus === "Paid" || order.paymentStatus === "Refunded") && order.paymentMethod !== "COD"
+                (order.paymentStatus === PAYMENT_STATUS.PAID || order.paymentStatus === PAYMENT_STATUS.REFUNDED) && order.paymentMethod !== "COD"
                     ? "Product cancelled and refund credited to wallet. " + (couponMsg ? couponMsg : "")
                     : "Product cancelled successfully. " + (couponMsg ? couponMsg : ""),
         };
@@ -343,28 +345,28 @@ export const returnOrderService = async (
         };
     }
 
-    if (order.orderStatus !== "Delivered") {
+    if (order.orderStatus !== ORDER_STATUS.DELIVERED) {
         return {
             success: false,
             message: "Only delivered orders can be returned",
         };
     }
 
-    if (order.returnStatus === "Requested") {
+    if (order.returnStatus === RETURN_STATUS.REQUESTED) {
         return {
             success: false,
             message: "Return request already submitted",
         };
     }
 
-    if (order.returnStatus === "Approved") {
+    if (order.returnStatus === RETURN_STATUS.APPROVED) {
         return {
             success: false,
             message: "Order has already been returned",
         };
     }
 
-if (order.returnStatus === "Rejected") {
+if (order.returnStatus === RETURN_STATUS.REJECTED) {
     return {
         success: false,
         message:
@@ -380,7 +382,7 @@ if (order.returnStatus === "Rejected") {
         };
     }
 
-    order.returnStatus = "Requested";
+    order.returnStatus = RETURN_STATUS.REQUESTED;
 
     order.returnReason = reason.trim();
 
@@ -388,11 +390,11 @@ if (order.returnStatus === "Rejected") {
     order.items.forEach(item => {
 
         if (
-            item.itemStatus === "Delivered" &&
-            item.itemReturnStatus === "None"
+            item.itemStatus === ORDER_STATUS.DELIVERED &&
+            item.itemReturnStatus === RETURN_STATUS.NONE
         ) {
 
-            item.itemReturnStatus = "Requested";
+            item.itemReturnStatus = RETURN_STATUS.REQUESTED;
 
             item.itemReturnReason = reason.trim();
         }
@@ -440,14 +442,14 @@ export const returnOrderItemService = async (
         };
     }
 
-    if (item.itemStatus !== "Delivered") {
+    if (item.itemStatus !== ORDER_STATUS.DELIVERED) {
         return {
             success: false,
             message: "Only delivered items can be returned",
         };
     }
 
-    if (item.itemReturnStatus === "Requested") {
+    if (item.itemReturnStatus === RETURN_STATUS.REQUESTED) {
         return {
             success: false,
             message:
@@ -455,14 +457,14 @@ export const returnOrderItemService = async (
         };
     }
 
-    if (item.itemReturnStatus === "Approved") {
+    if (item.itemReturnStatus === RETURN_STATUS.APPROVED) {
         return {
             success: false,
             message:
                 "This item has already been returned",
         };
     }
-if (item.itemReturnStatus === "Rejected") {
+if (item.itemReturnStatus === RETURN_STATUS.REJECTED) {
     return {
         success: false,
         message:
@@ -477,7 +479,7 @@ if (item.itemReturnStatus === "Rejected") {
         };
     }
 
-    item.itemReturnStatus = "Requested";
+    item.itemReturnStatus = RETURN_STATUS.REQUESTED;
 
     item.itemReturnReason = reason.trim();
 

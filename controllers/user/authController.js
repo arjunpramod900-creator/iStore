@@ -445,6 +445,7 @@ const verifySignupOTP = async (req, res) => {
       password: hashedPassword,
       referralCode: generateReferralCode(signupData.fullName),
       referredBy: referredByUser?._id || null,
+      referralRewardEarned: referredByUser ? 100 : 0,
     });
 
     await OTP.deleteMany({ email: signupData.email, type: "signup" });

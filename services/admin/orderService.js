@@ -8,6 +8,8 @@ import {
 import { revalidateCouponOnMutation } from "../shared/couponRevalidationService.js";
 import CouponUsage from "../../models/CouponUsage.js";
 import Coupon from "../../models/Coupon.js";
+import { ORDER_STATUS, PAYMENT_STATUS, RETURN_STATUS } from "../../constants/orderEnums.js";
+
 
 /* ============================
    CONSTANTS
@@ -30,9 +32,9 @@ export const loadOrdersService = async (query) => {
     const sort   = query.sort   || "newest";
 
     let filter = {};
-    if (status === "Return Requested")     filter.returnStatus = "Requested";
-    else if (status === "Return Approved") filter.returnStatus = "Approved";
-    else if (status === "Return Rejected") filter.returnStatus = "Rejected";
+    if (status === "Return Requested")     filter.returnStatus = RETURN_STATUS.REQUESTED;
+    else if (status === "Return Approved") filter.returnStatus = RETURN_STATUS.APPROVED;
+    else if (status === "Return Rejected") filter.returnStatus = RETURN_STATUS.REJECTED;
     else if (status)                       filter.orderStatus  = status;
 
     if (search) {
@@ -66,15 +68,15 @@ export const loadOrdersService = async (query) => {
 
     const stats = {
         total:           await Order.countDocuments(),
-        pending:         await Order.countDocuments({ orderStatus: "Pending" }),
-        processing:      await Order.countDocuments({ orderStatus: "Processing" }),
-        shipped:         await Order.countDocuments({ orderStatus: "Shipped" }),
-        delivered:       await Order.countDocuments({ orderStatus: "Delivered" }),
-        cancelled:       await Order.countDocuments({ orderStatus: "Cancelled" }),
-        returned:        await Order.countDocuments({ orderStatus: "Returned" }),
-        returnRequested: await Order.countDocuments({ returnStatus: "Requested" }),
-        returnApproved:  await Order.countDocuments({ returnStatus: "Approved" }),
-        returnRejected:  await Order.countDocuments({ returnStatus: "Rejected" }),
+        pending:         await Order.countDocuments({ orderStatus: ORDER_STATUS.PENDING }),
+        processing:      await Order.countDocuments({ orderStatus: ORDER_STATUS.PROCESSING }),
+        shipped:         await Order.countDocuments({ orderStatus: ORDER_STATUS.SHIPPED }),
+        delivered:       await Order.countDocuments({ orderStatus: ORDER_STATUS.DELIVERED }),
+        cancelled:       await Order.countDocuments({ orderStatus: ORDER_STATUS.CANCELLED }),
+        returned:        await Order.countDocuments({ orderStatus: ORDER_STATUS.RETURNED }),
+        returnRequested: await Order.countDocuments({ returnStatus: RETURN_STATUS.REQUESTED }),
+        returnApproved:  await Order.countDocuments({ returnStatus: RETURN_STATUS.APPROVED }),
+        returnRejected:  await Order.countDocuments({ returnStatus: RETURN_STATUS.REJECTED }),
     };
 
     return {
@@ -126,7 +128,7 @@ export const updateOrderStatusService = async (
     ========================== */
     if (
         order.paymentMethod === "RAZORPAY" &&
-        order.paymentStatus !== "Paid"
+        order.paymentStatus !== PAYMENT_STATUS.PAID
     ) {
         if (status !== "Cancelled") {
             throw new Error(
@@ -167,8 +169,8 @@ export const updateOrderStatusService = async (
         for (const item of order.items) {
 
             if (
-                item.itemStatus === "Cancelled" ||
-                item.itemStatus === "Returned"
+                item.itemStatus === ORDER_STATUS.CANCELLED ||
+                item.itemStatus === ORDER_STATUS.RETURNED
             ) {
                 continue;
             }
@@ -180,7 +182,7 @@ export const updateOrderStatusService = async (
                 },
             });
 
-            item.itemStatus = "Cancelled";
+            item.itemStatus = ORDER_STATUS.CANCELLED;
         }
 
         if (bulkOperations.length > 0) {
@@ -190,7 +192,7 @@ export const updateOrderStatusService = async (
         /* Refund only once — and only if payment was actually captured */
         if (
             ["RAZORPAY", "WALLET"].includes(order.paymentMethod) &&
-            order.paymentStatus === "Paid" &&
+            order.paymentStatus === PAYMENT_STATUS.PAID &&
             !order.isRefundProcessed
         ) {
 
@@ -208,7 +210,7 @@ export const updateOrderStatusService = async (
 
                 order.refundAmount      += refundAmount;
                 order.isRefundProcessed  = true;
-                order.paymentStatus      = "Refunded";
+                order.paymentStatus = PAYMENT_STATUS.REFUNDED;
             }
         }
 
@@ -237,7 +239,7 @@ export const updateOrderStatusService = async (
 
         /* COD payment collected at delivery */
         if (order.paymentMethod === "COD") {
-            order.paymentStatus = "Paid";
+            order.paymentStatus = PAYMENT_STATUS.PAID;
         }
     }
 
@@ -265,7 +267,7 @@ export const updateItemStatusService = async (
 
     if (
         order.paymentMethod === "RAZORPAY" &&
-        order.paymentStatus !== "Paid"
+        order.paymentStatus !== PAYMENT_STATUS.PAID
     ) {
         if (status !== "Cancelled") {
             throw new Error("Cannot update item status until payment is completed.");
@@ -302,7 +304,7 @@ export const updateItemStatusService = async (
 
         if (
             ["RAZORPAY", "WALLET"].includes(order.paymentMethod) &&
-            order.paymentStatus === "Paid" &&
+            order.paymentStatus === PAYMENT_STATUS.PAID &&
             !item.isRefundProcessed
         ) {
             if (refundAmount > 0) {
@@ -326,15 +328,15 @@ export const updateItemStatusService = async (
     item.itemStatus = status;
 
     // Check if order status needs synchronization
-    const activeItems = order.items.filter(i => i.itemStatus !== "Cancelled" && i.itemStatus !== "Returned");
+    const activeItems = order.items.filter(i => i.itemStatus !== ORDER_STATUS.CANCELLED && i.itemStatus !== ORDER_STATUS.RETURNED);
     if (activeItems.length === 0) {
         // If all items are Cancelled/Returned, order becomes Cancelled (or Returned)
-        const allReturned = order.items.every(i => i.itemStatus === "Returned" || i.itemStatus === "Cancelled");
-        const hasReturned = order.items.some(i => i.itemStatus === "Returned");
+        const allReturned = order.items.every(i => i.itemStatus === ORDER_STATUS.RETURNED || i.itemStatus === ORDER_STATUS.CANCELLED);
+        const hasReturned = order.items.some(i => i.itemStatus === ORDER_STATUS.RETURNED);
         if (hasReturned && allReturned) {
-            order.orderStatus = "Returned";
+            order.orderStatus = ORDER_STATUS.RETURNED;
         } else {
-            order.orderStatus = "Cancelled";
+            order.orderStatus = ORDER_STATUS.CANCELLED;
             if (order.paymentMethod === "COD") order.paymentStatus = "Cancelled";
         }
     } else {
@@ -346,7 +348,7 @@ export const updateItemStatusService = async (
             order.orderStatus = firstActiveStatus;
             if (firstActiveStatus === "Delivered") {
                 order.deliveredDate = new Date();
-                if (order.paymentMethod === "COD") order.paymentStatus = "Paid";
+                if (order.paymentMethod === "COD") order.paymentStatus = PAYMENT_STATUS.PAID;
             }
         }
     }
@@ -368,7 +370,7 @@ export const handleReturnRequestService = async (
         throw new Error("Order not found");
     }
 
-    if (order.returnStatus !== "Requested") {
+    if (order.returnStatus !== RETURN_STATUS.REQUESTED) {
         throw new Error("No pending return request");
     }
 
@@ -377,17 +379,17 @@ export const handleReturnRequestService = async (
     ========================== */
     if (action === "approve") {
 
-        order.returnStatus    = "Approved";
+        order.returnStatus = RETURN_STATUS.APPROVED;
         order.returnApprovedAt = new Date();
-        order.orderStatus     = "Returned";
+        order.orderStatus = ORDER_STATUS.RETURNED;
 
         const bulkOperations = [];
 
         for (const item of order.items) {
 
             if (
-                item.itemStatus === "Cancelled" ||
-                item.itemStatus === "Returned"
+                item.itemStatus === ORDER_STATUS.CANCELLED ||
+                item.itemStatus === ORDER_STATUS.RETURNED
             ) {
                 continue;
             }
@@ -399,8 +401,8 @@ export const handleReturnRequestService = async (
                 },
             });
 
-            item.itemStatus       = "Returned";
-            item.itemReturnStatus = "Approved";
+            item.itemStatus = ORDER_STATUS.RETURNED;
+            item.itemReturnStatus = RETURN_STATUS.APPROVED;
             item.returnApprovedAt = new Date();
         }
 
@@ -438,13 +440,13 @@ export const handleReturnRequestService = async (
 
                 order.refundAmount      += refundAmount;
                 order.isRefundProcessed  = true;
-                order.paymentStatus      = "Refunded";
+                order.paymentStatus = PAYMENT_STATUS.REFUNDED;
             }
         }
 
         /* COD already paid at delivery — mark refunded */
         if (order.paymentMethod === "COD") {
-            order.paymentStatus     = "Refunded";
+            order.paymentStatus = PAYMENT_STATUS.REFUNDED;
 
         }
 
@@ -461,18 +463,18 @@ export const handleReturnRequestService = async (
     ========================== */
     if (action === "reject") {
 
-        order.returnStatus = "Rejected";
+        order.returnStatus = RETURN_STATUS.REJECTED;
         order.returnReason = null;
 
         for (const item of order.items) {
-            if (item.itemReturnStatus === "Requested") {
-                item.itemReturnStatus = "Rejected";
+            if (item.itemReturnStatus === RETURN_STATUS.REQUESTED) {
+                item.itemReturnStatus = RETURN_STATUS.REJECTED;
             }
         }
 
         /* Rejected return — customer keeps product, remains paid */
         if (order.paymentMethod === "COD" && order.deliveredDate) {
-            order.paymentStatus = "Paid";
+            order.paymentStatus = PAYMENT_STATUS.PAID;
         }
 
         await order.save();
@@ -508,7 +510,7 @@ export const handleItemReturnRequestService = async (
         throw new Error("Item not found");
     }
 
-    if (item.itemReturnStatus !== "Requested") {
+    if (item.itemReturnStatus !== RETURN_STATUS.REQUESTED) {
         throw new Error("No pending return request for this item");
     }
 
@@ -517,7 +519,7 @@ export const handleItemReturnRequestService = async (
     ================================= */
     if (action === "approve") {
 
-        if (item.itemStatus === "Returned") {
+        if (item.itemStatus === ORDER_STATUS.RETURNED) {
             throw new Error("Item already returned");
         }
 
@@ -552,8 +554,8 @@ export const handleItemReturnRequestService = async (
             }
         }
 
-        item.itemStatus       = "Returned";
-        item.itemReturnStatus = "Approved";
+        item.itemStatus = ORDER_STATUS.RETURNED;
+        item.itemReturnStatus = RETURN_STATUS.APPROVED;
         item.returnApprovedAt = new Date();
 
         /*
@@ -571,12 +573,12 @@ export const handleItemReturnRequestService = async (
 
 if (allResolved) {
 
-    order.orderStatus = "Returned";
-    order.returnStatus = "Approved";
+    order.orderStatus = ORDER_STATUS.RETURNED;
+    order.returnStatus = RETURN_STATUS.APPROVED;
     order.returnApprovedAt = new Date();
 
     if (order.paymentMethod === "COD") {
-        order.paymentStatus = "Refunded";
+        order.paymentStatus = PAYMENT_STATUS.REFUNDED;
     }
 
 }
@@ -594,10 +596,10 @@ if (allResolved) {
     ================================= */
     if (action === "reject") {
 
-        item.itemReturnStatus = "Rejected";
+        item.itemReturnStatus = RETURN_STATUS.REJECTED;
 
         if (order.paymentMethod === "COD" && order.deliveredDate) {
-            order.paymentStatus = "Paid";
+            order.paymentStatus = PAYMENT_STATUS.PAID;
         }
 
         await order.save();

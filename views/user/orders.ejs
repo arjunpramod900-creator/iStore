@@ -166,7 +166,7 @@
                             day: "numeric", month: "short", year: "numeric",
                         });
 
-                        const activeItemsCount = order.items.filter(i => i.itemStatus !== "Cancelled" && i.itemStatus !== "Returned" && i.itemReturnStatus !== "Approved").length;
+                        const activeItemsCount = order.items.filter(i => i.itemStatus !== ORDER_STATUS.CANCELLED && i.itemStatus !== ORDER_STATUS.RETURNED && i.itemReturnStatus !== "Approved").length;
                         const displayAmount = (activeItemsCount === 0 && order.pricingSnapshot?.originalFinalAmount) 
                             ? order.pricingSnapshot.originalFinalAmount 
                             : (order.finalAmount || 0);
@@ -181,8 +181,8 @@
                             order.paymentMethod === "RAZORPAY" && 
                             order.paymentStatus !== "Paid" && 
                             order.paymentStatus !== "Refunded" &&
-                            order.orderStatus !== "Cancelled" &&
-                            order.orderStatus !== "Returned" &&
+                            order.orderStatus !== ORDER_STATUS.CANCELLED &&
+                            order.orderStatus !== ORDER_STATUS.RETURNED &&
                             !order.isStockRestored;
                     %>
 
@@ -205,7 +205,7 @@
                                     <% if (isRetryable) { %>
                                     <span class="or-payment-alert-tag <%= order.paymentStatus === 'Failed' ? 'failed' : 'pending' %>">
                                         <i data-lucide="<%= order.paymentStatus === 'Failed' ? 'alert-circle' : 'clock' %>" size="11"></i>
-                                        <%= order.paymentStatus === "Failed" ? "Payment Failed" : "Payment Pending" %>
+                                        <%= order.paymentStatus === PAYMENT_STATUS.FAILED ? "Payment Failed" : "Payment Pending" %>
                                     </span>
                                     <% } %>
                                 </div>

@@ -2,6 +2,8 @@ import Order from "../../models/Order.js";
 import User from "../../models/User.js";
 import Product from "../../models/Product.js";
 import Variant from "../../models/Variant.js";
+import { ORDER_STATUS, PAYMENT_STATUS, RETURN_STATUS } from "../../constants/orderEnums.js";
+
 
 export const getDashboardDataService = async (filter = "weekly") => {
 
@@ -43,7 +45,7 @@ export const getDashboardDataService = async (filter = "weekly") => {
   ================================================ */
 
   const matchDelivered = {
-    orderStatus: "Delivered",
+    orderStatus: ORDER_STATUS.DELIVERED,
     createdAt: { $gte: rangeStart, $lte: rangeEnd },
   };
 
@@ -105,7 +107,7 @@ export const getDashboardDataService = async (filter = "weekly") => {
 
   const totalReturns = await Order.countDocuments({
     ...matchAllStatuses,
-    orderStatus: "Returned",
+    orderStatus: ORDER_STATUS.RETURNED,
   });
 
   /* ================================================
@@ -122,7 +124,7 @@ export const getDashboardDataService = async (filter = "weekly") => {
 
   const totalCancelled = await Order.countDocuments({
     ...matchAllStatuses,
-    orderStatus: "Cancelled",
+    orderStatus: ORDER_STATUS.CANCELLED,
   });
 
   /* ================================================
@@ -131,7 +133,7 @@ export const getDashboardDataService = async (filter = "weekly") => {
 
   const totalPending = await Order.countDocuments({
     ...matchAllStatuses,
-    orderStatus: "Pending",
+    orderStatus: ORDER_STATUS.PENDING,
   });
 
   /* ================================================
@@ -144,7 +146,7 @@ export const getDashboardDataService = async (filter = "weekly") => {
   const rawGrossChart = await Order.aggregate([
     {
       $match: {
-        orderStatus: "Delivered",
+        orderStatus: ORDER_STATUS.DELIVERED,
         createdAt: { $gte: rangeStart, $lte: rangeEnd },
       },
     },
@@ -163,7 +165,7 @@ export const getDashboardDataService = async (filter = "weekly") => {
   const rawRefundChart = await Order.aggregate([
     {
       $match: {
-        orderStatus: "Returned",
+        orderStatus: ORDER_STATUS.RETURNED,
         $or: [
           { returnApprovedAt: { $gte: rangeStart, $lte: rangeEnd } },
           { returnApprovedAt: null, createdAt: { $gte: rangeStart, $lte: rangeEnd } },

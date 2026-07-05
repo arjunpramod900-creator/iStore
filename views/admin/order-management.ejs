@@ -311,7 +311,7 @@
                             let itemPayStatus = row.paymentStatus;
                             let itemPayClass = payClass(row.paymentStatus);
                             
-                            const isLegacyRefund = (row.paymentStatus === "Refunded" || (row.isRefundProcessed && row.refundAmount > 0)) && 
+                            const isLegacyRefund = (row.paymentStatus === PAYMENT_STATUS.REFUNDED || (row.isRefundProcessed && row.refundAmount > 0)) && 
                                                    row.items.every(i => !i.isRefundProcessed);
                                                    
                             if (item.itemStatus === 'Cancelled' || item.itemStatus === 'Returned') {
