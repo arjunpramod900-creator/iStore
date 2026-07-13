@@ -248,31 +248,49 @@ id="stockStatus"
 
             <% uniqueColors.forEach(color => { %>
 
-                <button
-
-                    class="color-btn
-
-                    <%= product.variant.color === color
-                    ? 'active'
-                    : ''
-                    %>"
-
-                    data-color="<%= color %>"
-
-                    title="<%= color %>"
-
-                    style="background-color:
-
-                    <%= color === 'Black'
-                    ? '#111111'
-                    : color === 'Silver'
-                    ? '#D1D5DB'
-                    : color === 'Purple'
-                    ? '#6D28D9'
-                    : '#CBD5E1'
-                    %>"
-
-                ></button>
+                <div class="color-option-wrapper">
+                    <button
+                        class="color-btn
+                        <%= product.variant.color === color
+                        ? 'active'
+                        : ''
+                        %>"
+                        data-color="<%= color %>"
+                        title="<%= color %>"
+                        style="background-color:
+                        <%= color.toLowerCase() === 'black'
+                        ? '#111111'
+                        : color.toLowerCase() === 'silver'
+                        ? '#D1D5DB'
+                        : color.toLowerCase() === 'purple'
+                        ? '#6D28D9'
+                        : color.toLowerCase() === 'blue'
+                        ? '#3B82F6'
+                        : color.toLowerCase() === 'red'
+                        ? '#EF4444'
+                        : color.toLowerCase() === 'green'
+                        ? '#22C55E'
+                        : color.toLowerCase() === 'yellow'
+                        ? '#EAB308'
+                        : color.toLowerCase() === 'pink'
+                        ? '#EC4899'
+                        : color.toLowerCase() === 'white'
+                        ? '#F8FAFC'
+                        : color.toLowerCase() === 'titanium'
+                        ? '#878681'
+                        : color.toLowerCase() === 'natural titanium'
+                        ? '#B5B6B3'
+                        : color.toLowerCase() === 'blue titanium'
+                        ? '#2F3C4D'
+                        : color.toLowerCase() === 'white titanium'
+                        ? '#F2F1ED'
+                        : color.toLowerCase() === 'black titanium'
+                        ? '#41403F'
+                        : '#CBD5E1'
+                        %>"
+                    ></button>
+                    <span class="color-name"><%= color %></span>
+                </div>
 
             <% }) %>
 

@@ -352,15 +352,14 @@ document.querySelectorAll(".retry-payment-btn").forEach(btn => {
             button.addEventListener("click", async () => {
                 const orderId = button.dataset.id;
 
-                const result = await showConfirmAlert({
+                const result = await showCancelReasonAlert({
                     title:       "Cancel this order?",
-                    text:        "This action cannot be undone.",
-                    confirmText: "Yes, Cancel",
-                    cancelText:  "Keep Order",
-                    icon:        "warning",
+                    confirmText: "Yes, Cancel Order",
                 });
 
                 if (!result.isConfirmed) return;
+                
+                const reason = result.value;
 
                 try {
                     button.disabled   = true;
@@ -369,7 +368,7 @@ document.querySelectorAll(".retry-payment-btn").forEach(btn => {
                     const response = await fetch(`/orders/${orderId}/cancel`, {
                         method:  "POST",
                         headers: { "Content-Type": "application/json" },
-                        body:    JSON.stringify({ reason: "Cancelled by user" }),
+                        body:    JSON.stringify({ reason }),
                     });
 
                     const data = await response.json();

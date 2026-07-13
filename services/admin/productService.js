@@ -776,15 +776,21 @@ export const addVariantService = async (data) => {
     throw new Error("Product not found");
   }
 
+  const normStorage = normalizeVariantValue(body.storage);
+  const normColor = normalizeVariantValue(body.color);
+  const normRAM = normalizeVariantValue(body.RAM);
+
+  /* SKU CHECK */
+  const existingSKU = await Variant.findOne({ SKU: body.SKU });
+  if (existingSKU) {
+    throw new Error("A variant with this SKU already exists");
+  }
+
   const existingVariant = await Variant.findOne({
     productId,
-
-    color: body.color,
-
-    storage: body.storage,
-
-    RAM: body.RAM,
-
+    color: normColor,
+    storage: normStorage,
+    RAM: normRAM,
     isDeleted: false,
   });
 
@@ -833,11 +839,11 @@ export const addVariantService = async (data) => {
 
     SKU: body.SKU,
 
-    storage: normalizeVariantValue(body.storage),
+    storage: normStorage,
 
-    color: normalizeVariantValue(body.color),
+    color: normColor,
 
-    RAM: normalizeVariantValue(body.RAM),
+    RAM: normRAM,
 
     stock: stockValue,
 
@@ -892,16 +898,30 @@ export const updateVariantService = async (
 
   /* DUPLICATE */
 
+  const normStorage = normalizeVariantValue(body.storage);
+  const normColor = normalizeVariantValue(body.color);
+  const normRAM = normalizeVariantValue(body.RAM);
+
+  /* SKU CHECK */
+  const existingSKU = await Variant.findOne({
+    _id: { $ne: variantId },
+    SKU: body.SKU,
+  });
+
+  if (existingSKU) {
+    throw new Error("A variant with this SKU already exists");
+  }
+
   const existingVariant = await Variant.findOne({
     _id: { $ne: variantId },
 
     productId: variant.productId,
 
-    color: body.color,
+    color: normColor,
 
-    storage: body.storage,
+    storage: normStorage,
 
-    RAM: body.RAM,
+    RAM: normRAM,
 
     isDeleted: false,
   });
@@ -965,11 +985,11 @@ export const updateVariantService = async (
     {
       SKU: body.SKU,
 
-      storage: normalizeVariantValue(body.storage),
+      storage: normStorage,
 
-      color: normalizeVariantValue(body.color),
+      color: normColor,
 
-      RAM: normalizeVariantValue(body.RAM),
+      RAM: normRAM,
 
       stock: stockValue,
 

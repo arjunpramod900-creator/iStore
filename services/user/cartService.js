@@ -571,10 +571,7 @@ if (
     ){
         itemSubtotal = lineTotal;
 
-        /* FIX: surface this item's real badge label
-           back to the client so the cart page can
-           refresh the badge text after a quantity
-           change without a full page reload */
+     
 
         itemBadgeLabel = offerData.badgeLabel;
     }

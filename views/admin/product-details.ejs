@@ -927,12 +927,14 @@
                 document.getElementById("variantPrice").value         = button.dataset.price;
                 document.getElementById("variantComparePrice").value  = button.dataset.compareprice || "";
                 document.getElementById("variantStock").value         = button.dataset.stock;
-
+              
                 document.getElementById("previewSpecs").innerText =
                     `${button.dataset.color} • ${button.dataset.storage} • ${button.dataset.ram}`;
                 document.getElementById("previewPrice").innerText =
                     `₹${Number(button.dataset.price).toLocaleString()}`;
 
+
+                    
                 existingImages = JSON.parse(button.dataset.images || "[]");
                 selectedFiles  = [];
                 renderImages();
@@ -940,6 +942,10 @@
                 openVariantModal();
             });
         });
+
+       
+
+
 
 
         /* =========================================

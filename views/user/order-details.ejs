@@ -836,22 +836,21 @@ document.getElementById("btnRetryPayment")?.addEventListener("click", function (
                 const orderId = this.dataset.orderId;
                 const itemId  = this.dataset.itemId;
 
-                const result = await showConfirmAlert({
+                const result = await showCancelReasonAlert({
                     title:       "Cancel this item?",
-                    text:        "This product will be cancelled from your order.",
                     confirmText: "Yes, Cancel Item",
-                    cancelText:  "Keep Item",
-                    icon:        "warning",
                 });
 
                 if (!result.isConfirmed) return;
+                
+                const reason = result.value;
 
                 try {
                     showLoadingAlert();
                     const response = await fetch(`/orders/${orderId}/item/${itemId}/cancel`, {
                         method:  "POST",
                         headers: { "Content-Type": "application/json" },
-                        body:    JSON.stringify({ reason: "Cancelled by user" }),
+                        body:    JSON.stringify({ reason }),
                     });
                     const data = await response.json();
                     Swal.close();

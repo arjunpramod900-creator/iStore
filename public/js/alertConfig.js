@@ -245,53 +245,37 @@ window.showConfirmAlert = ({
 
 window.showCancelReasonAlert =
 async ({
-
   title = "Cancel Order?",
-
   confirmText = "Confirm",
-
-  placeholder = "Optional reason",
-
 }) => {
-
   return Swal.fire({
-
     ...premiumAlertConfig,
-
     icon: "warning",
-
     title,
-
     html: `
-
-      <textarea
-      id="reasonInput"
-      class="swal2-textarea"
-      placeholder="${placeholder}"
-      ></textarea>
-
+      <select id="cancelReason" class="swal2-select">
+        <option value="">Select cancellation reason</option>
+        <option value="Changed my mind">Changed my mind</option>
+        <option value="Found a better price elsewhere">Found a better price elsewhere</option>
+        <option value="Ordered by mistake">Ordered by mistake</option>
+        <option value="Expected delivery time is too long">Expected delivery time is too long</option>
+        <option value="Other">Other</option>
+      </select>
+      <textarea id="cancelNote" class="swal2-textarea" placeholder="Additional notes (optional)"></textarea>
     `,
-
     showCancelButton: true,
-
-    confirmButtonText:
-    confirmText,
-
-    focusConfirm: false,
-
+    confirmButtonText: confirmText,
     preConfirm: () => {
-
-      return document
-      .getElementById(
-        "reasonInput"
-      )
-      .value
-      .trim()
-
+      const reason = document.getElementById("cancelReason").value;
+      const note = document.getElementById("cancelNote").value;
+      
+      if (!reason) {
+        Swal.showValidationMessage("Please select a cancellation reason");
+        return false;
+      }
+      return note.trim() ? `${reason} - ${note.trim()}` : reason;
     },
-
   })
-
 }
 
 /* ==================================

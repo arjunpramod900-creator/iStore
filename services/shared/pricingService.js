@@ -61,11 +61,15 @@ export const calculateCheckoutTotals = async ({
 
     /* DELIVERY */
     let deliveryCharge;
-    if (deliveryType === "express") {
+    
+    if (cartItems.length === 0) {
+        deliveryCharge = 0;
+    } else if (deliveryType === "express") {
         deliveryCharge = 500;
     } else {
         deliveryCharge = discountedSubtotal >= 5000 ? 0 : 99;
     }
+
 
     /* TAX — 2% on post-coupon subtotal */
     const taxAmount = Math.floor(discountedSubtotal * 0.02);
