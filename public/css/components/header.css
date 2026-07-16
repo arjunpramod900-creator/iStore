@@ -7,7 +7,7 @@
 .nav-link,
 .login-btn,
 .mobile-nav-item span {
-    font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
 }
 
 .header {
@@ -468,93 +468,77 @@
   transform: none !important;
 }
 
-
-
-
-
-
 /* =========================
    PREMIUM COUNT BADGES
 ========================= */
 
 .nav-icon {
-    position: relative;
+  position: relative;
 }
 
 /* Shared Badge Style */
 
 .cart-count,
 .wishlist-count {
+  position: absolute;
 
-    position: absolute;
+  top: 2px;
 
-    top: 2px;
+  right: 0;
 
-    right: 0;
+  min-width: 18px;
+  height: 18px;
 
-    min-width: 18px;
-    height: 18px;
+  padding: 0 5px;
 
-    padding: 0 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  border-radius: 999px;
 
-    border-radius: 999px;
+  background: linear-gradient(135deg, #603763 0%, #7c3aed 100%);
 
-    background:
-        linear-gradient(
-            135deg,
-            #603763 0%,
-            #7C3AED 100%
-        );
+  color: #ffffff;
 
-    color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
 
-    font-size: 10px;
-    font-weight: 700;
-    line-height: 1;
+  border: 2px solid #ffffff;
 
-    border: 2px solid #ffffff;
+  box-shadow:
+    0 4px 12px rgba(96, 55, 99, 0.28),
+    0 2px 6px rgba(124, 58, 237, 0.22);
 
-    box-shadow:
-        0 4px 12px rgba(96,55,99,.28),
-        0 2px 6px rgba(124,58,237,.22);
+  z-index: 10;
 
-    z-index: 10;
-
-    animation:
-        badgePop .35s ease;
+  animation: badgePop 0.35s ease;
 }
 
 /* Hover */
 
 .nav-icon:hover .cart-count,
 .nav-icon:hover .wishlist-count {
+  transform: scale(1.08);
 
-    transform: scale(1.08);
-
-    transition: .25s ease;
-
+  transition: 0.25s ease;
 }
 
 /* Count Change Animation */
 
 @keyframes badgePop {
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
 
-    0% {
-        transform: scale(.4);
-        opacity: 0;
-    }
+  70% {
+    transform: scale(1.15);
+  }
 
-    70% {
-        transform: scale(1.15);
-    }
-
-    100% {
-        transform: scale(1);
-        opacity: 1;
-    }
-
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }

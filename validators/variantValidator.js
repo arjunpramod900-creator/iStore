@@ -20,28 +20,23 @@ export const variantSchema = z.object({
     ),
 
   storage: z
-
-    .string()
-
+    .string({ required_error: "Storage is required" })
     .trim()
-
-    .optional(),
+    .min(1, "Storage is required")
+    .regex(/^\d+(GB|TB)$/i, "e.g. 256GB or 1TB"),
 
   color: z
-
-    .string()
-
+    .string({ required_error: "Color is required" })
     .trim()
-
-    .optional(),
+    .min(2, "Enter a valid color name")
+    .max(30, "Color name is too long")
+    .regex(/^[A-Za-z ]+$/, "Only letters and spaces are allowed"),
 
   RAM: z
-
-    .string()
-
+    .string({ required_error: "RAM is required" })
     .trim()
-
-    .optional(),
+    .min(1, "RAM is required")
+    .regex(/^\d+GB$/i, "e.g. 8GB or 16GB"),
 
   stock: z.coerce
 

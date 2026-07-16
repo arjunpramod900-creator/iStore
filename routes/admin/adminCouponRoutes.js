@@ -5,15 +5,10 @@ const router = express.Router();
 import adminAuthMiddleware from "../../middleware/adminAuthMiddleware.js";
 
 import {
-
   loadCoupons,
-
   addCoupon,
-
   updateCoupon,
-
   deleteCoupon,
-
 } from "../../controllers/admin/adminCouponController.js";
 
 /* ============================
@@ -21,13 +16,11 @@ import {
 ============================ */
 
 router.get(
-
   "/coupons",
 
   adminAuthMiddleware,
 
   loadCoupons,
-
 );
 
 /* ============================
@@ -35,13 +28,11 @@ router.get(
 ============================ */
 
 router.post(
-
   "/coupons/add",
 
   adminAuthMiddleware,
 
   addCoupon,
-
 );
 
 /* ============================
@@ -49,13 +40,11 @@ router.post(
 ============================ */
 
 router.post(
-
   "/coupons/edit/:id",
 
   adminAuthMiddleware,
 
   updateCoupon,
-
 );
 
 /* ============================
@@ -63,13 +52,11 @@ router.post(
 ============================ */
 
 router.patch(
-
   "/coupons/delete/:id",
 
   adminAuthMiddleware,
 
   deleteCoupon,
-
 );
 
 export default router;

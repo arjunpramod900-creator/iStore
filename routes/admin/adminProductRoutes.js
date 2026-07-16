@@ -43,22 +43,13 @@ router.get("/products", adminAuthMiddleware, loadProducts);
    ADD PRODUCT  (modal submit, JSON response)
 ============================ */
 
-router.post(
-  "/products/add",
-  adminAuthMiddleware,
-  uploadFields,
-  addProduct,
-);
+router.post("/products/add", adminAuthMiddleware, uploadFields, addProduct);
 
 /* ============================
    GET PRODUCT JSON (for Edit modal population)
 ============================ */
 
-router.get(
-  "/products/:id/json",
-  adminAuthMiddleware,
-  getProductJson,
-);
+router.get("/products/:id/json", adminAuthMiddleware, getProductJson);
 
 /* ============================
    UPDATE PRODUCT  (modal submit, JSON response)
@@ -75,28 +66,16 @@ router.post(
    PRODUCT DETAILS
 ============================ */
 
-router.get(
-  "/products/:id",
-  adminAuthMiddleware,
-  loadProductDetails,
-);
+router.get("/products/:id", adminAuthMiddleware, loadProductDetails);
 
 /* ============================
    DELETE / RESTORE / PERMANENT DELETE
    (paths now match the fetch() calls in product-management.ejs)
 ============================ */
 
-router.patch(
-  "/delete-product/:id",
-  adminAuthMiddleware,
-  deleteProduct,
-);
+router.patch("/delete-product/:id", adminAuthMiddleware, deleteProduct);
 
-router.patch(
-  "/restore-product/:id",
-  adminAuthMiddleware,
-  restoreProduct,
-);
+router.patch("/restore-product/:id", adminAuthMiddleware, restoreProduct);
 
 router.delete(
   "/permanent-delete-product/:id",
@@ -122,11 +101,7 @@ router.patch(
   updateVariant,
 );
 
-router.patch(
-  "/variants/:variantId/delete",
-  adminAuthMiddleware,
-  deleteVariant,
-);
+router.patch("/variants/:variantId/delete", adminAuthMiddleware, deleteVariant);
 
 router.patch(
   "/variants/:variantId/restore",

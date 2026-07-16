@@ -9,8 +9,11 @@ import Wishlist from "../../models/Wishlist.js";
 import Cart from "../../models/Cart.js";
 
 import Review from "../../models/Review.js";
-
-import { calculateItemOffer } from "../shared/offerService.js";
+import Offer from "../../models/Offer.js";
+import {
+  calculateItemOffer,
+  computeFinalOfferData,
+} from "../shared/offerService.js";
 
 /* =========================================
    LOAD ALL PRODUCTS
@@ -82,49 +85,76 @@ export const loadAllProductsService = async (
     .lean();
 
   /* =========================================
-   FLATTEN PRODUCT VARIANTS
+   BULK FETCH VARIANTS & OFFERS (Solves N+1 Query Problem)
 ========================================= */
+
+  const productIds = products.map((p) => p._id);
+  const categoryIds = products.map((p) => p.categoryId?._id || p.categoryId);
+  const now = new Date();
+
+  const [allVariants, allProductOffers, allCategoryOffers] = await Promise.all([
+    Variant.find({
+      productId: { $in: productIds },
+      isDeleted: false,
+      isActive: true,
+    })
+      .sort({ createdAt: 1 })
+      .lean(),
+
+    Offer.find({
+      applyTo: "PRODUCT",
+      targetId: { $in: productIds },
+      isActive: true,
+      isDeleted: false,
+      startDate: { $lte: now },
+      endDate: { $gte: now },
+    }).lean(),
+
+    Offer.find({
+      applyTo: "CATEGORY",
+      targetId: { $in: categoryIds },
+      isActive: true,
+      isDeleted: false,
+      startDate: { $lte: now },
+      endDate: { $gte: now },
+    }).lean(),
+  ]);
 
   let flattenedProducts = [];
 
   for (const product of products) {
-    const variants = await Variant.find({
-      productId: product._id,
+    const productVariants = allVariants.filter(
+      (v) => v.productId.toString() === product._id.toString(),
+    );
 
-      isDeleted: false,
-
-      isActive: true,
-    })
-
-      .sort({
-        createdAt: 1,
-      })
-
-      .lean();
-
-    if (!variants.length) {
+    if (!productVariants.length) {
       continue;
     }
 
-for (const variant of variants) {
+    const productOffer = allProductOffers.find(
+      (o) => o.targetId.toString() === product._id.toString(),
+    );
 
-  const offerData =
-  await calculateItemOffer(
-    product,
-    variant
-  );
+    const catIdStr = product.categoryId?._id
+      ? product.categoryId._id.toString()
+      : product.categoryId.toString();
+    const categoryOffer = allCategoryOffers.find(
+      (o) => o.targetId.toString() === catIdStr,
+    );
 
-  flattenedProducts.push({
+    for (const variant of productVariants) {
+      const offerData = computeFinalOfferData(
+        variant,
+        productOffer,
+        categoryOffer,
+      );
 
-    ...product,
-
-    variant,
-
-    offerData
-
-  });
-
-}
+      flattenedProducts.push({
+        ...product,
+        variant,
+        offerData,
+      });
+    }
   }
 
   products = flattenedProducts;
@@ -240,7 +270,7 @@ for (const variant of variants) {
     search,
 
     category,
-    
+
     selectedCategories,
 
     sort,
@@ -270,8 +300,6 @@ export const loadProductDetailsService = async (
     _id: productId,
 
     isDeleted: false,
-
-
   })
 
     .populate("categoryId")
@@ -285,16 +313,15 @@ export const loadProductDetailsService = async (
       product: null,
     };
   }
-/* =========================================
+  /* =========================================
    PRODUCT AVAILABILITY
 ========================================= */
 
-product.isUnavailable =
-  !product.isActive ||
-  product.categoryId?.isDeleted ||
-  !product.categoryId?.isActive;
+  product.isUnavailable =
+    !product.isActive ||
+    product.categoryId?.isDeleted ||
+    !product.categoryId?.isActive;
 
-  
   /* =========================================
    ALL ACTIVE VARIANTS
 ========================================= */
@@ -333,33 +360,19 @@ product.isUnavailable =
   /* ATTACH */
 
   product.variant = defaultVariant;
-  product.offerData =
-  await calculateItemOffer(
-    product,
-    defaultVariant
-  );
+  product.offerData = await calculateItemOffer(product, defaultVariant);
 
-product.variants = await Promise.all(
-
+  product.variants = await Promise.all(
     variants.map(async (variant) => {
+      const offerData = await calculateItemOffer(product, variant);
 
-        const offerData =
-        await calculateItemOffer(
-            product,
-            variant
-        );
+      return {
+        ...variant,
 
-        return {
-
-            ...variant,
-
-            offerData
-
-        };
-
-    })
-
-);
+        offerData,
+      };
+    }),
+  );
 
   /* =========================================
    REVIEWS
@@ -442,11 +455,7 @@ product.variants = await Promise.all(
 
     related.variant = relatedVariant;
 
-    related.offerData =
-    await calculateItemOffer(
-      related,
-      relatedVariant
-    );
+    related.offerData = await calculateItemOffer(related, relatedVariant);
   }
 
   /* REMOVE EMPTY VARIANTS */

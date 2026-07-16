@@ -45,6 +45,9 @@ export const isLoggedIn = async (req, res, next) => {
       return res.redirect("/");
     }
 
+    /* Attach user for downstream middleware */
+    req.user = user;
+
     next();
   } catch (error) {
     console.log("isLoggedIn Middleware Error:", error);

@@ -8,6 +8,8 @@
   <link rel="stylesheet" href="/css/admin-sales-report.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+  <link rel="stylesheet" href="/css/sweetalert-theme.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -300,7 +302,8 @@
             <th>Products</th>
             <th class="td-right">Amount Paid</th>
             <th style="text-align: center;">Payment</th>
-            <th>Status</th>
+            <th>Item Status</th>
+            <th style="text-align: center;">Order Status</th>
             <th class="hide-mobile">Date</th>
           </tr>
         </thead>
@@ -364,6 +367,11 @@
                   </td>
 
                   <% if (itemIdx === 0) { %>
+                    <td rowspan="<%= totalRows %>" style="border-left: 1px solid #f1f3f5; vertical-align: top; padding-top: 24px; text-align: center;">
+                      <span class="badge <%= badgeClass(order.orderStatus) %>">
+                        <%= order.orderStatus %>
+                      </span>
+                    </td>
                     <td rowspan="<%= totalRows %>" class="hide-mobile" style="border-left: 1px solid #f1f3f5; vertical-align: top; padding-top: 24px; color:var(--text-muted); font-size:12px;">
                       <%= new Date(order.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) %>
                     </td>
@@ -385,7 +393,7 @@
                     </td>
                 </tr>
                 <% } %>
-                <tr style="height: 12px; background: transparent;"><td colspan="8" style="padding: 0; border: none; border-bottom: 2px solid #f1f3f5;"></td></tr>
+                <tr style="height: 12px; background: transparent;"><td colspan="9" style="padding: 0; border: none; border-bottom: 2px solid #f1f3f5;"></td></tr>
 
               <% } else { %>
               <tr>
@@ -404,7 +412,8 @@
                 <td style="text-align: center;">
                     <span class="badge <%= badgeClass(order.paymentStatus) %>"><%= order.paymentStatus || 'Pending' %></span>
                 </td>
-                <td>
+                <td style="text-align: center;">-</td>
+                <td style="text-align: center;">
                   <span class="badge <%= badgeClass(order.orderStatus) %>">
                     <%= order.orderStatus %>
                   </span>
@@ -416,7 +425,7 @@
               <% } %>
             <% }) %>
           <% } else { %>
-            <tr><td colspan="8" style="color:var(--text-muted);padding:24px;">No orders found for this period.</td></tr>
+            <tr><td colspan="9" style="color:var(--text-muted);padding:24px;">No orders found for this period.</td></tr>
           <% } %>
         </tbody>
       </table>

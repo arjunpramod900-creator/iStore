@@ -56,163 +56,68 @@
 >
 
     <!-- REMOVE -->
-
     <button
-
-        class="btn-remove"
-
-        onclick="removeFromWishlist('<%= item._id %>')"
-
+        class="btn-remove wishlist-page-remove-btn"
+        data-variant-id="<%= item._id %>"
     >
-
-        <i
-            data-lucide="trash-2"
-            size="18"
-        ></i>
-
+        <i data-lucide="trash-2" size="18"></i>
     </button>
 
     <!-- CLICKABLE AREA -->
-
-    <a
-
-        href="/products/<%= item.productId %>?variant=<%= item._id %>"
-
-        class="product-card-link"
-
-    >
-
+    <a href="/products/<%= item.productId %>?variant=<%= item._id %>" class="product-card-link">
         <!-- IMAGE -->
-
         <div class="card-img-container">
-
-            <img
-
-                src="<%= item.thumbnail %>"
-
-                alt="<%= item.name %>"
-
-            >
-
+            <img src="<%= item.thumbnail %>" alt="<%= item.name %>">
         </div>
 
         <!-- CONTENT -->
-
         <div class="card-content">
-
             <!-- STATUS -->
-
-            <span
-
-                class="status-badge
-
-                <%= item.status === 'IN STOCK'
-                ? 'in-stock'
-                : 'out-of-stock'
-                %>"
-
-            >
-
+            <span class="status-badge <%= item.status === 'IN STOCK' ? 'in-stock' : 'out-of-stock' %>">
                 <%= item.status %>
-
             </span>
 
             <!-- TITLE -->
-
             <h3 class="card-title">
-
                 <%= item.name %>
-
             </h3>
 
             <!-- PRICE -->
-
             <p class="card-price">
-
                 ₹<%= item.variant.price.toLocaleString() %>
-
             </p>
 
             <!-- VARIANT DETAILS -->
-
             <div class="variant-details">
-
                 <% if(item.variant.RAM){ %>
-
                     <span class="variant-pill">
-
                         <%= item.variant.RAM %>
-
                     </span>
-
                 <% } %>
-
                 <% if(item.variant.storage){ %>
-
                     <span class="variant-pill">
-
                         <%= item.variant.storage %>
-
                     </span>
-
                 <% } %>
-
                 <% if(item.variant.color){ %>
-
                     <span class="variant-pill color-pill">
-
-                        <span
-
-                            class="color-dot"
-
-                            style="background:
-                            <%= item.variant.color === 'Black'
-                            ? '#111111'
-                            : item.variant.color === 'Silver'
-                            ? '#D1D5DB'
-                            : item.variant.color === 'Purple'
-                            ? '#6D28D9'
-                            : '#CBD5E1'
-                            %>"
-
-                        ></span>
-
+                        <span class="color-dot" style="background: <%= item.variant.color === 'Black' ? '#111111' : item.variant.color === 'Silver' ? '#D1D5DB' : item.variant.color === 'Purple' ? '#6D28D9' : '#CBD5E1' %>"></span>
                         <%= item.variant.color %>
-
                     </span>
-
                 <% } %>
-
             </div>
-
         </div>
-
     </a>
 
     <!-- ACTION -->
-
     <% if(item.status === 'IN STOCK') { %>
-
-        <button
-
-            class="btn-action btn-add-cart"
-
-            onclick="moveToCart('<%= item._id %>')"
-
-        >
-
+        <button class="btn-action btn-add-cart wishlist-page-add-cart-btn" data-variant-id="<%= item._id %>">
             Add to Cart
-
         </button>
-
     <% } else { %>
-
         <button class="btn-action btn-notify">
-
             Notify Me
-
         </button>
-
     <% } %>
 
 </div>

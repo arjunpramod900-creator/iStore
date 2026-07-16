@@ -1488,6 +1488,12 @@ document.getElementById(
 
         e.preventDefault()
 
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Submitting…";
+        }
+
         try{
 
             const productId =
@@ -1586,6 +1592,13 @@ document.getElementById(
 
             })
 
+        }
+
+        finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Submit Review";
+            }
         }
 
     }

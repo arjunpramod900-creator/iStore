@@ -1,10 +1,9 @@
 import { z } from "zod";
 
 export const addressSchema = z.object({
-
   fullName: z
     .string({
-      required_error: "Please enter your full name"
+      required_error: "Please enter your full name",
     })
     .trim()
     .min(3, "Full name must contain at least 3 characters")
@@ -13,14 +12,14 @@ export const addressSchema = z.object({
 
   phoneNumber: z
     .string({
-      required_error: "Please enter your mobile number"
+      required_error: "Please enter your mobile number",
     })
     .trim()
     .regex(/^[0-9]{10}$/, "Please enter a valid 10-digit mobile number"),
 
   addressLine1: z
     .string({
-      required_error: "Please enter your street address"
+      required_error: "Please enter your street address",
     })
     .trim()
     .min(5, "Street address is too short")
@@ -28,7 +27,7 @@ export const addressSchema = z.object({
 
   city: z
     .string({
-      required_error: "Please enter your city"
+      required_error: "Please enter your city",
     })
     .trim()
     .min(2, "City name is too short")
@@ -37,7 +36,7 @@ export const addressSchema = z.object({
 
   state: z
     .string({
-      required_error: "Please enter your state"
+      required_error: "Please enter your state",
     })
     .trim()
     .min(2, "State name is too short")
@@ -46,19 +45,19 @@ export const addressSchema = z.object({
 
   pincode: z
     .string({
-      required_error: "Please enter your PIN code"
+      required_error: "Please enter your PIN code",
     })
     .trim()
     .regex(/^[0-9]{6}$/, "Please enter a valid 6-digit PIN code"),
 
   country: z
     .string({
-      required_error: "Please select a country"
+      required_error: "Please select a country",
     })
     .min(2, "Please select a country"),
 
   type: z.enum(["Home", "Work", "Other"], {
-    errorMap: () => ({ message: "Please select an address type" })
+    errorMap: () => ({ message: "Please select an address type" }),
   }),
 
   // FIX: z.optional() alone is invalid — must be z.string().optional()
@@ -68,5 +67,4 @@ export const addressSchema = z.object({
     .string()
     .optional()
     .transform((val) => val === "true" || val === true),
-
 });

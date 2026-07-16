@@ -51,15 +51,11 @@ router.post(
 
 router.post("/update-quantity", updateCartQuantity);
 
-
 /* =========================================
    CLEAR CART
 ========================================= */
 
-router.delete(
-    "/clear",
-    clearCart
-);
+router.delete("/clear", clearCart);
 
 /* =========================================
    REMOVE ITEM

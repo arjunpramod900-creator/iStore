@@ -2,99 +2,51 @@
    UPDATE HEADER COUNTS
 ========================================= */
 
-function updateHeaderCounts(
-    cartCount,
-    wishlistCount
-) {
+function updateHeaderCounts(cartCount, wishlistCount) {
+  const wishlistLink = document.querySelector('a[href="/wishlist"]');
 
-    const wishlistLink =
-        document.querySelector(
-            'a[href="/wishlist"]'
-        );
+  const cartLink = document.querySelector('a[href="/cart"]');
 
-    const cartLink =
-        document.querySelector(
-            'a[href="/cart"]'
-        );
+  /* WISHLIST */
 
-    /* WISHLIST */
+  if (wishlistLink && typeof wishlistCount !== "undefined") {
+    let badge = wishlistLink.querySelector(".wishlist-count");
 
-    if (
-        wishlistLink &&
-        typeof wishlistCount !== "undefined"
-    ) {
+    if (wishlistCount > 0) {
+      if (!badge) {
+        badge = document.createElement("span");
 
-        let badge =
-            wishlistLink.querySelector(
-                ".wishlist-count"
-            );
+        badge.className = "wishlist-count";
 
-        if (wishlistCount > 0) {
+        wishlistLink.appendChild(badge);
+      }
 
-            if (!badge) {
-
-                badge =
-                    document.createElement("span");
-
-                badge.className =
-                    "wishlist-count";
-
-                wishlistLink.appendChild(
-                    badge
-                );
-            }
-
-            badge.textContent =
-                wishlistCount;
-
-        } else if (badge) {
-
-            badge.remove();
-
-        }
-
+      badge.textContent = wishlistCount;
+    } else if (badge) {
+      badge.remove();
     }
+  }
 
-    /* CART */
+  /* CART */
 
-    if (
-        cartLink &&
-        typeof cartCount !== "undefined"
-    ) {
+  if (cartLink && typeof cartCount !== "undefined") {
+    let badge = cartLink.querySelector(".cart-count");
 
-        let badge =
-            cartLink.querySelector(
-                ".cart-count"
-            );
+    if (cartCount > 0) {
+      if (!badge) {
+        badge = document.createElement("span");
 
-        if (cartCount > 0) {
+        badge.className = "cart-count";
 
-            if (!badge) {
+        cartLink.appendChild(badge);
+      }
 
-                badge =
-                    document.createElement("span");
-
-                badge.className =
-                    "cart-count";
-
-                cartLink.appendChild(
-                    badge
-                );
-            }
-
-            badge.textContent =
-                cartCount;
-
-        } else if (badge) {
-
-            badge.remove();
-
-        }
-
+      badge.textContent = cartCount;
+    } else if (badge) {
+      badge.remove();
     }
-
+  }
 }
-
 
 /* =========================================
    UPDATE CART UI
@@ -236,28 +188,27 @@ const updateCartUI = (
     }
   }
 
+  const offerDiscountElement = document.getElementById("offerDiscountAmount");
+  const offerDiscountRow = document.getElementById("offerDiscountRow");
+  const cartPostDiscount = document.getElementById("cartPostDiscount");
+  const cartPostDiscountRow = document.getElementById("cartPostDiscountRow");
 
-      const offerDiscountElement = document.getElementById("offerDiscountAmount");
-      const offerDiscountRow = document.getElementById("offerDiscountRow");
-      const cartPostDiscount = document.getElementById("cartPostDiscount");
-      const cartPostDiscountRow = document.getElementById("cartPostDiscountRow");
+  if (typeof data.offerDiscount !== "undefined") {
+    if (data.offerDiscount > 0) {
+      if (offerDiscountRow) offerDiscountRow.style.display = "flex";
+      if (cartPostDiscountRow) cartPostDiscountRow.style.display = "flex";
 
-      if (typeof data.offerDiscount !== "undefined") {
-        if (data.offerDiscount > 0) {
-            if (offerDiscountRow) offerDiscountRow.style.display = "flex";
-            if (cartPostDiscountRow) cartPostDiscountRow.style.display = "flex";
-            
-            if (offerDiscountElement) {
-                offerDiscountElement.innerText = `- ₹${data.offerDiscount.toLocaleString()}`;
-            }
-            if (cartPostDiscount && typeof data.cartSubtotal !== "undefined") {
-                cartPostDiscount.innerText = `₹${(data.cartSubtotal - data.offerDiscount).toLocaleString()}`;
-            }
-        } else {
-            if (offerDiscountRow) offerDiscountRow.style.display = "none";
-            if (cartPostDiscountRow) cartPostDiscountRow.style.display = "none";
-        }
+      if (offerDiscountElement) {
+        offerDiscountElement.innerText = `- ₹${data.offerDiscount.toLocaleString()}`;
       }
+      if (cartPostDiscount && typeof data.cartSubtotal !== "undefined") {
+        cartPostDiscount.innerText = `₹${(data.cartSubtotal - data.offerDiscount).toLocaleString()}`;
+      }
+    } else {
+      if (offerDiscountRow) offerDiscountRow.style.display = "none";
+      if (cartPostDiscountRow) cartPostDiscountRow.style.display = "none";
+    }
+  }
 
   /* =========================================
        TOTAL ITEMS
@@ -277,6 +228,19 @@ const updateCartUI = (
 ========================================= */
 
 const parseResponse = async (response) => {
+  if (response.status === 403) {
+    Swal.fire({
+      icon: "error",
+      title: "Account Blocked",
+      text: "Your account has been blocked by the admin. You will be logged out.",
+      confirmButtonColor: "#BA1A1A",
+      allowOutsideClick: false,
+    }).then(() => {
+      window.location.href = "/login";
+    });
+    return { success: false, message: "User blocked" };
+  }
+
   try {
     return await response.json();
   } catch (error) {
@@ -324,6 +288,7 @@ increaseButtons.forEach((button) => {
 
             headers: {
               "Content-Type": "application/json",
+              Accept: "application/json",
             },
 
             body: JSON.stringify({
@@ -336,19 +301,11 @@ increaseButtons.forEach((button) => {
 
         const data = await parseResponse(response);
 
-if (data.success) {
+        if (data.success) {
+          updateCartUI(variantId, data);
 
-  updateCartUI(
-    variantId,
-    data,
-  );
-
-  updateHeaderCounts(
-    data.cartCount,
-    data.wishlistCount
-  );
-
-} else {
+          updateHeaderCounts(data.cartCount, data.wishlistCount);
+        } else {
           showToast(
             data.message.includes("Maximum") || data.message.includes("Stock")
               ? "warning"
@@ -394,6 +351,7 @@ decreaseButtons.forEach((button) => {
 
             headers: {
               "Content-Type": "application/json",
+              Accept: "application/json",
             },
 
             body: JSON.stringify({
@@ -406,19 +364,11 @@ decreaseButtons.forEach((button) => {
 
         const data = await parseResponse(response);
 
-if (data.success) {
+        if (data.success) {
+          updateCartUI(variantId, data);
 
-  updateCartUI(
-    variantId,
-    data,
-  );
-
-  updateHeaderCounts(
-    data.cartCount,
-    data.wishlistCount
-  );
-
-} else {
+          updateHeaderCounts(data.cartCount, data.wishlistCount);
+        } else {
           showToast(
             data.message.includes("Maximum") || data.message.includes("Stock")
               ? "warning"
@@ -458,29 +408,19 @@ removeButtons.forEach((button) => {
 
         const result = await Swal.fire({
           title: "Remove Item?",
-
           text: "This product will be removed from your cart.",
-
           icon: "warning",
-
           showCancelButton: true,
-
           confirmButtonText: "Remove",
-
           cancelButtonText: "Cancel",
-
-          background: "#FFFFFF",
-
-          color: "#111111",
-
+          buttonsStyling: false,
           reverseButtons: true,
-
+          background: "#FFFFFF",
+          color: "#111111",
           customClass: {
-            popup: "cart-swal-popup",
-
-            confirmButton: "cart-swal-confirm",
-
-            cancelButton: "cart-swal-cancel",
+            popup: "premium-alert-popup",
+            confirmButton: "premium-alert-confirm",
+            cancelButton: "premium-alert-cancel",
           },
         });
 
@@ -495,6 +435,9 @@ removeButtons.forEach((button) => {
 
           {
             method: "DELETE",
+            headers: {
+              Accept: "application/json",
+            },
           },
         );
 
@@ -562,20 +505,11 @@ removeButtons.forEach((button) => {
 
           /* SUCCESS TOAST */
 
-updateCartUI(
-  variantId,
-  data
-);
+          updateCartUI(variantId, data);
 
-updateHeaderCounts(
-  data.cartCount,
-  data.wishlistCount
-);
+          updateHeaderCounts(data.cartCount, data.wishlistCount);
 
-showToast(
-  "success",
-  "Removed from cart"
-);
+          showToast("success", "Removed from cart");
 
           navigator.vibrate?.(30);
 
@@ -624,7 +558,11 @@ if (checkoutBtn) {
     checkoutBtn.disabled = true;
 
     try {
-      const response = await fetch("/cart/check-validity");
+      const response = await fetch("/cart/check-validity", {
+        headers: {
+          Accept: "application/json",
+        },
+      });
 
       const data = await parseResponse(response);
 
@@ -665,12 +603,6 @@ if (checkoutBtn) {
           `,
           confirmButtonText: "Shop More",
           showCancelButton: false,
-          background: "#FFFFFF",
-          color: "#111111",
-          customClass: {
-            popup: "cart-swal-popup",
-            confirmButton: "cart-swal-confirm",
-          },
         });
 
         window.location.href = "/products";
@@ -700,14 +632,6 @@ if (checkoutBtn) {
         showCancelButton: true,
         confirmButtonText: "Proceed to Checkout",
         cancelButtonText: "Shop More",
-        reverseButtons: true,
-        background: "#FFFFFF",
-        color: "#111111",
-        customClass: {
-          popup: "cart-swal-popup",
-          confirmButton: "cart-swal-confirm",
-          cancelButton: "cart-swal-cancel",
-        },
       });
 
       if (result.isConfirmed) {
@@ -715,7 +639,6 @@ if (checkoutBtn) {
       } else {
         window.location.href = "/products";
       }
-
     } catch (error) {
       console.log(error);
 

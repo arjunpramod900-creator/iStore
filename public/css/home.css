@@ -440,9 +440,9 @@ body {
 }
 
 .best-grid {
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:32px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 32px;
   width: 100%;
   justify-content: center;
 }
@@ -473,7 +473,7 @@ body {
   justify-content: center;
   align-items: flex-start;
   padding: 0px;
-  width:100%;
+  width: 100%;
   height: 236px;
   background: #f9f9fb;
   border-radius: 16px;
@@ -528,7 +528,7 @@ body {
   flex-direction: column;
   align-items: flex-start;
   padding: 24px 0px 0px;
-  width:100%;
+  width: 100%;
   height: 72px;
   box-sizing: border-box;
 }
@@ -742,198 +742,192 @@ body {
    TABLET RESPONSIVE
 ========================================== */
 
-@media (max-width: 1024px){
+@media (max-width: 1024px) {
+  .hero {
+    flex-direction: column;
+    text-align: center;
+    gap: 48px;
+    padding: 80px 32px;
+  }
 
-.hero{
-    flex-direction:column;
-    text-align:center;
-    gap:48px;
-    padding:80px 32px;
-}
+  .hero-content {
+    max-width: 100%;
+  }
 
-.hero-content{
-    max-width:100%;
-}
+  .hero-title {
+    font-size: 52px;
+    letter-spacing: -2px;
+  }
 
-.hero-title{
-    font-size:52px;
-    letter-spacing:-2px;
-}
+  .hero-image-container {
+    max-width: 700px;
+  }
 
-.hero-image-container{
-    max-width:700px;
-}
+  .category-grid-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
 
-.category-grid-container{
-    grid-template-columns:repeat(2,1fr);
-}
+  .product-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+  }
 
-.product-grid{
-    grid-template-columns:repeat(2,1fr);
-    gap:24px;
-}
+  .best-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 
-.best-grid{
-    grid-template-columns:repeat(2,1fr);
-}
+  .best-card {
+    width: 100%;
+  }
 
-.best-card{
-    width:100%;
-}
+  .best-img-container {
+    width: 100%;
+  }
 
-.best-img-container{
-    width:100%;
-}
+  .best-info {
+    width: 100%;
+  }
 
-.best-info{
-    width:100%;
-}
+  .deals-grid {
+    grid-template-columns: 1fr;
+  }
 
-.deals-grid{
-    grid-template-columns:1fr;
-}
+  .lifestyle-grid {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
 
-.lifestyle-grid{
-    grid-template-columns:1fr;
-    height:auto;
-}
+  .lifestyle-left {
+    height: 500px;
+  }
 
-.lifestyle-left{
-    height:500px;
-}
+  .lifestyle-right {
+    height: auto;
+  }
 
-.lifestyle-right{
-    height:auto;
-}
-
-.lifestyle-right-top{
-    height:300px;
-}
-
+  .lifestyle-right-top {
+    height: 300px;
+  }
 }
 
 /* ==========================================
    MOBILE RESPONSIVE
 ========================================== */
 
-@media (max-width:768px){
+@media (max-width: 768px) {
+  .section {
+    padding: 64px 20px;
+  }
 
-.section{
-    padding:64px 20px;
-}
+  .hero {
+    padding: 64px 20px;
+  }
 
-.hero{
-    padding:64px 20px;
-}
+  .hero-title {
+    font-size: 38px;
+    line-height: 1.15;
+    letter-spacing: -1px;
+  }
 
-.hero-title{
-    font-size:38px;
-    line-height:1.15;
-    letter-spacing:-1px;
-}
+  .hero-description {
+    font-size: 16px;
+  }
 
-.hero-description{
-    font-size:16px;
-}
+  .category-grid-container {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
 
-.category-grid-container{
-    grid-template-columns:1fr;
-    gap:20px;
-}
+  .category-card {
+    height: 260px;
+  }
 
-.category-card{
-    height:260px;
-}
+  .featured-container {
+    padding: 0 20px;
+  }
 
-.featured-container{
-    padding:0 20px;
-}
+  .featured-title {
+    font-size: 30px;
+  }
 
-.featured-title{
-    font-size:30px;
-}
+  .product-grid {
+    grid-template-columns: 1fr;
+  }
 
-.product-grid{
-    grid-template-columns:1fr;
-}
+  .product-card {
+    height: auto;
+  }
 
-.product-card{
-    height:auto;
-}
+  .best-grid {
+    grid-template-columns: 1fr;
+  }
 
-.best-grid{
-    grid-template-columns:1fr;
-}
+  .best-card {
+    width: 100%;
+  }
 
-.best-card{
-    width:100%;
-}
+  .deal-card {
+    padding: 28px;
+    height: auto;
+    min-height: 260px;
+  }
 
-.deal-card{
-    padding:28px;
-    height:auto;
-    min-height:260px;
-}
+  .deal-title {
+    font-size: 24px;
+  }
 
-.deal-title{
-    font-size:24px;
-}
+  .lifestyle-title {
+    font-size: 30px;
+  }
 
-.lifestyle-title{
-    font-size:30px;
-}
+  .lifestyle-left {
+    height: 320px;
+  }
 
-.lifestyle-left{
-    height:320px;
-}
+  .lifestyle-right-top {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
 
-.lifestyle-right-top{
-    grid-template-columns:1fr;
-    height:auto;
-}
+  .lifestyle-right-top .lifestyle-card {
+    height: 260px;
+  }
 
-.lifestyle-right-top .lifestyle-card{
-    height:260px;
-}
-
-.lifestyle-right-bottom{
-    height:300px;
-}
-
+  .lifestyle-right-bottom {
+    height: 300px;
+  }
 }
 
 /* ==========================================
    SMALL MOBILE
 ========================================== */
 
-@media (max-width:480px){
+@media (max-width: 480px) {
+  .hero-title {
+    font-size: 32px;
+  }
 
-.hero-title{
-    font-size:32px;
-}
+  .section-title {
+    font-size: 28px;
+  }
 
-.section-title{
-    font-size:28px;
-}
+  .featured-title {
+    font-size: 28px;
+  }
 
-.featured-title{
-    font-size:28px;
-}
+  .best-sellers-title {
+    font-size: 28px;
+  }
 
-.best-sellers-title{
-    font-size:28px;
-}
+  .lifestyle-title {
+    font-size: 28px;
+  }
 
-.lifestyle-title{
-    font-size:28px;
-}
+  .product-price {
+    font-size: 18px;
+  }
 
-.product-price{
-    font-size:18px;
-}
-
-.category-name{
-    font-size:20px;
-}
-
+  .category-name {
+    font-size: 20px;
+  }
 }

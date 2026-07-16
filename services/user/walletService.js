@@ -6,64 +6,45 @@ import {
   verifyRazorpaySignature,
 } from "./razorpayService.js";
 
-export const loadWalletService = async (
-  userId,
-  page = 1,
-  limit = 10
-) => {
+export const loadWalletService = async (userId, page = 1, limit = 10) => {
+  const wallet = await Wallet.findOne({ userId });
 
-  const wallet =
-    await Wallet.findOne({ userId });
+  const currentPage = Number(page) || 1;
 
-  const currentPage =
-    Number(page) || 1;
+  const skip = (currentPage - 1) * limit;
 
-  const skip =
-    (currentPage - 1) * limit;
+  const totalTransactions = await WalletTransaction.countDocuments({
+    userId,
+  });
 
-  const totalTransactions =
-    await WalletTransaction.countDocuments({
-      userId,
-    });
-
-  const transactions =
-    await WalletTransaction.find({
-      userId,
+  const transactions = await WalletTransaction.find({
+    userId,
+  })
+    .sort({
+      createdAt: -1,
     })
-      .sort({
-        createdAt: -1,
-      })
-      .skip(skip)
-      .limit(limit)
-      .lean();
+    .skip(skip)
+    .limit(limit)
+    .lean();
 
-  const recentRefunds =
-    await WalletTransaction.find({
+  const recentRefunds = await WalletTransaction.find({
+    userId,
 
-      userId,
+    transactionType: {
+      $in: [
+        "Refund",
 
-      transactionType: {
+        "CancellationRefund",
 
-        $in: [
+        "ReturnRefund",
 
-          "Refund",
-
-          "CancellationRefund",
-
-          "ReturnRefund",
-
-          "AdminCancellationRefund",
-
-        ],
-
-      },
-
-    })
+        "AdminCancellationRefund",
+      ],
+    },
+  })
 
     .sort({
-
       createdAt: -1,
-
     })
 
     .limit(3)
@@ -71,7 +52,6 @@ export const loadWalletService = async (
     .lean();
 
   return {
-
     wallet,
 
     transactions,
@@ -79,45 +59,29 @@ export const loadWalletService = async (
     recentRefunds,
 
     pagination: {
-
       currentPage,
 
-      totalPages:
-        Math.max(
-          1,
-          Math.ceil(
-            totalTransactions / limit
-          )
-        ),
+      totalPages: Math.max(1, Math.ceil(totalTransactions / limit)),
 
       totalTransactions,
-
     },
-
   };
-
 };
-
 
 export const creditWalletTopupService = async ({
   userId,
   amount,
   razorpayPaymentId,
 }) => {
-
-  let wallet =
-    await Wallet.findOne({
-      userId,
-    });
+  let wallet = await Wallet.findOne({
+    userId,
+  });
 
   if (!wallet) {
-
-    wallet =
-      await Wallet.create({
-        userId,
-        balance: 0,
-      });
-
+    wallet = await Wallet.create({
+      userId,
+      balance: 0,
+    });
   }
 
   wallet.balance += amount;
@@ -125,9 +89,7 @@ export const creditWalletTopupService = async ({
   await wallet.save();
 
   await WalletTransaction.create({
-
-    walletId:
-      wallet._id,
+    walletId: wallet._id,
 
     userId,
 
@@ -135,93 +97,51 @@ export const creditWalletTopupService = async ({
 
     type: "Credit",
 
-    transactionType:
-      "WalletTopup",
+    transactionType: "WalletTopup",
 
     razorpayPaymentId,
 
-    description:
-      `Wallet top-up via Razorpay (${razorpayPaymentId})`,
+    description: `Wallet top-up via Razorpay (${razorpayPaymentId})`,
 
-    balanceAfter:
-      wallet.balance,
-
+    balanceAfter: wallet.balance,
   });
 
   return {
-
     success: true,
 
-    balance:
-      wallet.balance,
-
+    balance: wallet.balance,
   };
-
 };
 
-export const createWalletTopupOrderService =
-async (
-  userId,
-  amount,
-) => {
-
-if (
-
-  !amount ||
-
-  amount < 100 ||
-
-  amount > 50000
-
-) {
-
-  return {
-
-    success: false,
-
-    message:
-      "Top-up amount must be between ₹100 and ₹50,000",
-
-  };
-
-} 
-
-  const razorpayResponse =
-    await createRazorpayOrder({
-
-      amount,
-
-    });
-
-  if (
-    !razorpayResponse.success
-  ) {
-
+export const createWalletTopupOrderService = async (userId, amount) => {
+  if (!amount || amount < 100 || amount > 50000) {
     return {
-
       success: false,
 
-      message:
-        "Unable to initiate payment",
-
+      message: "Top-up amount must be between ₹100 and ₹50,000",
     };
+  }
 
+  const razorpayResponse = await createRazorpayOrder({
+    amount,
+  });
+
+  if (!razorpayResponse.success) {
+    return {
+      success: false,
+
+      message: "Unable to initiate payment",
+    };
   }
 
   return {
-
     success: true,
 
-    razorpayOrder:
-      razorpayResponse.razorpayOrder,
-
+    razorpayOrder: razorpayResponse.razorpayOrder,
   };
-
 };
 
-export const verifyWalletTopupPaymentService =
-async ({
-
+export const verifyWalletTopupPaymentService = async ({
   userId,
 
   amount,
@@ -231,104 +151,61 @@ async ({
   razorpayPaymentId,
 
   razorpaySignature,
-
 }) => {
+  if (!amount || amount < 100 || amount > 50000) {
+    return {
+      success: false,
 
-  if (
+      message: "Invalid wallet top-up amount",
+    };
+  }
+  const existingTransaction = await WalletTransaction.findOne({
+    razorpayPaymentId,
+  });
 
-  !amount ||
+  if (existingTransaction) {
+    return {
+      success: false,
 
-  amount < 100 ||
+      message: "Payment already processed",
+    };
+  }
 
-  amount > 50000
+  const isValid = verifyRazorpaySignature({
+    razorpayOrderId,
 
-) {
+    razorpayPaymentId,
 
-  return {
-
-    success: false,
-
-    message:
-      "Invalid wallet top-up amount",
-
-  };
-
-}
-const existingTransaction =
-await WalletTransaction.findOne({
-
-  razorpayPaymentId,
-
-});
-
-if (existingTransaction) {
-
-  return {
-
-    success: false,
-
-    message:
-      "Payment already processed",
-
-  };
-
-}
-
-  const isValid =
-    verifyRazorpaySignature({
-
-      razorpayOrderId,
-
-      razorpayPaymentId,
-
-      razorpaySignature,
-
-    });
+    razorpaySignature,
+  });
 
   if (!isValid) {
-
     return {
-
       success: false,
 
-      message:
-        "Payment verification failed",
-
+      message: "Payment verification failed",
     };
-
   }
 
-  const creditResponse =
-    await creditWalletTopupService({
+  const creditResponse = await creditWalletTopupService({
+    userId,
 
-      userId,
+    amount,
 
-      amount,
-
-      razorpayPaymentId,
-
-    });
+    razorpayPaymentId,
+  });
 
   if (!creditResponse.success) {
-
     return {
-
       success: false,
 
-      message:
-        "Wallet credit failed",
-
+      message: "Wallet credit failed",
     };
-
   }
 
   return {
-
     success: true,
 
-    balance:
-      creditResponse.balance,
-
+    balance: creditResponse.balance,
   };
-
 };

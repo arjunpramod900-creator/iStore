@@ -4,6 +4,10 @@ dotenv.config();
 import express from "express";
 import session from "express-session";
 
+import MongoStore from "connect-mongo";
+
+import helmetConfig from "./config/helmet.js";
+
 import connectDB from "./config/db.js";
 
 import userRoutes from "./routes/user/index.js";
@@ -29,14 +33,13 @@ import {
   userNotFound,
 } from "./middleware/notFoundMiddleware.js";
 
-
 const app = express();
 
 /* ================================
-   CONNECT DATABASE
+   SECURITY HEADERS
 ================================ */
 
-connectDB();
+app.use(helmetConfig);
 
 /* ================================
    BODY PARSERS
@@ -68,17 +71,19 @@ const userSession = session({
   name: "user.sid",
   secret: process.env.SESSION_SECRET || "mySecretKey",
 
-  resave: false,
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGO_URI,
+    collectionName: "user_sessions",
+    ttl: 60 * 60 * 24, // 1 day, in seconds — should match cookie maxAge
+  }),
 
+  resave: false,
   saveUninitialized: false,
 
   cookie: {
     httpOnly: true,
-
     sameSite: "lax",
-
     secure: false,
-
     maxAge: 1000 * 60 * 60 * 24, // 1 day
   },
 });
@@ -87,17 +92,19 @@ const adminSession = session({
   name: "admin.sid",
   secret: process.env.ADMIN_SESSION_SECRET || "myAdminSecretKey",
 
-  resave: false,
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGO_URI,
+    collectionName: "admin_sessions",
+    ttl: 60 * 60 * 24,
+  }),
 
+  resave: false,
   saveUninitialized: false,
 
   cookie: {
     httpOnly: true,
-
     sameSite: "lax",
-
     secure: false,
-
     maxAge: 1000 * 60 * 60 * 24, // 1 day
   },
 });
@@ -110,7 +117,6 @@ app.use((req, res, next) => {
   if (req.path.startsWith("/admin")) return next();
   userSession(req, res, next);
 });
-
 
 /* ================================
 
@@ -133,7 +139,6 @@ GLOBAL VARIABLES
 ================================ */
 
 app.use(localsMiddleware);
-
 
 app.use(userCountsMiddleware);
 
@@ -158,9 +163,6 @@ ADMIN ROUTES
 
 app.use("/admin", adminRouter);
 
-
-
-
 /* ================================
 404 HANDLER
 ================================ */
@@ -168,12 +170,10 @@ app.use("/admin", adminNotFound);
 
 app.use(userNotFound);
 
- 
 /* ============================================================
   General 500 error handler
 ============================================================ */
 app.use(errorHandler);
-
 
 /* ================================
    START SERVER
@@ -181,12 +181,18 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 3030;
 
-app.listen(
-  PORT,
+const startServer = async () => {
+  try {
+    await connectDB();
 
-  () => {
-    console.log(`Server running on port ${PORT}`);
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+      console.log(`http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    console.error("Failed to start server:", error);
+    process.exit(1);
+  }
+};
 
-    console.log(`http://localhost:${PORT}`);
-  },
-);
+startServer();

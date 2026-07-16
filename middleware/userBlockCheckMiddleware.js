@@ -2,7 +2,6 @@ import User from "../models/User.js";
 
 const userBlockCheckMiddleware = async (req, res, next) => {
   try {
-
     /* =========================
        Skip ADMIN routes
        Use originalUrl (always the full path) instead of
@@ -39,10 +38,10 @@ const userBlockCheckMiddleware = async (req, res, next) => {
     }
 
     /* =========================
-       Find user
+       Find user (reuse from authMiddleware if available)
     ========================= */
 
-    const user = await User.findById(req.session.userId);
+    const user = req.user || (await User.findById(req.session.userId));
 
     /* =========================
        If blocked

@@ -375,7 +375,12 @@ document
 
 async () => {
 
+const topupBtn = document.getElementById("topupWalletBtn");
+
 try {
+
+topupBtn.disabled = true;
+topupBtn.textContent = "Processing…";
 
 const amount =
 Number(
@@ -613,6 +618,9 @@ razorpay.open();
 }
 
 catch(error){
+
+topupBtn.disabled = false;
+topupBtn.textContent = "Add Money";
 
 Swal.fire({
 

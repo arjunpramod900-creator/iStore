@@ -1,6 +1,4 @@
-import {
-  loadInventoryService,
-} from "../../services/admin/inventoryService.js";
+import { loadInventoryService } from "../../services/admin/inventoryService.js";
 
 import Variant from "../../models/Variant.js";
 
@@ -8,112 +6,60 @@ import Variant from "../../models/Variant.js";
    LOAD INVENTORY PAGE
 ============================ */
 
-export const loadInventory =
-async (req, res) => {
-
+export const loadInventory = async (req, res) => {
   try {
+    const inventoryData = await loadInventoryService(req.query);
 
-    const inventoryData =
-      await loadInventoryService(
-        req.query
-      );
+    res.render("admin/inventory-management", {
+      page: "inventory",
 
-    res.render(
-      "admin/inventory-management",
-      {
-        page: "inventory",
-
-        ...inventoryData,
-      }
-    );
-
+      ...inventoryData,
+    });
   } catch (error) {
+    console.log("Load Inventory Error:", error);
 
-    console.log(
-      "Load Inventory Error:",
-      error
-    );
-
-    res.redirect(
-      "/admin/dashboard"
-    );
-
+    res.redirect("/admin/dashboard");
   }
-
 };
 
-
-
-
-export const updateVariantStock =
-async (req, res) => {
-
+export const updateVariantStock = async (req, res) => {
   try {
+    const { variantId } = req.params;
 
-    const { variantId } =
-      req.params;
+    const { stock } = req.body;
 
-    const { stock } =
-      req.body;
-
-   if (
-    stock === undefined ||
-    isNaN(stock)
-    )
-    {
-    return res.status(400).json({
-    success:false,
-    message:"Invalid stock"
-    });
+    if (stock === undefined || isNaN(stock)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid stock",
+      });
     }
 
-    const stockValue =
-    Number(stock);
+    const stockValue = Number(stock);
 
-    if (
-    stockValue < 0
-    )
-    {
-    return res.status(400).json({
-    success:false,
-    message:"Stock cannot be negative"
-    });
+    if (stockValue < 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Stock cannot be negative",
+      });
     }
 
-  await Variant.findByIdAndUpdate(
-  variantId,
-  {
-    stock: stockValue,
-  }
-);
+    await Variant.findByIdAndUpdate(variantId, {
+      stock: stockValue,
+    });
 
     return res.json({
-
       success: true,
 
-      message:
-        "Stock updated",
-
+      message: "Stock updated",
     });
-
-  }
-
-  catch (error) {
-
-    console.log(
-      "Update Stock Error:",
-      error
-    );
+  } catch (error) {
+    console.log("Update Stock Error:", error);
 
     return res.status(500).json({
-
       success: false,
 
-      message:
-        "Server Error",
-
+      message: "Server Error",
     });
-
   }
-
 };

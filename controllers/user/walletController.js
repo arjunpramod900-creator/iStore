@@ -1,151 +1,78 @@
 import {
-
   loadWalletService,
-
   createWalletTopupOrderService,
-
   verifyWalletTopupPaymentService,
-
 } from "../../services/user/walletService.js";
 
 /* =========================================
    LOAD WALLET PAGE
 ========================================= */
 
-export const loadWalletPage =
-async (
-  req,
-  res,
-) => {
-
+export const loadWalletPage = async (req, res) => {
   try {
+    const userId = req.session.userId;
 
-    const userId =
-      req.session.userId;
+    const { page = 1 } = req.query;
 
-    const {
-      page = 1,
-    } = req.query;
+    const response = await loadWalletService(userId, page);
 
-    const response =
-      await loadWalletService(
-        userId,
-        page,
-      );
+    res.render("user/wallet", {
+      page: "wallet",
 
-    res.render(
-      "user/wallet",
-      {
+      wallet: response.wallet,
 
-        page: "wallet",
+      transactions: response.transactions,
 
-        wallet:
-          response.wallet,
+      recentRefunds: response.recentRefunds,
 
-        transactions:
-          response.transactions,
+      pagination: response.pagination,
 
-        recentRefunds:
-          response.recentRefunds,
+      razorpayKey: process.env.RAZORPAY_KEY_ID,
+    });
+  } catch (error) {
+    console.log("Load Wallet Error:", error);
 
-        pagination:
-          response.pagination,
-
-        razorpayKey:
-          process.env.RAZORPAY_KEY_ID,
-
-      },
-    );
-
+    return res.redirect("/profile");
   }
-
-  catch (error) {
-
-    console.log(
-      "Load Wallet Error:",
-      error,
-    );
-
-    return res.redirect(
-      "/profile",
-    );
-
-  }
-
 };
 
 /* =========================================
    CREATE WALLET TOPUP ORDER
 ========================================= */
 
-export const createWalletTopupOrder =
-async (
-  req,
-  res,
-) => {
-
+export const createWalletTopupOrder = async (req, res) => {
   try {
+    const userId = req.session.userId;
 
-    const userId =
-      req.session.userId;
+    const { amount } = req.body;
 
-    const {
-      amount,
-    } = req.body;
+    const response = await createWalletTopupOrderService(
+      userId,
 
-    const response =
-      await createWalletTopupOrderService(
-
-        userId,
-
-        Number(amount),
-
-      );
-
-    return res.json(
-      response
+      Number(amount),
     );
 
+    return res.json(response);
+  } catch (error) {
+    console.log("Create Wallet Topup Error:", error);
+
+    return res.status(500).json({
+      success: false,
+
+      message: "Failed to create payment",
+    });
   }
-
-  catch (error) {
-
-    console.log(
-      "Create Wallet Topup Error:",
-      error
-    );
-
-    return res.status(500)
-      .json({
-
-        success: false,
-
-        message:
-          "Failed to create payment",
-
-      });
-
-  }
-
 };
 
 /* =========================================
    VERIFY WALLET TOPUP
 ========================================= */
 
-export const verifyWalletTopupPayment =
-async (
-  req,
-  res,
-) => {
-
+export const verifyWalletTopupPayment = async (req, res) => {
   try {
-
-    const userId =
-      req.session.userId;
+    const userId = req.session.userId;
 
     const {
-
       amount,
 
       razorpay_order_id,
@@ -153,51 +80,28 @@ async (
       razorpay_payment_id,
 
       razorpay_signature,
-
     } = req.body;
 
-    const response =
-      await verifyWalletTopupPaymentService({
+    const response = await verifyWalletTopupPaymentService({
+      userId,
 
-        userId,
+      amount: Number(amount),
 
-        amount:
-          Number(amount),
+      razorpayOrderId: razorpay_order_id,
 
-        razorpayOrderId:
-          razorpay_order_id,
+      razorpayPaymentId: razorpay_payment_id,
 
-        razorpayPaymentId:
-          razorpay_payment_id,
+      razorpaySignature: razorpay_signature,
+    });
 
-        razorpaySignature:
-          razorpay_signature,
+    return res.json(response);
+  } catch (error) {
+    console.log("Verify Wallet Topup Error:", error);
 
-      });
+    return res.status(500).json({
+      success: false,
 
-    return res.json(
-      response
-    );
-
+      message: "Verification failed",
+    });
   }
-
-  catch (error) {
-
-    console.log(
-      "Verify Wallet Topup Error:",
-      error
-    );
-
-    return res.status(500)
-      .json({
-
-        success: false,
-
-        message:
-          "Verification failed",
-
-      });
-
-  }
-
 };

@@ -34,7 +34,6 @@ router.post("/resend-otp", authController.resendOTP);
 ========================= */
 
 router.get("/verify-otp", isLoggedOut, (req, res) => {
-
   const type = req.query.type || "signup";
 
   if (
@@ -51,15 +50,14 @@ router.get("/verify-otp", isLoggedOut, (req, res) => {
 
   res.set({
     "Cache-Control": "no-store, no-cache, must-revalidate, private",
-    "Pragma": "no-cache",
-    "Expires": "0"
+    Pragma: "no-cache",
+    Expires: "0",
   });
 
   res.render("user/otp", {
     type,
-    email
+    email,
   });
-
 });
 
 /* Verify Signup OTP */
@@ -82,28 +80,25 @@ router.post("/login", authController.loginUser);
 
 router.get(
   "/auth/google",
-  passport.authenticate("google", { scope: ["profile", "email"] })
+  passport.authenticate("google", { scope: ["profile", "email"] }),
 );
 
-router.get(
-  "/auth/google/callback",
-  (req, res, next) => {
-    passport.authenticate("google", (err, user, info) => {
-      if (err) return next(err);
-      if (!user) {
-        if (info && info.message === "blocked") {
-          return res.redirect("/login?error=blocked");
-        }
-        return res.redirect("/login");
+router.get("/auth/google/callback", (req, res, next) => {
+  passport.authenticate("google", (err, user, info) => {
+    if (err) return next(err);
+    if (!user) {
+      if (info && info.message === "blocked") {
+        return res.redirect("/login?error=blocked");
       }
-      req.logIn(user, (err) => {
-        if (err) return next(err);
-        req.session.userId = user._id;
-        return res.redirect("/?login=success");
-      });
-    })(req, res, next);
-  }
-);
+      return res.redirect("/login");
+    }
+    req.logIn(user, (err) => {
+      if (err) return next(err);
+      req.session.userId = user._id;
+      return res.redirect("/?login=success");
+    });
+  })(req, res, next);
+});
 
 /* =========================
    PROFILE ROUTE
@@ -123,7 +118,11 @@ router.post("/forgot-password", authController.sendForgotOTP);
    RESET PASSWORD
 ========================= */
 
-router.get("/reset-password", isResetVerified, authController.loadResetPassword);
+router.get(
+  "/reset-password",
+  isResetVerified,
+  authController.loadResetPassword,
+);
 
 router.post("/reset-password", authController.resetPassword);
 
@@ -131,13 +130,21 @@ router.post("/reset-password", authController.resetPassword);
    CHANGE PASSWORD OTP
 ========================= */
 
-router.post("/send-change-password-otp", isLoggedIn, authController.sendChangePasswordOTP);
+router.post(
+  "/send-change-password-otp",
+  isLoggedIn,
+  authController.sendChangePasswordOTP,
+);
 
 /* =========================
    EMAIL CHANGE OTP
 ========================= */
 
-router.post("/send-email-change-otp", isLoggedIn, authController.sendEmailChangeOTP);
+router.post(
+  "/send-email-change-otp",
+  isLoggedIn,
+  authController.sendEmailChangeOTP,
+);
 
 /* =========================
    LOGOUT ROUTE

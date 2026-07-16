@@ -931,85 +931,66 @@ body {
   }
 }
 
-
-
 /* =========================================
    CHECKOUT ADDRESS SYSTEM
 ========================================= */
 
-.checkout-addresses-grid{
+.checkout-addresses-grid {
+  display: grid;
 
-    display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
 
-    grid-template-columns:
-    repeat(auto-fit, minmax(320px, 1fr));
-
-    gap: 24px;
-
+  gap: 24px;
 }
 
-.checkout-address-wrapper{
-
-    cursor: pointer;
-
+.checkout-address-wrapper {
+  cursor: pointer;
 }
 
 /* HIDE DELETE BUTTON */
 
 .checkout-address-wrapper .card-actions {
-
-    display: flex;
-
+  display: flex;
 }
 
 .checkout-address-wrapper .deliver-here-btn {
-
-    display: none;
-
+  display: none;
 }
 
 .checkout-address-wrapper .delete-trigger {
-
-    display: none;
-
+  display: none;
 }
 
 /* ACTIVE CARD */
 
-.checkout-address-wrapper.active
-.address-card-v2{
+.checkout-address-wrapper.active .address-card-v2 {
+  border: 2px solid #4c0080;
 
-    border: 2px solid #4c0080;
-
-    box-shadow:
-    0 20px 40px rgba(106,13,173,0.12);
-
+  box-shadow: 0 20px 40px rgba(106, 13, 173, 0.12);
 }
 
 /* ADD ADDRESS BUTTON */
 
-.co-add-address-btn{
+.co-add-address-btn {
+  display: inline-flex;
 
-    display: inline-flex;
+  align-items: center;
 
-    align-items: center;
+  justify-content: center;
 
-    justify-content: center;
+  margin-top: 24px;
 
-    margin-top: 24px;
+  padding: 14px 24px;
 
-    padding: 14px 24px;
+  border-radius: 18px;
 
-    border-radius: 18px;
+  background: #4c0080;
 
-    background: #4c0080;
+  color: white;
 
-    color: white;
+  text-decoration: none;
 
-    text-decoration: none;
-
-    font-weight: 600;
-
+  font-weight: 600;
 }
 
 /* ============================================================

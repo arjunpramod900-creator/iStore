@@ -988,9 +988,6 @@ input:checked + .slider:before {
   }
 }
 
-
-
-
 /* Existing CSS */
 
 /* Responsive */
@@ -1004,38 +1001,26 @@ input:checked + .slider:before {
 ========================================= */
 
 .checkout-address-card {
+  cursor: pointer;
 
-    cursor: pointer;
+  transition: 0.25s ease;
 
-    transition:
-    0.25s ease;
-
-    border: 2px solid transparent;
-
+  border: 2px solid transparent;
 }
 
 .checkout-address-card:hover {
-
-    border-color:
-    rgba(76, 0, 128, 0.15);
-
+  border-color: rgba(76, 0, 128, 0.15);
 }
 
 .checkout-address-card.active {
+  border-color: #4c0080;
 
-    border-color: #4c0080;
-
-    box-shadow:
-    0 20px 40px rgba(106,13,173,0.12);
-
+  box-shadow: 0 20px 40px rgba(106, 13, 173, 0.12);
 }
 
 .checkout-address-card .card-actions {
-
-    display: none;
-
+  display: none;
 }
-
 
 .modal-overlay.active {
   display: flex;

@@ -7,13 +7,9 @@
 ================================== */
 
 const premiumAlertConfig = {
-
   background: "#FFFFFF",
-
-  color: "#2C1421",
-
+  color: "#111111",
   backdrop: "rgba(17,17,17,0.55)",
-
   borderRadius: "28px",
 
   padding: "2rem",
@@ -25,45 +21,29 @@ const premiumAlertConfig = {
   allowOutsideClick: true,
 
   customClass: {
+    popup: "premium-alert-popup",
 
-    popup:
-    "premium-alert-popup",
+    title: "premium-alert-title",
 
-    title:
-    "premium-alert-title",
+    htmlContainer: "premium-alert-text",
 
-    htmlContainer:
-    "premium-alert-text",
+    confirmButton: "premium-alert-confirm",
 
-    confirmButton:
-    "premium-alert-confirm",
-
-    cancelButton:
-    "premium-alert-cancel",
-
+    cancelButton: "premium-alert-cancel",
   },
 
- showClass: {
+  showClass: {
+    popup: "animate__animated animate__fadeIn animate__faster",
 
-popup:
-"animate__animated animate__fadeIn animate__faster",
+    backdrop: "animate__animated animate__fadeIn",
+  },
 
-backdrop:
-"animate__animated animate__fadeIn"
+  hideClass: {
+    popup: "animate__animated animate__fadeOut animate__faster",
 
-},
-
-hideClass: {
-
-popup:
-"animate__animated animate__fadeOut animate__faster",
-
-backdrop:
-"animate__animated animate__fadeOut"
-
-},
-
-}
+    backdrop: "animate__animated animate__fadeOut",
+  },
+};
 
 /* ==================================
    APPLY GLOBAL MIXIN
@@ -77,9 +57,7 @@ if (typeof Swal !== "undefined") {
 ================================== */
 
 window.showLoadingAlert = () => {
-
   Swal.fire({
-
     title: "Please wait...",
 
     allowOutsideClick: false,
@@ -89,46 +67,29 @@ window.showLoadingAlert = () => {
     backdrop: "rgba(0,0,0,0.6)",
 
     showClass: {
+      popup: "animate__animated animate__fadeIn animate__faster",
 
-popup:
-"animate__animated animate__fadeIn animate__faster",
-
-backdrop:
-"animate__animated animate__fadeIn"
-
-},
-
-hideClass: {
-
-popup:
-"animate__animated animate__fadeOut animate__faster",
-
-backdrop:
-"animate__animated animate__fadeOut"
-
-},
-
-    didOpen: () => {
-
-      Swal.showLoading()
-
+      backdrop: "animate__animated animate__fadeIn",
     },
 
-  })
+    hideClass: {
+      popup: "animate__animated animate__fadeOut animate__faster",
 
-}
+      backdrop: "animate__animated animate__fadeOut",
+    },
+
+    didOpen: () => {
+      Swal.showLoading();
+    },
+  });
+};
 
 /* ==================================
    SUCCESS ALERT
 ================================== */
 
-window.showSuccessAlert = (
-  title,
-  text
-) => {
-
+window.showSuccessAlert = (title, text) => {
   return Swal.fire({
-
     ...premiumAlertConfig,
 
     icon: "success",
@@ -140,22 +101,15 @@ window.showSuccessAlert = (
     timer: 1600,
 
     showConfirmButton: false,
-
-  })
-
-}
+  });
+};
 
 /* ==================================
    ERROR ALERT
 ================================== */
 
-window.showErrorAlert = (
-  title,
-  text
-) => {
-
+window.showErrorAlert = (title, text) => {
   return Swal.fire({
-
     ...premiumAlertConfig,
 
     icon: "error",
@@ -163,24 +117,15 @@ window.showErrorAlert = (
     title,
 
     text,
-
-  })
-
-}
+  });
+};
 
 /* ==================================
    LOGIN ALERT
 ================================== */
 
-window.showLoginAlert = (
-
-  text =
-  "Please login to continue."
-
-) => {
-
+window.showLoginAlert = (text = "Please login to continue.") => {
   return Swal.fire({
-
     ...premiumAlertConfig,
 
     icon: "info",
@@ -194,17 +139,14 @@ window.showLoginAlert = (
     confirmButtonText: "Login",
 
     cancelButtonText: "Cancel",
-
-  })
-
-}
+  });
+};
 
 /* ==================================
    CONFIRM ALERT
 ================================== */
 
 window.showConfirmAlert = ({
-
   title = "Are you sure?",
 
   text = "",
@@ -214,11 +156,8 @@ window.showConfirmAlert = ({
   cancelText = "Cancel",
 
   icon = "warning",
-
 }) => {
-
   return Swal.fire({
-
     ...premiumAlertConfig,
 
     icon,
@@ -229,22 +168,17 @@ window.showConfirmAlert = ({
 
     showCancelButton: true,
 
-    confirmButtonText:
-    confirmText,
+    confirmButtonText: confirmText,
 
-    cancelButtonText:
-    cancelText,
-
-  })
-
-}
+    cancelButtonText: cancelText,
+  });
+};
 
 /* ==================================
    CANCEL REASON ALERT
 ================================== */
 
-window.showCancelReasonAlert =
-async ({
+window.showCancelReasonAlert = async ({
   title = "Cancel Order?",
   confirmText = "Confirm",
 }) => {
@@ -268,25 +202,22 @@ async ({
     preConfirm: () => {
       const reason = document.getElementById("cancelReason").value;
       const note = document.getElementById("cancelNote").value;
-      
+
       if (!reason) {
         Swal.showValidationMessage("Please select a cancellation reason");
         return false;
       }
       return note.trim() ? `${reason} - ${note.trim()}` : reason;
     },
-  })
-}
+  });
+};
 
 /* ==================================
    RETURN REASON ALERT
 ================================== */
 
-window.showReturnReasonAlert =
-async () => {
-
+window.showReturnReasonAlert = async () => {
   return Swal.fire({
-
     ...premiumAlertConfig,
 
     title: "Return Order",
@@ -334,40 +265,22 @@ async () => {
 
     showCancelButton: true,
 
-    confirmButtonText:
-    "Submit Return",
+    confirmButtonText: "Submit Return",
 
     preConfirm: () => {
+      const reason = document.getElementById("returnReason").value;
 
-      const reason =
-      document.getElementById(
-        "returnReason"
-      ).value
+      const note = document.getElementById("returnNote").value;
 
-      const note =
-      document.getElementById(
-        "returnNote"
-      ).value
+      if (!reason) {
+        Swal.showValidationMessage("Return reason required");
 
-      if(!reason){
-
-        Swal.showValidationMessage(
-          "Return reason required"
-        )
-
-        return false
-
+        return false;
       }
 
       return {
-
-        reason:
-        `${reason} ${note}`
-
-      }
-
+        reason: `${reason} ${note}`,
+      };
     },
-
-  })
-
-}
+  });
+};

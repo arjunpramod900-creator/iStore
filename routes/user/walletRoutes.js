@@ -1,23 +1,15 @@
 import express from "express";
 
-const router =
-  express.Router();
+const router = express.Router();
+
+import { isLoggedIn } from "../../middleware/authMiddleware.js";
+
+import userBlockCheckMiddleware from "../../middleware/userBlockCheckMiddleware.js";
 
 import {
-  isLoggedIn,
-} from "../../middleware/authMiddleware.js";
-
-import userBlockCheckMiddleware
-from "../../middleware/userBlockCheckMiddleware.js";
-
-import {
-
   loadWalletPage,
-
   createWalletTopupOrder,
-
   verifyWalletTopupPayment,
-
 } from "../../controllers/user/walletController.js";
 
 /* =========================================
@@ -25,11 +17,9 @@ import {
 ========================================= */
 
 router.use(
-
   isLoggedIn,
 
   userBlockCheckMiddleware,
-
 );
 
 /* =========================================
@@ -37,11 +27,9 @@ router.use(
 ========================================= */
 
 router.get(
-
   "/wallet",
 
   loadWalletPage,
-
 );
 
 /* =========================================
@@ -49,11 +37,9 @@ router.get(
 ========================================= */
 
 router.post(
-
   "/wallet/create-order",
 
   createWalletTopupOrder,
-
 );
 
 /* =========================================
@@ -61,11 +47,9 @@ router.post(
 ========================================= */
 
 router.post(
-
   "/wallet/verify-payment",
 
   verifyWalletTopupPayment,
-
 );
 
 export default router;

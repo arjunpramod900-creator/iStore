@@ -206,7 +206,7 @@
         </button>
       </div>
 
-      <form id="addCategoryForm" action="/admin/add-category"
+      <form id="addCategoryForm" action="/admin/add-category" data-no-loader="true"
         method="POST" enctype="multipart/form-data" novalidate>
 
         <div class="cat-modal-body">
@@ -290,7 +290,7 @@
         </button>
       </div>
 
-      <form id="editCategoryForm" action=""
+      <form id="editCategoryForm" action="" data-no-loader="true"
         method="POST" enctype="multipart/form-data" novalidate>
 
         <div class="cat-modal-body">
@@ -747,26 +747,44 @@
           hideClass: { popup: "animate__animated animate__zoomOut animate__faster" }
         });
         if (!result.isConfirmed) return;
+        const originalHTML = btn.innerHTML;
         try {
+          btn.disabled = true;
+          btn.innerHTML = '<i data-lucide="loader-circle" class="spin"></i>';
+          if (typeof lucide !== 'undefined') lucide.createIcons();
           const res  = await fetch(`/admin/delete-category/${id}`, { method: "PATCH" });
           const data = await res.json();
           data.success
             ? (toast("Category deleted successfully"), setTimeout(() => location.reload(), 1200))
             : toast(data.message || "Failed to delete", "error");
-        } catch { toast("Something went wrong", "error"); }
+        } catch { 
+          btn.disabled = false; 
+          btn.innerHTML = originalHTML;
+          if (typeof lucide !== 'undefined') lucide.createIcons();
+          toast("Something went wrong", "error"); 
+        }
       });
     });
 
     document.querySelectorAll(".restore-btn").forEach(btn => {
       btn.addEventListener("click", async () => {
         const id = btn.dataset.id;
+        const originalHTML = btn.innerHTML;
         try {
+          btn.disabled = true;
+          btn.innerHTML = '<i data-lucide="loader-circle" class="spin"></i>';
+          if (typeof lucide !== 'undefined') lucide.createIcons();
           const res  = await fetch(`/admin/restore-category/${id}`, { method: "PATCH" });
           const data = await res.json();
           data.success
             ? (toast("Category restored successfully"), setTimeout(() => location.reload(), 1200))
             : toast("Failed to restore", "error");
-        } catch { toast("Something went wrong", "error"); }
+        } catch { 
+          btn.disabled = false; 
+          btn.innerHTML = originalHTML;
+          if (typeof lucide !== 'undefined') lucide.createIcons();
+          toast("Something went wrong", "error"); 
+        }
       });
     });
 
@@ -780,13 +798,22 @@
           confirmButtonText: "Delete Forever", cancelButtonText: "Cancel", reverseButtons: true
         });
         if (!result.isConfirmed) return;
+        const originalHTML = btn.innerHTML;
         try {
+          btn.disabled = true;
+          btn.innerHTML = '<i data-lucide="loader-circle" class="spin"></i>';
+          if (typeof lucide !== 'undefined') lucide.createIcons();
           const res  = await fetch(`/admin/permanent-delete-category/${id}`, { method: "DELETE" });
           const data = await res.json();
           data.success
             ? (toast("Category permanently deleted"), setTimeout(() => location.reload(), 1200))
             : toast("Permanent delete failed", "error");
-        } catch { toast("Something went wrong", "error"); }
+        } catch { 
+          btn.disabled = false; 
+          btn.innerHTML = originalHTML;
+          if (typeof lucide !== 'undefined') lucide.createIcons();
+          toast("Something went wrong", "error"); 
+        }
       });
     });
   </script>

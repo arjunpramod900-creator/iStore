@@ -1,9 +1,11 @@
 import Order from "../../models/Order.js";
-import { ORDER_STATUS, PAYMENT_STATUS, RETURN_STATUS } from "../../constants/orderEnums.js";
-
+import {
+  ORDER_STATUS,
+  PAYMENT_STATUS,
+  RETURN_STATUS,
+} from "../../constants/orderEnums.js";
 
 export const getSalesReportService = async (filterType, startDate, endDate) => {
-
   const today = new Date();
 
   let rangeStart;
@@ -14,32 +16,27 @@ export const getSalesReportService = async (filterType, startDate, endDate) => {
     rangeStart.setHours(0, 0, 0, 0);
     rangeEnd = new Date();
     rangeEnd.setHours(23, 59, 59, 999);
-
   } else if (filterType === "weekly") {
     rangeStart = new Date();
     rangeStart.setDate(today.getDate() - 6);
     rangeStart.setHours(0, 0, 0, 0);
     rangeEnd = new Date();
     rangeEnd.setHours(23, 59, 59, 999);
-
   } else if (filterType === "monthly") {
     rangeStart = new Date(today.getFullYear(), today.getMonth(), 1);
     rangeStart.setHours(0, 0, 0, 0);
     rangeEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
     rangeEnd.setHours(23, 59, 59, 999);
-
   } else if (filterType === "yearly") {
     rangeStart = new Date(today.getFullYear(), 0, 1);
     rangeStart.setHours(0, 0, 0, 0);
     rangeEnd = new Date(today.getFullYear(), 11, 31);
     rangeEnd.setHours(23, 59, 59, 999);
-
   } else if (filterType === "custom" && startDate && endDate) {
     rangeStart = new Date(startDate);
     rangeStart.setHours(0, 0, 0, 0);
     rangeEnd = new Date(endDate);
     rangeEnd.setHours(23, 59, 59, 999);
-
   } else {
     // fallback — last 7 days
     rangeStart = new Date();
@@ -59,28 +56,28 @@ export const getSalesReportService = async (filterType, startDate, endDate) => {
 
   if (filterType === "daily") {
     chartDateFormat = "%H:00";
-    chartGroupType  = "hour";
+    chartGroupType = "hour";
   } else if (filterType === "weekly") {
     chartDateFormat = "%d %b";
-    chartGroupType  = "day";
+    chartGroupType = "day";
   } else if (filterType === "monthly") {
     chartDateFormat = "%d";
-    chartGroupType  = "day";
+    chartGroupType = "day";
   } else if (filterType === "yearly") {
     chartDateFormat = "%b";
-    chartGroupType  = "month";
+    chartGroupType = "month";
   } else {
     // custom
     const diffDays = Math.ceil((rangeEnd - rangeStart) / (1000 * 60 * 60 * 24));
     if (diffDays <= 1) {
       chartDateFormat = "%H:00";
-      chartGroupType  = "hour";
+      chartGroupType = "hour";
     } else if (diffDays <= 60) {
       chartDateFormat = "%d %b";
-      chartGroupType  = "day";
+      chartGroupType = "day";
     } else {
       chartDateFormat = "%b %Y";
-      chartGroupType  = "month";
+      chartGroupType = "month";
     }
   }
 
@@ -96,12 +93,12 @@ export const getSalesReportService = async (filterType, startDate, endDate) => {
 
   const totalSalesCount = await Order.countDocuments({
     orderStatus: ORDER_STATUS.DELIVERED,
-    createdAt:   dateRange,
+    createdAt: dateRange,
   });
 
   const totalReturnedCount = await Order.countDocuments({
     orderStatus: ORDER_STATUS.RETURNED,
-    createdAt:   dateRange,
+    createdAt: dateRange,
   });
 
   const totalCompletedOrders = totalSalesCount + totalReturnedCount;
@@ -111,7 +108,7 @@ export const getSalesReportService = async (filterType, startDate, endDate) => {
     {
       $match: {
         orderStatus: { $in: [ORDER_STATUS.DELIVERED, ORDER_STATUS.RETURNED] },
-        createdAt:   dateRange,
+        createdAt: dateRange,
       },
     },
     {
@@ -128,7 +125,12 @@ export const getSalesReportService = async (filterType, startDate, endDate) => {
           $sum: {
             $cond: [
               { $eq: ["$orderStatus", ORDER_STATUS.DELIVERED] },
-              { $ifNull: ["$pricingSnapshot.originalFinalAmount", "$finalAmount"] },
+              {
+                $ifNull: [
+                  "$pricingSnapshot.originalFinalAmount",
+                  "$finalAmount",
+                ],
+              },
               0,
             ],
           },
@@ -138,7 +140,12 @@ export const getSalesReportService = async (filterType, startDate, endDate) => {
           $sum: {
             $cond: [
               { $eq: ["$orderStatus", ORDER_STATUS.DELIVERED] },
-              { $ifNull: ["$pricingSnapshot.originalOfferDiscount", "$offerDiscount"] },
+              {
+                $ifNull: [
+                  "$pricingSnapshot.originalOfferDiscount",
+                  "$offerDiscount",
+                ],
+              },
               0,
             ],
           },
@@ -147,7 +154,12 @@ export const getSalesReportService = async (filterType, startDate, endDate) => {
           $sum: {
             $cond: [
               { $eq: ["$orderStatus", ORDER_STATUS.DELIVERED] },
-              { $ifNull: ["$pricingSnapshot.originalCouponDiscount", "$couponDiscount"] },
+              {
+                $ifNull: [
+                  "$pricingSnapshot.originalCouponDiscount",
+                  "$couponDiscount",
+                ],
+              },
               0,
             ],
           },
@@ -159,40 +171,48 @@ export const getSalesReportService = async (filterType, startDate, endDate) => {
   const refundSummary = await Order.aggregate([
     {
       $match: {
-        orderStatus: ORDER_STATUS.RETURNED,
-        createdAt:   dateRange,
+        orderStatus: { $in: [ORDER_STATUS.DELIVERED, ORDER_STATUS.RETURNED] },
+        createdAt: dateRange,
       },
     },
     {
       $group: {
         _id: null,
-        // Use pricingSnapshot — works for COD and digital payments equally.
-        // order.refundAmount is 0 for COD returns (no digital transaction),
-        // but the revenue reversal should always equal what the customer originally paid.
         refundAmount: {
-          $sum: { $ifNull: ["$pricingSnapshot.originalFinalAmount", "$finalAmount"] },
+          $sum: {
+            $cond: [
+              { $eq: ["$orderStatus", ORDER_STATUS.RETURNED] },
+              { $ifNull: ["$pricingSnapshot.originalFinalAmount", "$finalAmount"] },
+              {
+                $subtract: [
+                  { $ifNull: ["$pricingSnapshot.originalFinalAmount", "$finalAmount"] },
+                  "$finalAmount",
+                ],
+              },
+            ],
+          },
         },
       },
     },
   ]);
 
-  const grossRevenue        = deliveredSummary[0]?.grossRevenue        || 0;
-  const deliveredRevenue    = deliveredSummary[0]?.deliveredRevenue     || 0;
-  const totalRefundAmount   = refundSummary[0]?.refundAmount           || 0;
-  const netRevenue          = grossRevenue - totalRefundAmount;
-  const totalOfferDiscount  = deliveredSummary[0]?.totalOfferDiscount  || 0;
+  const grossRevenue = deliveredSummary[0]?.grossRevenue || 0;
+  const deliveredRevenue = deliveredSummary[0]?.deliveredRevenue || 0;
+  const totalRefundAmount = refundSummary[0]?.refundAmount || 0;
+  const netRevenue = grossRevenue - totalRefundAmount;
+  const totalOfferDiscount = deliveredSummary[0]?.totalOfferDiscount || 0;
   const totalCouponDiscount = deliveredSummary[0]?.totalCouponDiscount || 0;
-  const totalDiscount       = totalOfferDiscount + totalCouponDiscount;
+  const totalDiscount = totalOfferDiscount + totalCouponDiscount;
 
   // AOV = delivered revenue ÷ delivered order count (excludes returned orders)
-  const avgOrderValue = totalSalesCount > 0
-    ? Math.round(deliveredRevenue / totalSalesCount)
-    : 0;
+  const avgOrderValue =
+    totalSalesCount > 0 ? Math.round(deliveredRevenue / totalSalesCount) : 0;
 
   // Return rate: returned / (delivered + returned) × 100
-  const returnRate = totalCompletedOrders > 0
-    ? ((totalReturnedCount / totalCompletedOrders) * 100).toFixed(1)
-    : "0.0";
+  const returnRate =
+    totalCompletedOrders > 0
+      ? ((totalReturnedCount / totalCompletedOrders) * 100).toFixed(1)
+      : "0.0";
 
   /* ─────────────────────────────────────────────────────
      REVENUE CHART — two separate queries so dates are correct:
@@ -205,32 +225,50 @@ export const getSalesReportService = async (filterType, startDate, endDate) => {
     {
       $match: {
         orderStatus: ORDER_STATUS.DELIVERED,
-        createdAt:   dateRange,
+        createdAt: dateRange,
       },
     },
     {
       $group: {
         _id: {
           $dateToString: {
-            format:   chartDateFormat,
-            date:     "$createdAt",
+            format: chartDateFormat,
+            date: "$createdAt",
             timezone: "Asia/Kolkata",
           },
         },
         grossRevenue: {
-          $sum: { $ifNull: ["$pricingSnapshot.originalFinalAmount", "$finalAmount"] },
+          $sum: {
+            $ifNull: ["$pricingSnapshot.originalFinalAmount", "$finalAmount"],
+          },
         },
       },
     },
     { $sort: { _id: 1 } },
   ]);
 
-  // Query 2: Refunds — Returned orders, grouped by returnApprovedAt (when refund was processed)
+  // Query 2: Refunds — Returned and Partially Returned orders
   const rawRefundChart = await Order.aggregate([
     {
       $match: {
-        orderStatus: ORDER_STATUS.RETURNED,
-        // Match orders returned within the range (use returnApprovedAt if set, else createdAt)
+        orderStatus: { $in: [ORDER_STATUS.DELIVERED, ORDER_STATUS.RETURNED] },
+        $expr: {
+          $gt: [
+            {
+              $cond: [
+                { $eq: ["$orderStatus", ORDER_STATUS.RETURNED] },
+                { $ifNull: ["$pricingSnapshot.originalFinalAmount", "$finalAmount"] },
+                {
+                  $subtract: [
+                    { $ifNull: ["$pricingSnapshot.originalFinalAmount", "$finalAmount"] },
+                    "$finalAmount",
+                  ],
+                },
+              ]
+            },
+            0
+          ]
+        },
         $or: [
           { returnApprovedAt: dateRange },
           { returnApprovedAt: null, createdAt: dateRange },
@@ -241,13 +279,24 @@ export const getSalesReportService = async (filterType, startDate, endDate) => {
       $group: {
         _id: {
           $dateToString: {
-            format:   chartDateFormat,
-            date:     { $ifNull: ["$returnApprovedAt", "$createdAt"] },
+            format: chartDateFormat,
+            date: { $ifNull: ["$returnApprovedAt", "$createdAt"] },
             timezone: "Asia/Kolkata",
           },
         },
         refundAmount: {
-          $sum: { $ifNull: ["$pricingSnapshot.originalFinalAmount", "$finalAmount"] },
+          $sum: {
+            $cond: [
+              { $eq: ["$orderStatus", ORDER_STATUS.RETURNED] },
+              { $ifNull: ["$pricingSnapshot.originalFinalAmount", "$finalAmount"] },
+              {
+                $subtract: [
+                  { $ifNull: ["$pricingSnapshot.originalFinalAmount", "$finalAmount"] },
+                  "$finalAmount",
+                ],
+              },
+            ],
+          },
         },
       },
     },
@@ -255,15 +304,24 @@ export const getSalesReportService = async (filterType, startDate, endDate) => {
   ]);
 
   /* Build separate maps then compute per-bucket net revenue */
-  const grossMap  = {};
+  const grossMap = {};
   const refundMap = {};
-  rawGrossChart.forEach(item  => { grossMap[item._id]  = item.grossRevenue || 0; });
-  rawRefundChart.forEach(item => { refundMap[item._id] = item.refundAmount  || 0; });
+  rawGrossChart.forEach((item) => {
+    grossMap[item._id] = item.grossRevenue || 0;
+  });
+  rawRefundChart.forEach((item) => {
+    refundMap[item._id] = item.refundAmount || 0;
+  });
 
-  const chartLabels    = generateLabels(filterType, rangeStart, rangeEnd, chartGroupType);
-  const grossChartData = chartLabels.map(label => grossMap[label]  || 0);
-  const netChartData   = chartLabels.map(label =>
-    Math.max(0, (grossMap[label] || 0) - (refundMap[label] || 0))
+  const chartLabels = generateLabels(
+    filterType,
+    rangeStart,
+    rangeEnd,
+    chartGroupType,
+  );
+  const grossChartData = chartLabels.map((label) => grossMap[label] || 0);
+  const netChartData = chartLabels.map((label) =>
+    Math.max(0, (grossMap[label] || 0) - (refundMap[label] || 0)),
   );
 
   // Keep chartData as grossChartData for any legacy references
@@ -278,16 +336,16 @@ export const getSalesReportService = async (filterType, startDate, endDate) => {
     {
       $match: {
         orderStatus: ORDER_STATUS.DELIVERED,
-        createdAt:   dateRange,
+        createdAt: dateRange,
       },
     },
     { $unwind: "$items" },
     { $match: { "items.itemStatus": { $ne: "Cancelled" } } },
     {
       $group: {
-        _id:     "$items.productId",
-        name:    { $first: "$items.productName" },
-        units:   { $sum: "$items.quantity" },
+        _id: "$items.productId",
+        name: { $first: "$items.productName" },
+        units: { $sum: "$items.quantity" },
         revenue: {
           $sum: {
             $ifNull: [
@@ -311,7 +369,7 @@ export const getSalesReportService = async (filterType, startDate, endDate) => {
     {
       $match: {
         orderStatus: { $in: [ORDER_STATUS.DELIVERED, ORDER_STATUS.RETURNED] },
-        createdAt:   dateRange,
+        createdAt: dateRange,
       },
     },
     { $unwind: "$items" },
@@ -322,19 +380,19 @@ export const getSalesReportService = async (filterType, startDate, endDate) => {
     },
     {
       $lookup: {
-        from:         "products",
-        localField:   "items.productId",
+        from: "products",
+        localField: "items.productId",
         foreignField: "_id",
-        as:           "product",
+        as: "product",
       },
     },
     { $unwind: { path: "$product", preserveNullAndEmptyArrays: false } },
     {
       $lookup: {
-        from:         "categories",
-        localField:   "product.categoryId",
+        from: "categories",
+        localField: "product.categoryId",
         foreignField: "_id",
-        as:           "category",
+        as: "category",
       },
     },
     { $unwind: { path: "$category", preserveNullAndEmptyArrays: false } },
@@ -347,7 +405,12 @@ export const getSalesReportService = async (filterType, startDate, endDate) => {
           $sum: {
             $cond: [
               { $ne: ["$items.itemStatus", "Returned"] },
-              { $ifNull: ["$items.finalPrice", { $multiply: ["$items.price", "$items.quantity"] }] },
+              {
+                $ifNull: [
+                  "$items.finalPrice",
+                  { $multiply: ["$items.price", "$items.quantity"] },
+                ],
+              },
               0,
             ],
           },
@@ -356,7 +419,7 @@ export const getSalesReportService = async (filterType, startDate, endDate) => {
     },
     {
       $project: {
-        _id:     1,
+        _id: 1,
         revenue: 1,
       },
     },
@@ -365,14 +428,16 @@ export const getSalesReportService = async (filterType, startDate, endDate) => {
   ]);
 
   const totalCategoryRevenue = topCategoriesRaw.reduce(
-    (sum, cat) => sum + (cat.revenue || 0), 0
+    (sum, cat) => sum + (cat.revenue || 0),
+    0,
   );
 
-  const topCategories = topCategoriesRaw.map(cat => ({
+  const topCategories = topCategoriesRaw.map((cat) => ({
     ...cat,
-    percentage: totalCategoryRevenue > 0
-      ? Math.round((cat.revenue / totalCategoryRevenue) * 100)
-      : 0,
+    percentage:
+      totalCategoryRevenue > 0
+        ? Math.round((cat.revenue / totalCategoryRevenue) * 100)
+        : 0,
   }));
 
   /* ─────────────────────────────────────────────────────
@@ -383,12 +448,12 @@ export const getSalesReportService = async (filterType, startDate, endDate) => {
     {
       $match: {
         orderStatus: { $in: [ORDER_STATUS.DELIVERED, ORDER_STATUS.RETURNED] },
-        createdAt:   dateRange,
+        createdAt: dateRange,
       },
     },
     {
       $group: {
-        _id:   "$paymentMethod",
+        _id: "$paymentMethod",
         count: { $sum: 1 },
       },
     },
@@ -397,15 +462,25 @@ export const getSalesReportService = async (filterType, startDate, endDate) => {
   const totalPaymentOrders = paymentStatsRaw.reduce((s, i) => s + i.count, 0);
 
   const paymentMethods = { cod: 0, razorpay: 0, wallet: 0 };
-  const paymentCounts  = { cod: 0, razorpay: 0, wallet: 0 };
+  const paymentCounts = { cod: 0, razorpay: 0, wallet: 0 };
 
-  paymentStatsRaw.forEach(item => {
-    const pct = totalPaymentOrders > 0
-      ? Math.round((item.count / totalPaymentOrders) * 100)
-      : 0;
-    if (item._id === "COD")      { paymentMethods.cod      = pct; paymentCounts.cod      = item.count; }
-    if (item._id === "RAZORPAY") { paymentMethods.razorpay = pct; paymentCounts.razorpay = item.count; }
-    if (item._id === "WALLET")   { paymentMethods.wallet   = pct; paymentCounts.wallet   = item.count; }
+  paymentStatsRaw.forEach((item) => {
+    const pct =
+      totalPaymentOrders > 0
+        ? Math.round((item.count / totalPaymentOrders) * 100)
+        : 0;
+    if (item._id === "COD") {
+      paymentMethods.cod = pct;
+      paymentCounts.cod = item.count;
+    }
+    if (item._id === "RAZORPAY") {
+      paymentMethods.razorpay = pct;
+      paymentCounts.razorpay = item.count;
+    }
+    if (item._id === "WALLET") {
+      paymentMethods.wallet = pct;
+      paymentCounts.wallet = item.count;
+    }
   });
 
   /* ─────────────────────────────────────────────────────
@@ -414,18 +489,15 @@ export const getSalesReportService = async (filterType, startDate, endDate) => {
      displayAmount = what the customer originally paid (immutable
      snapshot), so returned orders never show ₹0.
   ───────────────────────────────────────────────────── */
-  const recentOrderDocs = await Order
-    .find({ createdAt: dateRange })
+  const recentOrderDocs = await Order.find({ createdAt: dateRange })
     .sort({ createdAt: -1 })
     .limit(10)
     .lean();
 
-  const recentOrders = recentOrderDocs.map(order => ({
+  const recentOrders = recentOrderDocs.map((order) => ({
     ...order,
     displayAmount:
-      order.pricingSnapshot?.originalFinalAmount ??
-      order.finalAmount ??
-      0,
+      order.pricingSnapshot?.originalFinalAmount ?? order.finalAmount ?? 0,
   }));
 
   /* ─────────────────────────────────────────────────────
@@ -433,25 +505,25 @@ export const getSalesReportService = async (filterType, startDate, endDate) => {
   ───────────────────────────────────────────────────── */
   return {
     // Order counts
-    totalSalesCount,          // delivered orders (true sales)
-    totalReturnedCount,       // returned orders
-    totalCompletedOrders,     // delivered + returned
+    totalSalesCount, // delivered orders (true sales)
+    totalReturnedCount, // returned orders
+    totalCompletedOrders, // delivered + returned
 
     // Revenue
-    grossRevenue,             // sum paid on delivered orders
-    totalRefundAmount,        // total refunded for returned orders
-    netRevenue,               // grossRevenue − totalRefundAmount
+    grossRevenue, // sum paid on delivered orders
+    totalRefundAmount, // total refunded for returned orders
+    netRevenue, // grossRevenue − totalRefundAmount
     totalOrderAmount: netRevenue,
 
     // Discounts
-    totalDiscount,            // total offer + coupon savings
-    totalOfferDiscount,       // offer portion
-    totalCouponDiscount,      // coupon portion
+    totalDiscount, // total offer + coupon savings
+    totalOfferDiscount, // offer portion
+    totalCouponDiscount, // coupon portion
     totalCouponDeduction: totalCouponDiscount,
 
     // Averages / rates
-    avgOrderValue,            // gross revenue per delivered order
-    returnRate,               // % of completed orders returned
+    avgOrderValue, // gross revenue per delivered order
+    returnRate, // % of completed orders returned
 
     // Chart
     chartLabels,
@@ -460,17 +532,25 @@ export const getSalesReportService = async (filterType, startDate, endDate) => {
     netChartData,
 
     // Tables
-    topProducts,              // { name, units, returnedUnits, revenue }
-    topCategories,            // { _id, revenue, percentage }
-    paymentMethods,           // { cod, razorpay, wallet } percentages
-    paymentCounts,            // { cod, razorpay, wallet } raw counts
+    topProducts, // { name, units, returnedUnits, revenue }
+    topCategories, // { _id, revenue, percentage }
+    paymentMethods, // { cod, razorpay, wallet } percentages
+    paymentCounts, // { cod, razorpay, wallet } raw counts
 
     // Recent orders
-    recentOrders,             // includes displayAmount
+    recentOrders, // includes displayAmount
 
     // Formatted date labels for the view
-    resolvedStartDate: rangeStart.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
-    resolvedEndDate:   rangeEnd.toLocaleDateString("en-IN",   { day: "2-digit", month: "short", year: "numeric" }),
+    resolvedStartDate: rangeStart.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    }),
+    resolvedEndDate: rangeEnd.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    }),
   };
 };
 
@@ -480,7 +560,6 @@ export const getSalesReportService = async (filterType, startDate, endDate) => {
    MongoDB $dateToString format strings used above.
 ───────────────────────────────────────────────────── */
 function generateLabels(filterType, rangeStart, rangeEnd, chartGroupType) {
-
   const labels = [];
 
   if (chartGroupType === "hour") {
@@ -491,7 +570,20 @@ function generateLabels(filterType, rangeStart, rangeEnd, chartGroupType) {
   }
 
   if (chartGroupType === "month") {
-    const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    const monthNames = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
     if (filterType === "yearly") {
       // Full year — always show all 12 months
       for (let m = 0; m < 12; m++) {
@@ -499,9 +591,13 @@ function generateLabels(filterType, rangeStart, rangeEnd, chartGroupType) {
       }
     } else {
       // Custom range spanning multiple months
-      const start = new Date(rangeStart.getFullYear(), rangeStart.getMonth(), 1);
-      const end   = new Date(rangeEnd.getFullYear(),   rangeEnd.getMonth(),   1);
-      const cur   = new Date(start);
+      const start = new Date(
+        rangeStart.getFullYear(),
+        rangeStart.getMonth(),
+        1,
+      );
+      const end = new Date(rangeEnd.getFullYear(), rangeEnd.getMonth(), 1);
+      const cur = new Date(start);
       while (cur <= end) {
         labels.push(monthNames[cur.getMonth()]);
         cur.setMonth(cur.getMonth() + 1);
@@ -511,7 +607,11 @@ function generateLabels(filterType, rangeStart, rangeEnd, chartGroupType) {
   }
 
   if (filterType === "monthly") {
-    const daysInMonth = new Date(rangeStart.getFullYear(), rangeStart.getMonth() + 1, 0).getDate();
+    const daysInMonth = new Date(
+      rangeStart.getFullYear(),
+      rangeStart.getMonth() + 1,
+      0,
+    ).getDate();
     for (let d = 1; d <= daysInMonth; d++) {
       labels.push(String(d).padStart(2, "0"));
     }
@@ -525,7 +625,7 @@ function generateLabels(filterType, rangeStart, rangeEnd, chartGroupType) {
   end.setHours(0, 0, 0, 0);
 
   while (cur <= end) {
-    const day   = String(cur.getDate()).padStart(2, "0");
+    const day = String(cur.getDate()).padStart(2, "0");
     const month = cur.toLocaleString("en-GB", { month: "short" });
     labels.push(`${day} ${month}`);
     cur.setDate(cur.getDate() + 1);

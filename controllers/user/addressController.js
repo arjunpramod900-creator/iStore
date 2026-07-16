@@ -37,23 +37,17 @@ export const loadAddresses = async (req, res) => {
 export const addAddress = async (req, res) => {
   try {
     const userId = req.session.userId;
-    
 
     /* ZOD VALIDATION */
 
     const result = addressSchema.safeParse(req.body);
 
     if (!result.success) {
-
       return res.status(400).json({
-
         success: false,
 
-        message:
-          result.error.errors[0].message
-
+        message: result.error.errors[0].message,
       });
-
     }
 
     const data = result.data;
@@ -82,27 +76,16 @@ export const addAddress = async (req, res) => {
     await newAddress.save();
 
     return res.json({
-
       success: true,
 
-      message:
-      "Address added successfully",
+      message: "Address added successfully",
 
-      redirectTo:
-      req.body.redirectTo ||
-      "/addresses"
-
+      redirectTo: req.body.redirectTo || "/addresses",
     });
   } catch (error) {
     console.log("Add Address Error:", error);
 
-    res.redirect(
-
-req.body.redirectTo ||
-
-"/addresses"
-
-);
+    res.redirect(req.body.redirectTo || "/addresses");
   }
 };
 
@@ -138,16 +121,11 @@ export const updateAddress = async (req, res) => {
     const result = addressSchema.safeParse(req.body);
 
     if (!result.success) {
-
       return res.status(400).json({
-
         success: false,
 
-        message:
-          result.error.errors[0].message
-
+        message: result.error.errors[0].message,
       });
-
     }
 
     const data = result.data;
@@ -177,29 +155,20 @@ export const updateAddress = async (req, res) => {
     );
 
     return res.status(200).json({
+      success: true,
 
-        success: true,
+      message: "Address updated successfully.",
 
-        message: "Address updated successfully.",
-
-        redirectTo:
-
-        req.body.redirectTo ||
-
-        "/addresses"
-
+      redirectTo: req.body.redirectTo || "/addresses",
     });
   } catch (error) {
     console.log("Update Address Error:", error);
 
-   return res.status(500).json({
+    return res.status(500).json({
+      success: false,
 
-    success: false,
-
-    message:
-    "Something went wrong while updating the address."
-
-});
+      message: "Something went wrong while updating the address.",
+    });
   }
 };
 

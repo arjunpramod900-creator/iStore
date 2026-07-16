@@ -10,9 +10,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <!-- CSS -->
-    <link rel="stylesheet" href="/css/admin-order-management.css">
-    <link rel="stylesheet" href="/css/components/admin-sidebar.css">
-    <link rel="stylesheet" href="/css/admin-dashboard.css">
+    <link rel="stylesheet" href="/css/admin-order-management.css?v=1.1">
+    <link rel="stylesheet" href="/css/components/admin-sidebar.css?v=1.1">
+    <link rel="stylesheet" href="/css/admin-dashboard.css?v=1.1">
 
     <!-- Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -399,9 +399,10 @@
                                 <span style="font-weight: 700; color: #111827;">₹<%= row.refundAmount.toLocaleString("en-IN") %></span>
                             </td>
                             <!-- Empty Payment & Status spanning -->
-                            <td colspan="2" style="border-top: 1px dashed #e5e7eb; text-align: center;">
+                            <td class="center" style="border-top: 1px dashed #e5e7eb; text-align: center;">
                                 <span class="adm-pay-badge" style="background: rgba(16, 185, 129, 0.1); color: #059669;">Refunded</span>
                             </td>
+                            <td class="center" style="border-top: 1px dashed #e5e7eb;"></td>
                         </tr>
                         <% } %>
 

@@ -129,7 +129,9 @@ const loadHome = async (req, res) => {
       product.offerData = await calculateItemOffer(product, variant);
     }
 
-    bestSellerProducts = bestSellerProducts.filter((product) => product.variant);
+    bestSellerProducts = bestSellerProducts.filter(
+      (product) => product.variant,
+    );
 
     /* DEAL PRODUCTS */
     let dealProducts = await Product.find({
@@ -163,7 +165,7 @@ const loadHome = async (req, res) => {
       const wishlist = await Wishlist.findOne({ userId: req.session.userId });
       if (wishlist) {
         wishlistVariantIds = wishlist.items.map((item) =>
-          item.variantId.toString()
+          item.variantId.toString(),
         );
       }
 
@@ -258,7 +260,8 @@ const sendSignupOTP = async (req, res) => {
       });
     }
 
-    const { fullName, phoneNumber, email, password, referralCode } = result.data;
+    const { fullName, phoneNumber, email, password, referralCode } =
+      result.data;
 
     const existingUser = await User.findOne({ email });
 
@@ -287,7 +290,7 @@ const sendSignupOTP = async (req, res) => {
     await sendEmail(
       email,
       "Signup OTP Verification",
-      `Your signup OTP is ${otp}. It expires in 5 minutes.`
+      `Your signup OTP is ${otp}. It expires in 5 minutes.`,
     );
 
     return res.status(200).json({
@@ -356,7 +359,7 @@ const resendOTP = async (req, res) => {
     await sendEmail(
       email,
       subject,
-      `Your OTP is ${otp}. It expires in 5 minutes.`
+      `Your OTP is ${otp}. It expires in 5 minutes.`,
     );
 
     return res.status(200).json({
@@ -431,9 +434,16 @@ const verifySignupOTP = async (req, res) => {
     const hashedPassword = await bcrypt.hash(signupData.password, 10);
 
     let referredByUser = null;
-    if (signupData.referralCode && typeof signupData.referralCode === "string") {
+    if (
+      signupData.referralCode &&
+      typeof signupData.referralCode === "string"
+    ) {
       const referralCode = signupData.referralCode.trim();
-      if (referralCode && referralCode !== "null" && referralCode !== "undefined") {
+      if (
+        referralCode &&
+        referralCode !== "null" &&
+        referralCode !== "undefined"
+      ) {
         referredByUser = await User.findOne({ referralCode });
       }
     }
@@ -470,25 +480,21 @@ const verifySignupOTP = async (req, res) => {
       await referredByUser.save();
     }
 
-delete req.session.signupData;
+    delete req.session.signupData;
 
-req.session.save((err) => {
+    req.session.save((err) => {
+      if (err) {
+        return res.status(500).json({
+          success: false,
+          message: "Something went wrong. Please try again.",
+        });
+      }
 
-  if (err) {
-
-    return res.status(500).json({
-      success: false,
-      message: "Something went wrong. Please try again."
+      return res.status(200).json({
+        success: true,
+        message: "Signup successful! Please login.",
+      });
     });
-
-  }
-
-  return res.status(200).json({
-    success: true,
-    message: "Signup successful! Please login."
-  });
-
-});
   } catch (error) {
     console.log("OTP Verification Error:", error);
     return res.status(500).json({
@@ -612,7 +618,7 @@ const sendForgotOTP = async (req, res) => {
     await sendEmail(
       email,
       "Password Reset OTP",
-      `Your password reset OTP is ${otp}. It expires in 5 minutes.`
+      `Your password reset OTP is ${otp}. It expires in 5 minutes.`,
     );
 
     return res.status(200).json({
@@ -788,12 +794,17 @@ const sendEmailChangeOTP = async (req, res) => {
     const otp = generateOTP();
     const expiresAt = new Date(Date.now() + 300000);
 
-    await OTP.create({ email: newEmail, code: otp, type: "emailChange", expiresAt });
+    await OTP.create({
+      email: newEmail,
+      code: otp,
+      type: "emailChange",
+      expiresAt,
+    });
 
     await sendEmail(
       newEmail,
       "Email Change OTP",
-      `Your email change OTP is ${otp}. It expires in 5 minutes.`
+      `Your email change OTP is ${otp}. It expires in 5 minutes.`,
     );
 
     res.redirect("/verify-email-otp?flow=email");
@@ -923,14 +934,19 @@ const sendChangePasswordOTP = async (req, res) => {
     const expiresAt = new Date(Date.now() + 300000);
 
     await OTP.deleteMany({ email: user.email, type: "changePassword" });
-    await OTP.create({ email: user.email, code: otp, type: "changePassword", expiresAt });
+    await OTP.create({
+      email: user.email,
+      code: otp,
+      type: "changePassword",
+      expiresAt,
+    });
 
     req.session.newPassword = newPassword;
 
     await sendEmail(
       user.email,
       "Change Password OTP",
-      `Your password change OTP is ${otp}. It expires in 5 minutes.`
+      `Your password change OTP is ${otp}. It expires in 5 minutes.`,
     );
 
     res.redirect("/verify-email-otp?flow=password");

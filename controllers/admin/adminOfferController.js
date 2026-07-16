@@ -3,56 +3,41 @@ import Category from "../../models/Category.js";
 import Variant from "../../models/Variant.js";
 
 import {
-    getAllOffersService,
-    createOfferService,
-    updateOfferService,
-    deleteOfferService
-}
-from "../../services/admin/offerService.js";
-
+  getAllOffersService,
+  createOfferService,
+  updateOfferService,
+  deleteOfferService,
+} from "../../services/admin/offerService.js";
 
 /* =========================================
    LOAD OFFERS PAGE
 ========================================= */
 
-export const loadOffersPage =
-async (
-    req,
-    res
-) => {
+export const loadOffersPage = async (req, res) => {
+  try {
+    const data = await getAllOffersService(req.query);
 
-    try {
+    const products = await Product.find({
+      isActive: true,
 
-        const offers =
-        await getAllOffersService();
+      isDeleted: false,
+    })
+      .sort({
+        name: 1,
+      })
+      .lean();
 
-        const products =
-        await Product.find({
+    const categories = await Category.find({
+      isActive: true,
 
-            isActive: true,
+      isDeleted: false,
+    })
+      .sort({
+        name: 1,
+      })
+      .lean();
 
-            isDeleted: false
-
-        })
-        .sort({
-            name: 1
-        })
-        .lean();
-
-        const categories =
-        await Category.find({
-
-            isActive: true,
-
-            isDeleted: false
-
-        })
-        .sort({
-            name: 1
-        })
-        .lean();
-
-        /* =========================================
+    /* =========================================
            ATTACH REAL PRICES
            Products: price of their lowest-priced
            active, non-deleted variant. Categories:
@@ -63,372 +48,240 @@ async (
            sample price for that one option only.
         ========================================= */
 
-        for (const product of products) {
+    for (const product of products) {
+      const cheapestVariant = await Variant.findOne({
+        productId: product._id,
 
-            const cheapestVariant =
-            await Variant.findOne({
+        isDeleted: false,
+      })
+        .sort({
+          price: 1,
+        })
+        .lean();
 
-                productId: product._id,
-
-                isDeleted: false,
-
-            })
-            .sort({
-                price: 1
-            })
-            .lean();
-
-            product.lowestPrice =
-                cheapestVariant?.price || 0;
-        }
-
-        for (const category of categories) {
-
-            const categoryProducts =
-            await Product.find({
-
-                categoryId: category._id,
-
-                isActive: true,
-
-                isDeleted: false,
-
-            })
-            .select("_id")
-            .lean();
-
-            const productIds =
-                categoryProducts.map(p => p._id);
-
-            let lowestPrice = 0;
-
-            if (productIds.length > 0) {
-
-                const cheapestVariant =
-                await Variant.findOne({
-
-                    productId: {
-                        $in: productIds
-                    },
-
-                    isDeleted: false,
-
-                })
-                .sort({
-                    price: 1
-                })
-                .lean();
-
-                lowestPrice =
-                    cheapestVariant?.price || 0;
-            }
-
-            category.lowestPrice = lowestPrice;
-        }
-
-        return res.render(
-            "admin/offers",
-            {
-                page: "offers",
-                offers,
-                products,
-                categories
-            }
-        );
-
+      product.lowestPrice = cheapestVariant?.price || 0;
     }
 
-    catch (error) {
+    for (const category of categories) {
+      const categoryProducts = await Product.find({
+        categoryId: category._id,
 
-        console.log(
-            "Load Offers Error:",
-            error
-        );
+        isActive: true,
 
-        return res.redirect(
-            "/admin/dashboard"
-        );
+        isDeleted: false,
+      })
+        .select("_id")
+        .lean();
 
+      const productIds = categoryProducts.map((p) => p._id);
+
+      let lowestPrice = 0;
+
+      if (productIds.length > 0) {
+        const cheapestVariant = await Variant.findOne({
+          productId: {
+            $in: productIds,
+          },
+
+          isDeleted: false,
+        })
+          .sort({
+            price: 1,
+          })
+          .lean();
+
+        lowestPrice = cheapestVariant?.price || 0;
+      }
+
+      category.lowestPrice = lowestPrice;
     }
 
+    return res.render("admin/offers", {
+      page: "offers",
+      ...data,
+      products,
+      categories,
+    });
+  } catch (error) {
+    console.log("Load Offers Error:", error);
+
+    return res.redirect("/admin/dashboard");
+  }
 };
-
 
 /* =========================================
    ADD OFFER
 ========================================= */
 
-export const addOffer =
-async (
-    req,
-    res
-) => {
+export const addOffer = async (req, res) => {
+  try {
+    const {
+      offerName,
 
-    try {
+      targetId,
 
-        const {
+      applyTo,
 
-            offerName,
+      discountType,
 
-            targetId,
+      discountValue,
 
-            applyTo,
+      maxDiscount,
 
-            discountType,
+      minPurchase,
 
-            discountValue,
+      startDate,
 
-            maxDiscount,
+      endDate,
 
-            minPurchase,
+      isActive,
+    } = req.body;
 
-            startDate,
+    const response = await createOfferService({
+      offerName,
 
-            endDate,
+      targetId,
 
-            isActive
+      applyTo,
 
-        } = req.body;
+      applyToModel: applyTo === "PRODUCT" ? "Product" : "Category",
 
-        const response =
-        await createOfferService({
+      discountType: discountType === "FIXED" ? "FIXED" : "PERCENTAGE",
 
-            offerName,
+      discountValue,
 
-            targetId,
+      maxDiscount,
 
-            applyTo,
+      minPurchase,
 
-            applyToModel:
-            applyTo === "PRODUCT"
-            ? "Product"
-            : "Category",
+      startDate,
 
-            discountType:
-            discountType === "FIXED"
-            ? "FIXED"
-            : "PERCENTAGE",
+      endDate,
 
-            discountValue,
+      isActive: isActive === "true",
+    });
 
-            maxDiscount,
+    return res.json({
+      success: response.success,
+      message: response.message || null,
+    });
+  } catch (error) {
+    console.log("Add Offer Error:", error);
 
-            minPurchase,
+    return res.json({
+      success: false,
 
-            startDate,
-
-            endDate,
-
-            isActive:
-            isActive === "true"
-
-        });
-
-            return res.json({
-                success: response.success,
-                message: response.message || null,
-            });
-
-    }
-
-    catch (error) {
-
-        console.log(
-            "Add Offer Error:",
-            error
-        );
-
-        return res.json({
-
-            success: false,
-
-            message:
-            "Failed to create offer"
-
-        });
-
-    }
-
+      message: "Failed to create offer",
+    });
+  }
 };
-
 
 /* =========================================
    EDIT OFFER
 ========================================= */
 
-export const editOffer =
-async (
-    req,
-    res
-) => {
+export const editOffer = async (req, res) => {
+  try {
+    const offerId = req.params.id;
 
-    try {
+    const {
+      offerName,
 
-        const offerId =
-        req.params.id;
+      targetId,
 
-        const {
+      applyTo,
 
-            offerName,
+      discountType,
 
-            targetId,
+      discountValue,
 
-            applyTo,
+      maxDiscount,
 
-            discountType,
+      minPurchase,
 
-            discountValue,
+      startDate,
 
-            maxDiscount,
+      endDate,
 
-            minPurchase,
+      isActive,
+    } = req.body;
 
-            startDate,
+    const response = await updateOfferService(
+      offerId,
 
-            endDate,
+      {
+        offerName,
 
-            isActive
+        targetId,
 
-        } = req.body;
+        applyTo,
 
-        const response =
-        await updateOfferService(
+        applyToModel: applyTo === "PRODUCT" ? "Product" : "Category",
 
-            offerId,
+        discountType: discountType === "FIXED" ? "FIXED" : "PERCENTAGE",
 
-            {
+        discountValue,
 
-                offerName,
+        maxDiscount,
 
-                targetId,
+        minPurchase,
 
-                applyTo,
+        startDate,
 
-                applyToModel:
-                applyTo === "PRODUCT"
-                ? "Product"
-                : "Category",
+        endDate,
 
-                discountType:
-                discountType === "FIXED"
-                ? "FIXED"
-                : "PERCENTAGE",
+        isActive: isActive === "true",
+      },
+    );
 
-                discountValue,
+    if (!response.success) {
+      return res.json({
+        success: false,
 
-                maxDiscount,
-
-                minPurchase,
-
-                startDate,
-
-                endDate,
-
-                isActive:
-                isActive === "true"
-
-            }
-
-        );
-
-        if (!response.success) {
-
-            return res.json({
-
-                success: false,
-
-                message:
-                response.message
-
-            });
-
-        }
-
-        return res.json({
-
-            success: true
-
-        });
-
+        message: response.message,
+      });
     }
 
-    catch (error) {
+    return res.json({
+      success: true,
+    });
+  } catch (error) {
+    console.log("Edit Offer Error:", error);
 
-        console.log(
-            "Edit Offer Error:",
-            error
-        );
+    return res.json({
+      success: false,
 
-        return res.json({
-
-            success: false,
-
-            message:
-            "Failed to update offer"
-
-        });
-
-    }
-
+      message: "Failed to update offer",
+    });
+  }
 };
-
 
 /* =========================================
    DELETE OFFER
 ========================================= */
 
-export const deleteOffer =
-async (
-    req,
-    res
-) => {
+export const deleteOffer = async (req, res) => {
+  try {
+    const response = await deleteOfferService(req.params.id);
 
-    try {
+    if (!response.success) {
+      return res.json({
+        success: false,
 
-        const response =
-        await deleteOfferService(
-
-            req.params.id
-
-        );
-
-        if (!response.success) {
-
-            return res.json({
-
-                success: false,
-
-                message:
-                response.message
-
-            });
-
-        }
-
-        return res.json({
-
-            success: true
-
-        });
-
+        message: response.message,
+      });
     }
 
-    catch (error) {
+    return res.json({
+      success: true,
+    });
+  } catch (error) {
+    console.log("Delete Offer Error:", error);
 
-        console.log(
-            "Delete Offer Error:",
-            error
-        );
+    return res.json({
+      success: false,
 
-        return res.json({
-
-            success: false,
-
-            message:
-            "Failed to delete offer"
-
-        });
-
-    }
-
+      message: "Failed to delete offer",
+    });
+  }
 };

@@ -1,4 +1,4 @@
-import { validateCoupon }    from "../user/couponService.js";
+import { validateCoupon } from "../user/couponService.js";
 import { calculateItemOffer } from "./offerService.js";
 
 /* =========================================
@@ -15,77 +15,75 @@ import { calculateItemOffer } from "./offerService.js";
    finalAmount       = subtotal − couponDiscount + delivery + tax
 ========================================= */
 export const calculateCheckoutTotals = async ({
-    cartItems,
-    couponCode   = null,
-    userId       = null,
-    deliveryType = "standard",
+  cartItems,
+  couponCode = null,
+  userId = null,
+  deliveryType = "standard",
 }) => {
+  let originalSubtotal = 0; // sum of original prices × qty
+  let offerDiscount = 0; // total offer savings (line-level, qty already baked in)
 
-    let originalSubtotal = 0; // sum of original prices × qty
-    let offerDiscount    = 0; // total offer savings (line-level, qty already baked in)
+  for (const item of cartItems) {
+    const offer = await calculateItemOffer(
+      item.productId,
+      item.variantId,
+      item.quantity,
+    );
 
-    for (const item of cartItems) {
-        const offer = await calculateItemOffer(
-            item.productId,
-            item.variantId,
-            item.quantity,
-        );
+    originalSubtotal += item.price * item.quantity; // item.price = original cart price
+    offerDiscount += offer.offerDiscount; // already × qty from offerService
+  }
 
-        originalSubtotal += item.price * item.quantity; // item.price = original cart price
-        offerDiscount    += offer.offerDiscount;        // already × qty from offerService
-    }
+  /* Post-offer subtotal — this is what Order.subtotal stores */
+  const subtotal = originalSubtotal - offerDiscount;
 
-    /* Post-offer subtotal — this is what Order.subtotal stores */
-    const subtotal = originalSubtotal - offerDiscount;
+  let couponDiscount = 0;
+  let coupon = null;
+  let couponError = null;
 
-    let couponDiscount = 0;
-    let coupon         = null;
-    let couponError    = null;
+  if (couponCode && userId) {
+    const couponResult = await validateCoupon(
+      couponCode,
+      subtotal, // coupon validated against post-offer subtotal
+      userId,
+    );
 
-    if (couponCode && userId) {
-        const couponResult = await validateCoupon(
-            couponCode,
-            subtotal,   // coupon validated against post-offer subtotal
-            userId,
-        );
-
-        if (couponResult.success) {
-            couponDiscount = couponResult.discount;
-            coupon         = couponResult.coupon;
-        } else {
-            couponError = couponResult.message;
-        }
-    }
-
-    const discountedSubtotal = subtotal - couponDiscount;
-
-    /* DELIVERY */
-    let deliveryCharge;
-    
-    if (cartItems.length === 0) {
-        deliveryCharge = 0;
-    } else if (deliveryType === "express") {
-        deliveryCharge = 500;
+    if (couponResult.success) {
+      couponDiscount = couponResult.discount;
+      coupon = couponResult.coupon;
     } else {
-        deliveryCharge = discountedSubtotal >= 5000 ? 0 : 99;
+      couponError = couponResult.message;
     }
+  }
 
+  const discountedSubtotal = subtotal - couponDiscount;
 
-    /* TAX — 2% on post-coupon subtotal */
-    const taxAmount = Math.floor(discountedSubtotal * 0.02);
+  /* DELIVERY */
+  let deliveryCharge;
 
-    /* FINAL */
-    const finalAmount = discountedSubtotal + deliveryCharge + taxAmount;
+  if (cartItems.length === 0) {
+    deliveryCharge = 0;
+  } else if (deliveryType === "express") {
+    deliveryCharge = 500;
+  } else {
+    deliveryCharge = discountedSubtotal >= 5000 ? 0 : 99;
+  }
 
-    return {
-        originalSubtotal,  // pre-offer total (for pricingSnapshot label if needed)
-        subtotal,          // post-offer, pre-coupon  ← stored as Order.subtotal
-        offerDiscount,
-        couponDiscount,
-        deliveryCharge,
-        taxAmount,
-        finalAmount,
-        coupon,
-        couponError,
-    };
+  /* TAX — 2% on post-coupon subtotal */
+  const taxAmount = Math.floor(discountedSubtotal * 0.02);
+
+  /* FINAL */
+  const finalAmount = discountedSubtotal + deliveryCharge + taxAmount;
+
+  return {
+    originalSubtotal, // pre-offer total (for pricingSnapshot label if needed)
+    subtotal, // post-offer, pre-coupon  ← stored as Order.subtotal
+    offerDiscount,
+    couponDiscount,
+    deliveryCharge,
+    taxAmount,
+    finalAmount,
+    coupon,
+    couponError,
+  };
 };

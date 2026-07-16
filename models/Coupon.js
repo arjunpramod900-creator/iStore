@@ -23,10 +23,7 @@ const couponSchema = new mongoose.Schema(
 
     discountType: {
       type: String,
-      enum: [
-        "PERCENTAGE",
-        "FIXED",
-      ],
+      enum: ["PERCENTAGE", "FIXED"],
       required: true,
     },
 
@@ -82,12 +79,9 @@ const couponSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-const Coupon = mongoose.model(
-  "Coupon",
-  couponSchema
-);
+const Coupon = mongoose.model("Coupon", couponSchema);
 
 export default Coupon;

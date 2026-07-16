@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 
-const walletTransactionSchema =
-new mongoose.Schema(
+const walletTransactionSchema = new mongoose.Schema(
   {
     walletId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -34,10 +33,7 @@ new mongoose.Schema(
 
     type: {
       type: String,
-      enum: [
-        "Credit",
-        "Debit",
-      ],
+      enum: ["Credit", "Debit"],
       required: true,
     },
 
@@ -49,7 +45,7 @@ new mongoose.Schema(
         "AdminCancellationRefund",
         "ReturnRefund",
         "OrderPayment",
-        "OrderPaymentRefund",   
+        "OrderPaymentRefund",
         "ReferralBonus",
         "AdminAdjustment",
         "WalletTopup",
@@ -63,13 +59,11 @@ new mongoose.Schema(
     },
 
     razorpayPaymentId: {
-
       type: String,
 
       default: null,
 
       index: true,
-
     },
 
     balanceAfter: {
@@ -79,7 +73,7 @@ new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 walletTransactionSchema.index({
@@ -97,10 +91,9 @@ walletTransactionSchema.index({
   razorpayPaymentId: 1,
 });
 
-const WalletTransaction =
-mongoose.model(
+const WalletTransaction = mongoose.model(
   "WalletTransaction",
-  walletTransactionSchema
+  walletTransactionSchema,
 );
 
 export default WalletTransaction;

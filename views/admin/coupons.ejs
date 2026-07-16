@@ -137,10 +137,10 @@
 
         <!-- ── FILTER BAR ── -->
         <section class="filter-bar">
-            <div class="search-wrapper">
+            <form method="GET" action="/admin/coupons" class="search-wrapper">
                 <span class="search-icon"><i data-lucide="search" size="14"></i></span>
-                <input type="text" class="search-input" id="couponSearch" placeholder="Search Coupon Code or Name..." autocomplete="off">
-            </div>
+                <input type="text" class="search-input" name="search" value="<%= search %>" id="couponSearch" placeholder="Search Coupon Code or Name..." autocomplete="off">
+            </form>
             <div class="filter-selects">
                 <select class="filter-select" id="statusFilter">
                     <option value="">Status: All</option>
@@ -273,10 +273,34 @@
                     </tbody>
                 </table>
             </div>
+            <!-- Pagination -->
+            <div class="pagination-bar">
+                <span class="pagination-info">
+                    Showing <%= (currentPage - 1) * limit + 1 %> - <%= Math.min(currentPage * limit, totalCoupons) %> of <%= totalCoupons %> coupons
+                </span>
 
-            <div class="pagination-footer">
-                <span class="pagination-info" id="paginationInfo">Showing 1–<%= coupons.length %> of <%= totalCoupons %> coupons</span>
-                <div class="pagination-controls" id="paginationControls"></div>
+                <div class="pagination-controls">
+                    <% if (currentPage > 1) { %>
+                        <a href="?page=<%= currentPage - 1 %>&search=<%= search %>" class="page-btn icon">
+                            <i data-lucide="chevron-left"></i>
+                        </a>
+                    <% } %>
+
+                    <% for (let i = 1; i <= totalPages; i++) { %>
+                        <a href="?page=<%= i %>&search=<%= search %>" class="page-btn <%= currentPage === i ? 'active' : '' %>">
+                            <%= i %>
+                        </a>
+                    <% } %>
+
+                    <% if (currentPage < totalPages) { %>
+                        <a href="?page=<%= currentPage + 1 %>&search=<%= search %>" class="page-btn icon">
+                            <i data-lucide="chevron-right"></i>
+                        </a>
+                    <% } %>
+                </div>
+            </div>
+
+
             </div>
         </section>
 
@@ -297,7 +321,7 @@
                 </button>
             </div>
 
-            <form id="addCouponForm" novalidate>
+            <form id="addCouponForm" data-no-loader="true" novalidate>
                 <div class="modal-body">
 
                     <!-- ── LEFT COLUMN ── -->
@@ -487,7 +511,7 @@
                 </button>
             </div>
 
-            <form id="editCouponForm" novalidate>
+            <form id="editCouponForm" data-no-loader="true" novalidate>
                 <input type="hidden" id="edit-id" name="_couponId">
                 <div class="modal-body">
 
@@ -1050,7 +1074,7 @@ function generateCode(inputId, previewTextId, previewPillId) {
 function showToast(icon, title) {
   Swal.fire({
     toast: true,
-    position: 'top-end',
+    position: 'top',
     icon,
     title,
     showConfirmButton: false,
@@ -1155,6 +1179,7 @@ async function confirmDelete(id, code) {
   if (!result.isConfirmed) return;
 
   try {
+    Swal.fire({ title: 'Deleting...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     const res  = await fetch(`/admin/coupons/delete/${id}`, { method: 'PATCH' });
     const data = await res.json();
     if (data.success) {

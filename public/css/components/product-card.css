@@ -206,11 +206,7 @@
 
   border-radius: 999px;
 
-  background: linear-gradient(
-    135deg,
-    #57029d,
-    #7a4e7c
-  );
+  background: linear-gradient(135deg, #57029d, #7a4e7c);
 
   color: white;
 
@@ -337,29 +333,24 @@
   gap: 12px;
 }
 
+.add-to-cart-btn.unavailable {
+  background: #e5e7eb;
 
-.add-to-cart-btn.unavailable{
+  color: #6b7280;
 
-    background:#E5E7EB;
+  cursor: not-allowed;
 
-    color:#6B7280;
+  pointer-events: none;
 
-    cursor:not-allowed;
-
-    pointer-events:none;
-
-    opacity:.85;
-
+  opacity: 0.85;
 }
 
-.wishlist-toggle.disabled{
+.wishlist-toggle.disabled {
+  opacity: 0.45;
 
-    opacity:.45;
+  cursor: not-allowed;
 
-    cursor:not-allowed;
-
-    pointer-events:none;
-
+  pointer-events: none;
 }
 /* =========================
 

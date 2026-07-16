@@ -10,12 +10,9 @@ addToCartButtons.forEach((button) => {
 
     async (e) => {
       e.preventDefault();
-      if (
-    button.disabled ||
-    button.classList.contains("unavailable")
-) {
-    return;
-}
+      if (button.disabled || button.classList.contains("unavailable")) {
+        return;
+      }
 
       const variantId = button.dataset.variantId;
 
@@ -33,13 +30,13 @@ addToCartButtons.forEach((button) => {
 
       try {
         if (button.dataset.loading === "true") {
-    return;
-}
+          return;
+        }
 
-button.dataset.loading = "true";
-button.disabled = true;
+        button.dataset.loading = "true";
+        button.disabled = true;
 
-button.innerHTML=`
+        button.innerHTML = `
 
 <i
     data-lucide="loader-circle"
@@ -51,7 +48,7 @@ Adding...
 
 `;
 
-lucide.createIcons();
+        lucide.createIcons();
 
         const response = await fetch(
           "/cart/add",
@@ -75,23 +72,18 @@ lucide.createIcons();
           },
         );
 
-let data;
+        let data;
 
-try {
+        try {
+          data = await response.json();
+        } catch {
+          data = {
+            success: false,
 
-    data = await response.json();
-
-} catch {
-
-    data = {
-
-        success: false,
-
-        message: "We couldn't process the server response. Please try again."
-
-    };
-
-}
+            message:
+              "We couldn't process the server response. Please try again.",
+          };
+        }
 
         /* =========================
                         LOGIN REQUIRED
@@ -105,7 +97,6 @@ try {
               }
             },
           );
-
 
           button.dataset.loading = "false";
 
@@ -134,21 +125,20 @@ try {
             `.add-to-cart-btn[data-variant-id="${variantId}"]`,
           );
 
-cartButtons.forEach((cartButton) => {
+          cartButtons.forEach((cartButton) => {
+            cartButton.classList.remove("unavailable");
 
-    cartButton.classList.remove("unavailable");
+            cartButton.classList.add("added");
 
-    cartButton.classList.add("added");
+            cartButton.dataset.loading = "false";
 
-    cartButton.dataset.loading = "false";
+            cartButton.disabled = false;
 
-    cartButton.disabled = false;
+            cartButton.style.opacity = "";
 
-    cartButton.style.opacity = "";
+            cartButton.style.cursor = "";
 
-    cartButton.style.cursor = "";
-
-    cartButton.innerHTML = `
+            cartButton.innerHTML = `
         <i
             data-lucide="shopping-bag"
             size="18"
@@ -156,8 +146,7 @@ cartButtons.forEach((cartButton) => {
 
         Go to Cart
     `;
-
-});
+          });
 
           /* =========================================
                         REMOVE FROM ALL WISHLIST BUTTONS
@@ -193,44 +182,29 @@ cartButtons.forEach((cartButton) => {
 
           /* TOAST */
 
-showToast(
-  "success",
-  "Added to cart",
-);
+          showToast("success", "Added to cart");
 
-updateHeaderCounts(
-  data.cartCount,
-  data.wishlistCount
-);
+          updateHeaderCounts(data.cartCount, data.wishlistCount);
         } else {
-
-            /* =========================
+          /* =========================
        ITEM BLOCKED
 ========================= */
 
-if (
+          if (data.unavailable || data.message === "Out of stock") {
+            const cartButtons = document.querySelectorAll(
+              `.add-to-cart-btn[data-variant-id="${variantId}"]`,
+            );
 
-    data.unavailable ||
+            cartButtons.forEach((cartButton) => {
+              cartButton.classList.remove("added");
 
-    data.message === "Out of stock"
+              cartButton.classList.add("unavailable");
 
-){
+              cartButton.dataset.loading = "false";
 
-  const cartButtons = document.querySelectorAll(
-    `.add-to-cart-btn[data-variant-id="${variantId}"]`
-  );
+              cartButton.disabled = true;
 
-  cartButtons.forEach((cartButton) => {
-
-cartButton.classList.remove("added");
-
-cartButton.classList.add("unavailable");
-
-cartButton.dataset.loading = "false";
-
-cartButton.disabled = true;
-
-    cartButton.innerHTML = `
+              cartButton.innerHTML = `
       <i
         data-lucide="slash"
         size="18"
@@ -239,52 +213,43 @@ cartButton.disabled = true;
       Unavailable
     `;
 
-    cartButton.style.opacity = ".6";
+              cartButton.style.opacity = ".6";
 
-    cartButton.style.cursor = "not-allowed";
+              cartButton.style.cursor = "not-allowed";
+            });
 
-  });
+            /* remove wishlist highlight */
 
-  /* remove wishlist highlight */
+            const wishlistButtons = document.querySelectorAll(
+              `.wishlist-toggle[data-variant-id="${variantId}"]`,
+            );
 
-  const wishlistButtons = document.querySelectorAll(
-    `.wishlist-toggle[data-variant-id="${variantId}"]`
-  );
+            wishlistButtons.forEach((wishlistButton) => {
+              wishlistButton.classList.remove("active");
+            });
 
-  wishlistButtons.forEach((wishlistButton) => {
+            lucide.createIcons();
 
-    wishlistButton.classList.remove("active");
+            showToast("warning", data.message);
 
-  });
+            return;
+          }
 
-  lucide.createIcons();
-
-  showToast(
-    "warning",
-    data.message
-  );
-
-  return;
-
-}
-
-/* =========================
+          /* =========================
        NORMAL FAILURE
 ========================= */
+          else {
+            button.dataset.loading = "false";
 
-else {
+            button.disabled = false;
 
-    button.dataset.loading = "false";
+            button.classList.remove("unavailable");
 
-    button.disabled = false;
+            button.style.opacity = "";
 
-    button.classList.remove("unavailable");
+            button.style.cursor = "";
 
-    button.style.opacity = "";
-
-    button.style.cursor = "";
-
-    button.innerHTML = `
+            button.innerHTML = `
         <i
             data-lucide="shopping-cart"
             size="18"
@@ -293,23 +258,19 @@ else {
         Add to Cart
     `;
 
-    lucide.createIcons();
+            lucide.createIcons();
 
-    showToast(
-        "info",
-        data.message
-    );
-
-}
+            showToast("info", data.message);
+          }
         }
       } catch (error) {
         console.log(error);
 
-button.dataset.loading = "false";
+        button.dataset.loading = "false";
 
-button.disabled = false;
+        button.disabled = false;
 
-button.innerHTML = `
+        button.innerHTML = `
                         <i
                             data-lucide="shopping-cart"
                             size="18"

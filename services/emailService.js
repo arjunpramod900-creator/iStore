@@ -6,7 +6,10 @@ import nodemailer from "nodemailer";
 
 const sendEmail = async (email, subject, message, html = null) => {
   console.log("EMAIL_USER:", process.env.EMAIL_USER);
-  console.log("EMAIL_PASS:", process.env.EMAIL_PASS ? "Loaded ✅" : "Missing ❌");
+  console.log(
+    "EMAIL_PASS:",
+    process.env.EMAIL_PASS ? "Loaded ✅" : "Missing ❌",
+  );
 
   const transporter = nodemailer.createTransport({
     service: "gmail",

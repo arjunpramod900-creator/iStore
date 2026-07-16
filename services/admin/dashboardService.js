@@ -2,11 +2,13 @@ import Order from "../../models/Order.js";
 import User from "../../models/User.js";
 import Product from "../../models/Product.js";
 import Variant from "../../models/Variant.js";
-import { ORDER_STATUS, PAYMENT_STATUS, RETURN_STATUS } from "../../constants/orderEnums.js";
-
+import {
+  ORDER_STATUS,
+  PAYMENT_STATUS,
+  RETURN_STATUS,
+} from "../../constants/orderEnums.js";
 
 export const getDashboardDataService = async (filter = "weekly") => {
-
   const today = new Date();
 
   /* ================================================
@@ -20,20 +22,16 @@ export const getDashboardDataService = async (filter = "weekly") => {
   if (filter === "daily") {
     rangeStart = new Date();
     rangeStart.setHours(0, 0, 0, 0);
-
   } else if (filter === "weekly") {
     rangeStart = new Date();
     rangeStart.setDate(today.getDate() - 6);
     rangeStart.setHours(0, 0, 0, 0);
-
   } else if (filter === "monthly") {
     rangeStart = new Date(today.getFullYear(), today.getMonth(), 1);
     rangeStart.setHours(0, 0, 0, 0);
-
   } else if (filter === "yearly") {
     rangeStart = new Date(today.getFullYear(), 0, 1);
     rangeStart.setHours(0, 0, 0, 0);
-
   } else {
     rangeStart = new Date();
     rangeStart.setDate(today.getDate() - 6);
@@ -62,16 +60,16 @@ export const getDashboardDataService = async (filter = "weekly") => {
 
   if (filter === "daily") {
     chartDateFormat = "%H:00";
-    chartGroupType  = "hour";
+    chartGroupType = "hour";
   } else if (filter === "weekly") {
     chartDateFormat = "%d %b";
-    chartGroupType  = "day";
+    chartGroupType = "day";
   } else if (filter === "monthly") {
     chartDateFormat = "%d";
-    chartGroupType  = "day";
+    chartGroupType = "day";
   } else {
     chartDateFormat = "%b";
-    chartGroupType  = "month";
+    chartGroupType = "month";
   }
 
   /* ================================================
@@ -80,7 +78,16 @@ export const getDashboardDataService = async (filter = "weekly") => {
 
   const revenueResult = await Order.aggregate([
     { $match: matchDelivered },
-    { $group: { _id: null, totalRevenue: { $sum: { $ifNull: ["$pricingSnapshot.originalFinalAmount", "$finalAmount"] } } } },
+    {
+      $group: {
+        _id: null,
+        totalRevenue: {
+          $sum: {
+            $ifNull: ["$pricingSnapshot.originalFinalAmount", "$finalAmount"],
+          },
+        },
+      },
+    },
   ]);
 
   /* ================================================
@@ -114,9 +121,8 @@ export const getDashboardDataService = async (filter = "weekly") => {
      RETURN RATE
   ================================================ */
 
-  const returnRate = totalOrders > 0
-    ? ((totalReturns / totalOrders) * 100).toFixed(1)
-    : 0;
+  const returnRate =
+    totalOrders > 0 ? ((totalReturns / totalOrders) * 100).toFixed(1) : 0;
 
   /* ================================================
      CANCELLED ORDERS (filtered)
@@ -152,9 +158,17 @@ export const getDashboardDataService = async (filter = "weekly") => {
     },
     {
       $group: {
-        _id: { $dateToString: { format: chartDateFormat, date: "$createdAt", timezone: "Asia/Kolkata" } },
+        _id: {
+          $dateToString: {
+            format: chartDateFormat,
+            date: "$createdAt",
+            timezone: "Asia/Kolkata",
+          },
+        },
         grossRevenue: {
-          $sum: { $ifNull: ["$pricingSnapshot.originalFinalAmount", "$finalAmount"] },
+          $sum: {
+            $ifNull: ["$pricingSnapshot.originalFinalAmount", "$finalAmount"],
+          },
         },
       },
     },
@@ -168,7 +182,10 @@ export const getDashboardDataService = async (filter = "weekly") => {
         orderStatus: ORDER_STATUS.RETURNED,
         $or: [
           { returnApprovedAt: { $gte: rangeStart, $lte: rangeEnd } },
-          { returnApprovedAt: null, createdAt: { $gte: rangeStart, $lte: rangeEnd } },
+          {
+            returnApprovedAt: null,
+            createdAt: { $gte: rangeStart, $lte: rangeEnd },
+          },
         ],
       },
     },
@@ -176,13 +193,15 @@ export const getDashboardDataService = async (filter = "weekly") => {
       $group: {
         _id: {
           $dateToString: {
-            format:   chartDateFormat,
-            date:     { $ifNull: ["$returnApprovedAt", "$createdAt"] },
+            format: chartDateFormat,
+            date: { $ifNull: ["$returnApprovedAt", "$createdAt"] },
             timezone: "Asia/Kolkata",
           },
         },
         refundAmount: {
-          $sum: { $ifNull: ["$pricingSnapshot.originalFinalAmount", "$finalAmount"] },
+          $sum: {
+            $ifNull: ["$pricingSnapshot.originalFinalAmount", "$finalAmount"],
+          },
         },
       },
     },
@@ -190,15 +209,24 @@ export const getDashboardDataService = async (filter = "weekly") => {
   ]);
 
   /* Build separate maps then compute per-bucket net revenue */
-  const grossMap  = {};
+  const grossMap = {};
   const refundMap = {};
-  rawGrossChart.forEach(item  => { grossMap[item._id]  = item.grossRevenue || 0; });
-  rawRefundChart.forEach(item => { refundMap[item._id] = item.refundAmount  || 0; });
+  rawGrossChart.forEach((item) => {
+    grossMap[item._id] = item.grossRevenue || 0;
+  });
+  rawRefundChart.forEach((item) => {
+    refundMap[item._id] = item.refundAmount || 0;
+  });
 
-  const chartLabels    = generateChartLabels(filter, rangeStart, rangeEnd, chartGroupType);
-  const grossChartData = chartLabels.map(label => grossMap[label]  || 0);
-  const netChartData   = chartLabels.map(label =>
-    Math.max(0, (grossMap[label] || 0) - (refundMap[label] || 0))
+  const chartLabels = generateChartLabels(
+    filter,
+    rangeStart,
+    rangeEnd,
+    chartGroupType,
+  );
+  const grossChartData = chartLabels.map((label) => grossMap[label] || 0);
+  const netChartData = chartLabels.map((label) =>
+    Math.max(0, (grossMap[label] || 0) - (refundMap[label] || 0)),
   );
 
   // Keep chartData as grossRevenue for backward compatibility
@@ -208,19 +236,16 @@ export const getDashboardDataService = async (filter = "weekly") => {
      RECENT ORDERS (filtered, all statuses)
   ================================================ */
 
-  const recentOrderDocs = await Order
-    .find(matchAllStatuses)
+  const recentOrderDocs = await Order.find(matchAllStatuses)
     .populate("userId", "fullName")
     .sort({ createdAt: -1 })
     .limit(8)
     .lean();
 
-  const recentOrders = recentOrderDocs.map(order => ({
+  const recentOrders = recentOrderDocs.map((order) => ({
     ...order,
     displayAmount:
-      order.pricingSnapshot?.originalFinalAmount ??
-      order.finalAmount ??
-      0,
+      order.pricingSnapshot?.originalFinalAmount ?? order.finalAmount ?? 0,
   }));
 
   /* ================================================
@@ -232,10 +257,10 @@ export const getDashboardDataService = async (filter = "weekly") => {
     { $unwind: "$items" },
     {
       $group: {
-        _id:         "$items.productId",
+        _id: "$items.productId",
         productName: { $first: "$items.productName" },
-        unitsSold:   { $sum: "$items.quantity" },
-        revenue:     { $sum: { $multiply: ["$items.quantity", "$items.price"] } },
+        unitsSold: { $sum: "$items.quantity" },
+        revenue: { $sum: { $multiply: ["$items.quantity", "$items.price"] } },
       },
     },
     { $sort: { unitsSold: -1 } },
@@ -246,8 +271,11 @@ export const getDashboardDataService = async (filter = "weekly") => {
      LOW STOCK ALERTS (all time — not filtered)
   ================================================ */
 
-  const stockAlerts = await Variant
-    .find({ isDeleted: false, isActive: true, stock: { $lte: 10 } })
+  const stockAlerts = await Variant.find({
+    isDeleted: false,
+    isActive: true,
+    stock: { $lte: 10 },
+  })
     .populate("productId", "name")
     .sort({ stock: 1 })
     .limit(5)
@@ -262,36 +290,44 @@ export const getDashboardDataService = async (filter = "weekly") => {
     { $unwind: "$items" },
     {
       $lookup: {
-        from: "products", localField: "items.productId",
-        foreignField: "_id", as: "product",
+        from: "products",
+        localField: "items.productId",
+        foreignField: "_id",
+        as: "product",
       },
     },
     { $unwind: "$product" },
     {
       $lookup: {
-        from: "categories", localField: "product.categoryId",
-        foreignField: "_id", as: "category",
+        from: "categories",
+        localField: "product.categoryId",
+        foreignField: "_id",
+        as: "category",
       },
     },
     { $unwind: "$category" },
     {
       $group: {
-        _id:     "$category.name",
+        _id: "$category.name",
         revenue: { $sum: { $multiply: ["$items.quantity", "$items.price"] } },
-        units:   { $sum: "$items.quantity" },
+        units: { $sum: "$items.quantity" },
       },
     },
     { $sort: { revenue: -1 } },
     { $limit: 5 },
   ]);
 
-  const totalCategoryRevenue = topCategories.reduce((sum, c) => sum + c.revenue, 0);
+  const totalCategoryRevenue = topCategories.reduce(
+    (sum, c) => sum + c.revenue,
+    0,
+  );
 
-  const categoriesWithPercentage = topCategories.map(cat => ({
+  const categoriesWithPercentage = topCategories.map((cat) => ({
     ...cat,
-    percentage: totalCategoryRevenue > 0
-      ? Math.round((cat.revenue / totalCategoryRevenue) * 100)
-      : 0,
+    percentage:
+      totalCategoryRevenue > 0
+        ? Math.round((cat.revenue / totalCategoryRevenue) * 100)
+        : 0,
   }));
 
   /* ================================================
@@ -299,15 +335,15 @@ export const getDashboardDataService = async (filter = "weekly") => {
   ================================================ */
 
   const chartTitles = {
-    daily:   "Today — Hourly Revenue",
-    weekly:  "Last 7 Days — Revenue",
+    daily: "Today — Hourly Revenue",
+    weekly: "Last 7 Days — Revenue",
     monthly: "This Month — Revenue",
-    yearly:  "This Year — Monthly Revenue",
+    yearly: "This Year — Monthly Revenue",
   };
 
   return {
     /* KPIs */
-    totalRevenue:    revenueResult[0]?.totalRevenue || 0,
+    totalRevenue: revenueResult[0]?.totalRevenue || 0,
     totalOrders,
     totalCustomers,
     totalProducts,
@@ -350,10 +386,23 @@ function generateChartLabels(filter, rangeStart, rangeEnd, chartGroupType) {
   }
 
   if (chartGroupType === "month") {
-    const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    const monthNames = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
     const start = new Date(rangeStart.getFullYear(), rangeStart.getMonth(), 1);
-    const end   = new Date(rangeEnd.getFullYear(),   rangeEnd.getMonth(),   1);
-    const cur   = new Date(start);
+    const end = new Date(rangeEnd.getFullYear(), rangeEnd.getMonth(), 1);
+    const cur = new Date(start);
     while (cur <= end) {
       labels.push(monthNames[cur.getMonth()]);
       cur.setMonth(cur.getMonth() + 1);
@@ -363,7 +412,11 @@ function generateChartLabels(filter, rangeStart, rangeEnd, chartGroupType) {
 
   /* day-level */
   if (filter === "monthly") {
-    const daysInMonth = new Date(rangeStart.getFullYear(), rangeStart.getMonth() + 1, 0).getDate();
+    const daysInMonth = new Date(
+      rangeStart.getFullYear(),
+      rangeStart.getMonth() + 1,
+      0,
+    ).getDate();
     for (let d = 1; d <= daysInMonth; d++) {
       labels.push(String(d).padStart(2, "0"));
     }
@@ -376,7 +429,7 @@ function generateChartLabels(filter, rangeStart, rangeEnd, chartGroupType) {
   const end = new Date(rangeEnd);
   end.setHours(0, 0, 0, 0);
   while (cur <= end) {
-    const day   = String(cur.getDate()).padStart(2, "0");
+    const day = String(cur.getDate()).padStart(2, "0");
     const month = cur.toLocaleString("en-GB", { month: "short" });
     labels.push(`${day} ${month}`);
     cur.setDate(cur.getDate() + 1);

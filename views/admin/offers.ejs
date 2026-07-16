@@ -163,10 +163,10 @@
         <!-- ── ACTION BAR ── -->
         <div class="action-bar">
             <div class="action-left">
-                <div class="search-wrapper">
+                <form method="GET" action="/admin/offers" class="search-wrapper">
                     <span class="search-icon"><i data-lucide="search" size="16"></i></span>
-                    <input type="text" class="search-input" id="offerSearch" placeholder="Search offers..." autocomplete="off">
-                </div>
+                    <input type="text" class="search-input" name="search" value="<%= search %>" id="offerSearch" placeholder="Search offers..." autocomplete="off">
+                </form>
                 <select class="filter-select" id="statusFilter">
                     <option value="">All Statuses</option>
                     <option value="ACTIVE">Active</option>
@@ -319,6 +319,33 @@
                     </tbody>
                 </table>
             </div>
+
+            <!-- Pagination -->
+            <div class="pagination-bar">
+                <span class="pagination-info">
+                    Showing <%= (currentPage - 1) * limit + 1 %> - <%= Math.min(currentPage * limit, totalOffers) %> of <%= totalOffers %> offers
+                </span>
+
+                <div class="pagination-controls">
+                    <% if (currentPage > 1) { %>
+                        <a href="?page=<%= currentPage - 1 %>&search=<%= search %>" class="page-btn icon">
+                            <i data-lucide="chevron-left"></i>
+                        </a>
+                    <% } %>
+
+                    <% for (let i = 1; i <= totalPages; i++) { %>
+                        <a href="?page=<%= i %>&search=<%= search %>" class="page-btn <%= currentPage === i ? 'active' : '' %>">
+                            <%= i %>
+                        </a>
+                    <% } %>
+
+                    <% if (currentPage < totalPages) { %>
+                        <a href="?page=<%= currentPage + 1 %>&search=<%= search %>" class="page-btn icon">
+                            <i data-lucide="chevron-right"></i>
+                        </a>
+                    <% } %>
+                </div>
+            </div>
         </section>
 
     </main>
@@ -336,7 +363,7 @@
                 <button class="modal-close" onclick="closeModal('addModal')"><i data-lucide="x" size="18"></i></button>
             </div>
 
-            <form id="addOfferForm" novalidate>
+            <form id="addOfferForm" data-no-loader novalidate>
                 <div class="modal-body">
 
                     <!-- LEFT -->
@@ -543,7 +570,7 @@
                 <button class="modal-close" onclick="closeModal('editModal')"><i data-lucide="x" size="18"></i></button>
             </div>
 
-            <form id="editOfferForm" novalidate>
+            <form id="editOfferForm" data-no-loader novalidate>
                 <input type="hidden" id="edit-id">
                 <div class="modal-body">
 
@@ -1179,32 +1206,7 @@ async function confirmDelete(id, name) {
   }
 }
 
-/* ── SEARCH + FILTER ── */
-(function() {
-  const tbody   = document.getElementById('offersTableBody');
-  const allRows = Array.from(tbody.querySelectorAll('tr[data-name]'));
-  const search  = document.getElementById('offerSearch');
-  const status  = document.getElementById('statusFilter');
 
-  function render() {
-    const q  = search.value.trim().toLowerCase();
-    const st = status.value;
-    let visible = 0;
-
-    allRows.forEach(row => {
-      const nameMatch   = !q  || row.dataset.name.includes(q);
-      const statusMatch = !st || row.dataset.status === st;
-      row.style.display = (nameMatch && statusMatch) ? '' : 'none';
-      if (nameMatch && statusMatch) visible++;
-    });
-
-    const empty = document.getElementById('emptyRow');
-    if (empty) empty.style.display = visible === 0 ? '' : 'none';
-  }
-
-  search.addEventListener('input',  render);
-  status.addEventListener('change', render);
-}());
 
 document
 .querySelectorAll(".edit-offer-btn")

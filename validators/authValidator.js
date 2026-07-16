@@ -11,10 +11,9 @@ export const signupSchema = z
       .trim()
       .min(3, "Name must be at least 3 characters")
       .max(50, "Name cannot exceed 50 characters")
-      .refine(
-        (val) => val.replace(/\s/g, "").length > 0,
-        { message: "Name cannot be empty or only spaces" },
-      ),
+      .refine((val) => val.replace(/\s/g, "").length > 0, {
+        message: "Name cannot be empty or only spaces",
+      }),
 
     phoneNumber: z
       .string()
@@ -40,11 +39,7 @@ export const signupSchema = z
       .min(6, "Password must be at least 6 characters")
       .max(50, "Password cannot exceed 50 characters"),
 
-    referralCode: z
-      .string()
-      .trim()
-      .optional()
-      .or(z.literal("")),
+    referralCode: z.string().trim().optional().or(z.literal("")),
 
     confirmPassword: z.string(),
   })

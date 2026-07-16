@@ -6,32 +6,18 @@ import Variant from "../../models/Variant.js";
 
 import Cart from "../../models/Cart.js";
 
-
-
-
 const getCounts = async (userId) => {
+  const [cart, wishlist] = await Promise.all([
+    Cart.findOne({ userId }).lean(),
 
-    const [cart, wishlist] = await Promise.all([
+    Wishlist.findOne({ userId }).lean(),
+  ]);
 
-        Cart.findOne({ userId }).lean(),
+  return {
+    cartCount: cart?.items?.reduce((sum, item) => sum + item.quantity, 0) || 0,
 
-        Wishlist.findOne({ userId }).lean()
-
-    ]);
-
-    return {
-
-        cartCount:
-            cart?.items?.reduce(
-                (sum, item) => sum + item.quantity,
-                0
-            ) || 0,
-
-        wishlistCount:
-            wishlist?.items?.length || 0
-
-    };
-
+    wishlistCount: wishlist?.items?.length || 0,
+  };
 };
 
 /* =========================================
@@ -65,26 +51,19 @@ export const loadWishlistService = async (userId) => {
 
   /* REMOVE INVALID ITEMS */
 
-wishlist.items = wishlist.items.filter((item) => {
-
-  return (
-
-    item.productId &&
-    item.variantId &&
-
-    item.productId.isActive &&
-    !item.productId.isDeleted &&
-
-    item.productId.categoryId &&
-    item.productId.categoryId.isActive &&
-    !item.productId.categoryId.isDeleted &&
-
-    item.variantId.isActive &&
-    !item.variantId.isDeleted
-
-  );
-
-});
+  wishlist.items = wishlist.items.filter((item) => {
+    return (
+      item.productId &&
+      item.variantId &&
+      item.productId.isActive &&
+      !item.productId.isDeleted &&
+      item.productId.categoryId &&
+      item.productId.categoryId.isActive &&
+      !item.productId.categoryId.isDeleted &&
+      item.variantId.isActive &&
+      !item.variantId.isDeleted
+    );
+  });
 
   /* CLEAN DATABASE */
 
@@ -143,45 +122,36 @@ export const addToWishlistService = async ({
 
   variantId,
 }) => {
-const product = await Product.findById(productId)
-.populate("categoryId");
+  const product = await Product.findById(productId).populate("categoryId");
 
-if (
-  !product ||
-  product.isDeleted ||
-  !product.isActive ||
-  !product.categoryId ||
-  product.categoryId.isDeleted ||
-  !product.categoryId.isActive
-) {
+  if (
+    !product ||
+    product.isDeleted ||
+    !product.isActive ||
+    !product.categoryId ||
+    product.categoryId.isDeleted ||
+    !product.categoryId.isActive
+  ) {
+    return {
+      success: false,
 
-  return {
-    success: false,
+      unavailable: true,
 
-    unavailable: true,
+      message: "This item is no longer available",
+    };
+  }
 
-    message: "This item is no longer available",
-  };
+  const variant = await Variant.findById(variantId);
 
-}
+  if (!variant || variant.isDeleted || !variant.isActive) {
+    return {
+      success: false,
 
-const variant = await Variant.findById(variantId);
+      unavailable: true,
 
-if (
-  !variant ||
-  variant.isDeleted ||
-  !variant.isActive
-) {
-
-  return {
-    success: false,
-
-    unavailable: true,
-
-    message: "This item is no longer available",
-  };
-
-}
+      message: "This item is no longer available",
+    };
+  }
 
   const cart = await Cart.findOne({
     userId,
@@ -229,15 +199,15 @@ if (
     variantId,
   });
 
-await wishlist.save();
+  await wishlist.save();
 
-const counts = await getCounts(userId);
+  const counts = await getCounts(userId);
 
-return {
+  return {
     success: true,
     message: "Added to wishlist",
-    ...counts
-};
+    ...counts,
+  };
 };
 
 /* =========================================
@@ -265,14 +235,14 @@ export const removeWishlistItemService = async ({
     (item) => item.variantId.toString() !== variantId.toString(),
   );
 
-await wishlist.save();
+  await wishlist.save();
 
-const counts = await getCounts(userId);
+  const counts = await getCounts(userId);
 
-return {
+  return {
     success: true,
-    ...counts
-};
+    ...counts,
+  };
 };
 
 /* =========================================
@@ -308,79 +278,72 @@ export const moveWishlistToCartService = async ({
     };
   }
 
-/* =========================================
+  /* =========================================
    REVALIDATE PRODUCT + VARIANT
 ========================================= */
 
-const variant = await Variant.findOne({
-  _id: variantId,
-  isDeleted: false,
-  isActive: true
-});
+  const variant = await Variant.findOne({
+    _id: variantId,
+    isDeleted: false,
+    isActive: true,
+  });
 
-if (!variant) {
+  if (!variant) {
+    wishlist.items = wishlist.items.filter(
+      (item) => item.variantId.toString() !== variantId.toString(),
+    );
 
-  wishlist.items = wishlist.items.filter(
-    item => item.variantId.toString() !== variantId.toString()
+    await wishlist.save();
+
+    const counts = await getCounts(userId);
+
+    return {
+      success: false,
+      unavailable: true,
+      message: "This item is no longer available",
+      ...counts,
+    };
+  }
+
+  const product = await Product.findById(wishlistItem.productId).populate(
+    "categoryId",
   );
 
-await wishlist.save();
+  if (
+    !product ||
+    product.isDeleted ||
+    !product.isActive ||
+    !product.categoryId ||
+    product.categoryId.isDeleted ||
+    !product.categoryId.isActive
+  ) {
+    wishlist.items = wishlist.items.filter(
+      (item) => item.variantId.toString() !== variantId.toString(),
+    );
 
-const counts = await getCounts(userId);
+    await wishlist.save();
 
-return {
-  success:false,
-  unavailable:true,
-  message:"This item is no longer available",
-  ...counts
-};
+    const counts = await getCounts(userId);
 
-}
+    return {
+      success: false,
+      unavailable: true,
+      message: "This item is no longer available",
+      ...counts,
+    };
+  }
 
-const product = await Product.findById(
-  wishlistItem.productId
-)
-.populate("categoryId");
+  if (variant.stock <= 0) {
+    const counts = await getCounts(userId);
 
-if (
-  !product ||
-  product.isDeleted ||
-  !product.isActive ||
-  !product.categoryId ||
-  product.categoryId.isDeleted ||
-  !product.categoryId.isActive
-){
-  wishlist.items = wishlist.items.filter(
-  item => item.variantId.toString() !== variantId.toString()
-);
-
-await wishlist.save();
-
-const counts = await getCounts(userId);
-
-return {
-  success: false,
-  unavailable: true,
-  message: "This item is no longer available",
-  ...counts
-};
-
-}
-
-if (variant.stock <= 0) {
-
-  const counts = await getCounts(userId);
-
-  return {
-    success: false,
-    message: "Out of stock",
-    ...counts
-  };
-
-}
+    return {
+      success: false,
+      message: "Out of stock",
+      ...counts,
+    };
+  }
 
   /* IMPORT CART MODEL */
-
 
   let cart = await Cart.findOne({
     userId,
@@ -398,25 +361,23 @@ if (variant.stock <= 0) {
     (item) => item.variantId.toString() === variantId.toString(),
   );
 
-if (existingCartItem) {
-
+  if (existingCartItem) {
     if (existingCartItem.quantity >= 5) {
-        return {
-            success:false,
-            message:"Maximum quantity reached"
-        };
+      return {
+        success: false,
+        message: "Maximum quantity reached",
+      };
     }
 
     if (existingCartItem.quantity >= variant.stock) {
-        return {
-            success:false,
-            message:"Stock limit reached"
-        };
+      return {
+        success: false,
+        message: "Stock limit reached",
+      };
     }
 
     existingCartItem.quantity += 1;
-
-} else {
+  } else {
     cart.items.push({
       productId: wishlistItem.productId,
 
@@ -436,17 +397,17 @@ if (existingCartItem) {
     (item) => item.variantId.toString() !== variantId.toString(),
   );
 
- await cart.save();
+  await cart.save();
 
-await wishlist.save();
+  await wishlist.save();
 
-const counts = await getCounts(userId);
+  const counts = await getCounts(userId);
 
-return {
+  return {
     success: true,
     message: "Moved to cart",
-    ...counts
-};
+    ...counts,
+  };
 };
 
 /* =========================================
@@ -454,181 +415,152 @@ return {
 ========================================= */
 
 export const moveAllWishlistToCartService = async (userId) => {
+  const wishlist = await Wishlist.findOne({ userId });
 
-    const wishlist = await Wishlist.findOne({ userId });
+  if (!wishlist || wishlist.items.length === 0) {
+    return {
+      success: false,
+      message: "Wishlist is empty",
+    };
+  }
 
-    if (!wishlist || wishlist.items.length === 0) {
+  let cart = await Cart.findOne({ userId });
 
-        return {
-            success: false,
-            message: "Wishlist is empty"
-        };
+  if (!cart) {
+    cart = new Cart({
+      userId,
+      items: [],
+    });
+  }
 
-    }
+  let addedCount = 0;
 
-    let cart = await Cart.findOne({ userId });
+  const movedVariantIds = [];
 
-    if (!cart) {
+  const skippedItems = [];
 
-        cart = new Cart({
-            userId,
-            items: []
-        });
+  const remainingWishlistItems = [];
 
-    }
+  for (const wishlistItem of wishlist.items) {
+    const product = await Product.findById(wishlistItem.productId).populate(
+      "categoryId",
+    );
 
-    let addedCount = 0;
+    const variant = await Variant.findById(wishlistItem.variantId);
 
-    const movedVariantIds = [];
-
-    const skippedItems = [];
-
-    const remainingWishlistItems = [];
-
-    for (const wishlistItem of wishlist.items) {
-
-        const product = await Product.findById(
-            wishlistItem.productId
-        ).populate("categoryId");
-
-        const variant = await Variant.findById(
-            wishlistItem.variantId
-        );
-
-        /* =========================================
+    /* =========================================
            PRODUCT CHECK
         ========================================= */
 
-        if (
-            !product ||
-            product.isDeleted ||
-            !product.isActive ||
-            !product.categoryId ||
-            product.categoryId.isDeleted ||
-            !product.categoryId.isActive
-        ) {
+    if (
+      !product ||
+      product.isDeleted ||
+      !product.isActive ||
+      !product.categoryId ||
+      product.categoryId.isDeleted ||
+      !product.categoryId.isActive
+    ) {
+      skippedItems.push({
+        name: product?.name || "Product",
+        reason: "Unavailable",
+      });
 
-            skippedItems.push({
-                name: product?.name || "Product",
-                reason: "Unavailable"
-            });
-
-            continue;
-        }
-
-        /* =========================================
-           VARIANT CHECK
-        ========================================= */
-
-        if (
-            !variant ||
-            variant.isDeleted ||
-            !variant.isActive
-        ) {
-
-            skippedItems.push({
-                name: product.name,
-                reason: "Unavailable"
-            });
-
-            continue;
-        }
-
-        /* =========================================
-           STOCK CHECK
-        ========================================= */
-
-        if (variant.stock <= 0) {
-
-            skippedItems.push({
-                name: product.name,
-                reason: "Out of stock"
-            });
-
-            remainingWishlistItems.push(
-                wishlistItem
-            );
-
-            continue;
-        }
-
-        /* =========================================
-           ALREADY IN CART
-        ========================================= */
-
-        const existingCartItem =
-            cart.items.find(
-                item =>
-                    item.variantId.toString() ===
-                    variant._id.toString()
-            );
-
-        if (existingCartItem) {
-
-            skippedItems.push({
-                name: product.name,
-                reason: "Already in cart"
-            });
-
-            remainingWishlistItems.push(
-                wishlistItem
-            );
-
-            continue;
-        }
-
-        /* =========================================
-           ADD TO CART
-        ========================================= */
-
-        cart.items.push({
-
-            productId: product._id,
-
-            variantId: variant._id,
-
-            quantity: 1,
-
-            price: variant.price,
-
-            movedFromWishlist: true
-
-        });
-
-        movedVariantIds.push(
-            variant._id.toString()
-        );
-
-        addedCount++;
+      continue;
     }
 
     /* =========================================
+           VARIANT CHECK
+        ========================================= */
+
+    if (!variant || variant.isDeleted || !variant.isActive) {
+      skippedItems.push({
+        name: product.name,
+        reason: "Unavailable",
+      });
+
+      continue;
+    }
+
+    /* =========================================
+           STOCK CHECK
+        ========================================= */
+
+    if (variant.stock <= 0) {
+      skippedItems.push({
+        name: product.name,
+        reason: "Out of stock",
+      });
+
+      remainingWishlistItems.push(wishlistItem);
+
+      continue;
+    }
+
+    /* =========================================
+           ALREADY IN CART
+        ========================================= */
+
+    const existingCartItem = cart.items.find(
+      (item) => item.variantId.toString() === variant._id.toString(),
+    );
+
+    if (existingCartItem) {
+      skippedItems.push({
+        name: product.name,
+        reason: "Already in cart",
+      });
+
+      remainingWishlistItems.push(wishlistItem);
+
+      continue;
+    }
+
+    /* =========================================
+           ADD TO CART
+        ========================================= */
+
+    cart.items.push({
+      productId: product._id,
+
+      variantId: variant._id,
+
+      quantity: 1,
+
+      price: variant.price,
+
+      movedFromWishlist: true,
+    });
+
+    movedVariantIds.push(variant._id.toString());
+
+    addedCount++;
+  }
+
+  /* =========================================
        KEEP ONLY SKIPPED ITEMS
     ========================================= */
 
-    wishlist.items = remainingWishlistItems;
+  wishlist.items = remainingWishlistItems;
 
-    await cart.save();
+  await cart.save();
 
-    await wishlist.save();
+  await wishlist.save();
 
-    const counts = await getCounts(userId);
+  const counts = await getCounts(userId);
 
-    return {
+  return {
+    success: true,
 
-        success: true,
+    addedCount,
 
-        addedCount,
+    movedVariantIds,
 
-        movedVariantIds,
+    skippedCount: skippedItems.length,
 
-        skippedCount: skippedItems.length,
+    skippedItems,
 
-        skippedItems,
+    message: `${addedCount} item(s) added to cart`,
 
-        message: `${addedCount} item(s) added to cart`,
-
-        ...counts
-
-    };
+    ...counts,
+  };
 };

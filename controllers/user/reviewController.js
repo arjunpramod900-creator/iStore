@@ -32,7 +32,7 @@ export const addReview = async (req, res) => {
       },
 
       {
-        returnDocument: 'after',
+        returnDocument: "after",
 
         upsert: true,
       },

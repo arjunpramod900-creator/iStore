@@ -98,7 +98,7 @@ export const updateProfile = async (req, res) => {
 
       updateData,
 
-      { returnDocument: 'after' },
+      { returnDocument: "after" },
     );
 
     /* =========================
@@ -118,11 +118,3 @@ export const updateProfile = async (req, res) => {
     res.redirect("/edit-profile");
   }
 };
-
-
-
-
-
-
-
-

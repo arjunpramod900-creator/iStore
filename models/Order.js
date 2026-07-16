@@ -1,5 +1,9 @@
 import mongoose from "mongoose";
-import { ORDER_STATUS, PAYMENT_STATUS, RETURN_STATUS } from "../constants/orderEnums.js";
+import {
+  ORDER_STATUS,
+  PAYMENT_STATUS,
+  RETURN_STATUS,
+} from "../constants/orderEnums.js";
 
 const orderItemSchema = new mongoose.Schema({
   productId: {
@@ -57,7 +61,7 @@ const orderItemSchema = new mongoose.Schema({
     default: 0,
   },
 
-    couponDiscount: {
+  couponDiscount: {
     type: Number,
     default: 0,
   },
@@ -123,7 +127,7 @@ const shippingAddressSchema = new mongoose.Schema(
   },
   {
     _id: false,
-  }
+  },
 );
 
 const orderSchema = new mongoose.Schema(
@@ -203,7 +207,6 @@ const orderSchema = new mongoose.Schema(
     ================================================== */
 
     pricingSnapshot: {
-
       originalSubtotal: {
         type: Number,
         required: true,
@@ -235,7 +238,6 @@ const orderSchema = new mongoose.Schema(
         required: true,
         default: 0,
       },
-
     },
 
     couponId: {
@@ -335,7 +337,7 @@ const orderSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 // useful indexes

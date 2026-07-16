@@ -14,7 +14,6 @@ import {
   resetAdminPassword,
 } from "../../controllers/admin/adminAuthController.js";
 
-
 import adminLoggedOut from "../../middleware/adminLoggedOut.js";
 
 /* ============================
@@ -69,7 +68,6 @@ router.get("/reset-password", adminLoggedOut, renderAdminResetPassword);
    PASSWORD RESET
 ============================ */
 router.post("/reset-password", resetAdminPassword);
-
 
 /* ============================
    LOGOUT

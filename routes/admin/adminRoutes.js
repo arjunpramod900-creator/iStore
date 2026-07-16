@@ -4,9 +4,7 @@ import adminAuthMiddleware from "../../middleware/adminAuthMiddleware.js";
 
 import upload from "../../middleware/multer.js";
 
-import {
-  renderAdminDashboard,
-} from "../../controllers/admin/adminDashboardController.js";
+import { renderAdminDashboard } from "../../controllers/admin/adminDashboardController.js";
 
 import {
   loadUsers,
@@ -398,45 +396,28 @@ router.get(
   loadProductDetails,
 );
 
-
 /* ============================
    ORDER MANAGEMENT
 ============================ */
 
-router.get(
-  "/orders",
-  adminAuthMiddleware,
-  loadOrders
-);
+router.get("/orders", adminAuthMiddleware, loadOrders);
 
-router.get(
-  "/orders/:id",
-  adminAuthMiddleware,
-  viewOrderDetails
-);
+router.get("/orders/:id", adminAuthMiddleware, viewOrderDetails);
 
-router.patch(
-  "/orders/:id/status",
-  adminAuthMiddleware,
-  updateOrderStatus
-);
+router.patch("/orders/:id/status", adminAuthMiddleware, updateOrderStatus);
 
 router.patch(
   "/orders/:id/item/:itemId/status",
   adminAuthMiddleware,
-  updateItemStatus
+  updateItemStatus,
 );
 
-router.patch(
-  "/orders/:id/return",
-  adminAuthMiddleware,
-  handleReturnRequest
-);
+router.patch("/orders/:id/return", adminAuthMiddleware, handleReturnRequest);
 
 router.patch(
   "/orders/:id/item/:itemId/return",
   adminAuthMiddleware,
-  handleItemReturnRequest
+  handleItemReturnRequest,
 );
 
 /* ============================
@@ -448,13 +429,13 @@ router.get(
 
   adminAuthMiddleware,
 
-  loadInventory
+  loadInventory,
 );
 
 router.patch(
   "/inventory/update-stock/:variantId",
   adminAuthMiddleware,
-  updateVariantStock
+  updateVariantStock,
 );
 
 export default router;

@@ -782,12 +782,20 @@
                 background: "#FFFFFF"
             });
             if (result.isConfirmed) {
+                const deleteBtn = document.getElementById("deleteProductBtn");
+                const originalHTML = deleteBtn.innerHTML;
+                deleteBtn.disabled = true;
+                deleteBtn.innerHTML = '<i data-lucide="loader-circle" size="18" class="spin"></i> Deleting...';
+                if (typeof lucide !== 'undefined') lucide.createIcons();
                 const response = await fetch("/admin/delete-product/<%= product._id %>", { method: "PATCH" });
                 const data     = await response.json();
                 if (data.success) {
                     Toast.fire({ icon: "success", title: data.message });
                     setTimeout(() => { window.location.href = "/admin/products"; }, 1000);
                 } else {
+                    deleteBtn.disabled = false;
+                    deleteBtn.innerHTML = originalHTML;
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
                     Toast.fire({ icon: "error", title: "Failed to delete product" });
                 }
             }
@@ -812,12 +820,19 @@
                     background: "#FFFFFF"
                 });
                 if (result.isConfirmed) {
+                    const originalHTML = btn.innerHTML;
+                    btn.disabled = true;
+                    btn.innerHTML = '<i data-lucide="loader-circle" size="16" class="spin"></i>';
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
                     const response = await fetch(`/admin/variants/${id}/delete`, { method: "PATCH" });
                     const data     = await response.json();
                     if (data.success) {
                         Toast.fire({ icon: "success", title: data.message });
                         setTimeout(() => location.reload(), 1000);
                     } else {
+                        btn.disabled = false;
+                        btn.innerHTML = originalHTML;
+                        if (typeof lucide !== 'undefined') lucide.createIcons();
                         Toast.fire({ icon: "error", title: data.message });
                     }
                 }
@@ -832,12 +847,19 @@
         document.querySelectorAll(".restore-variant-btn").forEach(btn => {
             btn.addEventListener("click", async () => {
                 const id       = btn.dataset.id;
+                const originalHTML = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<i data-lucide="loader-circle" size="16" class="spin"></i>';
+                if (typeof lucide !== 'undefined') lucide.createIcons();
                 const response = await fetch(`/admin/variants/${id}/restore`, { method: "PATCH" });
                 const data     = await response.json();
                 if (data.success) {
                     Toast.fire({ icon: "success", title: "Variant restored" });
                     setTimeout(() => location.reload(), 1000);
                 } else {
+                    btn.disabled = false;
+                    btn.innerHTML = originalHTML;
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
                     Toast.fire({ icon: "error", title: data.message });
                 }
             });
@@ -862,12 +884,19 @@
                     background: "#FFFFFF"
                 });
                 if (!result.isConfirmed) return;
+                const originalHTML = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<i data-lucide="loader-circle" size="16" class="spin"></i>';
+                if (typeof lucide !== 'undefined') lucide.createIcons();
                 const response = await fetch(`/admin/variants/${id}/permanent-delete`, { method: "DELETE" });
                 const data     = await response.json();
                 if (data.success) {
                     Toast.fire({ icon: "success", title: "Variant permanently deleted" });
                     setTimeout(() => location.reload(), 1000);
                 } else {
+                    btn.disabled = false;
+                    btn.innerHTML = originalHTML;
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
                     Toast.fire({ icon: "error", title: data.message });
                 }
             });

@@ -410,7 +410,6 @@ body {
 ========================================= */
 
 .referral-section {
-
   background: var(--section-bg);
 
   border-radius: 24px;
@@ -422,45 +421,35 @@ body {
   flex-direction: column;
 
   gap: 24px;
-
 }
 
 .referral-header {
-
   display: flex;
 
   align-items: center;
 
   gap: 10px;
-
 }
 
 .referral-header i {
-
   color: var(--primary-color);
-
 }
 
 .referral-header h2 {
-
   font-size: 18px;
 
   font-weight: 700;
-
 }
 
 .referral-grid {
-
   display: grid;
 
   grid-template-columns: repeat(2, 1fr);
 
   gap: 16px;
-
 }
 
 .referral-stat {
-
   background: var(--card-bg);
 
   border-radius: 16px;
@@ -472,11 +461,9 @@ body {
   flex-direction: column;
 
   gap: 8px;
-
 }
 
 .referral-label {
-
   font-size: 10px;
 
   font-weight: 700;
@@ -486,11 +473,9 @@ body {
   text-transform: uppercase;
 
   color: var(--text-muted);
-
 }
 
 .referral-stat strong {
-
   font-size: 18px;
 
   font-weight: 700;
@@ -498,11 +483,9 @@ body {
   color: var(--text-main);
 
   word-break: break-word;
-
 }
 
 .referral-copy-row {
-
   display: flex;
 
   align-items: center;
@@ -510,11 +493,9 @@ body {
   justify-content: space-between;
 
   gap: 12px;
-
 }
 
 .copy-btn {
-
   border: none;
 
   border-radius: 9999px;
@@ -534,31 +515,22 @@ body {
   transition: var(--transition);
 
   flex-shrink: 0;
-
 }
 
 .copy-btn:hover {
-
   transform: translateY(-2px);
-
 }
 
 #referralLink {
-
   font-size: 13px;
 
   color: var(--text-muted);
 
   word-break: break-all;
-
 }
 
 @media (max-width: 768px) {
-
   .referral-grid {
-
     grid-template-columns: 1fr;
-
   }
-
 }

@@ -6,11 +6,12 @@
     <title>Order Details — iStore Admin</title>
     <meta name="description" content="Admin order detail view — manage individual order status, logistics, returns and payment.">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/css/admin-order-details.css">
-    <link rel="stylesheet" href="/css/components/admin-sidebar.css">
-    <link rel="stylesheet" href="/css/admin-dashboard.css">
+    <link rel="stylesheet" href="/css/admin-order-details.css?v=2.2">
+    <link rel="stylesheet" href="/css/components/admin-sidebar.css?v=2.2">
+    <link rel="stylesheet" href="/css/admin-dashboard.css?v=2.2">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
         /* ── Return status indicator badge ── */
@@ -238,7 +239,7 @@
         const hasTracking = !!order.trackingNumber;
     %>
 
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 
     <%- include('../partials/admin/sidebar', { page: 'orders' }) %>
 
@@ -419,6 +420,7 @@
                 <option value="Cancelled"        <%= itemStatus === ORDER_STATUS.CANCELLED        ? "selected" : "" %>>Cancelled</option>
             </select>
             <button 
+                type="button"
                 class="aod-update-btn" 
                 style="padding: 4px 12px; font-size: 10px; min-height: 24px;"
                 onclick="updateItemStatus('<%= item._id %>', this)"
@@ -861,6 +863,7 @@
                         </select>
 
                         <button
+                            type="button"
                             class="aod-update-btn"
                             id="btnUpdateStatus"
                             onclick="updateStatus()"
@@ -909,14 +912,15 @@
             const num = document.getElementById('trackingNum')?.textContent?.trim();
             if (!num || num === '—') return;
             navigator.clipboard.writeText(num).then(() => {
-                Swal.fire({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2000, icon: 'success', title: 'Tracking number copied!' });
+                Swal.fire({ toast: true, position: 'top', showConfirmButton: false, timer: 2000, icon: 'success', title: 'Tracking number copied!' });
             });
         }
 
-        /* ── FIX 5: Update order status with loading state ── */
+        /* ── Update order status ── */
         function updateStatus() {
             const sel = document.getElementById('orderStatusSelect');
             const btn = document.getElementById('btnUpdateStatus');
+            if (!sel || !btn) return;
             if (sel.disabled || btn.disabled) return;
 
             const status = sel?.value;
@@ -964,6 +968,7 @@
         /* ── Individual Item Status Update ── */
         function updateItemStatus(itemId, btn) {
             const select = document.getElementById('itemStatusSelect_' + itemId);
+            if (!select) return;
             const status = select.value;
 
             Swal.fire({

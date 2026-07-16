@@ -405,11 +405,7 @@ body {
 
   border-radius: 999px;
 
-  background: linear-gradient(
-    135deg,
-    #603763,
-    #7a4e7c
-  );
+  background: linear-gradient(135deg, #603763, #7a4e7c);
 
   color: white;
 
@@ -613,7 +609,7 @@ body {
   height: 40px;
   border-radius: 50%;
   cursor: pointer;
-  border: 1px solid var(--border-light, #E5E7EB);
+  border: 1px solid var(--border-light, #e5e7eb);
   position: relative;
 }
 

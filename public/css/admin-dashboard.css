@@ -224,7 +224,7 @@ body {
 .chart-filter-tabs {
   display: flex;
   gap: 4px;
-  background: #F3F0F4;
+  background: #f3f0f4;
   border-radius: 10px;
   padding: 4px;
 }
@@ -234,14 +234,14 @@ body {
   border-radius: 8px;
   font-size: 13px;
   font-weight: 600;
-  color: #6B6070;
+  color: #6b6070;
   text-decoration: none;
   transition: all 0.18s ease;
   white-space: nowrap;
 }
 
 .chart-filter-tab:hover {
-  color: #3D1F46;
+  color: #3d1f46;
   background: rgba(96, 55, 99, 0.08);
 }
 
@@ -865,8 +865,6 @@ tbody tr:last-child td {
   background-color: #603763 !important;
 }
 
-
-
 /* ── Filter links inside date-filter nav ── */
 .date-filter {
   display: flex;
@@ -891,13 +889,13 @@ tbody tr:last-child td {
 
 .filter-link:hover {
   color: #603763;
-  background: rgba(96,55,99,0.06);
+  background: rgba(96, 55, 99, 0.06);
 }
 
 .active-filter {
   background: #603763;
   color: #ffffff !important;
-  box-shadow: 0 2px 8px rgba(96,55,99,0.25);
+  box-shadow: 0 2px 8px rgba(96, 55, 99, 0.25);
 }
 
 /* ── Range label under page title ── */
@@ -919,12 +917,30 @@ tbody tr:last-child td {
   letter-spacing: 0.5px;
   text-transform: uppercase;
 }
-.kpi-chip-purple { background: rgba(96,55,99,0.1);  color: #603763; }
-.kpi-chip-blue   { background: rgba(59,130,246,0.1); color: #1d4ed8; }
-.kpi-chip-green  { background: rgba(16,185,129,0.1); color: #065f46; }
-.kpi-chip-gray   { background: #f4f4f5;              color: #52525b; }
-.kpi-chip-red    { background: rgba(186,26,26,0.1);  color: #ba1a1a; }
-.kpi-chip-orange { background: rgba(245,158,11,0.1); color: #92400e; }
+.kpi-chip-purple {
+  background: rgba(96, 55, 99, 0.1);
+  color: #603763;
+}
+.kpi-chip-blue {
+  background: rgba(59, 130, 246, 0.1);
+  color: #1d4ed8;
+}
+.kpi-chip-green {
+  background: rgba(16, 185, 129, 0.1);
+  color: #065f46;
+}
+.kpi-chip-gray {
+  background: #f4f4f5;
+  color: #52525b;
+}
+.kpi-chip-red {
+  background: rgba(186, 26, 26, 0.1);
+  color: #ba1a1a;
+}
+.kpi-chip-orange {
+  background: rgba(245, 158, 11, 0.1);
+  color: #92400e;
+}
 
 /* ── KPI sub text ── */
 .kpi-sub {
@@ -935,7 +951,7 @@ tbody tr:last-child td {
 
 /* ── Pending KPI icon ── */
 .kpi-icon.pending {
-  background: rgba(245,158,11,0.1);
+  background: rgba(245, 158, 11, 0.1);
   color: #d97706;
 }
 
@@ -951,7 +967,9 @@ tbody tr:last-child td {
   font-size: 14px;
   font-weight: 500;
 }
-.chart-empty i { opacity: 0.4; }
+.chart-empty i {
+  opacity: 0.4;
+}
 
 /* ── Chart container size ── */
 .chart-container {
@@ -977,12 +995,30 @@ tbody tr:last-child td {
   letter-spacing: 0.5px;
   text-transform: uppercase;
 }
-.badge-delivered  { background: #d1fae5; color: #065f46; }
-.badge-processing { background: #fef3c7; color: #92400e; }
-.badge-pending    { background: #dbeafe; color: #1e40af; }
-.badge-cancelled  { background: #fee2e2; color: #991b1b; }
-.badge-returned   { background: #f3e8ff; color: #7e22ce; }
-.badge-shipped    { background: #e0f2fe; color: #075985; }
+.badge-delivered {
+  background: #d1fae5;
+  color: #065f46;
+}
+.badge-processing {
+  background: #fef3c7;
+  color: #92400e;
+}
+.badge-pending {
+  background: #dbeafe;
+  color: #1e40af;
+}
+.badge-cancelled {
+  background: #fee2e2;
+  color: #991b1b;
+}
+.badge-returned {
+  background: #f3e8ff;
+  color: #7e22ce;
+}
+.badge-shipped {
+  background: #e0f2fe;
+  color: #075985;
+}
 
 /* ── Empty cell ── */
 .empty-cell {
@@ -993,8 +1029,16 @@ tbody tr:last-child td {
 }
 
 /* ── Alert stock colors ── */
-.stock-critical { color: #ba1a1a; font-size: 12px; font-weight: 700; }
-.stock-low      { color: #d97706; font-size: 12px; font-weight: 700; }
+.stock-critical {
+  color: #ba1a1a;
+  font-size: 12px;
+  font-weight: 700;
+}
+.stock-low {
+  color: #d97706;
+  font-size: 12px;
+  font-weight: 700;
+}
 
 /* ── Alert empty state ── */
 .alert-empty {
@@ -1010,7 +1054,9 @@ tbody tr:last-child td {
 }
 
 /* ── Quick stats card ── */
-.quick-stats-card .card-header-inner { border-bottom: 1px solid #fafafa; }
+.quick-stats-card .card-header-inner {
+  border-bottom: 1px solid #fafafa;
+}
 
 .quick-stats-list {
   display: grid;
@@ -1042,22 +1088,41 @@ tbody tr:last-child td {
   letter-spacing: -1px;
   line-height: 1;
 }
-.qs-pending   { color: #1d4ed8; }
-.qs-cancelled { color: #ba1a1a; }
-.qs-returned  { color: #7e22ce; }
-.qs-rate      { color: #603763; }
+.qs-pending {
+  color: #1d4ed8;
+}
+.qs-cancelled {
+  color: #ba1a1a;
+}
+.qs-returned {
+  color: #7e22ce;
+}
+.qs-rate {
+  color: #603763;
+}
 
 /* ── KPI grid 3 cols on smaller screens ── */
 @media (max-width: 1400px) {
-  .kpi-grid { grid-template-columns: repeat(3, 1fr); }
+  .kpi-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 @media (max-width: 900px) {
-  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 @media (max-width: 600px) {
-  .kpi-grid { grid-template-columns: 1fr; }
-  .date-filter { flex-wrap: wrap; }
-  .filter-link { flex: 1; text-align: center; }
+  .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+  .date-filter {
+    flex-wrap: wrap;
+  }
+  .filter-link {
+    flex: 1;
+    text-align: center;
+  }
 }
 
 /* RESPONSIVE CSS — mirrors admin-categories.css pattern */
@@ -1119,5 +1184,95 @@ tbody tr:last-child td {
 
   .kpi-card {
     padding: 16px;
+  }
+}
+
+/* Responsive Table Fixes */
+.table-wrapper table th,
+.table-wrapper table td,
+.adm-table-wrap table th,
+.adm-table-wrap table td,
+.table-responsive table th,
+.table-responsive table td,
+.table-card table th,
+.table-card table td,
+th, td {
+  white-space: nowrap;
+}
+
+
+/* HARD FIX FOR RESPONSIVE TABLES ON MOBILE */
+@media (max-width: 768px) {
+  .dashboard-main, 
+  .content-grid,
+  .main-column,
+  .side-column,
+  .dashboard-card,
+  .table-card,
+  .table-wrapper,
+  .adm-table-wrap,
+  .table-responsive {
+    min-width: 0 !important;
+    max-width: 100vw !important;
+  }
+  
+  .table-wrapper,
+  .adm-table-wrap,
+  .table-responsive {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    display: block !important;
+    width: 100% !important;
+  }
+  
+  table {
+    min-width: 600px !important; /* Force table to be wider than mobile screen so it scrolls */
+  }
+  
+  th, td {
+    white-space: nowrap !important;
+  }
+}
+
+
+/* HARD FIX FOR RESPONSIVE TABLES ON ALL SIZES */
+.dashboard-main, 
+.main-canvas,
+.content-grid,
+.product-showcase-grid,
+.info-details-grid,
+.main-column,
+.side-column,
+.dashboard-card,
+.table-card,
+.table-wrapper,
+.adm-table-wrap,
+.table-responsive,
+.aod-layout,
+.aod-main-content,
+.aod-sidebar {
+  min-width: 0 !important;
+  max-width: 100vw;
+}
+
+.table-wrapper,
+.adm-table-wrap,
+.table-responsive {
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  width: 100% !important;
+}
+
+table {
+  min-width: 800px; /* Prevent squishing on desktop/tablet */
+}
+
+th, td {
+  white-space: nowrap;
+}
+
+@media (max-width: 1024px) {
+  .aod-layout {
+    grid-template-columns: 1fr !important;
   }
 }

@@ -131,93 +131,73 @@ export const loadProductsService = async (query) => {
   /* VARIANT DETAILS */
 
   const now = new Date();
-for (const product of products) {
+  for (const product of products) {
+    const variants = await Variant.find({
+      productId: product._id,
 
-    const variants =
-    await Variant.find({
-
-        productId: product._id,
-
-        isDeleted: false,
-
+      isDeleted: false,
     });
 
-    product.variantCount =
-    variants.length;
+    product.variantCount = variants.length;
 
-    product.totalStock =
-    variants.reduce(
+    product.totalStock = variants.reduce(
+      (acc, item) => acc + item.stock,
 
-        (acc, item) =>
-        acc + item.stock,
-
-        0
-
+      0,
     );
 
-    product.defaultPrice =
-    variants[0]?.price || 0;
+    product.defaultPrice = variants[0]?.price || 0;
 
-    product.defaultSKU =
-    variants[0]?.SKU || "N/A";
+    product.defaultSKU = variants[0]?.SKU || "N/A";
 
     /* 
        ACTIVE PRODUCT OFFER
      */
 
+    const productOffer = await Offer.findOne({
+      applyTo: "PRODUCT",
 
-    const productOffer =
-    await Offer.findOne({
+      targetId: product._id,
 
-        applyTo: "PRODUCT",
+      isActive: true,
 
-        targetId: product._id,
+      isDeleted: false,
 
-        isActive: true,
+      startDate: {
+        $lte: now,
+      },
 
-        isDeleted: false,
-
-        startDate: {
-            $lte: now
-        },
-
-        endDate: {
-            $gte: now
-        }
-
+      endDate: {
+        $gte: now,
+      },
     }).lean();
 
     /* 
        ACTIVE CATEGORY OFFER
      */
 
-    const categoryOffer =
-    await Offer.findOne({
+    const categoryOffer = await Offer.findOne({
+      applyTo: "CATEGORY",
 
-        applyTo: "CATEGORY",
+      targetId: product.categoryId,
 
-        targetId: product.categoryId,
+      isActive: true,
 
-        isActive: true,
+      isDeleted: false,
 
-        isDeleted: false,
+      startDate: {
+        $lte: now,
+      },
 
-        startDate: {
-            $lte: now
-        },
-
-        endDate: {
-            $gte: now
-        }
-
+      endDate: {
+        $gte: now,
+      },
     }).lean();
 
-    product.productOffer =
-    productOffer;
+    product.productOffer = productOffer;
 
-    product.categoryOffer =
-    categoryOffer;
-}
+    product.categoryOffer = categoryOffer;
+  }
 
   /* TOTAL */
 
@@ -331,16 +311,10 @@ export const createProductService = async (data) => {
   /* 5. VALIDATE VARIANT SCHEMA */
   validateComparePrice(body.comparePrice, body.price);
 
-  const stockValue =
-  Number(body.stock);
+  const stockValue = Number(body.stock);
 
-  if (
-  isNaN(stockValue) ||
-  stockValue < 0
-  ) {
-  throw new Error(
-  "Stock cannot be negative"
-  );
+  if (isNaN(stockValue) || stockValue < 0) {
+    throw new Error("Stock cannot be negative");
   }
   const variantDataForValidation = {
     productId: "placeholder",
@@ -480,22 +454,18 @@ export const updateProductService = async (
      the one the user is actually editing. The edit form must
      submit `variantId`. */
 
-  const stockValue =
-  Number(body.stock);
+  const stockValue = Number(body.stock);
 
-  if (
-  isNaN(stockValue) ||
-  stockValue < 0
-  ) {
-  throw new Error(
-  "Stock cannot be negative"
-  );
+  if (isNaN(stockValue) || stockValue < 0) {
+    throw new Error("Stock cannot be negative");
   }
 
   validateComparePrice(body.comparePrice, body.price);
 
   if (!body.variantId) {
-    throw new Error("variantId is required to update this product's stock/price");
+    throw new Error(
+      "variantId is required to update this product's stock/price",
+    );
   }
 
   const variant = await Variant.findOne({
@@ -688,13 +658,11 @@ export const loadProductDetailsService = async (productId) => {
 
   const now = new Date();
 
-/* 
+  /* 
    PRODUCT OFFER
  */
 
-const productOffer =
-await Offer.findOne({
-
+  const productOffer = await Offer.findOne({
     applyTo: "PRODUCT",
 
     targetId: product._id,
@@ -704,22 +672,19 @@ await Offer.findOne({
     isDeleted: false,
 
     startDate: {
-        $lte: now
+      $lte: now,
     },
 
     endDate: {
-        $gte: now
-    }
+      $gte: now,
+    },
+  }).lean();
 
-}).lean();
-
-/* 
+  /* 
    CATEGORY OFFER
  */
 
-const categoryOffer =
-await Offer.findOne({
-
+  const categoryOffer = await Offer.findOne({
     applyTo: "CATEGORY",
 
     targetId: product.categoryId._id,
@@ -729,17 +694,15 @@ await Offer.findOne({
     isDeleted: false,
 
     startDate: {
-        $lte: now
+      $lte: now,
     },
 
     endDate: {
-        $gte: now
-    }
+      $gte: now,
+    },
+  }).lean();
 
-}).lean();
-
-return {
-
+  return {
     product,
 
     variants,
@@ -752,9 +715,8 @@ return {
 
     productOffer,
 
-    categoryOffer
-
-};
+    categoryOffer,
+  };
 };
 
 /* ============================
@@ -822,16 +784,10 @@ export const addVariantService = async (data) => {
 
   validateComparePrice(body.comparePrice, body.price);
 
-  const stockValue =
-  Number(body.stock);
+  const stockValue = Number(body.stock);
 
-  if (
-  isNaN(stockValue) ||
-  stockValue < 0
-  ) {
-  throw new Error(
-  "Stock cannot be negative"
-  );
+  if (isNaN(stockValue) || stockValue < 0) {
+    throw new Error("Stock cannot be negative");
   }
 
   const variantData = {
@@ -965,16 +921,10 @@ export const updateVariantService = async (
   }
 
   /* UPDATE */
-  const stockValue =
-  Number(body.stock);
+  const stockValue = Number(body.stock);
 
-  if (
-  isNaN(stockValue) ||
-  stockValue < 0
-  ) {
-  throw new Error(
-  "Stock cannot be negative"
-  );
+  if (isNaN(stockValue) || stockValue < 0) {
+    throw new Error("Stock cannot be negative");
   }
 
   validateComparePrice(body.comparePrice, body.price);

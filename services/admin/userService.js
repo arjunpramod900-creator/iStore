@@ -72,7 +72,6 @@ export const getUsersService = async (queryData) => {
     }
 
     query.createdAt = {
-
       $gte: dateFilter,
     };
   }
@@ -80,8 +79,6 @@ export const getUsersService = async (queryData) => {
   /* USERS */
 
   const users = await User.find(query)
-
-
 
     .sort({ createdAt: -1 })
 

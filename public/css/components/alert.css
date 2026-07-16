@@ -3,21 +3,12 @@
 ========================================= */
 
 .premium-alert-popup {
-  width: 430px;
-
-  padding: 2.2rem;
-
-  border-radius: 32px !important;
-
+  border-radius: 28px !important;
+  padding: 28px !important;
+  font-family: "Inter", sans-serif !important;
+  box-shadow: 0 20px 60px rgba(17, 17, 17, 0.08) !important;
   background: #ffffff !important;
-
-  border: 1px solid rgba(0, 0, 0, 0.04);
-
-  box-shadow:
-    0px 40px 80px rgba(78, 31, 88, 0.08),
-    0px 10px 20px rgba(78, 31, 88, 0.04);
-
-  overflow: hidden;
+  color: #111111 !important;
 }
 
 /* =========================================
@@ -31,9 +22,9 @@
   max-width: 100%;
   padding: 16px 18px !important;
   margin: 14px 0 0 0 !important;
-  border: 1px solid #E5E7EB !important;
+  border: 1px solid #e5e7eb !important;
   border-radius: 14px !important;
-  background: #F9FAFB !important;
+  background: #f9fafb !important;
   font-family: "Inter", sans-serif;
   font-size: 15px !important;
   color: #111827 !important;
@@ -51,9 +42,9 @@
 .premium-alert-popup .swal2-textarea:focus,
 .premium-alert-popup .swal2-input:focus {
   outline: none !important;
-  border-color: #8b5cf6 !important;
+  border-color: #6a0dad !important;
   background: #ffffff !important;
-  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1) !important;
+  box-shadow: 0 0 0 4px rgba(106, 13, 173, 0.1) !important;
 }
 
 /* =========================================
@@ -61,17 +52,11 @@
 ========================================= */
 
 .premium-alert-title {
-  font-family: "Inter", sans-serif;
-
-  font-size: 30px !important;
-
-  font-weight: 700 !important;
-
-  letter-spacing: -1.4px;
-
-  color: #2c1421;
-
-  margin-bottom: 10px;
+  font-family: "Inter", sans-serif !important;
+  font-size: 24px !important;
+  font-weight: 600 !important;
+  color: #111111 !important;
+  margin-bottom: 8px !important;
 }
 
 /* =========================================
@@ -79,15 +64,10 @@
 ========================================= */
 
 .premium-alert-text {
-  font-family: "Inter", sans-serif;
-
+  font-family: "Inter", sans-serif !important;
   font-size: 15px !important;
-
-  line-height: 1.7;
-
-  color: #6b7280;
-
-  margin-top: 6px;
+  color: #666666 !important;
+  margin-top: 6px !important;
 }
 
 /* =========================================
@@ -96,51 +76,31 @@
 
 .swal2-actions {
   width: 100%;
-
-  margin-top: 2rem !important;
-
-  gap: 14px;
+  margin-top: 1.5rem !important;
+  gap: 12px;
 }
 
 /* =========================================
-   LOGIN BUTTON
+   CONFIRM BUTTON
 ========================================= */
 
 .premium-alert-confirm {
-  flex: 1;
-
-  height: 56px;
-
-  border: none !important;
-
-  border-radius: 18px !important;
-
-  background: linear-gradient(
-    135deg,
-    #5b0ab2 0%,
-    #701a75 50%,
-    #8b5cf6 100%
-  ) !important;
-
+  background: linear-gradient(135deg, #4c0080 0%, #6a0dad 100%) !important;
   color: #ffffff !important;
-
-  font-size: 15px !important;
-
+  border-radius: 16px !important;
+  padding: 12px 24px !important;
+  font-size: 14px !important;
   font-weight: 600 !important;
-
-  letter-spacing: -0.2px;
-
-  box-shadow: 0px 18px 42px rgba(91, 10, 178, 0.28);
-
+  border: none !important;
+  box-shadow: 0 12px 30px rgba(106, 13, 173, 0.28) !important;
   transition:
-    transform 0.22s ease,
-    box-shadow 0.22s ease !important;
+    transform 0.2s ease,
+    box-shadow 0.2s ease !important;
 }
 
 .premium-alert-confirm:hover {
   transform: translateY(-2px);
-
-  box-shadow: 0px 24px 52px rgba(91, 10, 178, 0.38);
+  box-shadow: 0 16px 36px rgba(106, 13, 173, 0.35) !important;
 }
 
 /* =========================================
@@ -148,31 +108,18 @@
 ========================================= */
 
 .premium-alert-cancel {
-  flex: 1;
-
-  height: 56px;
-
-  border-radius: 18px !important;
-
-  border: 1px solid rgba(208, 195, 204, 0.18) !important;
-
-  background: rgba(255, 255, 255, 0.72) !important;
-
-  backdrop-filter: blur(10px);
-
-  color: #5a3e4b !important;
-
-  font-size: 15px !important;
-
+  background: #f3f4f6 !important;
+  color: #111111 !important;
+  border-radius: 16px !important;
+  padding: 12px 24px !important;
+  font-size: 14px !important;
   font-weight: 600 !important;
-
-  transition: all 0.22s ease !important;
+  border: none !important;
+  transition: background 0.2s ease !important;
 }
 
 .premium-alert-cancel:hover {
-  background: rgba(255, 240, 244, 0.9) !important;
-
-  transform: translateY(-1px);
+  background: #e5e7eb !important;
 }
 
 /* =========================================

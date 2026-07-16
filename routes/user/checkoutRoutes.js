@@ -1,7 +1,7 @@
 import express from "express";
 
-import { isLoggedIn }              from "../../middleware/authMiddleware.js";
-import userBlockCheckMiddleware    from "../../middleware/userBlockCheckMiddleware.js";
+import { isLoggedIn } from "../../middleware/authMiddleware.js";
+import userBlockCheckMiddleware from "../../middleware/userBlockCheckMiddleware.js";
 
 import {
   loadCheckoutPage,
@@ -24,21 +24,16 @@ const auth = [isLoggedIn, userBlockCheckMiddleware];
 /* =========================================
    CHECKOUT — new order flow
 ========================================= */
-router.get( "/checkout",              ...auth, loadCheckoutPage);
-router.post("/checkout/place-order",  ...auth, placeOrder);
+router.get("/checkout", ...auth, loadCheckoutPage);
+router.post("/checkout/place-order", ...auth, placeOrder);
 router.post("/checkout/apply-coupon", ...auth, applyCoupon);
-router.post("/checkout/remove-coupon",...auth, removeCoupon);
-
+router.post("/checkout/remove-coupon", ...auth, removeCoupon);
 
 /* =========================================
    RETRY CHECKOUT
 ========================================= */
-router.get(
-  "/orders/:orderId/retry",
-  ...auth,
-  loadRetryCheckoutPage
-);
-router.post("/orders/:orderId/retry/apply-coupon",  ...auth, applyRetryCoupon);
+router.get("/orders/:orderId/retry", ...auth, loadRetryCheckoutPage);
+router.post("/orders/:orderId/retry/apply-coupon", ...auth, applyRetryCoupon);
 router.post("/orders/:orderId/retry/remove-coupon", ...auth, removeRetryCoupon);
 
 /* =========================================
@@ -59,10 +54,6 @@ router.get("/order-success/:orderId", ...auth, loadOrderSuccessPage);
 ========================================= */
 router.get("/order-failure/:orderId", ...auth, loadOrderFailurePage);
 
-router.post(
-    "/checkout/payment-failed",
-    ...auth,
-    markPaymentFailed
-);
+router.post("/checkout/payment-failed", ...auth, markPaymentFailed);
 
 export default router;

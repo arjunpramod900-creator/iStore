@@ -11,7 +11,7 @@ import {
 
 import { calculateCheckoutTotals } from "../../services/shared/pricingService.js";
 
-import Cart  from "../../models/Cart.js";
+import Cart from "../../models/Cart.js";
 import Order from "../../models/Order.js";
 
 /* =========================================
@@ -32,33 +32,31 @@ export const loadCheckoutPage = async (req, res) => {
     }
 
     res.render("user/checkout", {
-      page:             "checkout",
-      mode:             "new",          /* ← tells the template which UI to show */
+      page: "checkout",
+      mode: "new" /* ← tells the template which UI to show */,
       cart: {
-        items:    response.cartItems,
+        items: response.cartItems,
         subtotal: response.subtotal,
       },
-      order:            null,           /* not used in new mode */
-      addresses:        response.addresses,
+      order: null /* not used in new mode */,
+      addresses: response.addresses,
       availableCoupons: response.availableCoupons,
-      subtotal:         response.subtotal,
-      offerDiscount:    response.offerDiscount,
-      couponDiscount:   response.couponDiscount,
-      appliedCoupon:    req.session.appliedCoupon || null,
-      totalItems:       response.totalItems,
-      taxAmount:        response.taxAmount,
-      deliveryCharge:   response.deliveryCharge,
-      finalAmount:      response.finalAmount,
-      razorpayKey:      process.env.RAZORPAY_KEY_ID,
-      stockMessages:    response.stockMessages || [],
+      subtotal: response.subtotal,
+      offerDiscount: response.offerDiscount,
+      couponDiscount: response.couponDiscount,
+      appliedCoupon: req.session.appliedCoupon || null,
+      totalItems: response.totalItems,
+      taxAmount: response.taxAmount,
+      deliveryCharge: response.deliveryCharge,
+      finalAmount: response.finalAmount,
+      razorpayKey: process.env.RAZORPAY_KEY_ID,
+      stockMessages: response.stockMessages || [],
     });
-
   } catch (error) {
     console.log("Load Checkout Error:", error);
     return res.redirect("/cart");
   }
 };
-
 
 /* =========================================
    LOAD RETRY CHECKOUT PAGE  (mode = "retry")
@@ -69,7 +67,7 @@ export const loadCheckoutPage = async (req, res) => {
 
 export const loadRetryCheckoutPage = async (req, res) => {
   try {
-    const userId      = req.session.userId;
+    const userId = req.session.userId;
     const { orderId } = req.params;
 
     const response = await loadRetryCheckoutService(userId, orderId);
@@ -83,40 +81,41 @@ export const loadRetryCheckoutPage = async (req, res) => {
     const order = response.order;
 
     // Restore any new coupon applied in this session, otherwise fallback to the order's existing coupon
-    const appliedCoupon   = req.session.retryCoupon || null;
-    const couponDiscount  = appliedCoupon ? appliedCoupon.discount : (order.couponDiscount || 0);
+    const appliedCoupon = req.session.retryCoupon || null;
+    const couponDiscount = appliedCoupon
+      ? appliedCoupon.discount
+      : order.couponDiscount || 0;
 
     // Recalculate totals (order.subtotal is already post-offer discount)
-    const base            = order.subtotal || 0;
-    const discounted      = base - couponDiscount;
-    const deliveryCharge  = order.deliveryCharge ?? (discounted >= 5000 ? 0 : 99);
-    const taxAmount       = Math.floor(discounted * 0.02);
-    const grandTotal      = discounted + deliveryCharge + taxAmount;
+    const base = order.subtotal || 0;
+    const discounted = base - couponDiscount;
+    const deliveryCharge =
+      order.deliveryCharge ?? (discounted >= 5000 ? 0 : 99);
+    const taxAmount = Math.floor(discounted * 0.02);
+    const grandTotal = discounted + deliveryCharge + taxAmount;
 
     res.render("user/checkout", {
-      page:             "orders",
-      mode:             "retry",
-      cart:             null,
+      page: "orders",
+      mode: "retry",
+      cart: null,
       order,
-      addresses:        response.addresses,
+      addresses: response.addresses,
       availableCoupons: response.availableCoupons,
-      subtotal:         order.subtotal,
-      offerDiscount:    order.offerDiscount  || 0,
+      subtotal: order.subtotal,
+      offerDiscount: order.offerDiscount || 0,
       couponDiscount,
       appliedCoupon,
-      totalItems:       order.items?.length || 0,
+      totalItems: order.items?.length || 0,
       taxAmount,
       deliveryCharge,
-      finalAmount:      grandTotal,
-      razorpayKey:      process.env.RAZORPAY_KEY_ID,
+      finalAmount: grandTotal,
+      razorpayKey: process.env.RAZORPAY_KEY_ID,
     });
-
   } catch (error) {
     console.log("Load Retry Checkout Error:", error);
     return res.redirect("/orders");
   }
 };
-
 
 /* =========================================
    PLACE ORDER  (new mode)
@@ -137,17 +136,19 @@ export const placeOrder = async (req, res) => {
       );
 
       if (!response.success) {
-        return res.status(400).json({ success: false, message: response.message });
+        return res
+          .status(400)
+          .json({ success: false, message: response.message });
       }
 
       delete req.session.appliedCoupon;
 
       return res.json({
-        success:       true,
+        success: true,
         paymentMethod: "RAZORPAY",
         razorpayOrder: response.razorpayOrder,
-        amount:        response.amount,
-        orderId:       response.orderId,
+        amount: response.amount,
+        orderId: response.orderId,
       });
     }
 
@@ -174,22 +175,24 @@ export const placeOrder = async (req, res) => {
     }
 
     if (!response.success) {
-      return res.status(400).json({ success: false, message: response.message });
+      return res
+        .status(400)
+        .json({ success: false, message: response.message });
     }
 
     delete req.session.appliedCoupon;
 
     return res.status(200).json({
-      success:     true,
+      success: true,
       redirectUrl: `/order-success/${response.order.orderId}`,
     });
-
   } catch (error) {
     console.log("Place Order Error:", error);
-    return res.status(500).json({ success: false, message: "Order placement failed" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Order placement failed" });
   }
 };
-
 
 /* =========================================
    VERIFY RAZORPAY PAYMENT
@@ -201,8 +204,8 @@ export const placeOrder = async (req, res) => {
 export const verifyRazorpayPayment = async (req, res) => {
   try {
     const response = await verifyRazorpayPaymentService({
-      userId:            req.session.userId,
-      razorpayOrderId:   req.body.razorpay_order_id,
+      userId: req.session.userId,
+      razorpayOrderId: req.body.razorpay_order_id,
       razorpayPaymentId: req.body.razorpay_payment_id,
       razorpaySignature: req.body.razorpay_signature,
     });
@@ -212,16 +215,14 @@ export const verifyRazorpayPayment = async (req, res) => {
     }
 
     return res.json({
-      success:     true,
+      success: true,
       redirectUrl: `/order-success/${response.order.orderId}`,
     });
-
   } catch (error) {
     console.log("Verify Payment Error:", error);
     return res.json({ success: false, message: "Payment verification failed" });
   }
 };
-
 
 /* =========================================
    APPLY COUPON
@@ -229,7 +230,7 @@ export const verifyRazorpayPayment = async (req, res) => {
 
 export const applyCoupon = async (req, res) => {
   try {
-    const userId         = req.session.userId;
+    const userId = req.session.userId;
     const { couponCode, deliveryType } = req.body;
 
     const cart = await Cart.findOne({ userId })
@@ -241,32 +242,38 @@ export const applyCoupon = async (req, res) => {
       return res.json({ success: false, message: "Cart is empty" });
     }
 
-    const totals = await calculateCheckoutTotals({ cartItems: cart.items, couponCode, userId, deliveryType });
+    const totals = await calculateCheckoutTotals({
+      cartItems: cart.items,
+      couponCode,
+      userId,
+      deliveryType,
+    });
 
     if (!totals.coupon) {
-      return res.json({ success: false, message: totals.couponError || "Invalid coupon" });
+      return res.json({
+        success: false,
+        message: totals.couponError || "Invalid coupon",
+      });
     }
 
     req.session.appliedCoupon = {
-      code:     totals.coupon.code,
+      code: totals.coupon.code,
       discount: totals.couponDiscount,
     };
 
     return res.json({
-      success:        true,
-      couponCode:     totals.coupon.code,
+      success: true,
+      couponCode: totals.coupon.code,
       couponDiscount: totals.couponDiscount,
-      finalAmount:    totals.finalAmount,
-      taxAmount:      totals.taxAmount,
+      finalAmount: totals.finalAmount,
+      taxAmount: totals.taxAmount,
       deliveryCharge: totals.deliveryCharge,
     });
-
   } catch (error) {
     console.log("Apply Coupon Error:", error);
     return res.json({ success: false, message: "Failed to apply coupon" });
   }
 };
-
 
 /* =========================================
    REMOVE COUPON
@@ -287,21 +294,24 @@ export const removeCoupon = async (req, res) => {
       return res.json({ success: false, message: "Cart is empty" });
     }
 
-    const totals = await calculateCheckoutTotals({ cartItems: cart.items, userId, couponCode: null, deliveryType });
-
-    return res.json({
-      success:        true,
-      taxAmount:      totals.taxAmount,
-      deliveryCharge: totals.deliveryCharge,
-      finalAmount:    totals.finalAmount,
+    const totals = await calculateCheckoutTotals({
+      cartItems: cart.items,
+      userId,
+      couponCode: null,
+      deliveryType,
     });
 
+    return res.json({
+      success: true,
+      taxAmount: totals.taxAmount,
+      deliveryCharge: totals.deliveryCharge,
+      finalAmount: totals.finalAmount,
+    });
   } catch (error) {
     console.log("Remove Coupon Error:", error);
     return res.json({ success: false, message: "Failed to remove coupon" });
   }
 };
-
 
 /* =========================================
    LOAD ORDER SUCCESS PAGE
@@ -311,13 +321,12 @@ export const loadOrderSuccessPage = async (req, res) => {
   try {
     const order = await Order.findOne({
       orderId: req.params.orderId,
-      userId:  req.session.userId,
+      userId: req.session.userId,
     });
 
     if (!order) return res.redirect("/");
 
     res.render("user/order-success", { page: "order-success", order });
-
   } catch (error) {
     console.log("Load Success Page Error:", error);
     return res.redirect("/");
@@ -329,9 +338,7 @@ export const loadOrderSuccessPage = async (req, res) => {
 ========================================= */
 
 export const loadOrderFailurePage = async (req, res) => {
-
   try {
-
     const order = await Order.findOne({
       orderId: req.params.orderId,
       userId: req.session.userId,
@@ -341,49 +348,36 @@ export const loadOrderFailurePage = async (req, res) => {
       return res.redirect("/orders");
     }
 
-/* Paid orders should not show failure page */
-if (order.paymentStatus === "Paid") {
-  return res.redirect(`/orders/${order.orderId}`);
-}
+    /* Paid orders should not show failure page */
+    if (order.paymentStatus === "Paid") {
+      return res.redirect(`/orders/${order.orderId}`);
+    }
 
     res.render("user/order-failure", {
       page: "order-failure",
       order,
     });
-
   } catch (error) {
-
     console.log("Load Failure Page Error:", error);
 
     return res.redirect("/orders");
-
   }
-
 };
 
 export const markPaymentFailed = async (req, res) => {
+  try {
+    await markPaymentFailedService(req.session.userId, req.body.orderId);
 
-    try {
+    res.json({
+      success: true,
+    });
+  } catch (error) {
+    console.log("Mark Payment Failed Error:", error);
 
-        await markPaymentFailedService(
-            req.session.userId,
-            req.body.orderId
-        );
-
-        res.json({
-            success: true
-        });
-
-    } catch (error) {
-
-        console.log("Mark Payment Failed Error:", error);
-
-        res.status(500).json({
-            success: false
-        });
-
-    }
-
+    res.status(500).json({
+      success: false,
+    });
+  }
 };
 
 /* =========================================
@@ -392,8 +386,8 @@ export const markPaymentFailed = async (req, res) => {
 ========================================= */
 export const applyRetryCoupon = async (req, res) => {
   try {
-    const userId         = req.session.userId;
-    const { orderId }    = req.params;
+    const userId = req.session.userId;
+    const { orderId } = req.params;
     const { couponCode } = req.body;
 
     const result = await applyRetryCouponService(userId, orderId, couponCode);
@@ -404,19 +398,18 @@ export const applyRetryCoupon = async (req, res) => {
 
     // Store in session so the page reload restores it
     req.session.retryCoupon = {
-      code:     result.couponCode,
+      code: result.couponCode,
       discount: result.couponDiscount,
     };
 
     return res.json({
-      success:        true,
-      couponCode:     result.couponCode,
+      success: true,
+      couponCode: result.couponCode,
       couponDiscount: result.couponDiscount,
-      taxAmount:      result.taxAmount,
+      taxAmount: result.taxAmount,
       deliveryCharge: result.deliveryCharge,
-      finalAmount:    result.finalAmount,
+      finalAmount: result.finalAmount,
     });
-
   } catch (error) {
     console.log("Apply Retry Coupon Error:", error);
     return res.json({ success: false, message: "Failed to apply coupon" });
@@ -431,20 +424,19 @@ export const removeRetryCoupon = async (req, res) => {
     // Set code: false to explicitly indicate removal instead of just deleting
     req.session.retryCoupon = { code: false, discount: 0 };
 
-    const userId  = req.session.userId;
+    const userId = req.session.userId;
     const orderId = req.params.orderId;
-    const Order   = (await import("../../models/Order.js")).default;
-    const order   = await Order.findOne({ userId, orderId }).lean();
+    const Order = (await import("../../models/Order.js")).default;
+    const order = await Order.findOne({ userId, orderId }).lean();
     if (!order) return res.json({ success: false, message: "Order not found" });
 
     // order.subtotal already has the offer discount applied
-    const base           = order.subtotal || 0;
+    const base = order.subtotal || 0;
     const deliveryCharge = order.deliveryCharge ?? (base >= 5000 ? 0 : 99);
-    const taxAmount      = Math.floor(base * 0.02);
-    const finalAmount    = base + deliveryCharge + taxAmount;
+    const taxAmount = Math.floor(base * 0.02);
+    const finalAmount = base + deliveryCharge + taxAmount;
 
     return res.json({ success: true, taxAmount, deliveryCharge, finalAmount });
-
   } catch (error) {
     console.log("Remove Retry Coupon Error:", error);
     return res.json({ success: false, message: "Failed to remove coupon" });

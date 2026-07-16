@@ -8,10 +8,16 @@ import Product from "../../models/Product.js";
 
 import { calculateCheckoutTotals } from "../shared/pricingService.js";
 import { debitWallet, creditWallet } from "../shared/walletService.js";
-import { createRazorpayOrder, verifyRazorpaySignature } from "./razorpayService.js";
+import {
+  createRazorpayOrder,
+  verifyRazorpaySignature,
+} from "./razorpayService.js";
 import { calculateItemOffer } from "../shared/offerService.js";
-import { ORDER_STATUS, PAYMENT_STATUS, RETURN_STATUS } from "../../constants/orderEnums.js";
-
+import {
+  ORDER_STATUS,
+  PAYMENT_STATUS,
+  RETURN_STATUS,
+} from "../../constants/orderEnums.js";
 
 const PAYMENT_EXPIRY_MS = 30 * 60 * 1000; // 30 minutes
 const MAX_RETRY_COUNT = 5;
@@ -20,160 +26,172 @@ const MAX_RETRY_COUNT = 5;
    LOAD CHECKOUT SERVICE
 ========================================= */
 export const loadCheckoutService = async (userId, couponCode = null) => {
-const cart = await Cart.findOne({ userId })
-.populate({
-    path: "items.productId",
-    populate: {
-        path: "categoryId"
-    }
-})
-.populate({
-    path: "items.variantId"
-})
+  const cart = await Cart.findOne({ userId })
+    .populate({
+      path: "items.productId",
+      populate: {
+        path: "categoryId",
+      },
+    })
+    .populate({
+      path: "items.variantId",
+    });
 
+  if (!cart || cart.items.length === 0)
+    return { success: false, message: "Cart is empty" };
 
-    if (!cart || cart.items.length === 0) return { success: false, message: "Cart is empty" };
-
-const validItems = cart.items.filter(item => {
-
+  const validItems = cart.items.filter((item) => {
     return (
-
-        item.productId &&
-        item.variantId &&
-
-        item.productId.isActive &&
-        !item.productId.isDeleted &&
-
-        item.productId.categoryId &&
-        item.productId.categoryId.isActive &&
-        !item.productId.categoryId.isDeleted &&
-
-        item.variantId.isActive &&
-        !item.variantId.isDeleted &&
-
-        item.variantId.stock > 0
-
+      item.productId &&
+      item.variantId &&
+      item.productId.isActive &&
+      !item.productId.isDeleted &&
+      item.productId.categoryId &&
+      item.productId.categoryId.isActive &&
+      !item.productId.categoryId.isDeleted &&
+      item.variantId.isActive &&
+      !item.variantId.isDeleted &&
+      item.variantId.stock > 0
     );
+  });
 
-});
+  const stockMessages = [];
 
-const stockMessages = [];
-
-/* Track items that will be removed */
-for (const item of cart.items) {
+  /* Track items that will be removed */
+  for (const item of cart.items) {
     if (!item.productId || !item.variantId) {
-        stockMessages.push("A product was removed from checkout (unavailable)");
-        continue;
+      stockMessages.push("A product was removed from checkout (unavailable)");
+      continue;
     }
     if (item.productId.isDeleted || !item.productId.isActive) {
-        stockMessages.push(`${item.productId.name} is no longer available`);
-    } else if (!item.productId.categoryId || item.productId.categoryId.isDeleted || !item.productId.categoryId.isActive) {
-        stockMessages.push(`${item.productId.name} category is unavailable`);
+      stockMessages.push(`${item.productId.name} is no longer available`);
+    } else if (
+      !item.productId.categoryId ||
+      item.productId.categoryId.isDeleted ||
+      !item.productId.categoryId.isActive
+    ) {
+      stockMessages.push(`${item.productId.name} category is unavailable`);
     } else if (item.variantId.isDeleted || !item.variantId.isActive) {
-        stockMessages.push(`${item.productId.name} variant is unavailable`);
+      stockMessages.push(`${item.productId.name} variant is unavailable`);
     } else if (item.variantId.stock <= 0) {
-        stockMessages.push(`${item.productId.name} is out of stock`);
+      stockMessages.push(`${item.productId.name} is out of stock`);
     } else if (item.quantity > item.variantId.stock) {
-        stockMessages.push(`${item.productId.name} quantity adjusted to available stock`);
+      stockMessages.push(
+        `${item.productId.name} quantity adjusted to available stock`,
+      );
     }
-}
+  }
 
-/* =========================================
+  /* =========================================
 
    CLEAN INVALID CART ITEMS
 
 ========================================= */
 
-if (validItems.length !== cart.items.length) {
+  if (validItems.length !== cart.items.length) {
+    cart.items = validItems.map((item) => ({
+      productId: item.productId._id,
 
-    cart.items = validItems.map(item => ({
+      variantId: item.variantId._id,
 
-        productId:
+      quantity: item.quantity,
 
-            item.productId._id,
+      price: item.price,
 
-        variantId:
-
-            item.variantId._id,
-
-        quantity:
-
-            item.quantity,
-
-        price:
-
-            item.price,
-
-        movedFromWishlist:
-
-            item.movedFromWishlist
-
+      movedFromWishlist: item.movedFromWishlist,
     }));
 
     await cart.save();
+  }
 
-}
+  for (const item of validItems) {
+    const offerData = await calculateItemOffer(
+      item.productId,
+      item.variantId,
+      item.quantity,
+    );
+    item.originalPrice = offerData.originalPrice;
+    item.finalPrice = offerData.finalPrice;
+    item.offerDiscount = offerData.offerDiscount;
+    item.appliedOffer = offerData.appliedOffer;
+    item.badgeLabel = offerData.badgeLabel;
+  }
 
-    for (const item of validItems) {
-        const offerData    = await calculateItemOffer(item.productId, item.variantId, item.quantity);
-        item.originalPrice = offerData.originalPrice;
-        item.finalPrice    = offerData.finalPrice;
-        item.offerDiscount = offerData.offerDiscount;
-        item.appliedOffer  = offerData.appliedOffer;
-        item.badgeLabel    = offerData.badgeLabel;
-    }
+  let totalItems = 0;
+  validItems.forEach((item) => {
+    totalItems += item.quantity;
+  });
 
-    let totalItems = 0;
-    validItems.forEach(item => { totalItems += item.quantity; });
+  const totals = await calculateCheckoutTotals({
+    cartItems: validItems,
+    userId,
+    couponCode,
+  });
 
-    const totals = await calculateCheckoutTotals({ cartItems: validItems, userId, couponCode });
+  const addresses = await Address.find({ userId })
+    .sort({ isDefault: -1, createdAt: -1 })
+    .lean();
 
-    const addresses = await Address.find({ userId }).sort({ isDefault: -1, createdAt: -1 }).lean();
+  const availableCoupons = await Coupon.find({
+    isDeleted: false,
+    isActive: true,
+    startDate: { $lte: new Date() },
+    endDate: { $gte: new Date() },
+  })
+    .sort({ createdAt: -1 })
+    .lean();
 
-    const availableCoupons = await Coupon.find({
-        isDeleted: false, isActive: true,
-        startDate: { $lte: new Date() }, endDate: { $gte: new Date() },
-    }).sort({ createdAt: -1 }).lean();
-
-    return {
-        success: true, cartItems: validItems, addresses, availableCoupons,
-        subtotal: totals.subtotal, offerDiscount: totals.offerDiscount,
-        couponDiscount: totals.couponDiscount, totalItems,
-        taxAmount: totals.taxAmount, deliveryCharge: totals.deliveryCharge,
-        finalAmount: totals.finalAmount,
-        stockMessages,
-    };
+  return {
+    success: true,
+    cartItems: validItems,
+    addresses,
+    availableCoupons,
+    subtotal: totals.subtotal,
+    offerDiscount: totals.offerDiscount,
+    couponDiscount: totals.couponDiscount,
+    totalItems,
+    taxAmount: totals.taxAmount,
+    deliveryCharge: totals.deliveryCharge,
+    finalAmount: totals.finalAmount,
+    stockMessages,
+  };
 };
 
 /* =========================================
    SHARED HELPERS
 ========================================= */
 const generateOrderId = () => {
-    const random = Math.random().toString(36).slice(2, 6).toUpperCase();
-    return `IST${Date.now()}${random}`;
+  const random = Math.random().toString(36).slice(2, 6).toUpperCase();
+  return `IST${Date.now()}${random}`;
 };
 
 const buildOrderItems = async (cartItems) => {
-    const orderItems = [];
-    for (const item of cartItems) {
-        const offerData = await calculateItemOffer(item.productId, item.variantId, item.quantity);
-        orderItems.push({
-            productId:    item.productId._id,
-            variantId:    item.variantId._id,
-            productName:  item.productId.name,
-            productImage: item.variantId.images?.[0] || item.productId.thumbnail,
-            variantName:  [item.variantId.color, item.variantId.storage].filter(Boolean).join(" • "),
-            quantity:     item.quantity,
-            /* per-unit prices — spec-compliant */
-            originalPrice: offerData.originalPrice,          // variant.price (MRP)
-            price:         offerData.finalPrice,             // post-offer per-unit price
-            offerDiscount: offerData.originalPrice - offerData.finalPrice,  // per-unit offer saving
-            /* line total = price × qty (couponDiscount applied later) */
-            finalPrice:    offerData.finalPrice * item.quantity,
-            couponDiscount: 0,  // will be overwritten by applyProportionalCoupon
-        });
-    }
-    return orderItems;
+  const orderItems = [];
+  for (const item of cartItems) {
+    const offerData = await calculateItemOffer(
+      item.productId,
+      item.variantId,
+      item.quantity,
+    );
+    orderItems.push({
+      productId: item.productId._id,
+      variantId: item.variantId._id,
+      productName: item.productId.name,
+      productImage: item.variantId.images?.[0] || item.productId.thumbnail,
+      variantName: [item.variantId.color, item.variantId.storage]
+        .filter(Boolean)
+        .join(" • "),
+      quantity: item.quantity,
+      /* per-unit prices — spec-compliant */
+      originalPrice: offerData.originalPrice, // variant.price (MRP)
+      price: offerData.finalPrice, // post-offer per-unit price
+      offerDiscount: offerData.originalPrice - offerData.finalPrice, // per-unit offer saving
+      /* line total = price × qty (couponDiscount applied later) */
+      finalPrice: offerData.finalPrice * item.quantity,
+      couponDiscount: 0, // will be overwritten by applyProportionalCoupon
+    });
+  }
+  return orderItems;
 };
 
 /* =========================================
@@ -189,218 +207,204 @@ const buildOrderItems = async (cartItems) => {
    Rounding remainder is added to the largest-share item.
 ========================================= */
 const applyProportionalCoupon = (orderItems, subtotal, totalCoupon) => {
-    if (!totalCoupon || totalCoupon <= 0 || !subtotal) return;
+  if (!totalCoupon || totalCoupon <= 0 || !subtotal) return;
 
-    let distributed = 0;
-    let maxShare = -1;
-    let maxIdx   = 0;
+  let distributed = 0;
+  let maxShare = -1;
+  let maxIdx = 0;
 
-    orderItems.forEach((item, idx) => {
-        const lineTotal = item.price * item.quantity;
-        const share     = Math.floor((lineTotal / subtotal) * totalCoupon);
-        item.couponDiscount = share;
-        item.finalPrice     = lineTotal - share;
-        distributed        += share;
-        if (share > maxShare) { maxShare = share; maxIdx = idx; }
-    });
-
-    /* Give rounding remainder to the largest-share item */
-    const remainder = totalCoupon - distributed;
-    if (remainder > 0) {
-        orderItems[maxIdx].couponDiscount += remainder;
-        orderItems[maxIdx].finalPrice     -= remainder;
+  orderItems.forEach((item, idx) => {
+    const lineTotal = item.price * item.quantity;
+    const share = Math.floor((lineTotal / subtotal) * totalCoupon);
+    item.couponDiscount = share;
+    item.finalPrice = lineTotal - share;
+    distributed += share;
+    if (share > maxShare) {
+      maxShare = share;
+      maxIdx = idx;
     }
+  });
+
+  /* Give rounding remainder to the largest-share item */
+  const remainder = totalCoupon - distributed;
+  if (remainder > 0) {
+    orderItems[maxIdx].couponDiscount += remainder;
+    orderItems[maxIdx].finalPrice -= remainder;
+  }
 };
 
 const revalidateStock = (cartItems) => {
+  for (const item of cartItems) {
+    /* PRODUCT */
 
-    for (const item of cartItems) {
-
-        /* PRODUCT */
-
-        if (
-            !item.productId ||
-            item.productId.isDeleted ||
-            !item.productId.isActive
-        ) {
-
-            return {
-                valid:false,
-                message:`${item.productId?.name || "Product"} is unavailable`
-            };
-
-        }
-
-        /* CATEGORY */
-
-        if (
-            !item.productId.categoryId ||
-            item.productId.categoryId.isDeleted ||
-            !item.productId.categoryId.isActive
-        ) {
-
-            return {
-                valid:false,
-                message:`${item.productId.name} category is unavailable`
-            };
-
-        }
-
-        /* VARIANT */
-
-        if (
-            !item.variantId ||
-            item.variantId.isDeleted ||
-            !item.variantId.isActive
-        ) {
-
-            return {
-                valid:false,
-                message:`${item.productId.name} variant is unavailable`
-            };
-
-        }
-
-        /* STOCK */
-
-        if (item.variantId.stock <= 0) {
-
-            return {
-                valid:false,
-                message:`${item.productId.name} is out of stock`
-            };
-
-        }
-
-        if (item.quantity > item.variantId.stock) {
-
-            return {
-                valid:false,
-                message:`Only ${item.variantId.stock} units available for ${item.productId.name}`
-            };
-
-        }
-
+    if (
+      !item.productId ||
+      item.productId.isDeleted ||
+      !item.productId.isActive
+    ) {
+      return {
+        valid: false,
+        message: `${item.productId?.name || "Product"} is unavailable`,
+      };
     }
 
-    return {
-        valid:true
-    };
+    /* CATEGORY */
 
+    if (
+      !item.productId.categoryId ||
+      item.productId.categoryId.isDeleted ||
+      !item.productId.categoryId.isActive
+    ) {
+      return {
+        valid: false,
+        message: `${item.productId.name} category is unavailable`,
+      };
+    }
+
+    /* VARIANT */
+
+    if (
+      !item.variantId ||
+      item.variantId.isDeleted ||
+      !item.variantId.isActive
+    ) {
+      return {
+        valid: false,
+        message: `${item.productId.name} variant is unavailable`,
+      };
+    }
+
+    /* STOCK */
+
+    if (item.variantId.stock <= 0) {
+      return {
+        valid: false,
+        message: `${item.productId.name} is out of stock`,
+      };
+    }
+
+    if (item.quantity > item.variantId.stock) {
+      return {
+        valid: false,
+        message: `Only ${item.variantId.stock} units available for ${item.productId.name}`,
+      };
+    }
+  }
+
+  return {
+    valid: true,
+  };
 };
 
 const deductStockAtomically = async (cartItems) => {
-    const decremented = [];
-    for (const item of cartItems) {
-        const updated = await Variant.findOneAndUpdate(
-            { _id: item.variantId._id, stock: { $gte: item.quantity } },
-            { $inc: { stock: -item.quantity } },
-            { returnDocument: 'after' },
-        );
-        if (!updated) {
-            for (const done of decremented)
-                await Variant.findByIdAndUpdate(done.variantId, { $inc: { stock: done.quantity } });
-            return { success: false, message: `${item.productId.name} just went out of stock. Please review your cart.` };
-        }
-        decremented.push({ variantId: item.variantId._id, quantity: item.quantity });
+  const decremented = [];
+  for (const item of cartItems) {
+    const updated = await Variant.findOneAndUpdate(
+      { _id: item.variantId._id, stock: { $gte: item.quantity } },
+      { $inc: { stock: -item.quantity } },
+      { returnDocument: "after" },
+    );
+    if (!updated) {
+      for (const done of decremented)
+        await Variant.findByIdAndUpdate(done.variantId, {
+          $inc: { stock: done.quantity },
+        });
+      return {
+        success: false,
+        message: `${item.productId.name} just went out of stock. Please review your cart.`,
+      };
     }
-    return { success: true };
+    decremented.push({
+      variantId: item.variantId._id,
+      quantity: item.quantity,
+    });
+  }
+  return { success: true };
 };
 
 const revalidateCoupon = async (couponCode, subtotal, userId) => {
-
-    if (!couponCode) {
-        return {
-            valid: true,
-            coupon: null,
-        };
-    }
-
-    const coupon = await Coupon.findOne({
-        code: couponCode.toUpperCase(),
-        isActive: true,
-        isDeleted: false,
-    });
-
-    if (!coupon) {
-        return {
-            valid: false,
-            message: "Coupon is no longer valid",
-        };
-    }
-
-    const now = new Date();
-
-    if (now < coupon.startDate || now > coupon.endDate) {
-        return {
-            valid: false,
-            message: "Coupon has expired",
-        };
-    }
-
-    if (
-        coupon.totalUsageLimit &&
-        coupon.usedCount >= coupon.totalUsageLimit
-    ) {
-        return {
-            valid: false,
-            message: "Coupon usage limit reached",
-        };
-    }
-
-    const usageCount = await CouponUsage.countDocuments({
-        couponId: coupon._id,
-        userId,
-    });
-
-    if (
-        coupon.userUsageLimit &&
-        usageCount >= coupon.userUsageLimit
-    ) {
-        return {
-            valid: false,
-            message: "You have already used this coupon",
-        };
-    }
-
-    if (subtotal < coupon.minPurchase) {
-        return {
-            valid: false,
-            message: `Minimum purchase Rs.${coupon.minPurchase} required`,
-        };
-    }
-
+  if (!couponCode) {
     return {
-        valid: true,
-        coupon,
+      valid: true,
+      coupon: null,
     };
+  }
+
+  const coupon = await Coupon.findOne({
+    code: couponCode.toUpperCase(),
+    isActive: true,
+    isDeleted: false,
+  });
+
+  if (!coupon) {
+    return {
+      valid: false,
+      message: "Coupon is no longer valid",
+    };
+  }
+
+  const now = new Date();
+
+  if (now < coupon.startDate || now > coupon.endDate) {
+    return {
+      valid: false,
+      message: "Coupon has expired",
+    };
+  }
+
+  if (coupon.totalUsageLimit && coupon.usedCount >= coupon.totalUsageLimit) {
+    return {
+      valid: false,
+      message: "Coupon usage limit reached",
+    };
+  }
+
+  const usageCount = await CouponUsage.countDocuments({
+    couponId: coupon._id,
+    userId,
+  });
+
+  if (coupon.userUsageLimit && usageCount >= coupon.userUsageLimit) {
+    return {
+      valid: false,
+      message: "You have already used this coupon",
+    };
+  }
+
+  if (subtotal < coupon.minPurchase) {
+    return {
+      valid: false,
+      message: `Minimum purchase Rs.${coupon.minPurchase} required`,
+    };
+  }
+
+  return {
+    valid: true,
+    coupon,
+  };
 };
 
 const recordCouponUsage = async (couponId, userId, orderId) => {
+  if (!couponId) return;
 
-    if (!couponId) return;
+  const alreadyUsed = await CouponUsage.findOne({
+    couponId,
+    orderId,
+  });
 
-    const alreadyUsed = await CouponUsage.findOne({
-        couponId,
-        orderId,
-    });
+  if (alreadyUsed) return;
 
-    if (alreadyUsed) return;
+  await CouponUsage.create({
+    couponId,
+    userId,
+    orderId,
+  });
 
-    await CouponUsage.create({
-        couponId,
-        userId,
-        orderId,
-    });
-
-    await Coupon.findByIdAndUpdate(
-        couponId,
-        {
-            $inc: {
-                usedCount: 1,
-            },
-        }
-    );
+  await Coupon.findByIdAndUpdate(couponId, {
+    $inc: {
+      usedCount: 1,
+    },
+  });
 };
 
 /* =========================================
@@ -409,103 +413,86 @@ const recordCouponUsage = async (couponId, userId, orderId) => {
    isStockRestored guard prevents double-run.
 ========================================= */
 export const restoreStockForExpiredOrder = async (order) => {
+  /* Safety */
+  if (!order) {
+    return;
+  }
 
-    /* Safety */
-    if (!order) {
-        return;
-    }
+  /* Reload latest copy if lean object passed */
+  if (!(order instanceof Order)) {
+    order = await Order.findById(order._id);
+  }
 
-    /* Reload latest copy if lean object passed */
-    if (!(order instanceof Order)) {
-        order = await Order.findById(order._id);
-    }
+  if (!order) {
+    return;
+  }
 
-    if (!order) {
-        return;
-    }
+  /* Idempotency protection */
+  if (order.isStockRestored) {
+    return;
+  }
 
-    /* Idempotency protection */
-    if (order.isStockRestored) {
-        return;
-    }
+  const bulkOperations = [];
 
-    const bulkOperations = [];
-
-    for (const item of order.items) {
-
-        /*
+  for (const item of order.items) {
+    /*
            Skip items already cancelled/returned
            because stock has already been restored
         */
-        if (
-            item.itemStatus === ORDER_STATUS.CANCELLED ||
-            item.itemStatus === ORDER_STATUS.RETURNED
-        ) {
-            continue;
-        }
-
-        bulkOperations.push({
-
-            updateOne: {
-
-                filter: {
-                    _id: item.variantId,
-                },
-
-                update: {
-                    $inc: {
-                        stock: item.quantity,
-                    },
-                },
-
-            },
-
-        });
-
-        item.itemStatus = ORDER_STATUS.CANCELLED;
-
-        item.cancelReason =
-            item.cancelReason ||
-            "Payment window expired";
-
+    if (
+      item.itemStatus === ORDER_STATUS.CANCELLED ||
+      item.itemStatus === ORDER_STATUS.RETURNED
+    ) {
+      continue;
     }
 
-    /* Restore inventory */
-    if (bulkOperations.length > 0) {
+    bulkOperations.push({
+      updateOne: {
+        filter: {
+          _id: item.variantId,
+        },
 
-        await Variant.bulkWrite(
-            bulkOperations,
-            {
-                ordered: false,
-            }
-        );
+        update: {
+          $inc: {
+            stock: item.quantity,
+          },
+        },
+      },
+    });
 
-    }
+    item.itemStatus = ORDER_STATUS.CANCELLED;
 
-    order.orderStatus = ORDER_STATUS.CANCELLED;
+    item.cancelReason = item.cancelReason || "Payment window expired";
+  }
 
-    /*
+  /* Restore inventory */
+  if (bulkOperations.length > 0) {
+    await Variant.bulkWrite(bulkOperations, {
+      ordered: false,
+    });
+  }
+
+  order.orderStatus = ORDER_STATUS.CANCELLED;
+
+  /*
        Failed because payment never completed.
        Do not mark Refunded.
     */
-    order.paymentStatus = PAYMENT_STATUS.FAILED;
+  order.paymentStatus = PAYMENT_STATUS.FAILED;
 
-    order.cancelReason =
-        order.cancelReason ||
-        "Payment window expired";
+  order.cancelReason = order.cancelReason || "Payment window expired";
 
-    /*
+  /*
        Prevent future expiry checks
     */
-    order.paymentExpiresAt = null;
+  order.paymentExpiresAt = null;
 
-    /*
+  /*
        Critical idempotency flag
     */
-    order.isStockRestored = true;
+  order.isStockRestored = true;
 
-    await order.save();
-
+  await order.save();
 };
 
 /* =========================================
@@ -513,869 +500,803 @@ export const restoreStockForExpiredOrder = async (order) => {
 ========================================= */
 
 export const placeOrderCODService = async (
-    userId,
-    addressId,
-    deliveryType = "standard",
-    paymentMethod = "COD",
-    couponCode = null
+  userId,
+  addressId,
+  deliveryType = "standard",
+  paymentMethod = "COD",
+  couponCode = null,
 ) => {
+  const cart = await Cart.findOne({ userId })
+    .populate({
+      path: "items.productId",
+      populate: {
+        path: "categoryId",
+      },
+    })
+    .populate("items.variantId");
+  if (!cart || cart.items.length === 0) {
+    return {
+      success: false,
+      message: "Cart is empty",
+    };
+  }
 
-    const cart = await Cart.findOne({ userId })
-.populate({
-    path:"items.productId",
-    populate:{
-        path:"categoryId"
-    }
-})
-.populate("items.variantId")
-    if (!cart || cart.items.length === 0) {
-        return {
-            success: false,
-            message: "Cart is empty",
-        };
-    }
+  const address = await Address.findOne({
+    _id: addressId,
+    userId,
+  });
 
-    const address = await Address.findOne({
-        _id: addressId,
-        userId,
-    });
+  if (!address) {
+    return {
+      success: false,
+      message: "Address not found",
+    };
+  }
 
-    if (!address) {
-        return {
-            success: false,
-            message: "Address not found",
-        };
-    }
+  /* Stock validation */
+  const stockCheck = revalidateStock(cart.items);
 
-    /* Stock validation */
-    const stockCheck = revalidateStock(cart.items);
+  if (!stockCheck.valid) {
+    return {
+      success: false,
+      message: stockCheck.message,
+    };
+  }
 
-    if (!stockCheck.valid) {
-        return {
-            success: false,
-            message: stockCheck.message,
-        };
-    }
+  /* Calculate totals */
+  const totals = await calculateCheckoutTotals({
+    cartItems: cart.items,
+    userId,
+    couponCode,
+    deliveryType,
+  });
 
-    /* Calculate totals */
-    const totals = await calculateCheckoutTotals({
-        cartItems: cart.items,
-        userId,
-        couponCode,
-        deliveryType,
-    });
-
-    /* Coupon validation */
-    if (couponCode) {
-
-        const couponCheck = await revalidateCoupon(
-            couponCode,
-            totals.subtotal - totals.offerDiscount,
-            userId
-        );
-
-        if (!couponCheck.valid) {
-            return {
-                success: false,
-                message: couponCheck.message,
-            };
-        }
-    }
-
-    /* Reserve stock */
-    const stockDeduction = await deductStockAtomically(
-        cart.items
+  /* Coupon validation */
+  if (couponCode) {
+    const couponCheck = await revalidateCoupon(
+      couponCode,
+      totals.subtotal - totals.offerDiscount,
+      userId,
     );
 
-    if (!stockDeduction.success) {
-        return stockDeduction;
+    if (!couponCheck.valid) {
+      return {
+        success: false,
+        message: couponCheck.message,
+      };
+    }
+  }
+
+  /* Reserve stock */
+  const stockDeduction = await deductStockAtomically(cart.items);
+
+  if (!stockDeduction.success) {
+    return stockDeduction;
+  }
+
+  try {
+    const orderItems = await buildOrderItems(cart.items);
+
+    /* Apply proportional coupon distribution across items */
+    applyProportionalCoupon(orderItems, totals.subtotal, totals.couponDiscount);
+
+    orderItems.forEach((item) => {
+      item.itemStatus = ORDER_STATUS.PENDING;
+    });
+
+    const order = await Order.create({
+      userId,
+
+      orderId: generateOrderId(),
+
+      items: orderItems,
+
+      shippingAddress: {
+        fullName: address.fullName,
+        phoneNumber: address.phoneNumber,
+        addressLine1: address.addressLine1,
+        city: address.city,
+        state: address.state,
+        country: address.country,
+        pincode: address.pincode,
+      },
+
+      paymentMethod: "COD",
+      paymentStatus: PAYMENT_STATUS.PENDING,
+      orderStatus: ORDER_STATUS.PENDING,
+
+      subtotal: totals.subtotal, // post-offer, pre-coupon
+      offerDiscount: totals.offerDiscount,
+      couponDiscount: totals.couponDiscount,
+      discountAmount: totals.offerDiscount + totals.couponDiscount,
+      taxAmount: totals.taxAmount,
+      deliveryCharge: totals.deliveryCharge,
+      finalAmount: totals.finalAmount,
+
+      couponId: totals.coupon?._id || null,
+      couponCode: totals.coupon?.code || null,
+
+      pricingSnapshot: {
+        originalSubtotal: totals.subtotal,
+        originalOfferDiscount: totals.offerDiscount,
+        originalCouponDiscount: totals.couponDiscount,
+        originalTaxAmount: totals.taxAmount,
+        originalDeliveryCharge: totals.deliveryCharge,
+        originalFinalAmount: totals.finalAmount,
+      },
+
+      estimatedDelivery: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+      retryCount: 0,
+    });
+
+    if (totals.coupon) {
+      await recordCouponUsage(totals.coupon._id, userId, order._id);
     }
 
-    try {
+    cart.items = [];
 
-        const orderItems = await buildOrderItems(cart.items);
+    await cart.save();
 
-        /* Apply proportional coupon distribution across items */
-        applyProportionalCoupon(orderItems, totals.subtotal, totals.couponDiscount);
+    return {
+      success: true,
+      order,
+    };
+  } catch (error) {
+    /* Roll back stock */
 
-        orderItems.forEach(item => {
-            item.itemStatus = ORDER_STATUS.PENDING;
-        });
+    const bulkOperations = cart.items.map((item) => ({
+      updateOne: {
+        filter: {
+          _id: item.variantId._id,
+        },
+        update: {
+          $inc: {
+            stock: item.quantity,
+          },
+        },
+      },
+    }));
 
-        const order = await Order.create({
-
-            userId,
-
-            orderId: generateOrderId(),
-
-            items: orderItems,
-
-            shippingAddress: {
-                fullName:     address.fullName,
-                phoneNumber:  address.phoneNumber,
-                addressLine1: address.addressLine1,
-                city:         address.city,
-                state:        address.state,
-                country:      address.country,
-                pincode:      address.pincode,
-            },
-
-            paymentMethod: "COD",
-            paymentStatus: PAYMENT_STATUS.PENDING,
-            orderStatus: ORDER_STATUS.PENDING,
-
-            subtotal:       totals.subtotal,        // post-offer, pre-coupon
-            offerDiscount:  totals.offerDiscount,
-            couponDiscount: totals.couponDiscount,
-            discountAmount: totals.offerDiscount + totals.couponDiscount,
-            taxAmount:      totals.taxAmount,
-            deliveryCharge: totals.deliveryCharge,
-            finalAmount:    totals.finalAmount,
-
-            couponId:   totals.coupon?._id  || null,
-            couponCode: totals.coupon?.code || null,
-
-            pricingSnapshot: {
-                originalSubtotal:       totals.subtotal,
-                originalOfferDiscount:  totals.offerDiscount,
-                originalCouponDiscount: totals.couponDiscount,
-                originalTaxAmount:      totals.taxAmount,
-                originalDeliveryCharge: totals.deliveryCharge,
-                originalFinalAmount:    totals.finalAmount,
-            },
-
-            estimatedDelivery: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-            retryCount: 0,
-        });
-
-        if (totals.coupon) {
-
-            await recordCouponUsage(
-                totals.coupon._id,
-                userId,
-                order._id
-            );
-
-        }
-
-        cart.items = [];
-
-        await cart.save();
-
-        return {
-            success: true,
-            order,
-        };
-
-    } catch (error) {
-
-        /* Roll back stock */
-
-        const bulkOperations = cart.items.map(item => ({
-            updateOne: {
-                filter: {
-                    _id: item.variantId._id,
-                },
-                update: {
-                    $inc: {
-                        stock: item.quantity,
-                    },
-                },
-            },
-        }));
-
-        if (bulkOperations.length) {
-            await Variant.bulkWrite(
-                bulkOperations,
-                { ordered: false }
-            );
-        }
-
-        throw error;
+    if (bulkOperations.length) {
+      await Variant.bulkWrite(bulkOperations, { ordered: false });
     }
+
+    throw error;
+  }
 };
-
 
 /* =========================================
    PLACE ORDER — WALLET
 ========================================= */
 export const placeOrderWalletService = async (
-    userId,
-    addressId,
-    deliveryType = "standard",
-    couponCode = null
+  userId,
+  addressId,
+  deliveryType = "standard",
+  couponCode = null,
 ) => {
+  const cart = await Cart.findOne({ userId })
+    .populate({
+      path: "items.productId",
+      populate: {
+        path: "categoryId",
+      },
+    })
+    .populate("items.variantId");
 
-    const cart = await Cart.findOne({ userId })
-.populate({
-    path:"items.productId",
-    populate:{
-        path:"categoryId"
-    }
-})
-.populate("items.variantId")
+  if (!cart || cart.items.length === 0) {
+    return {
+      success: false,
+      message: "Cart is empty",
+    };
+  }
 
-    if (!cart || cart.items.length === 0) {
-        return {
-            success: false,
-            message: "Cart is empty",
-        };
-    }
+  const address = await Address.findOne({
+    _id: addressId,
+    userId,
+  });
 
-    const address = await Address.findOne({
-        _id: addressId,
-        userId,
-    });
+  if (!address) {
+    return {
+      success: false,
+      message: "Address not found",
+    };
+  }
 
-    if (!address) {
-        return {
-            success: false,
-            message: "Address not found",
-        };
-    }
+  /* Revalidate stock */
+  const stockCheck = revalidateStock(cart.items);
 
-    /* Revalidate stock */
-    const stockCheck = revalidateStock(cart.items);
+  if (!stockCheck.valid) {
+    return {
+      success: false,
+      message: stockCheck.message,
+    };
+  }
 
-    if (!stockCheck.valid) {
-        return {
-            success: false,
-            message: stockCheck.message,
-        };
-    }
+  /* Calculate totals */
+  const totals = await calculateCheckoutTotals({
+    cartItems: cart.items,
+    userId,
+    couponCode,
+    deliveryType,
+  });
 
-    /* Calculate totals */
-    const totals = await calculateCheckoutTotals({
-        cartItems: cart.items,
-        userId,
-        couponCode,
-        deliveryType,
-    });
-
-    /* Revalidate coupon */
-    if (couponCode) {
-
-        const couponCheck = await revalidateCoupon(
-            couponCode,
-            totals.subtotal - totals.offerDiscount,
-            userId
-        );
-
-        if (!couponCheck.valid) {
-            return {
-                success: false,
-                message: couponCheck.message,
-            };
-        }
-    }
-
-    /* Debit wallet */
-    const walletResponse = await debitWallet({
-        userId,
-        amount: totals.finalAmount,
-        transactionType: "OrderPayment",
-        description: "Wallet payment for order",
-    });
-
-    if (!walletResponse.success) {
-        return {
-            success: false,
-            message: "Insufficient wallet balance",
-        };
-    }
-
-    /* Reserve stock */
-    const stockDeduction = await deductStockAtomically(
-        cart.items
+  /* Revalidate coupon */
+  if (couponCode) {
+    const couponCheck = await revalidateCoupon(
+      couponCode,
+      totals.subtotal - totals.offerDiscount,
+      userId,
     );
 
-    /* Rollback wallet if stock reservation fails */
-    if (!stockDeduction.success) {
+    if (!couponCheck.valid) {
+      return {
+        success: false,
+        message: couponCheck.message,
+      };
+    }
+  }
 
-        await creditWallet({
-            userId,
-            amount: totals.finalAmount,
-            transactionType: "OrderPaymentRefund",
-            description: "Wallet rollback due to stock failure",
-            transactionId: `rollback-stock-${Date.now()}`,
-        });
+  /* Debit wallet */
+  const walletResponse = await debitWallet({
+    userId,
+    amount: totals.finalAmount,
+    transactionType: "OrderPayment",
+    description: "Wallet payment for order",
+  });
 
-        return {
-            success: false,
-            message: stockDeduction.message,
-        };
+  if (!walletResponse.success) {
+    return {
+      success: false,
+      message: "Insufficient wallet balance",
+    };
+  }
+
+  /* Reserve stock */
+  const stockDeduction = await deductStockAtomically(cart.items);
+
+  /* Rollback wallet if stock reservation fails */
+  if (!stockDeduction.success) {
+    await creditWallet({
+      userId,
+      amount: totals.finalAmount,
+      transactionType: "OrderPaymentRefund",
+      description: "Wallet rollback due to stock failure",
+      transactionId: `rollback-stock-${Date.now()}`,
+    });
+
+    return {
+      success: false,
+      message: stockDeduction.message,
+    };
+  }
+
+  try {
+    const orderItems = await buildOrderItems(cart.items);
+
+    /* Apply proportional coupon distribution across items */
+    applyProportionalCoupon(orderItems, totals.subtotal, totals.couponDiscount);
+
+    orderItems.forEach((item) => {
+      item.itemStatus = ORDER_STATUS.PENDING;
+    });
+
+    const order = await Order.create({
+      userId,
+
+      orderId: generateOrderId(),
+
+      items: orderItems,
+
+      shippingAddress: {
+        fullName: address.fullName,
+        phoneNumber: address.phoneNumber,
+        addressLine1: address.addressLine1,
+        city: address.city,
+        state: address.state,
+        country: address.country,
+        pincode: address.pincode,
+      },
+
+      paymentMethod: "WALLET",
+      paymentStatus: PAYMENT_STATUS.PAID,
+      orderStatus: ORDER_STATUS.PENDING,
+
+      subtotal: totals.subtotal,
+      offerDiscount: totals.offerDiscount,
+      couponDiscount: totals.couponDiscount,
+      discountAmount: totals.offerDiscount + totals.couponDiscount,
+      taxAmount: totals.taxAmount,
+      deliveryCharge: totals.deliveryCharge,
+      finalAmount: totals.finalAmount,
+      walletAmountUsed: totals.finalAmount,
+
+      couponId: totals.coupon?._id || null,
+      couponCode: totals.coupon?.code || null,
+
+      pricingSnapshot: {
+        originalSubtotal: totals.subtotal,
+        originalOfferDiscount: totals.offerDiscount,
+        originalCouponDiscount: totals.couponDiscount,
+        originalTaxAmount: totals.taxAmount,
+        originalDeliveryCharge: totals.deliveryCharge,
+        originalFinalAmount: totals.finalAmount,
+      },
+
+      estimatedDelivery: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+      retryCount: 0,
+    });
+
+    /* Record coupon usage only after successful order creation */
+    if (totals.coupon) {
+      await recordCouponUsage(totals.coupon._id, userId, order._id);
     }
 
-    try {
+    /* Clear cart */
+    cart.items = [];
 
-        const orderItems = await buildOrderItems(cart.items);
+    await cart.save();
 
-        /* Apply proportional coupon distribution across items */
-        applyProportionalCoupon(orderItems, totals.subtotal, totals.couponDiscount);
+    return {
+      success: true,
+      order,
+    };
+  } catch (error) {
+    /* Wallet rollback */
+    await creditWallet({
+      userId,
+      amount: totals.finalAmount,
+      transactionType: "OrderPaymentRefund",
+      description: "Wallet rollback due to order creation failure",
+      transactionId: `rollback-order-${Date.now()}`,
+    });
 
-        orderItems.forEach(item => {
-            item.itemStatus = ORDER_STATUS.PENDING;
-        });
+    /* Restore stock */
+    const bulkOperations = cart.items.map((item) => ({
+      updateOne: {
+        filter: {
+          _id: item.variantId._id,
+        },
+        update: {
+          $inc: {
+            stock: item.quantity,
+          },
+        },
+      },
+    }));
 
-        const order = await Order.create({
-
-            userId,
-
-            orderId: generateOrderId(),
-
-            items: orderItems,
-
-            shippingAddress: {
-                fullName:     address.fullName,
-                phoneNumber:  address.phoneNumber,
-                addressLine1: address.addressLine1,
-                city:         address.city,
-                state:        address.state,
-                country:      address.country,
-                pincode:      address.pincode,
-            },
-
-            paymentMethod:  "WALLET",
-            paymentStatus: PAYMENT_STATUS.PAID,
-            orderStatus: ORDER_STATUS.PENDING,
-
-            subtotal:       totals.subtotal,
-            offerDiscount:  totals.offerDiscount,
-            couponDiscount: totals.couponDiscount,
-            discountAmount: totals.offerDiscount + totals.couponDiscount,
-            taxAmount:      totals.taxAmount,
-            deliveryCharge: totals.deliveryCharge,
-            finalAmount:    totals.finalAmount,
-            walletAmountUsed: totals.finalAmount,
-
-            couponId:   totals.coupon?._id  || null,
-            couponCode: totals.coupon?.code || null,
-
-            pricingSnapshot: {
-                originalSubtotal:       totals.subtotal,
-                originalOfferDiscount:  totals.offerDiscount,
-                originalCouponDiscount: totals.couponDiscount,
-                originalTaxAmount:      totals.taxAmount,
-                originalDeliveryCharge: totals.deliveryCharge,
-                originalFinalAmount:    totals.finalAmount,
-            },
-
-            estimatedDelivery: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-            retryCount: 0,
-        });
-
-        /* Record coupon usage only after successful order creation */
-        if (totals.coupon) {
-
-            await recordCouponUsage(
-                totals.coupon._id,
-                userId,
-                order._id
-            );
-
-        }
-
-        /* Clear cart */
-        cart.items = [];
-
-        await cart.save();
-
-        return {
-            success: true,
-            order,
-        };
-
-    } catch (error) {
-
-        /* Wallet rollback */
-        await creditWallet({
-            userId,
-            amount: totals.finalAmount,
-            transactionType: "OrderPaymentRefund",
-            description: "Wallet rollback due to order creation failure",
-            transactionId: `rollback-order-${Date.now()}`,
-        });
-
-        /* Restore stock */
-        const bulkOperations = cart.items.map(item => ({
-            updateOne: {
-                filter: {
-                    _id: item.variantId._id,
-                },
-                update: {
-                    $inc: {
-                        stock: item.quantity,
-                    },
-                },
-            },
-        }));
-
-        if (bulkOperations.length) {
-            await Variant.bulkWrite(
-                bulkOperations,
-                { ordered: false }
-            );
-        }
-
-        throw error;
+    if (bulkOperations.length) {
+      await Variant.bulkWrite(bulkOperations, { ordered: false });
     }
+
+    throw error;
+  }
 };
 
 /* =========================================
    RAZORPAY CHECKOUT
 ========================================= */
 export const createRazorpayCheckoutService = async (
-    userId,
-    addressId,
-    deliveryType = "standard",
-    couponCode = null
+  userId,
+  addressId,
+  deliveryType = "standard",
+  couponCode = null,
 ) => {
+  const cart = await Cart.findOne({ userId })
+    .populate({
+      path: "items.productId",
+      populate: {
+        path: "categoryId",
+      },
+    })
+    .populate("items.variantId");
 
-    const cart = await Cart.findOne({ userId })
-.populate({
-    path:"items.productId",
-    populate:{
-        path:"categoryId"
+  if (!cart || cart.items.length === 0) {
+    return {
+      success: false,
+      message: "Cart is empty",
+    };
+  }
+
+  const address = await Address.findOne({
+    _id: addressId,
+    userId,
+  });
+
+  if (!address) {
+    return {
+      success: false,
+      message: "Address not found",
+    };
+  }
+
+  /* Lazy cleanup of any expired pending orders */
+  const existingPendingOrders = await Order.find({
+    userId,
+    paymentMethod: "RAZORPAY",
+    paymentStatus: {
+      $in: ["Pending", "Failed"],
+    },
+    isStockRestored: false,
+  });
+
+  for (const pendingOrder of existingPendingOrders) {
+    if (
+      pendingOrder.paymentExpiresAt &&
+      new Date() > pendingOrder.paymentExpiresAt &&
+      !pendingOrder.isStockRestored
+    ) {
+      await restoreStockForExpiredOrder(pendingOrder);
     }
-})
-.populate("items.variantId")
+  }
 
-    if (!cart || cart.items.length === 0) {
-        return {
-            success: false,
-            message: "Cart is empty",
-        };
-    }
+  /* Stock validation */
+  const stockCheck = revalidateStock(cart.items);
 
-    const address = await Address.findOne({
-        _id: addressId,
-        userId,
-    });
+  if (!stockCheck.valid) {
+    return {
+      success: false,
+      message: stockCheck.message,
+    };
+  }
 
-    if (!address) {
-        return {
-            success: false,
-            message: "Address not found",
-        };
-    }
+  /* Calculate totals */
+  const totals = await calculateCheckoutTotals({
+    cartItems: cart.items,
+    userId,
+    couponCode,
+    deliveryType,
+  });
 
-    /* Lazy cleanup of any expired pending orders */
-    const existingPendingOrders = await Order.find({
-        userId,
-        paymentMethod: "RAZORPAY",
-        paymentStatus: {
-            $in: ["Pending","Failed"]
-        },
-        isStockRestored: false
-    });
-
-    for (const pendingOrder of existingPendingOrders) {
-        if (
-            pendingOrder.paymentExpiresAt &&
-            new Date() > pendingOrder.paymentExpiresAt &&
-            !pendingOrder.isStockRestored
-        ) {
-            await restoreStockForExpiredOrder(pendingOrder);
-        }
-    }
-
-    /* Stock validation */
-    const stockCheck = revalidateStock(cart.items);
-
-    if (!stockCheck.valid) {
-        return {
-            success: false,
-            message: stockCheck.message,
-        };
-    }
-
-    /* Calculate totals */
-    const totals = await calculateCheckoutTotals({
-        cartItems: cart.items,
-        userId,
-        couponCode,
-        deliveryType,
-    });
-
-    /* Coupon validation */
-    if (couponCode) {
-
-        const couponCheck = await revalidateCoupon(
-            couponCode,
-            totals.subtotal - totals.offerDiscount,
-            userId
-        );
-
-        if (!couponCheck.valid) {
-            return {
-                success: false,
-                message: couponCheck.message,
-            };
-        }
-    }
-
-    /* Reserve stock first */
-    const stockDeduction = await deductStockAtomically(
-        cart.items
+  /* Coupon validation */
+  if (couponCode) {
+    const couponCheck = await revalidateCoupon(
+      couponCode,
+      totals.subtotal - totals.offerDiscount,
+      userId,
     );
 
-    if (!stockDeduction.success) {
-        return stockDeduction;
+    if (!couponCheck.valid) {
+      return {
+        success: false,
+        message: couponCheck.message,
+      };
+    }
+  }
+
+  /* Reserve stock first */
+  const stockDeduction = await deductStockAtomically(cart.items);
+
+  if (!stockDeduction.success) {
+    return stockDeduction;
+  }
+
+  try {
+    /* Create Razorpay order */
+    const razorpayResponse = await createRazorpayOrder({
+      amount: totals.finalAmount,
+    });
+
+    if (!razorpayResponse.success) {
+      /* Rollback stock */
+
+      const bulkOperations = cart.items.map((item) => ({
+        updateOne: {
+          filter: {
+            _id: item.variantId._id,
+          },
+          update: {
+            $inc: {
+              stock: item.quantity,
+            },
+          },
+        },
+      }));
+
+      if (bulkOperations.length) {
+        await Variant.bulkWrite(bulkOperations, { ordered: false });
+      }
+
+      return {
+        success: false,
+        message: "Failed to initiate payment",
+      };
     }
 
-    try {
+    const orderItems = await buildOrderItems(cart.items);
 
-        /* Create Razorpay order */
-        const razorpayResponse = await createRazorpayOrder({
-            amount: totals.finalAmount,
-        });
+    /* Apply proportional coupon distribution across items */
+    applyProportionalCoupon(orderItems, totals.subtotal, totals.couponDiscount);
 
-        if (!razorpayResponse.success) {
+    orderItems.forEach((item) => {
+      item.itemStatus = ORDER_STATUS.PENDING;
+    });
 
-            /* Rollback stock */
+    const order = await Order.create({
+      userId,
 
-            const bulkOperations = cart.items.map(item => ({
-                updateOne: {
-                    filter: {
-                        _id: item.variantId._id,
-                    },
-                    update: {
-                        $inc: {
-                            stock: item.quantity,
-                        },
-                    },
-                },
-            }));
+      orderId: generateOrderId(),
 
-            if (bulkOperations.length) {
-                await Variant.bulkWrite(
-                    bulkOperations,
-                    { ordered: false }
-                );
-            }
+      items: orderItems,
 
-            return {
-                success: false,
-                message: "Failed to initiate payment",
-            };
-        }
+      shippingAddress: {
+        fullName: address.fullName,
+        phoneNumber: address.phoneNumber,
+        addressLine1: address.addressLine1,
+        city: address.city,
+        state: address.state,
+        country: address.country,
+        pincode: address.pincode,
+      },
 
-        const orderItems = await buildOrderItems(cart.items);
+      paymentMethod: "RAZORPAY",
+      paymentStatus: PAYMENT_STATUS.PENDING,
+      orderStatus: ORDER_STATUS.PENDING,
 
-        /* Apply proportional coupon distribution across items */
-        applyProportionalCoupon(orderItems, totals.subtotal, totals.couponDiscount);
+      razorpayOrderId: razorpayResponse.razorpayOrder.id,
 
-        orderItems.forEach(item => {
-            item.itemStatus = ORDER_STATUS.PENDING;
-        });
+      subtotal: totals.subtotal,
+      offerDiscount: totals.offerDiscount,
+      couponDiscount: totals.couponDiscount,
+      discountAmount: totals.offerDiscount + totals.couponDiscount,
+      taxAmount: totals.taxAmount,
+      deliveryCharge: totals.deliveryCharge,
+      finalAmount: totals.finalAmount,
 
-        const order = await Order.create({
+      couponId: totals.coupon?._id || null,
+      couponCode: totals.coupon?.code || null,
 
-            userId,
+      pricingSnapshot: {
+        originalSubtotal: totals.subtotal,
+        originalOfferDiscount: totals.offerDiscount,
+        originalCouponDiscount: totals.couponDiscount,
+        originalTaxAmount: totals.taxAmount,
+        originalDeliveryCharge: totals.deliveryCharge,
+        originalFinalAmount: totals.finalAmount,
+      },
 
-            orderId: generateOrderId(),
+      paymentExpiresAt: new Date(Date.now() + PAYMENT_EXPIRY_MS),
+      estimatedDelivery: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+      retryCount: 0,
+    });
 
-            items: orderItems,
-
-            shippingAddress: {
-                fullName:     address.fullName,
-                phoneNumber:  address.phoneNumber,
-                addressLine1: address.addressLine1,
-                city:         address.city,
-                state:        address.state,
-                country:      address.country,
-                pincode:      address.pincode,
-            },
-
-            paymentMethod: "RAZORPAY",
-            paymentStatus: PAYMENT_STATUS.PENDING,
-            orderStatus: ORDER_STATUS.PENDING,
-
-            razorpayOrderId: razorpayResponse.razorpayOrder.id,
-
-            subtotal:       totals.subtotal,
-            offerDiscount:  totals.offerDiscount,
-            couponDiscount: totals.couponDiscount,
-            discountAmount: totals.offerDiscount + totals.couponDiscount,
-            taxAmount:      totals.taxAmount,
-            deliveryCharge: totals.deliveryCharge,
-            finalAmount:    totals.finalAmount,
-
-            couponId:   totals.coupon?._id  || null,
-            couponCode: totals.coupon?.code || null,
-
-            pricingSnapshot: {
-                originalSubtotal:       totals.subtotal,
-                originalOfferDiscount:  totals.offerDiscount,
-                originalCouponDiscount: totals.couponDiscount,
-                originalTaxAmount:      totals.taxAmount,
-                originalDeliveryCharge: totals.deliveryCharge,
-                originalFinalAmount:    totals.finalAmount,
-            },
-
-            paymentExpiresAt:  new Date(Date.now() + PAYMENT_EXPIRY_MS),
-            estimatedDelivery: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-            retryCount: 0,
-        });
-
-        /*
+    /*
          Coupon usage recorded ONLY after successful payment.
          Therefore do NOT record coupon usage here.
         */
 
-        cart.items = [];
+    cart.items = [];
 
-        await cart.save();
+    await cart.save();
 
-        return {
+    return {
+      success: true,
 
-            success: true,
+      razorpayOrder: razorpayResponse.razorpayOrder,
 
-            razorpayOrder:
-                razorpayResponse.razorpayOrder,
+      amount: totals.finalAmount,
 
-            amount:
-                totals.finalAmount,
+      orderId: order.orderId,
+    };
+  } catch (error) {
+    /* Rollback stock */
 
-            orderId:
-                order.orderId,
+    const bulkOperations = cart.items.map((item) => ({
+      updateOne: {
+        filter: {
+          _id: item.variantId._id,
+        },
+        update: {
+          $inc: {
+            stock: item.quantity,
+          },
+        },
+      },
+    }));
 
-        };
-
-    } catch (error) {
-
-        /* Rollback stock */
-
-        const bulkOperations = cart.items.map(item => ({
-            updateOne: {
-                filter: {
-                    _id: item.variantId._id,
-                },
-                update: {
-                    $inc: {
-                        stock: item.quantity,
-                    },
-                },
-            },
-        }));
-
-        if (bulkOperations.length) {
-            await Variant.bulkWrite(
-                bulkOperations,
-                { ordered: false }
-            );
-        }
-
-        throw error;
+    if (bulkOperations.length) {
+      await Variant.bulkWrite(bulkOperations, { ordered: false });
     }
+
+    throw error;
+  }
 };
 
 /* =========================================
    VERIFY RAZORPAY PAYMENT
 ========================================= */
 export const verifyRazorpayPaymentService = async ({
-    userId,
+  userId,
+  razorpayOrderId,
+  razorpayPaymentId,
+  razorpaySignature,
+}) => {
+  /* Verify signature */
+  const isValid = verifyRazorpaySignature({
     razorpayOrderId,
     razorpayPaymentId,
     razorpaySignature,
-}) => {
+  });
 
-    /* Verify signature */
-    const isValid = verifyRazorpaySignature({
-        razorpayOrderId,
-        razorpayPaymentId,
-        razorpaySignature,
-    });
-
-if (!isValid) {
-
+  if (!isValid) {
     const order = await Order.findOne({
-        userId,
-        razorpayOrderId,
+      userId,
+      razorpayOrderId,
     });
 
     if (order && order.paymentStatus !== PAYMENT_STATUS.PAID) {
+      order.paymentStatus = PAYMENT_STATUS.FAILED;
 
-        order.paymentStatus = PAYMENT_STATUS.FAILED;
-
-        await order.save();
-
+      await order.save();
     }
 
     return {
-        success: false,
-        message: "Payment verification failed",
+      success: false,
+      message: "Payment verification failed",
     };
-}
+  }
 
-    /* Find order */
-    const order = await Order.findOne({
-        userId,
-        razorpayOrderId,
-    });
+  /* Find order */
+  const order = await Order.findOne({
+    userId,
+    razorpayOrderId,
+  });
 
-    if (!order) {
-        return {
-            success: false,
-            message: "Order not found for this payment",
-        };
-    }
+  if (!order) {
+    return {
+      success: false,
+      message: "Order not found for this payment",
+    };
+  }
 
-    /* ---------------------------------------
+  /* ---------------------------------------
        Already verified (idempotency)
     ---------------------------------------- */
-    if (
-        order.paymentStatus === PAYMENT_STATUS.PAID &&
-        order.razorpayPaymentId === razorpayPaymentId
-    ) {
-        return {
-            success: true,
-            order,
-        };
-    }
+  if (
+    order.paymentStatus === PAYMENT_STATUS.PAID &&
+    order.razorpayPaymentId === razorpayPaymentId
+  ) {
+    return {
+      success: true,
+      order,
+    };
+  }
 
-    /* Prevent second payment on already-paid order */
-    if (
-        order.paymentStatus === PAYMENT_STATUS.PAID
-    ) {
-        return {
-            success: false,
-            message: "Order already paid",
-        };
-    }
+  /* Prevent second payment on already-paid order */
+  if (order.paymentStatus === PAYMENT_STATUS.PAID) {
+    return {
+      success: false,
+      message: "Order already paid",
+    };
+  }
 
-    /* ---------------------------------------
+  /* ---------------------------------------
        Expired payment window
     ---------------------------------------- */
-    if (
-        order.paymentExpiresAt &&
-        new Date() > order.paymentExpiresAt
-    ) {
-
-        if (!order.isStockRestored) {
-            await restoreStockForExpiredOrder(order);
-        }
-
-        return {
-            success: false,
-            message:
-                "Payment window expired. Order has been cancelled.",
-        };
+  if (order.paymentExpiresAt && new Date() > order.paymentExpiresAt) {
+    if (!order.isStockRestored) {
+      await restoreStockForExpiredOrder(order);
     }
 
-    /* ---------------------------------------
+    return {
+      success: false,
+      message: "Payment window expired. Order has been cancelled.",
+    };
+  }
+
+  /* ---------------------------------------
        Duplicate Razorpay callback protection
     ---------------------------------------- */
-    const duplicatePayment = await Order.findOne({
-        razorpayPaymentId,
-    });
+  const duplicatePayment = await Order.findOne({
+    razorpayPaymentId,
+  });
 
-    if (
-        duplicatePayment &&
-        String(duplicatePayment._id) !== String(order._id)
-    ) {
+  if (duplicatePayment && String(duplicatePayment._id) !== String(order._id)) {
+    return {
+      success: true,
+      order: duplicatePayment,
+    };
+  }
 
-        return {
-            success: true,
-            order: duplicatePayment,
-        };
-
-    }
-
-    /* ---------------------------------------
+  /* ---------------------------------------
        Mark payment success
     ---------------------------------------- */
-    order.paymentMethod = "RAZORPAY";
+  order.paymentMethod = "RAZORPAY";
 
-    order.paymentStatus = PAYMENT_STATUS.PAID;
+  order.paymentStatus = PAYMENT_STATUS.PAID;
 
-    order.paymentId = razorpayPaymentId;
+  order.paymentId = razorpayPaymentId;
 
-    order.razorpayPaymentId = razorpayPaymentId;
+  order.razorpayPaymentId = razorpayPaymentId;
 
-    order.razorpaySignature = razorpaySignature;
+  order.razorpaySignature = razorpaySignature;
 
-    order.orderStatus = ORDER_STATUS.PENDING;
+  order.orderStatus = ORDER_STATUS.PENDING;
 
-    order.paymentExpiresAt = null;
+  order.paymentExpiresAt = null;
 
-    order.items.forEach(item => {
+  order.items.forEach((item) => {
+    if (
+      item.itemStatus !== ORDER_STATUS.CANCELLED &&
+      item.itemStatus !== ORDER_STATUS.RETURNED
+    ) {
+      item.itemStatus = ORDER_STATUS.PENDING;
+    }
+  });
 
-        if (
-            item.itemStatus !== ORDER_STATUS.CANCELLED &&
-            item.itemStatus !== ORDER_STATUS.RETURNED
-        ) {
-            item.itemStatus = ORDER_STATUS.PENDING;
-        }
+  await order.save();
 
-    });
-
-    await order.save();
-
-    /* ---------------------------------------
+  /* ---------------------------------------
        Coupon usage
        Record ONLY after successful payment
     ---------------------------------------- */
-    if (order.couponId) {
+  if (order.couponId) {
+    const alreadyUsed = await CouponUsage.findOne({
+      couponId: order.couponId,
+      orderId: order._id,
+    });
 
-        const alreadyUsed = await CouponUsage.findOne({
-            couponId: order.couponId,
-            orderId: order._id,
-        });
-
-        if (!alreadyUsed) {
-
-            await recordCouponUsage(
-                order.couponId,
-                userId,
-                order._id
-            );
-
-        }
-
+    if (!alreadyUsed) {
+      await recordCouponUsage(order.couponId, userId, order._id);
     }
+  }
 
-    return {
-        success: true,
-        order,
-    };
-
+  return {
+    success: true,
+    order,
+  };
 };
 
 /* =========================================
    LOAD RETRY CHECKOUT PAGE DATA
 ========================================= */
 export const loadRetryCheckoutService = async (userId, orderId) => {
-    const order = await Order.findOne({ userId, orderId }).lean();
-    if (!order) return { success: false, message: "Order not found" };
+  const order = await Order.findOne({ userId, orderId }).lean();
+  if (!order) return { success: false, message: "Order not found" };
 
-    if (order.paymentMethod !== "RAZORPAY") {
-        return { success: false, message: "Only Razorpay orders can be retried here" };
-    }
+  if (order.paymentMethod !== "RAZORPAY") {
+    return {
+      success: false,
+      message: "Only Razorpay orders can be retried here",
+    };
+  }
 
-    if (order.paymentStatus === PAYMENT_STATUS.PAID || order.isStockRestored === true) {
-        return { success: false, message: "This order cannot be retried" };
-    }
+  if (
+    order.paymentStatus === PAYMENT_STATUS.PAID ||
+    order.isStockRestored === true
+  ) {
+    return { success: false, message: "This order cannot be retried" };
+  }
 
-    /* FIX 5 — check expiry before showing retry page */
-    if (order.paymentExpiresAt && new Date() > order.paymentExpiresAt && !order.isStockRestored) {
-        const liveOrder = await Order.findOne({ userId, orderId });
-        await restoreStockForExpiredOrder(liveOrder);
-        return {
-            success: false,
-            message: "Payment window expired. Your order has been cancelled and stock restored. Please place a new order.",
-            expired: true,
-        };
-    }
+  /* FIX 5 — check expiry before showing retry page */
+  if (
+    order.paymentExpiresAt &&
+    new Date() > order.paymentExpiresAt &&
+    !order.isStockRestored
+  ) {
+    const liveOrder = await Order.findOne({ userId, orderId });
+    await restoreStockForExpiredOrder(liveOrder);
+    return {
+      success: false,
+      message:
+        "Payment window expired. Your order has been cancelled and stock restored. Please place a new order.",
+      expired: true,
+    };
+  }
 
-    const addresses = await Address.find({ userId }).sort({ isDefault: -1, createdAt: -1 }).lean();
+  const addresses = await Address.find({ userId })
+    .sort({ isDefault: -1, createdAt: -1 })
+    .lean();
 
-    const availableCoupons = await Coupon.find({
-        isDeleted: false, isActive: true,
-        startDate: { $lte: new Date() }, endDate: { $gte: new Date() },
-    }).sort({ createdAt: -1 }).lean();
+  const availableCoupons = await Coupon.find({
+    isDeleted: false,
+    isActive: true,
+    startDate: { $lte: new Date() },
+    endDate: { $gte: new Date() },
+  })
+    .sort({ createdAt: -1 })
+    .lean();
 
-    return { success: true, order, addresses, availableCoupons };
+  return { success: true, order, addresses, availableCoupons };
 };
 
 /* =========================================
@@ -1384,31 +1305,31 @@ export const loadRetryCheckoutService = async (userId, orderId) => {
    (no cart involved in retry mode).
 ========================================= */
 export const applyRetryCouponService = async (userId, orderId, couponCode) => {
-    const { validateCoupon } = await import("./couponService.js");
+  const { validateCoupon } = await import("./couponService.js");
 
-    const order = await Order.findOne({ userId, orderId }).lean();
-    if (!order) return { success: false, message: "Order not found" };
+  const order = await Order.findOne({ userId, orderId }).lean();
+  if (!order) return { success: false, message: "Order not found" };
 
-    // order.subtotal is already the post-offer discount subtotal, use it as the base
-    const base = order.subtotal || 0;
+  // order.subtotal is already the post-offer discount subtotal, use it as the base
+  const base = order.subtotal || 0;
 
-    const result = await validateCoupon(couponCode, base, userId);
-    if (!result.success) return { success: false, message: result.message };
+  const result = await validateCoupon(couponCode, base, userId);
+  if (!result.success) return { success: false, message: result.message };
 
-    const couponDiscount  = result.discount;
-    const discounted      = base - couponDiscount;
-    const deliveryCharge  = order.deliveryCharge ?? (discounted >= 5000 ? 0 : 99);
-    const taxAmount       = Math.floor(discounted * 0.02);
-    const finalAmount     = discounted + deliveryCharge + taxAmount;
+  const couponDiscount = result.discount;
+  const discounted = base - couponDiscount;
+  const deliveryCharge = order.deliveryCharge ?? (discounted >= 5000 ? 0 : 99);
+  const taxAmount = Math.floor(discounted * 0.02);
+  const finalAmount = discounted + deliveryCharge + taxAmount;
 
-    return {
-        success: true,
-        couponCode:     result.coupon.code,
-        couponDiscount,
-        deliveryCharge,
-        taxAmount,
-        finalAmount,
-    };
+  return {
+    success: true,
+    couponCode: result.coupon.code,
+    couponDiscount,
+    deliveryCharge,
+    taxAmount,
+    finalAmount,
+  };
 };
 
 /* =========================================
@@ -1417,478 +1338,438 @@ export const applyRetryCouponService = async (userId, orderId, couponCode) => {
    Stock is already reserved — no cart involved.
 ========================================= */
 export const retryOrderPaymentService = async ({
+  userId,
+  orderId,
+  addressId,
+  paymentMethod,
+  couponCode = undefined,
+}) => {
+  const order = await Order.findOne({
     userId,
     orderId,
-    addressId,
-    paymentMethod,
-    couponCode = undefined,
-}) => {
+  });
 
-    const order = await Order.findOne({
-        userId,
-        orderId,
+  if (!order) {
+    return {
+      success: false,
+      message: "Order not found",
+    };
+  }
+
+  /* Allow retry only for Razorpay */
+  if (order.paymentMethod !== "RAZORPAY") {
+    return {
+      success: false,
+      message: "This order does not use Razorpay",
+    };
+  }
+
+  /* Block if already paid or stock restored */
+  if (order.paymentStatus === PAYMENT_STATUS.PAID || order.isStockRestored) {
+    return {
+      success: false,
+      message: "This order cannot be retried",
+    };
+  }
+
+  /* Retry limit exceeded */
+  if (order.retryCount >= MAX_RETRY_COUNT) {
+    if (!order.isStockRestored) {
+      await restoreStockForExpiredOrder(order);
+    }
+
+    return {
+      success: false,
+      expired: true,
+      message: "Maximum payment attempts exceeded. Please place a new order.",
+    };
+  }
+
+  /* Payment window expired */
+  if (order.paymentExpiresAt && new Date() > order.paymentExpiresAt) {
+    if (!order.isStockRestored) {
+      await restoreStockForExpiredOrder(order);
+    }
+
+    return {
+      success: false,
+      expired: true,
+      message: "Payment window expired. Please place a new order.",
+    };
+  }
+
+  /* Address update */
+  if (addressId) {
+    const address = await Address.findOne({
+      _id: addressId,
+      userId,
     });
 
-    if (!order) {
-        return {
-            success: false,
-            message: "Order not found",
-        };
+    if (!address) {
+      return {
+        success: false,
+        message: "Selected address not found",
+      };
     }
 
-    /* Allow retry only for Razorpay */
-    if (order.paymentMethod !== "RAZORPAY") {
-        return {
-            success: false,
-            message: "This order does not use Razorpay",
-        };
-    }
+    order.shippingAddress = {
+      fullName: address.fullName,
+      phoneNumber: address.phoneNumber,
+      addressLine1: address.addressLine1,
+      city: address.city,
+      state: address.state,
+      country: address.country,
+      pincode: address.pincode,
+    };
+  }
 
-    /* Block if already paid or stock restored */
-    if (order.paymentStatus === PAYMENT_STATUS.PAID || order.isStockRestored) {
-        return {
-            success: false,
-            message: "This order cannot be retried",
-        };
-    }
-
-    /* Retry limit exceeded */
-    if (order.retryCount >= MAX_RETRY_COUNT) {
-
-        if (!order.isStockRestored) {
-            await restoreStockForExpiredOrder(order);
-        }
-
-        return {
-            success: false,
-            expired: true,
-            message:
-                "Maximum payment attempts exceeded. Please place a new order.",
-        };
-    }
-
-    /* Payment window expired */
-    if (
-        order.paymentExpiresAt &&
-        new Date() > order.paymentExpiresAt
-    ) {
-
-        if (!order.isStockRestored) {
-            await restoreStockForExpiredOrder(order);
-        }
-
-        return {
-            success: false,
-            expired: true,
-            message:
-                "Payment window expired. Please place a new order.",
-        };
-    }
-
-    /* Address update */
-    if (addressId) {
-
-        const address = await Address.findOne({
-            _id: addressId,
-            userId,
-        });
-
-        if (!address) {
-            return {
-                success: false,
-                message: "Selected address not found",
-            };
-        }
-
-        order.shippingAddress = {
-            fullName: address.fullName,
-            phoneNumber: address.phoneNumber,
-            addressLine1: address.addressLine1,
-            city: address.city,
-            state: address.state,
-            country: address.country,
-            pincode: address.pincode,
-        };
-    }
-
-    /* =====================================
+  /* =====================================
        AVAILABILITY RE-CHECK
        Stock is already held, but verify products/variants
        haven't been deactivated or deleted by admin.
     ===================================== */
-    for (const item of order.items) {
-        if (["Cancelled", "Returned"].includes(item.itemStatus)) continue;
+  for (const item of order.items) {
+    if (["Cancelled", "Returned"].includes(item.itemStatus)) continue;
 
-        const variant = await Variant.findById(item.variantId);
-        const product = variant
-            ? await Product.findById(item.productId).populate("categoryId")
-            : null;
+    const variant = await Variant.findById(item.variantId);
+    const product = variant
+      ? await Product.findById(item.productId).populate("categoryId")
+      : null;
 
-        if (
-            !product || product.isDeleted || !product.isActive ||
-            !product.categoryId || product.categoryId.isDeleted || !product.categoryId.isActive ||
-            !variant || variant.isDeleted || !variant.isActive
-        ) {
-            return {
-                success: false,
-                message: `"${item.productName}" is no longer available. Please cancel this order and place a new one.`,
-            };
-        }
+    if (
+      !product ||
+      product.isDeleted ||
+      !product.isActive ||
+      !product.categoryId ||
+      product.categoryId.isDeleted ||
+      !product.categoryId.isActive ||
+      !variant ||
+      variant.isDeleted ||
+      !variant.isActive
+    ) {
+      return {
+        success: false,
+        message: `"${item.productName}" is no longer available. Please cancel this order and place a new one.`,
+      };
     }
+  }
 
-    /* Restore active item statuses */
-    order.items.forEach(item => {
+  /* Restore active item statuses */
+  order.items.forEach((item) => {
+    if (
+      item.itemStatus !== ORDER_STATUS.CANCELLED &&
+      item.itemStatus !== ORDER_STATUS.RETURNED
+    ) {
+      item.itemStatus = ORDER_STATUS.PENDING;
+    }
+  });
 
-        if (
-            item.itemStatus !== ORDER_STATUS.CANCELLED &&
-            item.itemStatus !== ORDER_STATUS.RETURNED
-        ) {
-            item.itemStatus = ORDER_STATUS.PENDING;
-        }
-
-    });
-
-    /* =====================================
+  /* =====================================
        APPLY COUPON (if provided)
        Recalculate finalAmount before payment
     ===================================== */
-    let payAmount = order.finalAmount; // default: original amount
+  let payAmount = order.finalAmount; // default: original amount
 
-    if (couponCode !== undefined) {
-        if (couponCode === false) {
-            // Coupon was explicitly removed by the user on the retry page
-            const base           = order.subtotal || 0;
-            const deliveryCharge = order.deliveryCharge ?? (base >= 5000 ? 0 : 99);
-            const taxAmount      = Math.floor(base * 0.02);
-            payAmount            = base + deliveryCharge + taxAmount;
+  if (couponCode !== undefined) {
+    if (couponCode === false) {
+      // Coupon was explicitly removed by the user on the retry page
+      const base = order.subtotal || 0;
+      const deliveryCharge = order.deliveryCharge ?? (base >= 5000 ? 0 : 99);
+      const taxAmount = Math.floor(base * 0.02);
+      payAmount = base + deliveryCharge + taxAmount;
 
-            // Persist the removed coupon state
-            order.couponDiscount = 0;
-            order.couponCode     = null;
-            order.taxAmount      = taxAmount;
-            order.deliveryCharge = deliveryCharge;
-            order.finalAmount    = payAmount;
-        } else {
-            // A new coupon was explicitly applied by the user on the retry page
-            const { validateCoupon } = await import("./couponService.js");
-            // Use the offer-discounted subtotal directly (no double subtraction)
-            const base = order.subtotal || 0;
-            const couponResult = await validateCoupon(couponCode, base, userId);
+      // Persist the removed coupon state
+      order.couponDiscount = 0;
+      order.couponCode = null;
+      order.taxAmount = taxAmount;
+      order.deliveryCharge = deliveryCharge;
+      order.finalAmount = payAmount;
+    } else {
+      // A new coupon was explicitly applied by the user on the retry page
+      const { validateCoupon } = await import("./couponService.js");
+      // Use the offer-discounted subtotal directly (no double subtraction)
+      const base = order.subtotal || 0;
+      const couponResult = await validateCoupon(couponCode, base, userId);
 
-            if (couponResult.success) {
-                const couponDiscount  = couponResult.discount;
-                const discounted      = base - couponDiscount;
-                const deliveryCharge  = order.deliveryCharge ?? (discounted >= 5000 ? 0 : 99);
-                const taxAmount       = Math.floor(discounted * 0.02);
-                payAmount             = discounted + deliveryCharge + taxAmount;
+      if (couponResult.success) {
+        const couponDiscount = couponResult.discount;
+        const discounted = base - couponDiscount;
+        const deliveryCharge =
+          order.deliveryCharge ?? (discounted >= 5000 ? 0 : 99);
+        const taxAmount = Math.floor(discounted * 0.02);
+        payAmount = discounted + deliveryCharge + taxAmount;
 
-                // Persist the updated pricing on the order
-                order.couponDiscount  = couponDiscount;
-                order.couponCode      = couponCode.toUpperCase();
-                order.taxAmount       = taxAmount;
-                order.deliveryCharge  = deliveryCharge;
-                order.finalAmount     = payAmount;
-            }
-        }
+        // Persist the updated pricing on the order
+        order.couponDiscount = couponDiscount;
+        order.couponCode = couponCode.toUpperCase();
+        order.taxAmount = taxAmount;
+        order.deliveryCharge = deliveryCharge;
+        order.finalAmount = payAmount;
+      }
     }
+  }
 
-    /* =====================================
+  /* =====================================
        COD
     ===================================== */
 
-    if (paymentMethod === "COD") {
-
-        order.paymentMethod = "COD";
-
-        order.paymentStatus = PAYMENT_STATUS.PENDING;
-
-        order.orderStatus = ORDER_STATUS.PENDING;
-
-        order.walletAmountUsed = 0;
-
-        order.paymentId = null;
-
-        order.razorpayOrderId = null;
-
-        order.razorpayPaymentId = null;
-
-        order.razorpaySignature = null;
-
-        order.paymentExpiresAt = null;
-
-        order.retryCount += 1;
-
-        await order.save();
-
-        return {
-            success: true,
-            paymentMethod: "COD",
-            redirectUrl: `/order-success/${order.orderId}`,
-        };
-    }
-
-    /* =====================================
-       WALLET
-    ===================================== */
-
-    if (paymentMethod === "WALLET") {
-
-        const walletResponse = await debitWallet({
-            userId,
-            amount: payAmount,
-            transactionType: "OrderPayment",
-            description:
-                `Wallet payment for retry order ${order.orderId}`,
-            orderId: order._id,
-        });
-
-        if (!walletResponse.success) {
-            return {
-                success: false,
-                message: "Insufficient wallet balance",
-            };
-        }
-
-        order.paymentMethod = "WALLET";
-
-        order.paymentStatus = PAYMENT_STATUS.PAID;
-
-        order.orderStatus = ORDER_STATUS.PENDING;
-
-        order.walletAmountUsed = payAmount;
-
-        order.paymentId = null;
-
-        order.razorpayOrderId = null;
-
-        order.razorpayPaymentId = null;
-
-        order.razorpaySignature = null;
-
-        order.paymentExpiresAt = null;
-
-        order.retryCount += 1;
-
-        await order.save();
-
-        return {
-            success: true,
-            paymentMethod: "WALLET",
-            redirectUrl: `/order-success/${order.orderId}`,
-        };
-    }
-
-    /* =====================================
-       RAZORPAY
-    ===================================== */
-
-    if (paymentMethod === "RAZORPAY") {
-
-        const razorpayResponse =
-            await createRazorpayOrder({
-                amount: payAmount,
-            });
-
-        if (!razorpayResponse.success) {
-            return {
-                success: false,
-                message: "Failed to initiate payment",
-            };
-        }
-
-        order.paymentMethod = "RAZORPAY";
-
-        order.paymentStatus = PAYMENT_STATUS.PENDING;
-
-        order.walletAmountUsed = 0;
-
-        order.paymentId = null;
-
-        order.razorpayPaymentId = null;
-
-        order.razorpaySignature = null;
-
-        order.razorpayOrderId =
-            razorpayResponse.razorpayOrder.id;
-
-        order.paymentExpiresAt = new Date(
-            Date.now() + PAYMENT_EXPIRY_MS
-        );
-
-        order.retryCount += 1;
-
-        await order.save();
-
-        return {
-            success: true,
-            paymentMethod: "RAZORPAY",
-            razorpayOrder: razorpayResponse.razorpayOrder,
-            amount: order.finalAmount,
-            orderId: order.orderId,
-        };
-    }
-
-    return {
-        success: false,
-        message: "Invalid payment method",
-    };
-
-};
-/* =========================================
-   RETRY RAZORPAY PAYMENT SERVICE (legacy)
-========================================= */
-export const retryRazorpayPaymentService = async (
-    userId,
-    orderId
-) => {
-
-    const order = await Order.findOne({
-        userId,
-        orderId,
-    });
-
-    if (!order) {
-        return {
-            success: false,
-            message: "Order not found",
-        };
-    }
-
-    /* Allow retry only for Razorpay */
-    if (order.paymentMethod !== "RAZORPAY") {
-        return {
-            success: false,
-            message: "This order does not use Razorpay",
-        };
-    }
-
-    /* Block if already paid or stock restored */
-    if (order.paymentStatus === PAYMENT_STATUS.PAID || order.isStockRestored) {
-        return {
-            success: false,
-            message: "This order cannot be retried",
-        };
-    }
-
-    /* Retry limit reached */
-    if (order.retryCount >= MAX_RETRY_COUNT) {
-
-        if (!order.isStockRestored) {
-            await restoreStockForExpiredOrder(order);
-        }
-
-        return {
-            success: false,
-            expired: true,
-            message:
-                "Maximum payment attempts exceeded. Please place a new order.",
-        };
-    }
-
-    /* Payment window expired */
-    if (
-        order.paymentExpiresAt &&
-        new Date() > order.paymentExpiresAt
-    ) {
-
-        if (!order.isStockRestored) {
-            await restoreStockForExpiredOrder(order);
-        }
-
-        return {
-            success: false,
-            expired: true,
-            message:
-                "Payment window expired. Please place a new order.",
-        };
-    }
-
-    /* Create new Razorpay order */
-    const razorpayResponse = await createRazorpayOrder({
-        amount: order.finalAmount,
-    });
-
-    if (!razorpayResponse.success) {
-        return {
-            success: false,
-            message: "Failed to create payment session",
-        };
-    }
-
-    /* Reset old payment info */
-    order.paymentMethod = "RAZORPAY";
+  if (paymentMethod === "COD") {
+    order.paymentMethod = "COD";
 
     order.paymentStatus = PAYMENT_STATUS.PENDING;
 
-    order.paymentId = null;
+    order.orderStatus = ORDER_STATUS.PENDING;
 
     order.walletAmountUsed = 0;
+
+    order.paymentId = null;
+
+    order.razorpayOrderId = null;
 
     order.razorpayPaymentId = null;
 
     order.razorpaySignature = null;
 
-    order.razorpayOrderId =
-        razorpayResponse.razorpayOrder.id;
-
-    order.paymentExpiresAt = new Date(
-        Date.now() + PAYMENT_EXPIRY_MS
-    );
+    order.paymentExpiresAt = null;
 
     order.retryCount += 1;
-
-    /* Restore active item status */
-    order.items.forEach(item => {
-
-        if (
-            item.itemStatus !== ORDER_STATUS.CANCELLED &&
-            item.itemStatus !== ORDER_STATUS.RETURNED
-        ) {
-            item.itemStatus = ORDER_STATUS.PENDING;
-        }
-
-    });
 
     await order.save();
 
     return {
-
-        success: true,
-
-        razorpayOrder:
-            razorpayResponse.razorpayOrder,
-
-        amount:
-            order.finalAmount,
-
-        orderId:
-            order.orderId,
-
+      success: true,
+      paymentMethod: "COD",
+      redirectUrl: `/order-success/${order.orderId}`,
     };
+  }
 
-};
+  /* =====================================
+       WALLET
+    ===================================== */
 
-export const markPaymentFailedService = async (
-    userId,
-    orderId
-) => {
-
-    const order = await Order.findOne({
-        userId,
-        orderId
+  if (paymentMethod === "WALLET") {
+    const walletResponse = await debitWallet({
+      userId,
+      amount: payAmount,
+      transactionType: "OrderPayment",
+      description: `Wallet payment for retry order ${order.orderId}`,
+      orderId: order._id,
     });
 
-    if (!order) {
-        return;
+    if (!walletResponse.success) {
+      return {
+        success: false,
+        message: "Insufficient wallet balance",
+      };
     }
 
-    /* Don't touch successful orders */
-    if (order.paymentStatus === PAYMENT_STATUS.PAID) {
-        return;
-    }
+    order.paymentMethod = "WALLET";
 
-    order.paymentStatus = PAYMENT_STATUS.FAILED;
+    order.paymentStatus = PAYMENT_STATUS.PAID;
+
+    order.orderStatus = ORDER_STATUS.PENDING;
+
+    order.walletAmountUsed = payAmount;
+
+    order.paymentId = null;
+
+    order.razorpayOrderId = null;
+
+    order.razorpayPaymentId = null;
+
+    order.razorpaySignature = null;
+
+    order.paymentExpiresAt = null;
+
+    order.retryCount += 1;
 
     await order.save();
 
+    return {
+      success: true,
+      paymentMethod: "WALLET",
+      redirectUrl: `/order-success/${order.orderId}`,
+    };
+  }
+
+  /* =====================================
+       RAZORPAY
+    ===================================== */
+
+  if (paymentMethod === "RAZORPAY") {
+    const razorpayResponse = await createRazorpayOrder({
+      amount: payAmount,
+    });
+
+    if (!razorpayResponse.success) {
+      return {
+        success: false,
+        message: "Failed to initiate payment",
+      };
+    }
+
+    order.paymentMethod = "RAZORPAY";
+
+    order.paymentStatus = PAYMENT_STATUS.PENDING;
+
+    order.walletAmountUsed = 0;
+
+    order.paymentId = null;
+
+    order.razorpayPaymentId = null;
+
+    order.razorpaySignature = null;
+
+    order.razorpayOrderId = razorpayResponse.razorpayOrder.id;
+
+    order.paymentExpiresAt = new Date(Date.now() + PAYMENT_EXPIRY_MS);
+
+    order.retryCount += 1;
+
+    await order.save();
+
+    return {
+      success: true,
+      paymentMethod: "RAZORPAY",
+      razorpayOrder: razorpayResponse.razorpayOrder,
+      amount: order.finalAmount,
+      orderId: order.orderId,
+    };
+  }
+
+  return {
+    success: false,
+    message: "Invalid payment method",
+  };
+};
+/* =========================================
+   RETRY RAZORPAY PAYMENT SERVICE (legacy)
+========================================= */
+export const retryRazorpayPaymentService = async (userId, orderId) => {
+  const order = await Order.findOne({
+    userId,
+    orderId,
+  });
+
+  if (!order) {
+    return {
+      success: false,
+      message: "Order not found",
+    };
+  }
+
+  /* Allow retry only for Razorpay */
+  if (order.paymentMethod !== "RAZORPAY") {
+    return {
+      success: false,
+      message: "This order does not use Razorpay",
+    };
+  }
+
+  /* Block if already paid or stock restored */
+  if (order.paymentStatus === PAYMENT_STATUS.PAID || order.isStockRestored) {
+    return {
+      success: false,
+      message: "This order cannot be retried",
+    };
+  }
+
+  /* Retry limit reached */
+  if (order.retryCount >= MAX_RETRY_COUNT) {
+    if (!order.isStockRestored) {
+      await restoreStockForExpiredOrder(order);
+    }
+
+    return {
+      success: false,
+      expired: true,
+      message: "Maximum payment attempts exceeded. Please place a new order.",
+    };
+  }
+
+  /* Payment window expired */
+  if (order.paymentExpiresAt && new Date() > order.paymentExpiresAt) {
+    if (!order.isStockRestored) {
+      await restoreStockForExpiredOrder(order);
+    }
+
+    return {
+      success: false,
+      expired: true,
+      message: "Payment window expired. Please place a new order.",
+    };
+  }
+
+  /* Create new Razorpay order */
+  const razorpayResponse = await createRazorpayOrder({
+    amount: order.finalAmount,
+  });
+
+  if (!razorpayResponse.success) {
+    return {
+      success: false,
+      message: "Failed to create payment session",
+    };
+  }
+
+  /* Reset old payment info */
+  order.paymentMethod = "RAZORPAY";
+
+  order.paymentStatus = PAYMENT_STATUS.PENDING;
+
+  order.paymentId = null;
+
+  order.walletAmountUsed = 0;
+
+  order.razorpayPaymentId = null;
+
+  order.razorpaySignature = null;
+
+  order.razorpayOrderId = razorpayResponse.razorpayOrder.id;
+
+  order.paymentExpiresAt = new Date(Date.now() + PAYMENT_EXPIRY_MS);
+
+  order.retryCount += 1;
+
+  /* Restore active item status */
+  order.items.forEach((item) => {
+    if (
+      item.itemStatus !== ORDER_STATUS.CANCELLED &&
+      item.itemStatus !== ORDER_STATUS.RETURNED
+    ) {
+      item.itemStatus = ORDER_STATUS.PENDING;
+    }
+  });
+
+  await order.save();
+
+  return {
+    success: true,
+
+    razorpayOrder: razorpayResponse.razorpayOrder,
+
+    amount: order.finalAmount,
+
+    orderId: order.orderId,
+  };
+};
+
+export const markPaymentFailedService = async (userId, orderId) => {
+  const order = await Order.findOne({
+    userId,
+    orderId,
+  });
+
+  if (!order) {
+    return;
+  }
+
+  /* Don't touch successful orders */
+  if (order.paymentStatus === PAYMENT_STATUS.PAID) {
+    return;
+  }
+
+  order.paymentStatus = PAYMENT_STATUS.FAILED;
+
+  await order.save();
 };

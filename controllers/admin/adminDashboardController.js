@@ -10,8 +10,11 @@ export const renderAdminDashboard = async (req, res) => {
 
     const dashboardData = await getDashboardDataService(filter);
 
-    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate, private");
-    res.setHeader("Pragma",  "no-cache");
+    res.setHeader(
+      "Cache-Control",
+      "no-store, no-cache, must-revalidate, proxy-revalidate, private",
+    );
+    res.setHeader("Pragma", "no-cache");
     res.setHeader("Expires", "0");
 
     res.render("admin/dashboard", {
@@ -19,7 +22,6 @@ export const renderAdminDashboard = async (req, res) => {
       dashboardData,
       filter,
     });
-
   } catch (error) {
     console.log("Dashboard Error:", error);
     return res.redirect("/admin/login");

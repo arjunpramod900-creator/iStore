@@ -148,22 +148,7 @@
             </div>
         </div>
 
-        <!-- SYSTEM -->
-        <div class="nav-section">
-            <span class="nav-section-label">System</span>
-            <div class="nav-links">
 
-                <a href="#"
-                   class="nav-link <%= page === 'settings' ? 'active' : '' %>"
-                   id="nav-settings">
-                    <span class="nav-icon">
-                        <i data-lucide="settings" size="15"></i>
-                    </span>
-                    <span class="nav-text">Settings</span>
-                </a>
-
-            </div>
-        </div>
 
     </nav>
 
@@ -171,7 +156,7 @@
     <div class="sidebar-footer">
 
         <!-- Logout (above profile card) -->
-        <a href="/admin/logout" class="sidebar-logout" id="btn-logout">
+        <a href="/admin/logout" class="sidebar-logout" id="btn-logout" data-no-loader="true">
             <span class="nav-icon">
                 <i data-lucide="log-out" size="15"></i>
             </span>
@@ -313,5 +298,38 @@
     /* ── Apply immediately on page load ── */
     applyInitialState();
 
+    /* ── Logout Confirmation ── */
+    var btnLogout = document.getElementById('btn-logout');
+    if (btnLogout) {
+        btnLogout.addEventListener('click', function(e) {
+            e.preventDefault();
+            var href = this.getAttribute('href');
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: 'Ready to leave?',
+                    text: 'Are you sure you want to log out of the admin panel?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, log out',
+                    cancelButtonText: 'Cancel',
+                    reverseButtons: true,
+                    customClass: { popup: 'swal2-popup', confirmButton: 'swal2-confirm', cancelButton: 'swal2-cancel' }
+                }).then(function(result) {
+                    if (result.isConfirmed) {
+                        window.location.href = href;
+                    }
+                });
+            } else {
+                if (confirm('Are you sure you want to log out?')) {
+                    window.location.href = href;
+                }
+            }
+        });
+    }
+
 }());
 </script>
+
+<!-- Page Loading Overlay -->
+<link rel="stylesheet" href="/css/components/page-loader.css">
+<script src="/js/page-loader.js"></script>

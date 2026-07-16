@@ -720,30 +720,22 @@ if (clearCartBtn) {
 
         async () => {
 
-            const result =
-            await Swal.fire({
-
-                title:
-                    "Clear Cart?",
-
-                text:
-                    "All items will be removed from your cart.",
-
-                icon:
-                    "warning",
-
-                showCancelButton:
-                    true,
-
-                confirmButtonText:
-                    "Clear Cart",
-
-                cancelButtonText:
-                    "Cancel",
-
-                reverseButtons:
-                    true,
-
+            const result = await Swal.fire({
+                title: "Clear Cart?",
+                text: "All items will be removed from your cart.",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Clear Cart",
+                cancelButtonText: "Cancel",
+                buttonsStyling: false,
+                reverseButtons: true,
+                background: "#FFFFFF",
+                color: "#111111",
+                customClass: {
+                    popup: "premium-alert-popup",
+                    confirmButton: "premium-alert-confirm",
+                    cancelButton: "premium-alert-cancel",
+                }
             });
 
             if(!result.isConfirmed){

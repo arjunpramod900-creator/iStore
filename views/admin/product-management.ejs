@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Product Management - Admin | iStore</title>
-  <link rel="stylesheet" href="/css/components/admin-sidebar.css">
-  <link rel="stylesheet" href="/css/admin-dashboard.css">
-  <link rel="stylesheet" href="/css/admin-products.css">
+  <link rel="stylesheet" href="/css/components/admin-sidebar.css?v=1.1">
+  <link rel="stylesheet" href="/css/admin-dashboard.css?v=1.1">
+  <link rel="stylesheet" href="/css/admin-products.css?v=1.1">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
@@ -221,7 +221,7 @@
       <div class="modal-body">
         <div class="error-alert" id="addProductError" style="display:none;"></div>
 
-        <form id="addProductForm" class="bento-form-grid" enctype="multipart/form-data" novalidate>
+        <form id="addProductForm" class="bento-form-grid" enctype="multipart/form-data" data-no-loader="true" novalidate>
 
           <div class="column">
 
@@ -419,7 +419,7 @@
       <div class="modal-body">
         <div class="error-alert" id="editProductError" style="display:none;"></div>
 
-        <form id="editProductForm" class="bento-form-grid" enctype="multipart/form-data" novalidate>
+        <form id="editProductForm" class="bento-form-grid" enctype="multipart/form-data" data-no-loader="true" novalidate>
 
           <input type="hidden" name="productId" id="editProductId">
           <input type="hidden" name="variantId" id="editVariantId">
@@ -1306,27 +1306,45 @@ function validateColor(prefix) {
         confirmButtonColor: "#603763", cancelButtonColor: "#E5E7EB", confirmButtonText: "Delete"
       });
       if (!result.isConfirmed) return;
+      const originalHTML = btn.innerHTML;
       try {
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader-circle" class="spin"></i>';
+        if (typeof lucide !== 'undefined') lucide.createIcons();
         const res  = await fetch(`/admin/delete-product/${btn.dataset.id}`, { method: "PATCH" });
         const data = await res.json();
         if (data.success) {
           await Swal.fire({ icon: "success", title: "Deleted Successfully", timer: 1200, showConfirmButton: false });
           window.location.reload();
         } else throw new Error();
-      } catch { Swal.fire({ icon: "error", title: "Failed to delete product" }); }
+      } catch { 
+        btn.disabled = false; 
+        btn.innerHTML = originalHTML;
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+        Swal.fire({ icon: "error", title: "Failed to delete product" }); 
+      }
     });
 
     document.addEventListener("click", async (e) => {
       const btn = e.target.closest(".restore-btn");
       if (!btn) return;
+      const originalHTML = btn.innerHTML;
       try {
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader-circle" class="spin"></i>';
+        if (typeof lucide !== 'undefined') lucide.createIcons();
         const res  = await fetch(`/admin/restore-product/${btn.dataset.id}`, { method: "PATCH" });
         const data = await res.json();
         if (data.success) {
           await Swal.fire({ icon: "success", title: "Product restored", timer: 1200, showConfirmButton: false });
           window.location.reload();
         }
-      } catch { Swal.fire({ icon: "error", title: "Restore failed" }); }
+      } catch { 
+        btn.disabled = false; 
+        btn.innerHTML = originalHTML;
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+        Swal.fire({ icon: "error", title: "Restore failed" }); 
+      }
     });
 
     document.addEventListener("click", async (e) => {
@@ -1338,14 +1356,23 @@ function validateColor(prefix) {
         confirmButtonColor: "#BA1A1A", confirmButtonText: "Delete Forever"
       });
       if (!result.isConfirmed) return;
+      const originalHTML = btn.innerHTML;
       try {
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader-circle" class="spin"></i>';
+        if (typeof lucide !== 'undefined') lucide.createIcons();
         const res  = await fetch(`/admin/permanent-delete-product/${btn.dataset.id}`, { method: "DELETE" });
         const data = await res.json();
         if (data.success) {
           await Swal.fire({ icon: "success", title: "Product permanently deleted", timer: 1200, showConfirmButton: false });
           window.location.reload();
         }
-      } catch { Swal.fire({ icon: "error", title: "Delete failed" }); }
+      } catch { 
+        btn.disabled = false; 
+        btn.innerHTML = originalHTML;
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+        Swal.fire({ icon: "error", title: "Delete failed" }); 
+      }
     });
 
   </script>

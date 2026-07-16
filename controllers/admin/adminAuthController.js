@@ -5,9 +5,7 @@ import {
   resetAdminPasswordService,
 } from "../../services/admin/authService.js";
 
-import {
-  getDashboardDataService,
-} from "../../services/admin/dashboardService.js";
+import { getDashboardDataService } from "../../services/admin/dashboardService.js";
 
 /* ============================
    RENDER LOGIN PAGE

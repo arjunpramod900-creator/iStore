@@ -286,10 +286,20 @@
 }
 
 @keyframes fadeInShake {
-  0% { opacity: 0; transform: translateX(-6px); }
-  40% { transform: translateX(4px); }
-  70% { transform: translateX(-2px); }
-  100% { opacity: 1; transform: translateX(0); }
+  0% {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+  40% {
+    transform: translateX(4px);
+  }
+  70% {
+    transform: translateX(-2px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 /* =========================

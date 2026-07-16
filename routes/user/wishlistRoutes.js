@@ -62,9 +62,6 @@ router.post(
    MOVE ALL WISHLIST ITEMS TO CART
 ========================================= */
 
-router.post(
-  "/add-all-to-cart",
-  moveAllWishlistToCart,
-);
+router.post("/add-all-to-cart", moveAllWishlistToCart);
 
 export default router;
