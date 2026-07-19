@@ -34,6 +34,8 @@ import {
 } from "./middleware/notFoundMiddleware.js";
 
 const app = express();
+/* Trust Nginx reverse proxy */
+app.set("trust proxy", 1);
 
 /* ================================
    SECURITY HEADERS
