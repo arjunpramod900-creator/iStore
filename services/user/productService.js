@@ -284,6 +284,40 @@ export const loadAllProductsService = async (
 };
 
 /* =========================================
+   LIVE SEARCH
+========================================= */
+
+export const liveSearchService = async (searchQuery) => {
+  const products = await Product.find({
+    name: { $regex: searchQuery, $options: "i" },
+    isDeleted: false,
+    isActive: true,
+  })
+    .populate("defaultVariant")
+    .limit(5)
+    .lean();
+
+  // Format the products to include only necessary data for the dropdown
+  return products.map(product => {
+    let price = 0;
+    if (product.defaultVariant && product.defaultVariant.salePrice) {
+      price = product.defaultVariant.salePrice;
+    }
+    
+    // We should also check for offers if they apply, but for a fast live search
+    // we can just return the base sale price, or we can compute it if it's fast enough.
+    // To keep it simple and blazing fast, we just return the salePrice of defaultVariant
+    
+    return {
+      _id: product._id,
+      productName: product.name,
+      thumbnail: product.thumbnail,
+      salePrice: price
+    };
+  });
+};
+
+/* =========================================
    LOAD PRODUCT DETAILS
 ========================================= */
 

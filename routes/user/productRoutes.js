@@ -5,6 +5,7 @@ const router = express.Router();
 import {
   loadAllProducts,
   loadProductDetails,
+  liveSearchProducts,
 } from "../../controllers/user/productController.js";
 
 import { addReview } from "../../controllers/user/reviewController.js";
@@ -19,6 +20,16 @@ router.get(
   "/products",
 
   loadAllProducts,
+);
+
+/* ================================
+   LIVE SEARCH API
+================================ */
+
+router.get(
+  "/api/search",
+
+  liveSearchProducts,
 );
 
 /* ================================
