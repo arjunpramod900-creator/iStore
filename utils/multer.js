@@ -1,15 +1,19 @@
 import multer from "multer";
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "public/uploads");
-  },
+/* =========================
+   MEMORY STORAGE
+   Files are kept in RAM as buffers.
+   Works on all platforms (local, Render, Railway, etc.)
+   without needing a writable disk directory.
+========================= */
 
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + "-" + file.originalname);
+const storage = multer.memoryStorage();
+
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, /* 5 MB */
   },
 });
-
-const upload = multer({ storage });
 
 export default upload;

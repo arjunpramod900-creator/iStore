@@ -53,6 +53,24 @@ export const updateProfile = async (req, res) => {
     }
 
     /* =========================
+       DOB VALIDATION
+    ========================= */
+
+    if (dateOfBirth) {
+      const selectedDate = new Date(dateOfBirth);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      if (selectedDate > today) {
+        req.session.toast = {
+          type: "error",
+          message: "Date of Birth cannot be in the future",
+        };
+        return res.redirect("/edit-profile");
+      }
+    }
+
+    /* =========================
        PREPARE UPDATE DATA
     ========================= */
 
@@ -72,15 +90,18 @@ export const updateProfile = async (req, res) => {
     console.log("FILE:", req.file);
 
     if (req.file) {
-      console.log("📸 File received:", req.file.path);
+      console.log("📸 File received (buffer size):", req.file.size);
 
-      const result = await cloudinary.uploader.upload(
-        req.file.path,
-
-        {
-          folder: "profile_photos",
-        },
-      );
+      const result = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { folder: "profile_photos" },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        );
+        stream.end(req.file.buffer);
+      });
 
       console.log("☁️ Cloudinary URL:", result.secure_url);
 
