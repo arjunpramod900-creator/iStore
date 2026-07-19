@@ -92,6 +92,7 @@
         /* ── Per-item return actions (inside products table) ── */
         .aod-item-return-actions {
             display: flex;
+            flex-direction: column;
             gap: 6px;
             justify-content: center;
         }
@@ -300,7 +301,8 @@
                     <div class="aod-card-header">
                         <h2 class="aod-card-title">Ordered Products</h2>
                     </div>
-                    <table class="aod-products-table">
+                    <div style="overflow-x: auto; width: 100%; -webkit-overflow-scrolling: touch;">
+                        <table class="aod-products-table">
                         <thead>
                             <tr>
                                 <th>Product</th>
@@ -436,6 +438,7 @@
                             <% }) %>
                         </tbody>
                     </table>
+                    </div>
                 </div>
 
                 <!-- Revised Order Summary (replaces Logistics — only when order was mutated) -->

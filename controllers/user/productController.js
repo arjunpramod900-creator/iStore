@@ -1,6 +1,7 @@
 import {
   loadAllProductsService,
   loadProductDetailsService,
+  liveSearchService,
 } from "../../services/user/productService.js";
 
 /* =========================================
@@ -28,6 +29,27 @@ export const loadAllProducts = async (req, res) => {
     console.log(error);
 
     res.redirect("/");
+  }
+};
+
+/* =========================================
+   LIVE SEARCH
+========================================= */
+
+export const liveSearchProducts = async (req, res) => {
+  try {
+    const query = req.query.q;
+    
+    if (!query) {
+      return res.json({ success: true, products: [] });
+    }
+
+    const products = await liveSearchService(query);
+    
+    res.json({ success: true, products });
+  } catch (error) {
+    console.error("Error in live search:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
 

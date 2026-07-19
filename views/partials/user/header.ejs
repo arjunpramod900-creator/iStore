@@ -7,162 +7,166 @@
 
 <!-- Header -->
 <header class="header">
-
     <nav class="nav">
-
         <a href="/" class="logo">
             iStore
         </a>
 
-        <div class="nav-links">
-
-            <a
-                href="/"
-                class="nav-link <%= currentPage === 'home' ? 'active' : '' %>"
-            >
-                Home
-            </a>
-
-            <!-- <a
-                href="/categories"
-                class="nav-link <%= currentPage === 'categories' ? 'active' : '' %>"
-            >
-                Categories
-            </a> -->
-
-            <a
-                href="/products"
-                class="nav-link <%= currentPage === 'products' ? 'active' : '' %>"
-            >
-                Products
-            </a>
-
-            <a
-                href="/deals"
-                class="nav-link <%= currentPage === 'deals' ? 'active' : '' %>"
-            >
-                Deals
-            </a>
-
+        <div class="nav-links" id="navLinks">
+            <a href="/" class="nav-link <%= currentPage === 'home' ? 'active' : '' %>">Home</a>
+            <a href="/products" class="nav-link <%= currentPage === 'products' ? 'active' : '' %>">Products</a>
+            <a href="/deals" class="nav-link <%= currentPage === 'deals' ? 'active' : '' %>">Deals</a>
         </div>
 
-        <div class="nav-icons">
+        <div class="inline-search-container" id="inlineSearchContainer">
+            <form action="/products" method="GET" class="inline-search-form" id="inlineSearchForm">
+                <i data-lucide="search" class="inline-search-icon"></i>
+                <input type="text" name="search" id="inlineSearchInput" placeholder="Search products..." autocomplete="off">
+                
+                <button type="button" class="inline-search-close" id="inlineSearchClose">
+                    <i data-lucide="x"></i>
+                </button>
 
-            <div class="nav-icon">
+                <!-- Live Search Dropdown -->
+                <div class="live-search-dropdown" id="liveSearchDropdown">
+                    <ul id="liveSearchResults"></ul>
+                </div>
+            </form>
+        </div>
+
+        <div class="nav-icons" id="navIcons">
+            <div class="nav-icon" id="headerSearchIcon" style="cursor: pointer;">
                 <i data-lucide="search"></i>
             </div>
 
- <a href="/wishlist" class="nav-icon <%= currentPage === 'wishlist' ? 'active' : '' %>">
+            <a href="/wishlist" class="nav-icon <%= currentPage === 'wishlist' ? 'active' : '' %>">
+                <i data-lucide="heart"></i>
+                <% if(typeof wishlistCount !== "undefined" && wishlistCount > 0){ %>
+                    <span class="wishlist-count"><%= wishlistCount %></span>
+                <% } %>
+            </a>
 
-    <i data-lucide="heart"></i>
-
-    <% if(typeof wishlistCount !== "undefined" && wishlistCount > 0){ %>
-
-        <span class="wishlist-count">
-
-            <%= wishlistCount %>
-
-        </span>
-
-    <% } %>
-
-</a>
-
-<a href="/cart" class="nav-icon <%= currentPage === 'cart' ? 'active' : '' %>">
-
-    <i data-lucide="shopping-cart"></i>
-
-    <% if(typeof cartCount !== "undefined" && cartCount > 0){ %>
-
-        <span class="cart-count">
-
-            <%= cartCount %>
-
-        </span>
-
-    <% } %>
-
-</a>
+            <a href="/cart" class="nav-icon <%= currentPage === 'cart' ? 'active' : '' %>">
+                <i data-lucide="shopping-cart"></i>
+                <% if(typeof cartCount !== "undefined" && cartCount > 0){ %>
+                    <span class="cart-count"><%= cartCount %></span>
+                <% } %>
+            </a>
 
             <% if (userId) { %>
-
-                <a
-                    href="/profile"
-                    class="nav-icon"
-                    title="Profile"
-                >
-
+                <a href="/profile" class="nav-icon" title="Profile">
                     <i data-lucide="user"></i>
-
                     <div></div>
-
                 </a>
-
             <% } else { %>
-
-                <a
-                    href="/login"
-                    class="login-btn"
-                >
-
-                    Login
-
-                </a>
-
+                <a href="/login" class="login-btn">Login</a>
             <% } %>
-
         </div>
-
     </nav>
-
 </header>
 
 <!-- Mobile Bottom Navigation -->
-
 <div class="mobile-bottom-nav">
-
-    <a
-        href="/"
-        class="mobile-nav-item <%= currentPage === 'home' ? 'active' : '' %>"
-    >
-
+    <a href="/" class="mobile-nav-item <%= currentPage === 'home' ? 'active' : '' %>">
         <i data-lucide="house"></i>
-
         <span>Home</span>
-
     </a>
-
-    <!-- <a
-        href="/categories"
-        class="mobile-nav-item <%= currentPage === 'categories' ? 'active' : '' %>"
-    >
-
-        <i data-lucide="layout-grid"></i>
-
-        <span>Categories</span>
-
-    </a> -->
-
-    <a
-        href="/products"
-        class="mobile-nav-item <%= currentPage === 'products' ? 'active' : '' %>"
-    >
-
+    <a href="/products" class="mobile-nav-item <%= currentPage === 'products' ? 'active' : '' %>">
         <i data-lucide="shopping-bag"></i>
-
         <span>Products</span>
-
     </a>
-
-    <a
-        href="/deals"
-        class="mobile-nav-item <%= currentPage === 'deals' ? 'active' : '' %>"
-    >
-
+    <a href="/deals" class="mobile-nav-item <%= currentPage === 'deals' ? 'active' : '' %>">
         <i data-lucide="badge-percent"></i>
-
         <span>Deals</span>
-
     </a>
-
 </div>
+
+<!-- Search Scripts -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const searchIcon = document.getElementById('headerSearchIcon');
+    const searchContainer = document.getElementById('inlineSearchContainer');
+    const navLinks = document.getElementById('navLinks');
+    const navIcons = document.getElementById('navIcons');
+    const searchCloseBtn = document.getElementById('inlineSearchClose');
+    const searchInput = document.getElementById('inlineSearchInput');
+    const searchDropdown = document.getElementById('liveSearchDropdown');
+    const searchResultsList = document.getElementById('liveSearchResults');
+    let debounceTimer;
+
+    if (searchIcon && searchContainer) {
+        // Open search
+        searchIcon.addEventListener('click', () => {
+            searchIcon.style.display = 'none';
+            searchContainer.classList.add('active');
+            setTimeout(() => searchInput.focus(), 300);
+        });
+
+        // Close search
+        const closeSearch = () => {
+            searchContainer.classList.remove('active');
+            setTimeout(() => {
+                searchIcon.style.display = '';
+            }, 300);
+            searchDropdown.classList.remove('active');
+            searchInput.value = '';
+            searchResultsList.innerHTML = '';
+        };
+
+        searchCloseBtn.addEventListener('click', closeSearch);
+
+        // Close on outside click
+        document.addEventListener('click', (e) => {
+            if (searchContainer.classList.contains('active') && !searchContainer.contains(e.target) && !searchIcon.contains(e.target)) {
+                closeSearch();
+            }
+        });
+
+        // Live search AJAX
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.trim();
+            
+            clearTimeout(debounceTimer);
+            
+            if (query.length < 2) {
+                searchDropdown.classList.remove('active');
+                searchResultsList.innerHTML = '';
+                return;
+            }
+
+            debounceTimer = setTimeout(async () => {
+                try {
+                    const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+                    if (!response.ok) throw new Error("Network response was not ok");
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        searchResultsList.innerHTML = '';
+                        if (data.products.length > 0) {
+                            data.products.forEach(product => {
+                                const li = document.createElement('li');
+                                li.innerHTML = `
+                                    <a href="/products/${product._id}" class="live-search-item">
+                                        <img src="${product.thumbnail || '/images/placeholder.png'}" alt="${product.productName}">
+                                        <div class="live-search-info">
+                                            <span class="live-search-name">${product.productName}</span>
+                                            <span class="live-search-price">₹${product.salePrice}</span>
+                                        </div>
+                                    </a>
+                                `;
+                                searchResultsList.appendChild(li);
+                            });
+                        } else {
+                            searchResultsList.innerHTML = '<li class="live-search-empty">No products found</li>';
+                        }
+                        searchDropdown.classList.add('active');
+                    }
+                } catch (error) {
+                    console.error('Search error:', error);
+                }
+            }, 300);
+        });
+    }
+});
+</script>
