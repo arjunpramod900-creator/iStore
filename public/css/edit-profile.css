@@ -166,6 +166,7 @@
   top: 50%;
   transform: translateY(-50%);
   color: #a1a1aa;
+  pointer-events: none;
 }
 
 .form-hint {
