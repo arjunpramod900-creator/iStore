@@ -213,8 +213,8 @@ body {
   justify-content: center;
   gap: 8px;
   padding: 16px;
-  background: transparent;
-  border: 1px solid rgba(186, 26, 26, 0.2);
+  background: #fef2f2;
+  border: 1px solid #fecaca;
   border-radius: 24px;
   color: var(--danger-color);
   font-size: 16px;
@@ -224,8 +224,12 @@ body {
 }
 
 .logout-btn:hover {
-  background: rgba(186, 26, 26, 0.05);
-  border-color: var(--danger-color);
+  background: #fee2e2;
+  border-color: #fca5a5;
+}
+
+.mobile-logout {
+  display: none !important;
 }
 
 /* Right Column */
@@ -343,6 +347,13 @@ body {
 @media (max-width: 1024px) {
   .dashboard-container {
     grid-template-columns: 1fr;
+  }
+  .desktop-logout {
+    display: none !important;
+  }
+  .mobile-logout {
+    display: flex !important;
+    margin-top: 16px;
   }
 
   .sidebar {

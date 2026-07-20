@@ -460,3 +460,49 @@ body {
   border-radius: 16px;
   transform: rotate(-5deg);
 }
+
+/* =========================
+   MOBILE RESPONSIVENESS
+========================= */
+@media (max-width: 992px) {
+  .main-container {
+    flex-direction: column;
+    min-height: auto;
+  }
+  .branding-panel, .signup-section {
+    min-width: 100%;
+    width: 100%;
+    padding: 60px 20px;
+    flex: none;
+  }
+  .product-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    padding: 16px;
+    max-width: 380px;
+    margin: 0 auto;
+  }
+  .product-card {
+    padding: 12px;
+  }
+  .product-image {
+    height: 100px;
+  }
+  .otp-visual-cluster {
+    transform: scale(0.5);
+    margin-top: -80px;
+    margin-bottom: -80px;
+  }
+  .branding-content {
+    gap: 20px;
+  }
+  .logo-text {
+    font-size: 42px;
+    line-height: 48px;
+    margin-bottom: 8px;
+  }
+  .sub-greeting {
+    font-size: 16px;
+    line-height: 22px;
+  }
+}
