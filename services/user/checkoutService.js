@@ -1064,9 +1064,7 @@ export const createRazorpayCheckoutService = async (
          Therefore do NOT record coupon usage here.
         */
 
-    cart.items = [];
-
-    await cart.save();
+    // Cart is no longer emptied here, it will be emptied upon successful verification or actual payment failure.
 
     return {
       success: true,
@@ -1239,6 +1237,9 @@ export const verifyRazorpayPaymentService = async ({
       await recordCouponUsage(order.couponId, userId, order._id);
     }
   }
+
+  /* Empty the cart now that payment is successful */
+  await Cart.findOneAndUpdate({ userId }, { items: [] });
 
   return {
     success: true,
@@ -1481,9 +1482,23 @@ export const retryOrderPaymentService = async ({
       // Persist the removed coupon state
       order.couponDiscount = 0;
       order.couponCode = null;
+      order.couponId = null;
       order.taxAmount = taxAmount;
       order.deliveryCharge = deliveryCharge;
       order.finalAmount = payAmount;
+
+      // Keep pricingSnapshot in sync so refund calculator uses correct amounts
+      order.pricingSnapshot = {
+        originalSubtotal: order.subtotal,
+        originalOfferDiscount: order.offerDiscount || 0,
+        originalCouponDiscount: 0,
+        originalTaxAmount: taxAmount,
+        originalDeliveryCharge: deliveryCharge,
+        originalFinalAmount: payAmount,
+      };
+
+      // Ensure individual items reflect the removed coupon
+      applyProportionalCoupon(order.items, order.subtotal, 0);
     } else {
       // A new coupon was explicitly applied by the user on the retry page
       const { validateCoupon } = await import("./couponService.js");
@@ -1502,9 +1517,23 @@ export const retryOrderPaymentService = async ({
         // Persist the updated pricing on the order
         order.couponDiscount = couponDiscount;
         order.couponCode = couponCode.toUpperCase();
+        order.couponId = couponResult.couponId || order.couponId;
         order.taxAmount = taxAmount;
         order.deliveryCharge = deliveryCharge;
         order.finalAmount = payAmount;
+
+        // Keep pricingSnapshot in sync so refund calculator uses correct amounts
+        order.pricingSnapshot = {
+          originalSubtotal: order.subtotal,
+          originalOfferDiscount: order.offerDiscount || 0,
+          originalCouponDiscount: couponDiscount,
+          originalTaxAmount: taxAmount,
+          originalDeliveryCharge: deliveryCharge,
+          originalFinalAmount: payAmount,
+        };
+
+        // Distribute the new coupon discount proportionally across items
+        applyProportionalCoupon(order.items, order.subtotal, couponDiscount);
       }
     }
   }
@@ -1772,4 +1801,28 @@ export const markPaymentFailedService = async (userId, orderId) => {
   order.paymentStatus = PAYMENT_STATUS.FAILED;
 
   await order.save();
+
+  /* Empty the cart so they don't have both a failed order and a full cart */
+  await Cart.findOneAndUpdate({ userId }, { items: [] });
+};
+
+/* =========================================
+   CANCEL PENDING ORDER (ON MODAL DISMISS)
+========================================= */
+export const cancelPendingOrderService = async (userId, orderId) => {
+  const order = await Order.findOne({
+    userId,
+    orderId,
+    paymentStatus: PAYMENT_STATUS.PENDING
+  });
+
+  if (!order) {
+    return;
+  }
+
+  if (!order.isStockRestored) {
+    await restoreStockForExpiredOrder(order);
+  }
+
+  await Order.deleteOne({ _id: order._id });
 };

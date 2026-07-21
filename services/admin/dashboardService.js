@@ -148,11 +148,11 @@ export const getDashboardDataService = async (filter = "weekly") => {
        Returned orders   → bucketed by returnApprovedAt (day refund was processed)
   ================================================ */
 
-  // Query 1: Gross Revenue — Delivered orders, grouped by order creation date
+  // Query 1: Gross Revenue — Delivered + Returned orders, grouped by order creation date
   const rawGrossChart = await Order.aggregate([
     {
       $match: {
-        orderStatus: ORDER_STATUS.DELIVERED,
+        orderStatus: { $in: [ORDER_STATUS.DELIVERED, ORDER_STATUS.RETURNED] },
         createdAt: { $gte: rangeStart, $lte: rangeEnd },
       },
     },
@@ -175,11 +175,28 @@ export const getDashboardDataService = async (filter = "weekly") => {
     { $sort: { _id: 1 } },
   ]);
 
-  // Query 2: Refunds — Returned orders, grouped by returnApprovedAt (when refund was processed)
+  // Query 2: Refunds — Returned orders + partial refunds on Delivered orders (item cancellations)
   const rawRefundChart = await Order.aggregate([
     {
       $match: {
-        orderStatus: ORDER_STATUS.RETURNED,
+        orderStatus: { $in: [ORDER_STATUS.DELIVERED, ORDER_STATUS.RETURNED] },
+        $expr: {
+          $gt: [
+            {
+              $cond: [
+                { $eq: ["$orderStatus", ORDER_STATUS.RETURNED] },
+                { $ifNull: ["$pricingSnapshot.originalFinalAmount", "$finalAmount"] },
+                {
+                  $subtract: [
+                    { $ifNull: ["$pricingSnapshot.originalFinalAmount", "$finalAmount"] },
+                    "$finalAmount",
+                  ],
+                },
+              ]
+            },
+            0
+          ]
+        },
         $or: [
           { returnApprovedAt: { $gte: rangeStart, $lte: rangeEnd } },
           {
@@ -200,7 +217,16 @@ export const getDashboardDataService = async (filter = "weekly") => {
         },
         refundAmount: {
           $sum: {
-            $ifNull: ["$pricingSnapshot.originalFinalAmount", "$finalAmount"],
+            $cond: [
+              { $eq: ["$orderStatus", ORDER_STATUS.RETURNED] },
+              { $ifNull: ["$pricingSnapshot.originalFinalAmount", "$finalAmount"] },
+              {
+                $subtract: [
+                  { $ifNull: ["$pricingSnapshot.originalFinalAmount", "$finalAmount"] },
+                  "$finalAmount",
+                ],
+              },
+            ],
           },
         },
       },

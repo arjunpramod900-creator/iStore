@@ -113,9 +113,10 @@ export const downloadSalesReportExcel = async (req, res) => {
           }
 
           const itemTax = Math.round((item.finalPrice || 0) * 0.02);
+          const orderTax = order.pricingSnapshot?.originalTaxAmount || order.taxAmount || 0;
           const itemTotal =
             (item.finalPrice || item.price * item.quantity) +
-            (order.taxAmount > 0 ? itemTax : 0);
+            (orderTax > 0 ? itemTax : 0);
 
           const row = worksheet.addRow({
             orderId: order.orderId,

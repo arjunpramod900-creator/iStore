@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="/css/components/header.css">
     <link rel="stylesheet" href="/css/components/footer.css">
     <link rel="stylesheet" href="/css/wallet.css">
+    <link rel="stylesheet" href="/css/components/pagination.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
@@ -69,10 +70,6 @@
                     <!-- Section Header -->
                     <div class="section-header">
                         <h2>Transaction History</h2>
-                        <div class="filter-btn">
-                            <span class="filter-label">Filter:</span>
-                            <span class="filter-value">All Transactions <i data-lucide="chevron-down" style="width: 16px; height: 16px; color: #6B7280;"></i></span>
-                        </div>
                     </div>
 
                     <!-- Transactions List -->
@@ -126,40 +123,27 @@
                     </div>
 
                     <% if (pagination.totalPages > 1) { %>
+                        <div class="pagination-section" style="padding-top: 30px; padding-bottom: 0px;">
+                            <div class="pagination-container">
+                                <% if (pagination.currentPage > 1) { %>
+                                    <a href="/wallet?page=<%= pagination.currentPage - 1 %>" class="page-nav-btn">
+                                        <i data-lucide="chevron-left" style="width: 16px; height: 16px; margin-right: 4px;"></i> Prev
+                                    </a>
+                                <% } %>
 
-                        <div class="wallet-pagination">
+                                <% for (let i = 1; i <= pagination.totalPages; i++) { %>
+                                    <a href="/wallet?page=<%= i %>" class="page-btn <%= i === pagination.currentPage ? 'active' : '' %>">
+                                        <%= i %>
+                                    </a>
+                                <% } %>
 
-                            <% if (pagination.currentPage > 1) { %>
-
-                                <a href="/wallet?page=<%= pagination.currentPage - 1 %>">
-                                    Previous
-                                </a>
-
-                            <% } %>
-
-                            <span>
-                                Page <%= pagination.currentPage %>
-                                of
-                                <%= pagination.totalPages %>
-                            </span>
-
-                            <% if (pagination.currentPage < pagination.totalPages) { %>
-
-                                <a href="/wallet?page=<%= pagination.currentPage + 1 %>">
-                                    Next
-                                </a>
-
-                            <% } %>
-
+                                <% if (pagination.currentPage < pagination.totalPages) { %>
+                                    <a href="/wallet?page=<%= pagination.currentPage + 1 %>" class="page-nav-btn">
+                                        Next <i data-lucide="chevron-right" style="width: 16px; height: 16px; margin-left: 4px;"></i>
+                                    </a>
+                                <% } %>
+                            </div>
                         </div>
-
-                    <% } %>
-
-                    <!-- View All Button -->
-                    <% if (transactions && transactions.length > 0) { %>
-                        <button class="view-all-btn">
-                            View Full Archive
-                        </button>
                     <% } %>
                 </section>
             </div>
@@ -445,6 +429,9 @@ await response.json();
 
 if(!data.success){
 
+topupBtn.disabled = false;
+topupBtn.textContent = "Top-up Wallet";
+
 return Swal.fire({
 
 icon:"error",
@@ -478,6 +465,13 @@ description:
 
 order_id:
 data.razorpayOrder.id,
+
+modal: {
+  ondismiss: function() {
+    topupBtn.disabled = false;
+    topupBtn.textContent = "Top-up Wallet";
+  }
+},
 
 handler:
 async function(response){
@@ -522,6 +516,9 @@ await verifyResponse.json();
 
 if(!result.success){
 
+topupBtn.disabled = false;
+topupBtn.textContent = "Top-up Wallet";
+
 return Swal.fire({
 
 icon:"error",
@@ -553,6 +550,9 @@ window.location.reload();
 }
 
 catch(error){
+
+topupBtn.disabled = false;
+topupBtn.textContent = "Top-up Wallet";
 
 Swal.fire({
 
@@ -595,6 +595,9 @@ razorpay.on(
       "Razorpay Failed:",
       response
     );
+
+    topupBtn.disabled = false;
+    topupBtn.textContent = "Top-up Wallet";
 
     Swal.fire({
 
