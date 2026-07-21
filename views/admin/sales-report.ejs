@@ -315,7 +315,8 @@
               <% if (order.items && order.items.length > 0) { %>
                 <% order.items.forEach((item, itemIdx) => { 
                     const itemTax = Math.round((item.finalPrice || 0) * 0.02);
-                    const itemTotal = (item.finalPrice || (item.price * item.quantity)) + (order.taxAmount > 0 ? itemTax : 0);
+                    const orderTax = order.pricingSnapshot?.originalTaxAmount || order.taxAmount || 0;
+                    const itemTotal = (item.finalPrice || (item.price * item.quantity)) + (orderTax > 0 ? itemTax : 0);
                     
                     let itemPayStatus = order.paymentStatus || 'Pending';
                     let itemPayClass = badgeClass(order.paymentStatus);

@@ -15,6 +15,7 @@ import {
   markPaymentFailed,
   applyRetryCoupon,
   removeRetryCoupon,
+  cancelPayment,
 } from "../../controllers/user/checkoutController.js";
 
 const router = express.Router();
@@ -55,5 +56,6 @@ router.get("/order-success/:orderId", ...auth, loadOrderSuccessPage);
 router.get("/order-failure/:orderId", ...auth, loadOrderFailurePage);
 
 router.post("/checkout/payment-failed", ...auth, markPaymentFailed);
+router.post("/checkout/cancel-payment", ...auth, cancelPayment);
 
 export default router;

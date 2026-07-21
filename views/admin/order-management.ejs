@@ -305,7 +305,8 @@
 
                         <% row.items.forEach((item, itemIdx) => { 
                             const itemTax = Math.round((item.finalPrice || 0) * 0.02);
-                            const itemTotal = (item.finalPrice || (item.price * item.quantity)) + (row.taxAmount > 0 ? itemTax : 0);
+                            const orderTax = row.pricingSnapshot?.originalTaxAmount || row.taxAmount || 0;
+                            const itemTotal = (item.finalPrice || (item.price * item.quantity)) + (orderTax > 0 ? itemTax : 0);
                             
                             // Determine item payment status
                             let itemPayStatus = row.paymentStatus;

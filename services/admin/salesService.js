@@ -224,7 +224,7 @@ export const getSalesReportService = async (filterType, startDate, endDate) => {
   const rawGrossChart = await Order.aggregate([
     {
       $match: {
-        orderStatus: ORDER_STATUS.DELIVERED,
+        orderStatus: { $in: [ORDER_STATUS.DELIVERED, ORDER_STATUS.RETURNED] },
         createdAt: dateRange,
       },
     },

@@ -6,6 +6,7 @@ import {
   verifyRazorpayPaymentService,
   loadRetryCheckoutService,
   markPaymentFailedService,
+  cancelPendingOrderService,
   applyRetryCouponService,
 } from "../../services/user/checkoutService.js";
 
@@ -373,6 +374,26 @@ export const markPaymentFailed = async (req, res) => {
     });
   } catch (error) {
     console.log("Mark Payment Failed Error:", error);
+
+    res.status(500).json({
+      success: false,
+    });
+  }
+};
+
+/* =========================================
+   CANCEL PENDING ORDER (MODAL DISMISS)
+========================================= */
+
+export const cancelPayment = async (req, res) => {
+  try {
+    await cancelPendingOrderService(req.session.userId, req.body.orderId);
+
+    res.json({
+      success: true,
+    });
+  } catch (error) {
+    console.log("Cancel Payment Error:", error);
 
     res.status(500).json({
       success: false,
