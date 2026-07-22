@@ -30,8 +30,10 @@
                 <span class="breadcrumb-sep">/</span>
                 <a href="/products" class="breadcrumb-link">Products</a>
                 <span class="breadcrumb-sep">/</span>
-                <a href="/products?category=<%= product.categoryId._id %>" class="breadcrumb-link"><%= product.categoryId.name %></a>
-                <span class="breadcrumb-sep">/</span>
+                <% if (product.categoryId) { %>
+                    <a href="/products?category=<%= product.categoryId._id %>" class="breadcrumb-link"><%= product.categoryId.name %></a>
+                    <span class="breadcrumb-sep">/</span>
+                <% } %>
                 <span class="breadcrumb-current"><%= product.name %></span>
             </nav>
 

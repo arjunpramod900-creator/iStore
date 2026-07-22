@@ -27,6 +27,7 @@ const helmetConfig = helmet({
       imgSrc: [
         "'self'",
         "data:",
+        "blob:",
         "https://res.cloudinary.com",
         "https://store.storeimages.cdn-apple.com",
         "https://*.cdn-apple.com",

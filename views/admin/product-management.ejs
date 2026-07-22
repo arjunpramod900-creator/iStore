@@ -292,11 +292,14 @@
 
               <div class="variant-images-wrapper">
                 <label class="form-label">Variant Gallery Images</label>
-                <input type="file" name="variantImages" id="addVariantImages"
-                  accept="image/*" multiple>
+                <label class="variant-upload-box" id="add-variant-images-slot">
+                  <input type="file" name="variantImages" id="addVariantImages" accept="image/*" multiple hidden>
+                  <i data-lucide="upload-cloud" size="24"></i>
+                  <span>Click or drag to add gallery images</span>
+                  <small>Upload minimum 3 images (JPG, PNG, WebP)</small>
+                </label>
                 <span class="field-error" id="add-variant-images-error"></span>
-                <p class="image-note">Upload minimum 3 images</p>
-                <div class="variant-preview-grid" id="addVariantPreviewGrid"></div>
+                <div class="variant-preview-grid" id="addVariantPreviewGrid" style="margin-top: 14px;"></div>
               </div>
             </section>
 
@@ -630,6 +633,8 @@
       document.getElementById("addProductForm").reset();
       document.getElementById("addThumbnailPreview").style.display = "none";
       document.getElementById("addVariantPreviewGrid").innerHTML   = "";
+      addThumbnailBlob = null;
+      addVariantBlobs  = [];
       document.getElementById("addProductError").style.display     = "none";
       clearAllErrors("add");
       openModal(addModal);
@@ -926,25 +931,33 @@ function validateColor(prefix) {
 
     function openCropDialog(imageSrc, callback, aspectRatio = 4/5) {
       cropCallback = callback;
-      cropTargetImg.src = imageSrc;
       cropOverlay.classList.add("open");
+      if (activeCropper) {
+        activeCropper.destroy();
+        activeCropper = null;
+      }
 
       cropTargetImg.onload = function () {
-        if (activeCropper) activeCropper.destroy();
-        activeCropper = new Cropper(cropTargetImg, {
-          aspectRatio: aspectRatio,
-          viewMode: 1,
-          dragMode: "move",
-          autoCropArea: 0.85,
-          cropBoxResizable: true,
-          cropBoxMovable: true,
-          background: false,
-          responsive: true,
-          guides: false,
-          center: true,
-          highlight: false,
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            if (activeCropper) activeCropper.destroy();
+            activeCropper = new Cropper(cropTargetImg, {
+              aspectRatio: aspectRatio,
+              viewMode: 1,
+              dragMode: "move",
+              autoCropArea: 0.85,
+              cropBoxResizable: true,
+              cropBoxMovable: true,
+              background: false,
+              responsive: true,
+              guides: false,
+              center: true,
+              highlight: false,
+            });
+          }, 50);
         });
       };
+      cropTargetImg.src = imageSrc;
     }
 
     function closeCropDialog() {
@@ -956,14 +969,16 @@ function validateColor(prefix) {
     cropApplyBtn.addEventListener("click", () => {
       if (!activeCropper || !cropCallback) return;
       const canvas = activeCropper.getCroppedCanvas({
-        width: 1200,
-        height: 1200,
+        width: 800,
+        height: 1000,
         imageSmoothingEnabled: true,
         imageSmoothingQuality: "high",
       });
+      if (!canvas) return;
       const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
       canvas.toBlob(blob => {
-        cropCallback(dataUrl, blob);
+        if (!blob) return;
+        if (cropCallback) cropCallback(dataUrl, blob);
       }, "image/jpeg", 0.92);
     });
 
@@ -1028,49 +1043,79 @@ function validateColor(prefix) {
     let pendingVariantFiles     = [];
 
     addVariantImages.addEventListener("change", function () {
-      pendingVariantFiles = Array.from(this.files);
-      if (!pendingVariantFiles.length) return;
+      const newFiles = Array.from(this.files);
+      this.value = "";
+      if (!newFiles.length) return;
       
       const s = document.getElementById("add-variant-images-error");
-      const slot = document.getElementById("add-variant-images-slot"); // Might not exist, but safe
       
-      if (pendingVariantFiles.length > 10) {
-        if (s) { s.textContent = "Maximum of 10 variant images allowed"; s.classList.add("visible"); }
-        this.value = ""; return;
+      if (addVariantBlobs.length + newFiles.length > 10) {
+        if (s) {
+          s.textContent = `Maximum of 10 variant images allowed. You already have ${addVariantBlobs.length}.`;
+          s.classList.add("visible");
+        }
+        return;
       }
       
       let valid = true;
 
-      for (let f of pendingVariantFiles) {
+      for (let f of newFiles) {
         if (!ALLOWED_IMG_TYPES.includes(f.type) || f.size > MAX_IMG_SIZE) {
           if (s) { s.textContent = "Invalid type or size > 5MB"; s.classList.add("visible"); }
           valid = false; break;
         }
       }
 
-      if (!valid) { this.value = ""; return; }
+      if (!valid) return;
       if (s) { s.textContent = ""; s.classList.remove("visible"); }
       
-      addVariantBlobs = [];
-      addVariantPreviewGrid.innerHTML = "";
+      pendingVariantFiles = newFiles;
       processNextVariantImage();
     });
 
+    function renderAddVariantPreviews() {
+      addVariantPreviewGrid.innerHTML = "";
+      addVariantBlobs.forEach((item, index) => {
+        const url = item.dataUrl || (item.blob ? URL.createObjectURL(item.blob) : URL.createObjectURL(item));
+        const previewEl = document.createElement("div");
+        previewEl.className = "variant-preview-item";
+        previewEl.style.position = "relative";
+        previewEl.innerHTML = `
+          <img src="${url}" alt="Variant">
+          <button type="button" class="remove-img-btn" style="position:absolute; top:4px; right:4px; background:rgba(0,0,0,0.6); color:#fff; border:none; border-radius:50%; width:20px; height:20px; font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center;">×</button>
+        `;
+        previewEl.querySelector("button").addEventListener("click", () => {
+          addVariantBlobs.splice(index, 1);
+          renderAddVariantPreviews();
+        });
+        addVariantPreviewGrid.appendChild(previewEl);
+      });
+
+      const s = document.getElementById("add-variant-images-error");
+      if (s) {
+        if (addVariantBlobs.length >= 3) {
+          s.textContent = "";
+          s.classList.remove("visible");
+        } else {
+          s.textContent = "Upload minimum 3 images";
+          s.classList.add("visible");
+        }
+      }
+    }
+
     function processNextVariantImage() {
       if (!pendingVariantFiles.length) {
-        /* done cropping all */
-        const s = document.getElementById("add-variant-images-error");
-        if (s && addVariantBlobs.length >= 3) { s.textContent = ""; s.classList.remove("visible"); }
+        renderAddVariantPreviews();
         return;
       }
       const file = pendingVariantFiles[0];
       const reader = new FileReader();
       reader.onload = e => {
         openCropDialog(e.target.result, (dataUrl, blob) => {
-          addVariantPreviewGrid.innerHTML += `<div class="variant-preview-item"><img src="${dataUrl}" alt="Variant"></div>`;
-          addVariantBlobs.push(blob);
+          addVariantBlobs.push({ dataUrl, blob });
           closeCropDialog();
           pendingVariantFiles.shift();
+          renderAddVariantPreviews();
           processNextVariantImage();
         }, 4/5); /* 4:5 for variant images */
       };
@@ -1136,7 +1181,8 @@ function validateColor(prefix) {
         formData.delete("variantImages");
         
         formData.append("thumbnail", addThumbnailBlob, "thumbnail.jpg");
-        addVariantBlobs.forEach((blob, index) => {
+        addVariantBlobs.forEach((item, index) => {
+          const blob = item.blob || item;
           formData.append("variantImages", blob, `variant-${index}.jpg`);
         });
 
