@@ -98,7 +98,11 @@
                 </section>
 
                 <!-- Logout Button -->
-               <a href="/logout" class="logout-btn desktop-logout"> <i data-lucide="log-out"></i>Logout from iStore</a>
+                <form action="/logout" method="POST" style="display:inline-block; width:100%;">
+                    <button type="submit" class="logout-btn desktop-logout" style="width:100%; border:none; cursor:pointer; font:inherit;">
+                        <i data-lucide="log-out"></i>Logout from iStore
+                    </button>
+                </form>
             </aside>
 
             <!-- Right Column: Navigation Grid & Settings -->
@@ -413,7 +417,11 @@
 </section>
             </div>
             <!-- Mobile Logout Button -->
-            <a href="/logout" class="logout-btn mobile-logout"> <i data-lucide="log-out"></i>Logout from iStore</a>
+            <form action="/logout" method="POST" style="display:inline-block; width:100%;">
+                <button type="submit" class="logout-btn mobile-logout" style="width:100%; border:none; cursor:pointer; font:inherit;">
+                    <i data-lucide="log-out"></i>Logout from iStore
+                </button>
+            </form>
         </div>
     </main>
 

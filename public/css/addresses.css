@@ -306,7 +306,7 @@
   display: none; /* Hidden by default */
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 1000000; /* Higher than .mobile-bottom-nav (99999) */
   overflow-y: auto;
 }
 
@@ -1052,4 +1052,99 @@ input:checked + .slider:before {
 .swal-confirm-istore-success:hover {
   background: #6100c6;
   transform: translateY(-1px);
+}
+
+/* =========================================
+   MOBILE FRIENDLY ADDRESS MODAL & PIN CODE FIXES
+========================================= */
+@media (max-width: 640px) {
+  .modal-overlay {
+    padding: 16px 12px;
+    align-items: flex-end;
+    z-index: 1000000 !important;
+  }
+
+  .modal-card {
+    max-height: 88vh;
+    max-height: calc(100dvh - 24px);
+    padding: 24px 18px 24px;
+    border-radius: 24px 24px 20px 20px;
+    margin: 0 auto;
+    width: 100%;
+    gap: 16px;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.2);
+  }
+
+  .modal-header h2 {
+    font-size: 22px;
+  }
+
+  .modal-header p {
+    font-size: 13px;
+  }
+
+  .form-row {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* Fix Pin Code squeezed input: 2 columns for City/State, Pin Code full width span 2 */
+  .form-row-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .form-row-3 .form-group:nth-child(3) {
+    grid-column: span 2;
+  }
+
+  .form-group input,
+  .custom-select-wrapper select {
+    font-size: 15px !important;
+    padding: 12px 14px !important;
+  }
+
+  /* Type selector spacing */
+  .type-selector-premium {
+    gap: 8px;
+  }
+
+  .type-option-premium label {
+    padding: 12px 8px;
+    font-size: 10px;
+  }
+
+  /* Modal action buttons stacked & bottom safe padding */
+  .modal-actions-premium {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 10px;
+    margin-top: 16px;
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+  }
+
+  .save-address-btn-premium,
+  .cancel-btn-premium {
+    width: 100%;
+    padding: 14px;
+    font-size: 15px;
+    text-align: center;
+  }
+
+  /* Edit Modal Mobile Layout */
+  .edit-modal-card {
+    grid-template-columns: 1fr;
+    max-height: 88vh;
+    max-height: calc(100dvh - 24px);
+  }
+
+  .edit-modal-left {
+    padding: 24px 18px;
+  }
+
+  .edit-modal-right {
+    display: none;
+  }
 }

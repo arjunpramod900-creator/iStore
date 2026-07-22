@@ -156,12 +156,14 @@
     <div class="sidebar-footer">
 
         <!-- Logout (above profile card) -->
-        <a href="/admin/logout" class="sidebar-logout" id="btn-logout" data-no-loader="true">
-            <span class="nav-icon">
-                <i data-lucide="log-out" size="15"></i>
-            </span>
-            <span class="logout-text">Logout</span>
-        </a>
+        <form action="/admin/logout" method="POST" style="margin:0; padding:0; display:block;">
+            <button type="submit" class="sidebar-logout" id="btn-logout" data-no-loader="true" style="width:100%; border:none; background:transparent; cursor:pointer; font:inherit; text-align:left;">
+                <span class="nav-icon">
+                    <i data-lucide="log-out" size="15"></i>
+                </span>
+                <span class="logout-text">Logout</span>
+            </button>
+        </form>
 
         <!-- Profile Card (below logout) -->
         <div class="profile-card">

@@ -171,7 +171,13 @@ export const restoreCategory = async (req, res) => {
 
 export const permanentDeleteCategory = async (req, res) => {
   try {
-    await permanentDeleteCategoryService(req.params.id);
+    const { action, targetCategoryId } = req.body || {};
+
+    await permanentDeleteCategoryService(
+      req.params.id,
+      action,
+      targetCategoryId,
+    );
 
     res.json({
       success: true,

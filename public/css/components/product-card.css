@@ -317,7 +317,7 @@
   border-radius: 24px;
   border: none;
   background: linear-gradient(90deg, #4c0080 0%, #6a0dad 100%);
-  color: var(--white);
+  color: #ffffff !important;
   font-weight: 700;
   font-size: 16px;
   display: flex;
@@ -326,6 +326,12 @@
   gap: 8px;
   cursor: pointer;
   transition: var(--transition);
+}
+
+.add-to-cart-btn svg,
+.add-to-cart-btn i {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
 }
 
 .add-to-cart-btn:hover {

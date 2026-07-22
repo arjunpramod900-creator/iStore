@@ -84,6 +84,10 @@ export const loadAllProductsService = async (
 
     .lean();
 
+  products = products.filter(
+    (p) => p.categoryId && !p.categoryId.isDeleted && p.categoryId.isActive,
+  );
+
   /* =========================================
    BULK FETCH VARIANTS & OFFERS (Solves N+1 Query Problem)
 ========================================= */
@@ -292,14 +296,19 @@ export const loadAllProductsService = async (
 ========================================= */
 
 export const liveSearchService = async (searchQuery) => {
-  const products = await Product.find({
+  let products = await Product.find({
     name: { $regex: searchQuery, $options: "i" },
     isDeleted: false,
     isActive: true,
   })
     .populate("defaultVariant")
-    .limit(5)
+    .populate("categoryId")
+    .limit(10)
     .lean();
+
+  products = products.filter(
+    (p) => p.categoryId && !p.categoryId.isDeleted && p.categoryId.isActive,
+  ).slice(0, 5);
 
   // Format the products to include only necessary data for the dropdown
   return products.map(product => {

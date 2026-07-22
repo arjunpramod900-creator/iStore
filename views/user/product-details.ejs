@@ -30,7 +30,7 @@
                 <span class="breadcrumb-sep">/</span>
                 <a href="/products" class="breadcrumb-link">Products</a>
                 <span class="breadcrumb-sep">/</span>
-                <% if (product.categoryId) { %>
+                <% if (product.categoryId && !product.categoryId.isDeleted) { %>
                     <a href="/products?category=<%= product.categoryId._id %>" class="breadcrumb-link"><%= product.categoryId.name %></a>
                     <span class="breadcrumb-sep">/</span>
                 <% } %>
@@ -63,7 +63,7 @@
 
                 <!-- Info Column -->
                 <div class="info-column">
-                    <p class="product-label"><%= product.categoryId.name %></p>
+                    <p class="product-label"><%= product.categoryId?.name || 'Uncategorized' %></p>
                     <h1 class="product-title"><%= product.name %></h1>
                     
                     <div class="rating-row">

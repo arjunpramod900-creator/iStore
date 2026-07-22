@@ -147,7 +147,9 @@
                         <i data-lucide="rotate-ccw" size="18"></i>
                       </button>
                       <button class="action-btn permanent-delete-btn" title="Delete Permanently"
-                        data-id="<%= category._id %>">
+                        data-id="<%= category._id %>"
+                        data-name="<%= category.name %>"
+                        data-product-count="<%= category.productCount || 0 %>">
                         <i data-lucide="x-circle" size="18"></i>
                       </button>
                     <% } %>
@@ -788,26 +790,124 @@
       });
     });
 
+    const allActiveCategories = <%- JSON.stringify(allActiveCategories || []) %>;
+
     document.querySelectorAll(".permanent-delete-btn").forEach(btn => {
       btn.addEventListener("click", async () => {
         const id = btn.dataset.id;
-        const result = await Swal.fire({
-          title: "Delete Permanently?", text: "This action cannot be undone.",
-          icon: "warning", background: "#FFFFFF", color: "#2C1421",
-          confirmButtonColor: "#BA1A1A", cancelButtonColor: "#E5E7EB",
-          confirmButtonText: "Delete Forever", cancelButtonText: "Cancel", reverseButtons: true
-        });
-        if (!result.isConfirmed) return;
+        const catName = btn.dataset.name || "this category";
+        const productCount = parseInt(btn.dataset.productCount || "0", 10);
+
+        let payload = {};
+
+        if (productCount > 0) {
+          const destinationOptions = allActiveCategories
+            .filter(c => c._id.toString() !== id)
+            .map(c => `<option value="${c._id}">${c.name}</option>`)
+            .join("");
+
+          const htmlContent = `
+            <div style="text-align: left; font-size: 0.95rem; line-height: 1.5; color: #374151;">
+              <p style="margin-bottom: 12px;"><strong>${catName}</strong> contains <strong>${productCount} product(s)</strong>. What would you like to do with these products before deleting?</p>
+
+              <div style="margin-bottom: 12px; background: #F9FAFB; padding: 12px; border-radius: 8px; border: 1px solid #E5E7EB;">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600; color: #111827;">
+                  <input type="radio" name="swalAction" value="reassign" checked id="swalReassignRadio">
+                  Reassign products to another category
+                </label>
+                <div id="swalSelectContainer" style="margin-top: 8px; margin-left: 24px;">
+                  <select id="swalTargetCategory" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #D1D5DB; font-size: 0.9rem;">
+                    ${destinationOptions || '<option value="">No other categories available</option>'}
+                  </select>
+                </div>
+              </div>
+
+              <div style="background: #F9FAFB; padding: 12px; border-radius: 8px; border: 1px solid #E5E7EB;">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600; color: #111827;">
+                  <input type="radio" name="swalAction" value="trash" id="swalTrashRadio">
+                  Move all ${productCount} products to Trash as well
+                </label>
+              </div>
+            </div>
+          `;
+
+          const result = await Swal.fire({
+            title: `Delete '${catName}' Permanently?`,
+            html: htmlContent,
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#BA1A1A",
+            cancelButtonColor: "#E5E7EB",
+            confirmButtonText: "Confirm & Delete",
+            cancelButtonText: "Cancel",
+            reverseButtons: true,
+            didOpen: () => {
+              const reassignRadio = document.getElementById("swalReassignRadio");
+              const trashRadio = document.getElementById("swalTrashRadio");
+              const selectContainer = document.getElementById("swalSelectContainer");
+
+              if (reassignRadio && trashRadio && selectContainer) {
+                reassignRadio.addEventListener("change", () => {
+                  selectContainer.style.display = "block";
+                });
+                trashRadio.addEventListener("change", () => {
+                  selectContainer.style.display = "none";
+                });
+              }
+            },
+            preConfirm: () => {
+              const action = document.querySelector('input[name="swalAction"]:checked')?.value || "reassign";
+              let targetCategoryId = "";
+
+              if (action === "reassign") {
+                targetCategoryId = document.getElementById("swalTargetCategory")?.value;
+                if (!targetCategoryId) {
+                  Swal.showValidationMessage("Please select a valid destination category.");
+                  return false;
+                }
+              }
+              return { action, targetCategoryId };
+            }
+          });
+
+          if (!result.isConfirmed || !result.value) return;
+          payload = result.value;
+        } else {
+          const result = await Swal.fire({
+            title: "Delete Permanently?",
+            text: "This category has 0 products and will be deleted forever.",
+            icon: "warning",
+            background: "#FFFFFF",
+            color: "#2C1421",
+            confirmButtonColor: "#BA1A1A",
+            cancelButtonColor: "#E5E7EB",
+            confirmButtonText: "Delete Forever",
+            cancelButtonText: "Cancel",
+            reverseButtons: true
+          });
+          if (!result.isConfirmed) return;
+        }
+
         const originalHTML = btn.innerHTML;
         try {
           btn.disabled = true;
           btn.innerHTML = '<i data-lucide="loader-circle" class="spin"></i>';
           if (typeof lucide !== 'undefined') lucide.createIcons();
-          const res  = await fetch(`/admin/permanent-delete-category/${id}`, { method: "DELETE" });
+          const res = await fetch(`/admin/permanent-delete-category/${id}`, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
           const data = await res.json();
-          data.success
-            ? (toast("Category permanently deleted"), setTimeout(() => location.reload(), 1200))
-            : toast("Permanent delete failed", "error");
+          if (data.success) {
+            toast("Category permanently deleted");
+            setTimeout(() => location.reload(), 1200);
+          } else {
+            btn.disabled = false;
+            btn.innerHTML = originalHTML;
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+            toast(data.message || "Permanent delete failed", "error");
+          }
         } catch { 
           btn.disabled = false; 
           btn.innerHTML = originalHTML;

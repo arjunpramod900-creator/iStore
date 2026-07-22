@@ -150,7 +150,7 @@ router.post(
    LOGOUT ROUTE
 ========================= */
 
-router.get("/logout", isLoggedIn, authController.logoutUser);
+router.post("/logout", isLoggedIn, authController.logoutUser);
 
 /* =========================
    VERIFY EMAIL / PASSWORD OTP PAGE
