@@ -160,25 +160,31 @@ body {
 }
 
 .category-card {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  align-items: flex-start;
-  padding: 32px;
-  isolation: isolate;
-  position: relative; /* Changed from absolute to relative for grid flow */
-  height: 320px; /* Adjusted height for better proportions in flexible grid */
+  position: relative;
+  height: 320px;
   background: #ffffff;
   border-radius: 24px;
   overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.category-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 40px rgba(76, 0, 128, 0.15);
+}
+
+.category-card-link {
+  display: block;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  text-decoration: none;
 }
 
 .category-img {
   position: absolute;
-  left: 0px;
-  right: 0px;
-  top: 0px;
-  bottom: 0px;
+  inset: 0;
   background-size: cover;
   background-position: center;
   z-index: 0;
@@ -186,54 +192,94 @@ body {
 }
 
 .category-card:hover .category-img {
-  transform: scale(1.05);
+  transform: scale(1.08);
 }
 
 .category-gradient {
   position: absolute;
-  left: 0px;
-  right: 0px;
-  top: 0px;
-  bottom: 0px;
+  inset: 0;
   background: linear-gradient(
-    0deg,
-    rgba(0, 0, 0, 0.6) 0%,
-    rgba(0, 0, 0, 0) 100%
+    180deg,
+    rgba(0, 0, 0, 0) 30%,
+    rgba(0, 0, 0, 0.5) 100%
   );
   z-index: 1;
+  pointer-events: none;
 }
 
-.category-content {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  padding: 0px;
-  width: 100%;
-  z-index: 2;
-}
-
-.category-name {
-  font-family: "Inter";
-  font-style: normal;
-  font-weight: 600;
-  font-size: 24px;
-  line-height: 32px;
+.category-floating-row {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  right: 16px;
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.category-name-badge {
+  background: rgba(18, 18, 24, 0.65);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  padding: 10px 20px;
+  display: inline-flex;
+  align-items: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  max-width: calc(100% - 56px);
+}
+
+.category-card:hover .category-name-badge {
+  background: rgba(26, 15, 38, 0.82);
+  border-color: rgba(168, 85, 247, 0.4);
+  box-shadow: 0 12px 30px rgba(76, 0, 128, 0.35);
+}
+
+.category-name-text {
+  font-family: "Inter", sans-serif;
+  font-size: 15px;
+  font-weight: 700;
   color: #ffffff;
-  margin: 0;
+  letter-spacing: -0.2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.category-description {
-  font-family: "Inter";
-  font-style: normal;
-  font-weight: 400;
-  font-size: 14px;
-  line-height: 20px;
+.category-arrow-badge {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(18, 18, 24, 0.65);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #ffffff;
   display: flex;
   align-items: center;
-  color: rgba(255, 255, 255, 0.8);
-  margin: 0;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.category-arrow-badge svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2.2;
+}
+
+.category-card:hover .category-arrow-badge {
+  background: #a855f7;
+  border-color: #a855f7;
+  color: #ffffff;
+  transform: scale(1.08) translate(2px, -2px);
+  box-shadow: 0 10px 24px rgba(168, 85, 247, 0.4);
 }
 
 /* Featured Products Section */
@@ -834,12 +880,44 @@ body {
   }
 
   .category-grid-container {
-    grid-template-columns: 1fr;
-    gap: 20px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
   }
 
   .category-card {
-    height: 260px;
+    height: 190px;
+    border-radius: 16px;
+  }
+
+  .category-floating-row {
+    bottom: 10px;
+    left: 10px;
+    right: 10px;
+    gap: 6px;
+  }
+
+  .category-name-badge {
+    padding: 6px 12px;
+    border-radius: 999px;
+    max-width: calc(100% - 40px);
+    background: rgba(18, 18, 24, 0.72);
+  }
+
+  .category-name-text {
+    font-size: 12px;
+    color: #ffffff;
+  }
+
+  .category-arrow-badge {
+    width: 32px;
+    height: 32px;
+    background: rgba(18, 18, 24, 0.72);
+    color: #ffffff;
+  }
+
+  .category-arrow-badge svg {
+    width: 14px;
+    height: 14px;
   }
 
   .featured-container {
