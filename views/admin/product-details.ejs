@@ -1018,20 +1018,19 @@
 
             const allImages = [
                 ...existingImages.map(img  => ({ type: "existing", url: img })),
-                ...selectedFiles.map(file  => ({ type: "file", file, url: URL.createObjectURL(file) }))
+                ...selectedFiles.map(file  => ({ type: "file", file, url: file.dataUrl || (file instanceof Blob ? URL.createObjectURL(file) : "") }))
             ];
+
+            if (hasAttemptedSubmit || allImages.length > 0) {
+                validateImages();
+            }
 
             if (!allImages.length) {
                 previewImage.src = "<%= product.thumbnail %>";
-                /* Clear image error if images were removed AFTER a failed submit */
-                if (hasAttemptedSubmit) validateImages();
                 return;
             }
 
             previewImage.src = allImages[0].url;
-
-            /* Clear image error once user has added images */
-            if (hasAttemptedSubmit) validateImages();
 
             allImages.forEach((imageData) => {
                 const previewItem = document.createElement("div");
@@ -1109,40 +1108,56 @@
         });
 
         function openCropper(file) {
+            cropperOverlay.classList.add("open");
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
+
             const reader = new FileReader();
             reader.onload = function(event) {
-                cropperOverlay.classList.add("open");
-                cropperImage.src = event.target.result;
-                setTimeout(() => {
-                    if (cropper) cropper.destroy();
-                    cropper = new Cropper(cropperImage, {
-                        aspectRatio: 4/5,
-                        viewMode: 1,
-                        dragMode: "move",
-                        autoCropArea: 0.8,
-                        movable: true,
-                        zoomable: true,
-                        scalable: true,
-                        rotatable: false,
-                        cropBoxMovable: true,
-                        cropBoxResizable: true,
-                        background: false
+                cropperImage.onload = function () {
+                    requestAnimationFrame(() => {
+                        setTimeout(() => {
+                            if (cropper) cropper.destroy();
+                            cropper = new Cropper(cropperImage, {
+                                aspectRatio: 4/5,
+                                viewMode: 1,
+                                dragMode: "move",
+                                autoCropArea: 0.85,
+                                movable: true,
+                                zoomable: true,
+                                scalable: true,
+                                rotatable: false,
+                                cropBoxMovable: true,
+                                cropBoxResizable: true,
+                                background: false,
+                                responsive: true
+                            });
+                        }, 50);
                     });
-                }, 100);
+                };
+                cropperImage.src = event.target.result;
             };
             reader.readAsDataURL(file);
         }
 
         document.getElementById("cropImageBtn").addEventListener("click", () => {
             if (!cropper) return;
-            const canvas = cropper.getCroppedCanvas({ width: 1200, height: 1200, imageSmoothingEnabled: true, imageSmoothingQuality: "high" });
+            const canvas = cropper.getCroppedCanvas({ width: 800, height: 1000, imageSmoothingEnabled: true, imageSmoothingQuality: "high" });
+            if (!canvas) return;
+            const dataUrl = canvas.toDataURL("image/jpeg", 0.9);
             canvas.toBlob((blob) => {
+                if (!blob) return;
                 const croppedFile = new File([blob], `variant-${Date.now()}.jpg`, { type: "image/jpeg" });
+                croppedFile.dataUrl = dataUrl;
                 selectedFiles.push(croppedFile);
                 renderImages();
                 cropperOverlay.classList.remove("open");
-                cropper.destroy();
-                cropper = null;
+                if (cropper) {
+                    cropper.destroy();
+                    cropper = null;
+                }
                 pendingFiles.shift();
                 if (pendingFiles.length) openCropper(pendingFiles[0]);
             }, "image/jpeg", 0.9);
@@ -1358,14 +1373,9 @@ function validateColor() {
         }
 
         function validateImages() {
-            const mode  = document.getElementById("variantMode").value;
             const total = (existingImages?.length || 0) + (selectedFiles?.length || 0);
-            if (total === 0) {
-                showImageError(
-                    mode === "add"
-                        ? "Please upload at least one variant image"
-                        : "A variant must have at least one image"
-                );
+            if (total < 3) {
+                showImageError("Upload minimum 3 images");
                 return false;
             }
             if (total > 10) {

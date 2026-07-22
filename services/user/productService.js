@@ -89,7 +89,9 @@ export const loadAllProductsService = async (
 ========================================= */
 
   const productIds = products.map((p) => p._id);
-  const categoryIds = products.map((p) => p.categoryId?._id || p.categoryId);
+  const categoryIds = products
+    .map((p) => p.categoryId?._id || p.categoryId)
+    .filter(Boolean);
   const now = new Date();
 
   const [allVariants, allProductOffers, allCategoryOffers] = await Promise.all([
@@ -137,10 +139,12 @@ export const loadAllProductsService = async (
 
     const catIdStr = product.categoryId?._id
       ? product.categoryId._id.toString()
-      : product.categoryId.toString();
-    const categoryOffer = allCategoryOffers.find(
-      (o) => o.targetId.toString() === catIdStr,
-    );
+      : product.categoryId
+        ? product.categoryId.toString()
+        : null;
+    const categoryOffer = catIdStr
+      ? allCategoryOffers.find((o) => o.targetId.toString() === catIdStr)
+      : null;
 
     for (const variant of productVariants) {
       const offerData = computeFinalOfferData(
@@ -459,7 +463,7 @@ export const loadProductDetailsService = async (
       $ne: product._id,
     },
 
-    categoryId: product.categoryId._id,
+    categoryId: product.categoryId?._id || product.categoryId,
 
     isDeleted: false,
 

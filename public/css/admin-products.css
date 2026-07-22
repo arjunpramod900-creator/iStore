@@ -1588,3 +1588,47 @@ th, td {
     grid-template-columns: 1fr !important;
   }
 }
+
+/* Bento Variant Upload Dropzone Box */
+.variant-upload-box {
+  width: 100%;
+  padding: 24px 16px;
+  border-radius: 18px;
+  border: 2px dashed rgba(208, 195, 204, 0.55);
+  background: rgba(255, 255, 255, 0.65);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  margin-top: 8px;
+}
+
+.variant-upload-box:hover {
+  border-color: rgba(112, 26, 117, 0.45);
+  background: rgba(255, 255, 255, 0.95);
+  transform: translateY(-2px);
+  box-shadow: 0px 12px 30px rgba(96, 55, 99, 0.08);
+}
+
+.variant-upload-box i {
+  color: #603763;
+}
+
+.variant-upload-box span {
+  font-size: 13px;
+  font-weight: 600;
+  color: #2c1421;
+}
+
+.variant-upload-box small {
+  font-size: 11px;
+  color: #8e8a94;
+}
+
+.variant-upload-box.input-error {
+  border-color: #e74c3c !important;
+  background: #fff8f7 !important;
+}
