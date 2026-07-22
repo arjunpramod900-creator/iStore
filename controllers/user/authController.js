@@ -94,7 +94,13 @@ const loadHome = async (req, res) => {
       product.offerData = await calculateItemOffer(product, variant);
     }
 
-    featuredProducts = featuredProducts.filter((product) => product.variant);
+    featuredProducts = featuredProducts.filter(
+      (product) =>
+        product.variant &&
+        product.categoryId &&
+        !product.categoryId.isDeleted &&
+        product.categoryId.isActive,
+    );
 
     /* BEST SELLERS */
     let bestSellerProducts = await Product.find({
@@ -130,7 +136,11 @@ const loadHome = async (req, res) => {
     }
 
     bestSellerProducts = bestSellerProducts.filter(
-      (product) => product.variant,
+      (product) =>
+        product.variant &&
+        product.categoryId &&
+        !product.categoryId.isDeleted &&
+        product.categoryId.isActive,
     );
 
     /* DEAL PRODUCTS */
@@ -155,7 +165,13 @@ const loadHome = async (req, res) => {
       product.offerData = await calculateItemOffer(product, variant);
     }
 
-    dealProducts = dealProducts.filter((product) => product.variant);
+    dealProducts = dealProducts.filter(
+      (product) =>
+        product.variant &&
+        product.categoryId &&
+        !product.categoryId.isDeleted &&
+        product.categoryId.isActive,
+    );
 
     /* WISHLIST & CART IDS */
     let wishlistVariantIds = [];

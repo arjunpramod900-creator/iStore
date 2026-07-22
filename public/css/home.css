@@ -1,4 +1,5 @@
 :root {
+  --white: #ffffff;
   --bg-white: #ffffff;
   --bg-light: #f9f9fb;
   --text-primary: #1a1c1d;
@@ -272,9 +273,8 @@ body {
 
 .product-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  column-gap: 64px;
-  row-gap: 32px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 28px;
   width: 100%;
 }
 
@@ -441,8 +441,8 @@ body {
 
 .best-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 32px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 28px;
   width: 100%;
   justify-content: center;
 }

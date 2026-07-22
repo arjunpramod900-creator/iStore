@@ -73,7 +73,7 @@ router.post("/reset-password", resetAdminPassword);
    LOGOUT
 ============================ */
 
-router.get(
+router.post(
   "/logout",
 
   adminLogout,

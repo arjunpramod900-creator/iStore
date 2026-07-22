@@ -1,4 +1,5 @@
 import Category from "../../models/Category.js";
+import Product from "../../models/Product.js";
 
 import { categorySchema } from "../../validators/categoryValidator.js";
 
@@ -88,8 +89,24 @@ export const getCategoriesService = async (queryData) => {
     isActive: false,
   });
 
+  const categoriesWithCounts = await Promise.all(
+    categories.map(async (cat) => {
+      const productCount = await Product.countDocuments({ categoryId: cat._id });
+      return {
+        ...cat.toObject(),
+        productCount,
+      };
+    }),
+  );
+
+  const allActiveCategories = await Category.find({ isDeleted: false })
+    .select("name _id")
+    .lean();
+
   return {
-    categories,
+    categories: categoriesWithCounts,
+
+    allActiveCategories,
 
     currentPage: page,
 
@@ -315,11 +332,39 @@ export const restoreCategoryService = async (categoryId) => {
    PERMANENT DELETE CATEGORY
 ============================ */
 
-export const permanentDeleteCategoryService = async (categoryId) => {
+export const permanentDeleteCategoryService = async (
+  categoryId,
+  action,
+  targetCategoryId,
+) => {
   const category = await Category.findById(categoryId);
 
   if (!category) {
     throw new Error("Category not found");
+  }
+
+  const productCount = await Product.countDocuments({ categoryId });
+
+  if (productCount > 0) {
+    if (action === "reassign") {
+      if (!targetCategoryId) {
+        throw new Error("Please select a target category to reassign products.");
+      }
+      if (targetCategoryId.toString() === categoryId.toString()) {
+        throw new Error("Target category cannot be the category being deleted.");
+      }
+      const targetCat = await Category.findById(targetCategoryId);
+      if (!targetCat || targetCat.isDeleted) {
+        throw new Error("Target category is invalid or deleted.");
+      }
+      await Product.updateMany({ categoryId }, { categoryId: targetCategoryId });
+    } else if (action === "trash") {
+      await Product.updateMany({ categoryId }, { isDeleted: true });
+    } else {
+      throw new Error(
+        `Cannot permanently delete category. ${productCount} product(s) still belong to this category. Please select an action to reassign or trash them.`,
+      );
+    }
   }
 
   await Category.findByIdAndDelete(categoryId);
